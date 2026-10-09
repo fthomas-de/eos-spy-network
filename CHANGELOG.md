@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.3] - 2026-10-09
+
 ### Added
 
 - Network page: per Corporation the mains whose main and alts exchanged ISK

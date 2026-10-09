@@ -8,26 +8,21 @@ Last updated 2026-10-09.
 
 ## State
 
-- Version: `0.0.2`, 2026-10-09 (see `CHANGELOG.md`): Corporation tiles and
-  a page per Corporation with the mains that have markers (`markers.py`);
-  the hostile list page is gone, `hostile_entities()` stays as the base of
-  `hostile_index()`. Setting `corp_changes_per_year` (migration 0002).
-- What the app does today: a settings page to choose the Alliance, the
-  standing threshold, the Corporation changes per year and the contact
-  sources; the Corporations of the Alliance as tiles; per Corporation the
-  mains with markers: hostile membership (now and Corporation history),
-  frequent Corporation changes, friendly/watched hostile contacts, mails,
-  ISK, contracts - over the main and all its alts.
-- Unreleased (committed, not pushed): Network tab (`network.py`): mains whose
-  characters share an ISK partner outside the Alliance (>= 2 own characters,
-  one payment each; donations, player trading, contract payments) or did
-  player trading outside it, as a vis-network graph per main. Markers and
-  connections are now computed by the task `update_snapshot` into the
-  `Snapshot` row (migration 0003, `snapshot.py`, as in eos-auth-monitor);
-  button *Recalculate*, footer with the calculation's cost. Corporations tab
-  renamed Markers, with a switch hiding Corporations without markers. The
-  footer's counts line carries the `eos-spy-network` context: eos-auth-monitor
-  has the same msgid with another translation.
+- Version: `0.0.3`, 2026-10-09 (see `CHANGELOG.md`): Network tab
+  (`network.py`): mains whose characters share an ISK partner outside the
+  Alliance (>= 2 own characters, one payment each; donations, player
+  trading, contract payments) or did player trading outside it, as a
+  vis-network graph per main. Markers and connections are computed by the
+  task `update_snapshot` into the `Snapshot` row (migration 0003,
+  `snapshot.py`, as in eos-auth-monitor); button *Recalculate*, footer with
+  the calculation's cost. Corporations tab renamed Markers, with a switch
+  hiding Corporations without markers.
+- What the app does today: a settings page (Alliance, standing threshold,
+  Corporation changes per year, contact sources); Markers: the Corporations
+  as tiles, per Corporation the mains with markers (hostile membership now
+  and in the history, frequent Corporation changes, friendly/watched hostile
+  contacts, mails, ISK, contracts - over main and alts); Network: the ISK
+  connections outside the Alliance. Pages read only the stored snapshot.
 - Tests: 93 without translation tests plus 3 translation tests, all green
   in the dev instance; every new test checked against sabotaged code.
   `tests.base.SpyTestCase` patches `views.update_snapshot`, so no test
@@ -49,8 +44,9 @@ Last updated 2026-10-09.
   graph and the *Recalculate* button. Rendered server-side against `aa_dev`
   without errors: Ether Element shows E 'o with two watched hostiles at -5,
   and on Network E 'o and BigBlackout C both paying fenriscw1.
-- Ask the user: does a shared payment partner need the main among the
-  characters, or are two alts enough (implemented: any two)?
+- Ask the user (asked at the end of the session, no answer yet): does a
+  shared payment partner need the main among the characters, or are two
+  alts enough (implemented: any two)?
 - Ask the user: watching a hostile is a marker (README decision), but PvP
   pilots watch enemies routinely - should a watched hostile with a negative
   standing stay a marker?
@@ -76,6 +72,14 @@ Last updated 2026-10-09.
   ticked in a searchable table) with a standing below a configurable value,
   default below 0. One negative source is enough. The Alliance and its own
   Corporations never count.
+- Network (2026-10-09): payments are donations, player trading and
+  contract payments; one payment per character is enough, it is the overlap
+  of two own characters that counts; player trading shows on its own. A
+  counterpart Auth does not know counts as outside; NPCs never. The graph
+  is vis-network from cdnjs. The pages need `view_evidence` as well.
+- Recalculation: stored in the database by a Celery task (not a cache, not
+  live), started by the button, by saving the settings, or by a
+  `CELERYBEAT_SCHEDULE` entry the admin adds (README).
 - No ESI call at all, not even an affiliation lookup: a counterpart is
   hostile only when it is a hostile contact itself or a member Auth knows
   (`EveCharacter`, `EveCorporationInfo`); corptools' `EveName` has no
@@ -89,16 +93,19 @@ Last updated 2026-10-09.
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 and 0002
-  applied to `aa_dev`, `collectstatic` run.
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0003
+  applied to `aa_dev`, `collectstatic` run. A snapshot was built once by
+  hand (`snapshot.update()` in the shell); no `CELERYBEAT_SCHEDULE` entry
+  for it in `local.py`.
 - aa-contacts holds tokens for Invidia Gloriae Comes (99003995) and Ether
   Element (98633815); first read 2026-10-09 by hand (159 Alliance, 54
   Corporation contacts). No `celery beat` runs in the dev instance, so no
   periodic task fires on its own.
 - The periodic task row `contacts` (id 7, every 15 minutes) is disabled; the
   `CELERYBEAT_SCHEDULE` entry in `local.py` (hourly) is the one to keep.
-- The Celery worker started at 12:03 without aa-contacts was stopped; the
-  one in the user's terminal remains.
+- The Celery worker in the user's terminal was (re)started 16:26; whether
+  it has `eos_spy_network.tasks.update_snapshot` registered is unchecked -
+  restart it if *Recalculate* does nothing.
 
 ## Traps
 
@@ -125,4 +132,10 @@ Last updated 2026-10-09.
   translation run.
 - Another installed app translates "Standing" and "Hostile" differently;
   both carry the `eos-spy-network` context. `tools/translate.py` names every
-  new clash of that kind.
+  new clash of that kind. Same for the footer's "... Corporations, ...
+  accounts, ... characters" (eos-auth-monitor has that msgid).
+- The dev server answers only on `127.0.0.1:8000`, not `localhost`
+  (DisallowedHost), and needs EVE SSO: render pages for a check through
+  `django.test.Client` with `force_login` in `manage.py shell`.
+- `sri_static` of a new static file fails in tests with "Missing
+  staticfiles manifest entry" until `collectstatic` ran.
