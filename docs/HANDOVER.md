@@ -8,25 +8,28 @@ Last updated 2026-10-09.
 
 ## State
 
-- Version: `0.0.3`, 2026-10-09 (see `CHANGELOG.md`): Network tab
-  (`network.py`): mains whose characters share an ISK partner outside the
-  Alliance (>= 2 own characters, one payment each; donations, player
-  trading, contract payments) or did player trading outside it, as a
-  vis-network graph per main. Markers and connections are computed by the
-  task `update_snapshot` into the `Snapshot` row (migration 0003,
-  `snapshot.py`, as in eos-auth-monitor); button *Recalculate*, footer with
-  the calculation's cost. Corporations tab renamed Markers, with a switch
-  hiding Corporations without markers.
+- Version: `0.0.4`, 2026-10-09 (see `CHANGELOG.md`): the network graph
+  follows each counterpart to its Corporation and Alliance
+  (`affiliations.py`: Auth, corptools, then public ESI in the task) and
+  shows a hostile one as a red node with its standing; mains listed first,
+  graph and table on click (`#main-<id>`); columns main | alts | partners |
+  Corporations | Alliances, own side green, hostiles red; switch hiding
+  Corporations without connections; progress bar while the task runs
+  (`progress.py`, cache key, polled at `rebuild/progress/`).
+- Before (0.0.3): Network tab (`network.py`) - shared ISK partners outside
+  the Alliance and player trading; markers and connections stored by the
+  task `update_snapshot` in the `Snapshot` row; Markers tab with its switch.
 - What the app does today: a settings page (Alliance, standing threshold,
   Corporation changes per year, contact sources); Markers: the Corporations
   as tiles, per Corporation the mains with markers (hostile membership now
   and in the history, frequent Corporation changes, friendly/watched hostile
   contacts, mails, ISK, contracts - over main and alts); Network: the ISK
   connections outside the Alliance. Pages read only the stored snapshot.
-- Tests: 93 without translation tests plus 3 translation tests, all green
+- Tests: 116 without translation tests plus 3 translation tests, all green
   in the dev instance; every new test checked against sabotaged code.
-  `tests.base.SpyTestCase` patches `views.update_snapshot`, so no test
-  queues a task into the dev worker.
+  `tests.base.SpyTestCase` patches `views.update_snapshot` and the three
+  ESI calls of `affiliations.py` (`self.esi_names`, `self.esi_affiliations`,
+  `self.esi_corporation_alliance`; set `return_value` for an answer).
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
   not reviewed by the user yet.
 
@@ -35,16 +38,15 @@ Last updated 2026-10-09.
 | Markers | `view_suspects` | a tile per Corporation: mains, mains with markers, count per marker; switch to hide clean ones |
 | Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found |
 | Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections outside the Alliance |
-| Network Corporation | `view_suspects` + `view_evidence` | per main a graph and a table of its connections |
+| Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner -> Corporation -> Alliance) and a table of the connections |
 | Settings | `manage_settings` | Alliance, threshold, Corporation changes per year, contact sources with aa-contacts' token state |
 
 ## Open
 
-- Committed, not released (2026-10-09): affiliation chain, click-to-show
-  mains, network switch, colours/columns, progress bar (see `[Unreleased]`).
-  116 tests plus translation tests green; version bump follows with `/push`.
 - Not tried in the browser yet (EVE SSO login): the tiles, the switches, the
-  click-to-show graph, its layout and the progress bar. Rendered server-side
+  click-to-show graph, whether its column layout stays readable with many
+  partners (`levelSeparation`/`nodeSpacing` in `network.js`), and the
+  progress bar. Rendered server-side
   against `aa_dev` without errors: on Network E 'o and BigBlackout C both
   paying fenriscw1, who ESI puts into Royal Amarr Institute (NPC starter
   Corporation, no Alliance, not hostile).
@@ -117,9 +119,10 @@ Last updated 2026-10-09.
   periodic task fires on its own.
 - The periodic task row `contacts` (id 7, every 15 minutes) is disabled; the
   `CELERYBEAT_SCHEDULE` entry in `local.py` (hourly) is the one to keep.
-- The Celery worker in the user's terminal was (re)started 16:26; whether
-  it has `eos_spy_network.tasks.update_snapshot` registered is unchecked -
-  restart it if *Recalculate* does nothing.
+- The Celery worker was restarted 2026-10-09 15:00 in a terminal tab of the
+  Claude session (`celery -A myauth worker -l info -P solo`) and lists
+  `eos_spy_network.tasks.update_snapshot`; it stops with that session. A
+  snapshot of 0.0.4 was built by hand (`snapshot.update()`).
 
 ## Traps
 
@@ -153,3 +156,7 @@ Last updated 2026-10-09.
   `django.test.Client` with `force_login` in `manage.py shell`.
 - `sri_static` of a new static file fails in tests with "Missing
   staticfiles manifest entry" until `collectstatic` ran.
+- Every patch script of a session has to leave the repo: a `patch_*.py` in
+  the repo root would land in `git status` and the next commit.
+- An assertion on the URL `/eos_spy_network/rebuild/` also matches
+  `rebuild/progress/`; assert on `action="..."` instead.

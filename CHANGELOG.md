@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-10-09
+
 ### Added
 
 - Network graph follows each counterpart to its Corporation and Alliance, so
