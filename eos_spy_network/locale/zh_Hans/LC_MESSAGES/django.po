@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 16:50+0000\n"
-"PO-Revision-Date: 2026-10-09 16:50+0000\n"
+"POT-Creation-Date: 2026-10-09 18:00+0000\n"
+"PO-Revision-Date: 2026-10-09 18:00+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: zh_Hans\n"
 "Language: zh_Hans\n"
@@ -27,15 +27,17 @@ msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:89
+#: contacts.py:26 models.py:118
 #: templates/eos_spy_network/network_corporation.html:99
+#: templates/eos_spy_network/partials/dealings.html:10
 #: templates/eos_spy_network/partials/network-legend.html:8
 msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:11 models.py:35 models.py:88
+#: contacts.py:27 forms.py:24 models.py:42 models.py:117
 #: templates/eos_spy_network/network_corporation.html:100
+#: templates/eos_spy_network/partials/dealings.html:11
 #: templates/eos_spy_network/partials/network-legend.html:10
 #: templates/eos_spy_network/settings.html:11
 msgctxt "EVE jargon"
@@ -97,31 +99,54 @@ msgstr "与敌对方的钱包日志条目。"
 msgid "Contracts with hostiles."
 msgstr "与敌对方的合同。"
 
-#: models.py:36
+#: models.py:43
 msgid "The Alliance whose members are checked."
 msgstr "要检查其成员的 Alliance。"
 
-#: models.py:43
+#: models.py:50
 msgid "Hostile below standing"
 msgstr "低于此声望即为敌对"
 
-#: models.py:44
+#: models.py:51
 msgid ""
 "A contact of a ticked source counts as hostile when its standing is below "
 "this value."
 msgstr "已勾选来源的联系人，其声望低于此值时视为敌对。"
 
-#: models.py:49
+#: models.py:56
 msgid "Corporation changes per year"
 msgstr "每年更换 Corporation 次数"
 
-#: models.py:50
+#: models.py:57
 msgid ""
 "A character that joined this many Corporations within the last 365 days gets"
 " a marker."
 msgstr "在过去 365 天内加入这么多 Corporation 的 Character 会被标记。"
 
-#: models.py:55 models.py:58
+#: models.py:63
+msgid "Time frame in days"
+msgstr "时间范围（天）"
+
+#: models.py:65
+msgid ""
+"Only the last this many days count: wallet, contracts, mails, the network's "
+"payments and former Corporations. Standings change - a hostile today may "
+"have been a friend back then. 0 takes everything."
+msgstr ""
+"只计算最近这么多天：钱包、合同、邮件、关系网中的付款以及以前的 Corporation。Standings 会变化——今天的敌人当时可能是朋友。0 "
+"表示全部计算。"
+
+#: models.py:72
+msgid "Ignored wallet entry types"
+msgstr "忽略的钱包条目类型"
+
+#: models.py:73
+msgid ""
+"Wallet journal entries of these types count neither as ISK with hostiles nor"
+" as a payment."
+msgstr "这些类型的钱包日志条目既不算作与敌对方的 ISK，也不算作付款。"
+
+#: models.py:78 models.py:81
 msgid "Configuration"
 msgstr "配置"
 
@@ -308,7 +333,7 @@ msgstr "Standing"
 
 #: templates/eos_spy_network/network_corporation.html:66
 #: templates/eos_spy_network/network_corporation.html:104
-#: templates/eos_spy_network/partials/dealings.html:11
+#: templates/eos_spy_network/partials/dealings.html:15
 msgid "Period"
 msgstr "时间段"
 
@@ -317,14 +342,15 @@ msgstr "时间段"
 msgid "Counterpart"
 msgstr "对方"
 
-#: templates/eos_spy_network/partials/dealings.html:9
+#: templates/eos_spy_network/partials/dealings.html:13
 msgid "Count"
 msgstr "数量"
 
-#: templates/eos_spy_network/partials/dealings.html:12
+#: templates/eos_spy_network/partials/dealings.html:16
 msgid "Kind"
 msgstr "类别"
 
+#: templates/eos_spy_network/partials/dealings.html:35
 #: templates/eos_spy_network/partials/group-cell.html:13
 msgid "unknown"
 msgstr "未知"
@@ -420,11 +446,11 @@ msgstr "正在重新计算"
 msgid "Recalculate"
 msgstr "重新计算"
 
-#: templates/eos_spy_network/settings.html:22
+#: templates/eos_spy_network/settings.html:24
 msgid "Contact sources"
 msgstr "联系人来源"
 
-#: templates/eos_spy_network/settings.html:27
+#: templates/eos_spy_network/settings.html:29
 msgid ""
 "Tick whose contacts make up the hostile list. The contacts come from aa-"
 "contacts: a source needs a token there, and aa-contacts' own task keeps them"
@@ -432,70 +458,70 @@ msgid ""
 msgstr ""
 "勾选其联系人构成敌对列表的来源。联系人来自 aa-contacts：来源需要在其中拥有令牌，aa-contacts 自己的任务会保持其最新。"
 
-#: templates/eos_spy_network/settings.html:28
+#: templates/eos_spy_network/settings.html:30
 msgid "Open aa-contacts"
 msgstr "打开 aa-contacts"
 
-#: templates/eos_spy_network/settings.html:32
+#: templates/eos_spy_network/settings.html:34
 msgid ""
 "aa-contacts is not installed: the hostile list is made from its contacts."
 msgstr "未安装 aa-contacts：敌对列表由其联系人生成。"
 
-#: templates/eos_spy_network/settings.html:40
+#: templates/eos_spy_network/settings.html:42
 msgid "Ticked"
 msgstr "已勾选"
 
-#: templates/eos_spy_network/settings.html:41
+#: templates/eos_spy_network/settings.html:43
 msgctxt "eos-spy-network"
 msgid "Name"
 msgstr "名称"
 
-#: templates/eos_spy_network/settings.html:42
+#: templates/eos_spy_network/settings.html:44
 msgctxt "eos-spy-network"
 msgid "Type"
 msgstr "类型"
 
-#: templates/eos_spy_network/settings.html:43
+#: templates/eos_spy_network/settings.html:45
 msgid "Token in aa-contacts"
 msgstr "aa-contacts 中的令牌"
 
-#: templates/eos_spy_network/settings.html:44
+#: templates/eos_spy_network/settings.html:46
 msgid "Contacts as of"
 msgstr "联系人截至"
 
-#: templates/eos_spy_network/settings.html:45
+#: templates/eos_spy_network/settings.html:47
 msgid "Contacts"
 msgstr "联系人"
 
-#: templates/eos_spy_network/settings.html:46
+#: templates/eos_spy_network/settings.html:48
 msgctxt "eos-spy-network"
 msgid "Hostile"
 msgstr "敌对"
 
-#: templates/eos_spy_network/settings.html:58
+#: templates/eos_spy_network/settings.html:60
 msgid "Not in the Alliance"
 msgstr "不在 Alliance 中"
 
-#: templates/eos_spy_network/settings.html:64
+#: templates/eos_spy_network/settings.html:66
 msgctxt "eos-spy-network"
 msgid "Yes"
 msgstr "是"
 
-#: templates/eos_spy_network/settings.html:66
+#: templates/eos_spy_network/settings.html:68
 msgctxt "eos-spy-network"
 msgid "No"
 msgstr "否"
 
-#: templates/eos_spy_network/settings.html:73
+#: templates/eos_spy_network/settings.html:75
 msgid "Not read yet"
 msgstr "尚未读取"
 
-#: templates/eos_spy_network/settings.html:84
+#: templates/eos_spy_network/settings.html:86
 msgid ""
 "Choose an Alliance first: its Corporations are listed here once it is saved."
 msgstr "请先选择 Alliance：保存后，其 Corporation 会列在这里。"
 
-#: templates/eos_spy_network/settings.html:89
+#: templates/eos_spy_network/settings.html:91
 msgctxt "eos-spy-network"
 msgid "Save"
 msgstr "保存"

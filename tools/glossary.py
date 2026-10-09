@@ -139,6 +139,26 @@ TRANSLATIONS = {
         "Character, вступивший в столько Corporation за последние 365 дней, получает маркер.",
         "在过去 365 天内加入这么多 Corporation 的 Character 会被标记。",
     ),
+    "Time frame in days": ("Zeitrahmen in Tagen", "Период в днях", "时间范围（天）"),
+    "Only the last this many days count: wallet, contracts, mails, the network's payments and former "
+    "Corporations. Standings change - a hostile today may have been a friend back then. 0 takes everything.": (
+        "Nur die letzten so vielen Tage zählen: Wallet, Contracts, Mails, die Zahlungen im Network und frühere "
+        "Corporations. Standings ändern sich - ein heutiger Feind kann damals ein Freund gewesen sein. 0 nimmt alles.",
+        "Учитываются только последние столько дней: кошелёк, контракты, письма, платежи сети и прежние "
+        "Corporation. Standings меняются - сегодняшний враг мог быть тогда другом. 0 - учитывать всё.",
+        "只计算最近这么多天：钱包、合同、邮件、关系网中的付款以及以前的 Corporation。"
+        "Standings 会变化——今天的敌人当时可能是朋友。0 表示全部计算。",
+    ),
+    "Ignored wallet entry types": (
+        "Ignorierte Wallet-Eintragsarten",
+        "Игнорируемые типы записей кошелька",
+        "忽略的钱包条目类型",
+    ),
+    "Wallet journal entries of these types count neither as ISK with hostiles nor as a payment.": (
+        "Wallet-Journal-Einträge dieser Arten zählen weder als ISK mit Feinden noch als Zahlung.",
+        "Записи кошелька этих типов не считаются ни ISK с врагами, ни платежом.",
+        "这些类型的钱包日志条目既不算作与敌对方的 ISK，也不算作付款。",
+    ),
     "Mains with markers": ("Mains mit Markern", "Mains с маркерами", "有标记的 Mains"),
     "Markers": ("Marker", "Маркеры", "标记"),
     "No markers.": ("Keine Marker.", "Нет маркеров.", "没有标记。"),

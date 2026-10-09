@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 16:50+0000\n"
-"PO-Revision-Date: 2026-10-09 16:50+0000\n"
+"POT-Creation-Date: 2026-10-09 18:00+0000\n"
+"PO-Revision-Date: 2026-10-09 18:00+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: de\n"
 "Language: de\n"
@@ -27,15 +27,17 @@ msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:89
+#: contacts.py:26 models.py:118
 #: templates/eos_spy_network/network_corporation.html:99
+#: templates/eos_spy_network/partials/dealings.html:10
 #: templates/eos_spy_network/partials/network-legend.html:8
 msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:11 models.py:35 models.py:88
+#: contacts.py:27 forms.py:24 models.py:42 models.py:117
 #: templates/eos_spy_network/network_corporation.html:100
+#: templates/eos_spy_network/partials/dealings.html:11
 #: templates/eos_spy_network/partials/network-legend.html:10
 #: templates/eos_spy_network/settings.html:11
 msgctxt "EVE jargon"
@@ -101,15 +103,15 @@ msgstr "Wallet-Journal-Einträge mit Feinden."
 msgid "Contracts with hostiles."
 msgstr "Contracts mit Feinden."
 
-#: models.py:36
+#: models.py:43
 msgid "The Alliance whose members are checked."
 msgstr "Die Alliance, deren Mitglieder geprüft werden."
 
-#: models.py:43
+#: models.py:50
 msgid "Hostile below standing"
 msgstr "Feindlich unter Standing"
 
-#: models.py:44
+#: models.py:51
 msgid ""
 "A contact of a ticked source counts as hostile when its standing is below "
 "this value."
@@ -117,11 +119,11 @@ msgstr ""
 "Ein Kontakt einer angehakten Quelle gilt als feindlich, wenn sein Standing "
 "unter diesem Wert liegt."
 
-#: models.py:49
+#: models.py:56
 msgid "Corporation changes per year"
 msgstr "Corporation-Wechsel pro Jahr"
 
-#: models.py:50
+#: models.py:57
 msgid ""
 "A character that joined this many Corporations within the last 365 days gets"
 " a marker."
@@ -129,7 +131,33 @@ msgstr ""
 "Ein Character, der in den letzten 365 Tagen so vielen Corporations "
 "beigetreten ist, bekommt einen Marker."
 
-#: models.py:55 models.py:58
+#: models.py:63
+msgid "Time frame in days"
+msgstr "Zeitrahmen in Tagen"
+
+#: models.py:65
+msgid ""
+"Only the last this many days count: wallet, contracts, mails, the network's "
+"payments and former Corporations. Standings change - a hostile today may "
+"have been a friend back then. 0 takes everything."
+msgstr ""
+"Nur die letzten so vielen Tage zählen: Wallet, Contracts, Mails, die "
+"Zahlungen im Network und frühere Corporations. Standings ändern sich - ein "
+"heutiger Feind kann damals ein Freund gewesen sein. 0 nimmt alles."
+
+#: models.py:72
+msgid "Ignored wallet entry types"
+msgstr "Ignorierte Wallet-Eintragsarten"
+
+#: models.py:73
+msgid ""
+"Wallet journal entries of these types count neither as ISK with hostiles nor"
+" as a payment."
+msgstr ""
+"Wallet-Journal-Einträge dieser Arten zählen weder als ISK mit Feinden noch "
+"als Zahlung."
+
+#: models.py:78 models.py:81
 msgid "Configuration"
 msgstr "Konfiguration"
 
@@ -320,7 +348,7 @@ msgstr "Standing"
 
 #: templates/eos_spy_network/network_corporation.html:66
 #: templates/eos_spy_network/network_corporation.html:104
-#: templates/eos_spy_network/partials/dealings.html:11
+#: templates/eos_spy_network/partials/dealings.html:15
 msgid "Period"
 msgstr "Zeitraum"
 
@@ -329,14 +357,15 @@ msgstr "Zeitraum"
 msgid "Counterpart"
 msgstr "Gegenüber"
 
-#: templates/eos_spy_network/partials/dealings.html:9
+#: templates/eos_spy_network/partials/dealings.html:13
 msgid "Count"
 msgstr "Anzahl"
 
-#: templates/eos_spy_network/partials/dealings.html:12
+#: templates/eos_spy_network/partials/dealings.html:16
 msgid "Kind"
 msgstr "Art"
 
+#: templates/eos_spy_network/partials/dealings.html:35
 #: templates/eos_spy_network/partials/group-cell.html:13
 msgid "unknown"
 msgstr "unbekannt"
@@ -440,11 +469,11 @@ msgstr "Neuberechnung läuft"
 msgid "Recalculate"
 msgstr "Neu berechnen"
 
-#: templates/eos_spy_network/settings.html:22
+#: templates/eos_spy_network/settings.html:24
 msgid "Contact sources"
 msgstr "Kontaktquellen"
 
-#: templates/eos_spy_network/settings.html:27
+#: templates/eos_spy_network/settings.html:29
 msgid ""
 "Tick whose contacts make up the hostile list. The contacts come from aa-"
 "contacts: a source needs a token there, and aa-contacts' own task keeps them"
@@ -454,74 +483,74 @@ msgstr ""
 "contacts: Eine Quelle braucht dort einen Token, und der eigene Task von aa-"
 "contacts hält sie aktuell."
 
-#: templates/eos_spy_network/settings.html:28
+#: templates/eos_spy_network/settings.html:30
 msgid "Open aa-contacts"
 msgstr "aa-contacts öffnen"
 
-#: templates/eos_spy_network/settings.html:32
+#: templates/eos_spy_network/settings.html:34
 msgid ""
 "aa-contacts is not installed: the hostile list is made from its contacts."
 msgstr ""
 "aa-contacts ist nicht installiert: Die Feindliste entsteht aus dessen "
 "Kontakten."
 
-#: templates/eos_spy_network/settings.html:40
+#: templates/eos_spy_network/settings.html:42
 msgid "Ticked"
 msgstr "Angehakt"
 
-#: templates/eos_spy_network/settings.html:41
+#: templates/eos_spy_network/settings.html:43
 msgctxt "eos-spy-network"
 msgid "Name"
 msgstr "Name"
 
-#: templates/eos_spy_network/settings.html:42
+#: templates/eos_spy_network/settings.html:44
 msgctxt "eos-spy-network"
 msgid "Type"
 msgstr "Typ"
 
-#: templates/eos_spy_network/settings.html:43
+#: templates/eos_spy_network/settings.html:45
 msgid "Token in aa-contacts"
 msgstr "Token in aa-contacts"
 
-#: templates/eos_spy_network/settings.html:44
+#: templates/eos_spy_network/settings.html:46
 msgid "Contacts as of"
 msgstr "Kontakte vom"
 
-#: templates/eos_spy_network/settings.html:45
+#: templates/eos_spy_network/settings.html:47
 msgid "Contacts"
 msgstr "Kontakte"
 
-#: templates/eos_spy_network/settings.html:46
+#: templates/eos_spy_network/settings.html:48
 msgctxt "eos-spy-network"
 msgid "Hostile"
 msgstr "Feindlich"
 
-#: templates/eos_spy_network/settings.html:58
+#: templates/eos_spy_network/settings.html:60
 msgid "Not in the Alliance"
 msgstr "Nicht in der Alliance"
 
-#: templates/eos_spy_network/settings.html:64
+#: templates/eos_spy_network/settings.html:66
 msgctxt "eos-spy-network"
 msgid "Yes"
 msgstr "Ja"
 
-#: templates/eos_spy_network/settings.html:66
+#: templates/eos_spy_network/settings.html:68
 msgctxt "eos-spy-network"
 msgid "No"
 msgstr "Nein"
 
-#: templates/eos_spy_network/settings.html:73
+#: templates/eos_spy_network/settings.html:75
 msgid "Not read yet"
 msgstr "Noch nicht gelesen"
 
-#: templates/eos_spy_network/settings.html:84
+#: templates/eos_spy_network/settings.html:86
 msgid ""
 "Choose an Alliance first: its Corporations are listed here once it is saved."
 msgstr ""
 "Wähle zuerst eine Alliance: Ihre Corporations erscheinen hier, sobald sie "
 "gespeichert ist."
 
-#: templates/eos_spy_network/settings.html:89
+#: templates/eos_spy_network/settings.html:91
 msgctxt "eos-spy-network"
 msgid "Save"
 msgstr "Speichern"

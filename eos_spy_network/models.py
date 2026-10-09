@@ -1,13 +1,20 @@
+from datetime import timedelta
 from decimal import Decimal
 
 from solo.models import SingletonModel
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
 
 from allianceauth.eveonline.models import EveAllianceInfo
+
+
+def default_ignored_ref_types() -> list[str]:
+    # buying from or selling to a hostile on the market is anonymous: nobody picks the other side
+    return ["market_transaction"]
 
 
 class General(models.Model):
@@ -50,12 +57,34 @@ class SpyConfiguration(SingletonModel):
         help_text=_("A character that joined this many Corporations within the last 365 days gets a marker."),
     )
 
+    lookback_days = models.PositiveSmallIntegerField(
+        default=365,
+        validators=[MaxValueValidator(3650)],
+        verbose_name=_("Time frame in days"),
+        help_text=_(
+            "Only the last this many days count: wallet, contracts, mails, the network's payments and former "
+            "Corporations. Standings change - a hostile today may have been a friend back then. 0 takes everything."
+        ),
+    )
+    ignored_ref_types = models.JSONField(
+        default=default_ignored_ref_types,
+        blank=True,
+        verbose_name=_("Ignored wallet entry types"),
+        help_text=_("Wallet journal entries of these types count neither as ISK with hostiles nor as a payment."),
+    )
+
     class Meta:
         default_permissions = ()
         verbose_name = _("Configuration")
 
     def __str__(self):
         return str(_("Configuration"))
+
+    def since(self):
+        """The start of the time frame; None takes everything."""
+        if not self.lookback_days:
+            return None
+        return timezone.now() - timedelta(days=self.lookback_days)
 
 
 class Snapshot(models.Model):

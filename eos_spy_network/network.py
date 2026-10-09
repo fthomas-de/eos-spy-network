@@ -226,16 +226,19 @@ class Connections:
 ALLIANCE_KIND = "alliance"
 
 
-def affiliate(accounts, hostiles: dict) -> dict:
+def affiliate(accounts, hostiles: dict, more_ids=()) -> dict:
     """Look up the Corporation and Alliance of every counterpart and hand them to the accounts.
 
-    ``hostiles`` maps the ID of every hostile contact to its Standing. Returns
-    the entities, which the snapshot stores once for all accounts.
+    ``hostiles`` maps the ID of every hostile contact to its Standing;
+    ``more_ids`` are looked up along, in the same ESI requests. Returns the
+    entities, which the snapshot stores once for all accounts.
     """
     from .affiliations import resolve
 
     accounts = list(accounts)
-    entities = resolve({counterpart_id for account in accounts for counterpart_id in account.counterparts})
+    entities = resolve(
+        {counterpart_id for account in accounts for counterpart_id in account.counterparts} | set(more_ids)
+    )
     for account in accounts:
         account.entities = entities
         account.hostiles = hostiles
@@ -270,11 +273,14 @@ def alliance_ids(alliance_id: int) -> set[int]:
     return {alliance_id, *corporations, *characters.values_list("character_id", flat=True)}
 
 
-def connections(mains: dict, alliance_id: int, stats: dict | None = None) -> dict:
+def connections(
+    mains: dict, alliance_id: int, stats: dict | None = None, since=None, ignored_ref_types=()
+) -> dict:
     """The accounts with connections outside the Alliance, by user ID.
 
     ``mains`` maps the user ID of every account to check to its main
-    EveCharacter. ``stats`` gets the number of journal entries read.
+    EveCharacter. ``stats`` gets the number of journal entries read. Only
+    payments from ``since`` on count, and none of ``ignored_ref_types``.
     """
     if stats is not None:
         stats["journal_entries"] = 0
@@ -298,8 +304,12 @@ def connections(mains: dict, alliance_id: int, stats: dict | None = None) -> dic
     links = {}
     counterpart_names = {}
     entries = CharacterWalletJournalEntry.objects.filter(
-        character__character__character_id__in=list(owner), ref_type__in=PAYMENT_REF_TYPES
-    ).values_list(
+        character__character__character_id__in=list(owner),
+        ref_type__in=[ref_type for ref_type in PAYMENT_REF_TYPES if ref_type not in ignored_ref_types],
+    )
+    if since is not None:
+        entries = entries.filter(date__gte=since)
+    entries = entries.values_list(
         "character__character__character_id",
         "ref_type",
         "amount",

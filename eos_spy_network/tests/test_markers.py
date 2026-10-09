@@ -17,7 +17,7 @@ from django.utils import timezone
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCorporationInfo
 
-from eos_spy_network import markers
+from eos_spy_network import markers, snapshot
 from eos_spy_network.hostiles import hostile_index
 from eos_spy_network.models import ContactSource
 
@@ -28,6 +28,7 @@ HOSTILE_ALLIANCE = 99000001
 CORP_OF_HOSTILE_ALLIANCE = 98000002
 NEUTRAL_CORP = 98000003
 HOSTILE_MEMBER = 90000001  # a character Auth knows, in the hostile Corporation
+OUTSIDER = 90000100  # a character Auth has never seen
 NOT_INSTALLED = "eos_spy_network.markers.corptools_installed"
 
 
@@ -135,6 +136,36 @@ class TestMembership(MarkerTestCase):
 
         self.assertEqual(self.kinds(), {markers.MEMBERSHIP})
 
+    def add_record(self, record_id, corporation_id, days_ago):
+        CorporationHistory.objects.create(
+            character=self.audit,
+            corporation_id=corporation_id,
+            corporation_name=eve_name(corporation_id, "corporation"),
+            record_id=record_id,
+            start_date=timezone.now() - timedelta(days=days_ago),
+        )
+
+    def test_should_ignore_a_hostile_membership_that_ended_before_the_time_frame(self):
+        configure(lookback_days=100)
+        self.add_record(1, HOSTILE_CORP, 900)
+        self.add_record(2, 2001, 200)
+
+        self.assertIsNone(self.suspect())
+
+    def test_should_mark_a_hostile_membership_that_ended_within_the_time_frame(self):
+        configure(lookback_days=300)
+        self.add_record(1, HOSTILE_CORP, 900)
+        self.add_record(2, 2001, 200)
+
+        self.assertEqual(self.kinds(), {markers.MEMBERSHIP})
+
+    def test_should_take_the_whole_history_with_a_time_frame_of_0(self):
+        configure(lookback_days=0)
+        self.add_record(1, HOSTILE_CORP, 900)
+        self.add_record(2, 2001, 800)
+
+        self.assertEqual(self.kinds(), {markers.MEMBERSHIP})
+
     def test_should_leave_a_clean_account_out(self):
         self.add_alt(5001, corporation_id=NEUTRAL_CORP, alliance_id=None)
 
@@ -220,8 +251,11 @@ class TestContacts(MarkerTestCase):
 
 
 class TestMails(MarkerTestCase):
-    def add_mail(self, id_key, mail_id, from_id, audit=None, recipients=()):
-        mail = MailMessage.objects.create(id_key=id_key, character=audit or self.audit, mail_id=mail_id, from_id=from_id)
+    def add_mail(self, id_key, mail_id, from_id, audit=None, recipients=(), days_ago=None):
+        timestamp = None if days_ago is None else timezone.now() - timedelta(days=days_ago)
+        mail = MailMessage.objects.create(
+            id_key=id_key, character=audit or self.audit, mail_id=mail_id, from_id=from_id, timestamp=timestamp
+        )
         for recipient_id in recipients:
             recipient, _ = MailRecipient.objects.get_or_create(recipient_id=recipient_id, recipient_type="character")
             mail.recipients.add(recipient)
@@ -236,6 +270,19 @@ class TestMails(MarkerTestCase):
 
     def test_should_mark_a_mail_to_a_hostile(self):
         self.add_mail(1, 1, self.main.character_id, recipients=[HOSTILE_CORP])
+
+        self.assertEqual(self.kinds(), {markers.MAILS})
+
+    def test_should_ignore_mails_before_the_time_frame(self):
+        configure(lookback_days=30)
+        self.add_mail(1, 1, HOSTILE_MEMBER, days_ago=60)
+        self.add_mail(2, 2, self.main.character_id, recipients=[HOSTILE_CORP], days_ago=60)
+
+        self.assertIsNone(self.suspect())
+
+    def test_should_keep_an_undated_mail(self):
+        configure(lookback_days=30)
+        self.add_mail(1, 1, HOSTILE_MEMBER)
 
         self.assertEqual(self.kinds(), {markers.MAILS})
 
@@ -290,6 +337,35 @@ class TestWallet(MarkerTestCase):
         self.assertEqual(marker.count, 2)
         self.assertEqual(marker.details, {"Bad Corp", f"Char {HOSTILE_MEMBER} (Bad Corp)"})
 
+    def test_should_ignore_market_transactions_by_default(self):
+        self.add_entry(1, HOSTILE_CORP, self.main.character_id, ref_type="market_transaction")
+
+        self.assertIsNone(self.suspect())
+
+    def test_should_ignore_the_configured_types_only(self):
+        configure(ignored_ref_types=["player_donation"])
+        self.add_entry(1, HOSTILE_CORP, self.main.character_id, ref_type="player_donation")
+        self.add_entry(2, HOSTILE_CORP, self.main.character_id, ref_type="market_transaction")
+
+        (row,) = self.suspect().markers[markers.WALLET].rows
+
+        self.assertEqual((row["count"], row["types"]), (1, ["market transaction"]))
+
+    def test_should_ignore_entries_before_the_time_frame(self):
+        configure(lookback_days=30)
+        self.add_entry(1, HOSTILE_CORP, self.main.character_id, days_ago=10)
+        self.add_entry(2, HOSTILE_CORP, self.main.character_id, days_ago=60)
+
+        (row,) = self.suspect().markers[markers.WALLET].rows
+
+        self.assertEqual(row["count"], 1)
+
+    def test_should_take_every_entry_with_a_time_frame_of_0(self):
+        configure(lookback_days=0)
+        self.add_entry(1, HOSTILE_CORP, self.main.character_id, days_ago=3000)
+
+        self.assertEqual(self.kinds(), {markers.WALLET})
+
     def test_should_ignore_isk_with_an_own_alt(self):
         alt = self.add_alt(5001, corporation_id=HOSTILE_CORP, alliance_id=None)
         self.add_entry(1, alt.character_id, self.main.character_id)
@@ -327,6 +403,12 @@ class TestContracts(MarkerTestCase):
             ((timezone.now() - timedelta(days=60)).date().isoformat(), timezone.now().date().isoformat()),
         )
 
+    def test_should_ignore_contracts_before_the_time_frame(self):
+        configure(lookback_days=30)
+        self.add_contract(1, self.main.character_id, 2001, HOSTILE_CORP, days_ago=60)
+
+        self.assertIsNone(self.suspect())
+
     def test_should_mark_a_contract_by_a_stranger_of_a_hostile_corporation(self):
         self.add_contract(1, 5555, HOSTILE_CORP, self.main.character_id)
 
@@ -337,3 +419,47 @@ class TestContracts(MarkerTestCase):
         self.add_contract(1, alt.character_id, HOSTILE_CORP, self.main.character_id)
 
         self.assertEqual(self.kinds(), {markers.MEMBERSHIP})
+
+
+class TestDealingAffiliation(MarkerTestCase):
+    """The snapshot names the Corporation and Alliance of each ISK counterpart."""
+
+    # borrowed, not inherited: inheriting would run TestWallet's tests twice
+    add_entry = TestWallet.add_entry
+
+    def wallet_row(self):
+        tile = snapshot.Report(snapshot.update()).tile(2001)
+        (suspect,) = tile.suspects
+        marker = suspect.markers[markers.WALLET]
+        self.assertTrue(marker.affiliated)
+        (row,) = marker.rows
+        return row
+
+    def test_should_name_the_corporation_of_a_known_member(self):
+        self.add_entry(1, HOSTILE_MEMBER, self.main.character_id)
+
+        row = self.wallet_row()
+
+        self.assertEqual(row["counterpart"], f"Char {HOSTILE_MEMBER}")
+        # the name the character's own row in Auth carries; make_character writes "Corp <ID>"
+        self.assertEqual(row["corporation"], {"name": f"Corp {HOSTILE_CORP}", "standing": "-10.0"})
+        self.assertIsNone(row["alliance"])
+
+    def test_should_look_up_a_stranger_through_esi(self):
+        make_corporation(4001, alliance_id=HOSTILE_ALLIANCE)
+        add_contact(ContactSource.ALLIANCE, ALLIANCE_ID, OUTSIDER, -3, contact_type="character")
+        self.esi_names.return_value = {OUTSIDER: ("Outsider", "character")}
+        self.esi_affiliations.return_value = {OUTSIDER: (4001, HOSTILE_ALLIANCE)}
+        self.add_entry(1, OUTSIDER, self.main.character_id)
+
+        row = self.wallet_row()
+
+        self.assertEqual(row["corporation"], {"name": "Corp 4001", "standing": None})
+        self.assertEqual(row["alliance"], {"name": f"Alliance {HOSTILE_ALLIANCE}", "standing": "-5.0"})
+
+    def test_should_give_a_corporation_counterpart_its_own_column(self):
+        self.add_entry(1, HOSTILE_CORP, self.main.character_id)
+
+        row = self.wallet_row()
+
+        self.assertEqual(row["corporation"], {"name": "Bad Corp", "standing": "-10.0"})

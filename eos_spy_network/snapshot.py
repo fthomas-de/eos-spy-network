@@ -19,9 +19,9 @@ from django.utils.translation import gettext_lazy as _
 from allianceauth.authentication.models import UserProfile
 from allianceauth.services.hooks import get_extension_logger
 
-from .affiliations import Entity
+from .affiliations import ALLIANCE, CORPORATION, Entity
 from .hostiles import hostile_entities
-from .markers import CorporationTile, Marker, Suspect, corporation_tiles
+from .markers import CONTRACTS, WALLET, CorporationTile, Marker, Suspect, corporation_tiles
 from .models import Snapshot, SpyConfiguration
 from .network import Connections, Link, Standing, affiliate, connections, hostile_only
 
@@ -111,13 +111,24 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
                 main_character__corporation_id__in=[tile.id for tile in tiles]
             ).select_related("main_character")
         }
-        found = connections(mains, config.alliance.alliance_id, stats)
+        found = connections(
+            mains, config.alliance.alliance_id, stats, config.since(), config.ignored_ref_types or ()
+        )
     step("affiliations")
     with measurement.phase(AFFILIATIONS):
         hostiles = {
             hostile.id: Standing(hostile.standing, hostile.sources) for hostile in hostile_entities(config)
         }
-        entities = affiliate(found.values(), hostiles)
+        dealing_rows = [
+            row
+            for tile in tiles
+            for suspect in tile.suspects
+            for kind in (WALLET, CONTRACTS)
+            if kind in suspect.markers
+            for row in suspect.markers[kind].rows
+        ]
+        entities = affiliate(found.values(), hostiles, {row["counterpart_id"] for row in dealing_rows})
+        _affiliate_rows(dealing_rows, entities, hostiles)
         found = hostile_only(found)
 
     by_corporation = {}
@@ -167,6 +178,34 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
         "payload_bytes": len(json.dumps(data)),
     }
     return data
+
+
+def _affiliate_rows(rows: list, entities: dict, hostiles: dict) -> None:
+    """Name the Corporation and Alliance of each ISK and contract counterpart, with the standing of a hostile one."""
+
+    def group(eve_id):
+        if not eve_id:
+            return None
+        hostile = hostiles.get(eve_id)
+        entity = entities.get(eve_id)
+        return {
+            "name": entity.name if entity else str(eve_id),
+            "standing": str(hostile.standing) if hostile else None,
+        }
+
+    for row in rows:
+        entity = entities.get(row["counterpart_id"])
+        category = entity.category if entity else ""
+        if category == CORPORATION:
+            corporation_id, alliance_id = row["counterpart_id"], entity.alliance_id
+        elif category == ALLIANCE:
+            corporation_id, alliance_id = None, row["counterpart_id"]
+        else:
+            corporation_id = entity.corporation_id if entity else None
+            alliance_id = entity.alliance_id if entity else None
+        row["category"] = category
+        row["corporation"] = group(corporation_id)
+        row["alliance"] = group(alliance_id)
 
 
 def _suspect_data(suspect: Suspect) -> dict:

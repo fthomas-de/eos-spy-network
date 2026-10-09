@@ -43,12 +43,12 @@ class NetworkTestCase(SpyTestCase):
         }
         self.entry_id = 0
 
-    def pay(self, character, counterpart_id, ref_type="player_donation", amount=100):
+    def pay(self, character, counterpart_id, ref_type="player_donation", amount=100, days_ago=0):
         self.entry_id += 1
         CharacterWalletJournalEntry.objects.create(
             character=self.audits[character.character_id],
             entry_id=self.entry_id,
-            date=timezone.now(),
+            date=timezone.now() - timedelta(days=days_ago),
             description="",
             ref_type=ref_type,
             first_party_id=character.character_id,
@@ -112,6 +112,34 @@ class TestSharedCounterpart(NetworkTestCase):
         self.pay(self.alt, NPC_CORPORATION)
 
         self.assertIsNone(self.account())
+
+
+class TestSettingsFilters(NetworkTestCase):
+    """Time frame and ignored types reach the network through the snapshot."""
+
+    def setUp(self):
+        super().setUp()
+        self.make_hostile(OUTSIDER)
+
+    def test_should_ignore_payments_before_the_time_frame(self):
+        configure(lookback_days=30)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER, days_ago=60)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+    def test_should_take_every_payment_with_a_time_frame_of_0(self):
+        configure(lookback_days=0)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER, days_ago=3000)
+
+        self.assertEqual(len(self.stored_accounts()), 1)
+
+    def test_should_ignore_the_configured_types(self):
+        configure(ignored_ref_types=["player_trading"])
+        self.pay(self.main, OUTSIDER, ref_type="player_trading")
+
+        self.assertEqual(self.stored_accounts(), [])
 
 
 class TestPlayerTrading(NetworkTestCase):

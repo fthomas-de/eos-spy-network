@@ -263,6 +263,7 @@ class TestEvidence(SuspectPageTestCase):
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
         self.assertContains(response, self.COUNTERPART)
+        self.assertContains(response, "<th>Alliance</th>", html=True)
         self.assertContains(response, "player donation")
         self.assertContains(response, timezone.now().date().isoformat())
 
@@ -405,6 +406,8 @@ class TestSettingsPage(SpyTestCase):
                 "alliance": make_alliance().pk,
                 "hostile_below": "-5",
                 "corp_changes_per_year": "6",
+                "lookback_days": "90",
+                "ignored_ref_types": ["market_transaction", "player_trading"],
                 "source": ["corporation:2002"],
             },
         )
@@ -416,6 +419,46 @@ class TestSettingsPage(SpyTestCase):
         config = SpyConfiguration.get_solo()
         self.assertEqual(config.hostile_below, Decimal("-5"))
         self.assertEqual(config.corp_changes_per_year, 6)
+        self.assertEqual(config.lookback_days, 90)
+        self.assertEqual(config.ignored_ref_types, ["market_transaction", "player_trading"])
+
+    def test_should_offer_the_types_of_the_wallet_journal(self):
+        from corptools.models import CharacterAudit, CharacterWalletJournalEntry
+
+        configure()
+        CharacterWalletJournalEntry.objects.create(
+            character=CharacterAudit.objects.create(character=make_character(5001)),
+            entry_id=1,
+            date=timezone.now(),
+            description="",
+            ref_type="bounty_prizes",
+            amount=1,
+            balance=1,
+        )
+
+        response = self.client.get(reverse("eos_spy_network:settings"))
+
+        self.assertContains(response, '<option value="bounty_prizes">bounty prizes</option>', html=True)
+        self.assertContains(
+            response, '<option value="market_transaction" selected>market transaction</option>', html=True
+        )
+
+    def test_should_reject_an_unknown_type(self):
+        configure()
+
+        response = self.client.post(
+            reverse("eos_spy_network:settings"),
+            {
+                "alliance": make_alliance().pk,
+                "hostile_below": "0",
+                "corp_changes_per_year": "4",
+                "lookback_days": "365",
+                "ignored_ref_types": ["no_such_type"],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SpyConfiguration.get_solo().ignored_ref_types, ["market_transaction"])
 
     def test_should_reject_a_threshold_out_of_range(self):
         configure()

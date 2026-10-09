@@ -6,6 +6,10 @@
             <tr>
                 <th>{% translate "Character" context "EVE jargon" %}</th>
                 <th>{% translate "Counterpart" %}</th>
+                {% if marker.affiliated %}
+                    <th>{% translate "Corporation" context "EVE jargon" %}</th>
+                    <th>{% translate "Alliance" context "EVE jargon" %}</th>
+                {% endif %}
                 <th>{% translate "Count" %}</th>
                 {% if marker.kind == "wallet" %}<th>ISK</th>{% endif %}
                 <th>{% translate "Period" %}</th>
@@ -17,6 +21,20 @@
                 <tr>
                     <td class="text-break">{{ row.character }}</td>
                     <td class="text-break text-danger">{{ row.counterpart }}</td>
+                    {% if marker.affiliated %}
+                        {% if row.category == "alliance" %}
+                            {# an Alliance as counterpart has no Corporation above it #}
+                            <td></td>
+                        {% else %}
+                            {% include "eos_spy_network/partials/group-cell.html" with group=row.corporation %}
+                        {% endif %}
+                        {% if row.alliance %}
+                            {% include "eos_spy_network/partials/group-cell.html" with group=row.alliance %}
+                        {% else %}
+                            {# no Alliance is a fact, not a gap: the Corporation is known #}
+                            <td class="text-body-secondary">{% if not row.corporation %}{% translate "unknown" %}{% endif %}</td>
+                        {% endif %}
+                    {% endif %}
                     <td>{{ row.count }}</td>
                     {% if marker.kind == "wallet" %}<td class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>{% endif %}
                     <td class="text-nowrap">{% include "eos_spy_network/partials/period.html" with first=row.first last=row.last %}</td>

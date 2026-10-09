@@ -25,26 +25,31 @@ every one with a standing below a configurable value.
   account and per marker what was found. The counterparts of mails, ISK and
   contracts are evidence and only shown with `view_evidence`; without it
   the marker and its count are. ISK and contracts show a row per own
-  character and hostile: how many entries or contracts, the ISK moved (for
-  the wallet), the period from the first to the last one and their kinds.
+  character and hostile: the hostile's Corporation and Alliance (red with
+  the standing when hostile themselves), how many entries or contracts, the
+  ISK moved (for the wallet), the period from the first to the last one and
+  their kinds.
   The Corporation changes name the Corporations joined, with the day, in a
   tooltip per character
 - **Markers** per account, over the main and all its alts:
   - *Hostile membership*: a character is in a hostile Corporation or
-    Alliance, or was in a hostile Corporation (`CorporationHistory`)
+    Alliance, or was in a hostile Corporation within the time frame
+    (`CorporationHistory`)
   - *Frequent Corporation changes*: a character joined as many Corporations
     within the last 365 days as configured (default 4)
   - *Friendly to hostiles*: a character's own contacts hold a hostile with a
     positive standing, or on the watch list (`CharacterContact`)
   - *Mails with hostiles*: mails from or to hostiles, counted once per mail
     (`MailMessage`; the body is never read)
-  - *ISK with hostiles*: wallet journal entries with a hostile as a party
-    (`CharacterWalletJournalEntry`)
+  - *ISK with hostiles*: wallet journal entries with a hostile as a party,
+    except the ignored entry types (`CharacterWalletJournalEntry`)
   - *Contracts with hostiles*: a hostile issued, was assigned or accepted the
     contract, or its issuer is in a hostile Corporation (`Contract`)
 
   Mails, ISK and contracts between characters of the same account never
-  count.
+  count. Mails, ISK and contracts count only within the time frame (a mail
+  without a date always counts); the contacts carry no date in corptools,
+  so today's are checked whatever the time frame.
 - **Network**: a tile per Corporation with the mains that have ISK
   connections with hostile partners outside the Alliance (a switch hides the
   Corporations without any), and per Corporation the list of such mains; a
@@ -71,7 +76,8 @@ every one with a standing below a configurable value.
 
   "Outside" is everything Auth does not know as part of the Alliance, so a
   character Auth has never seen counts as outside. NPCs (agents, NPC
-  Corporations, factions) never count. The page needs `view_suspects` and
+  Corporations, factions) never count. Only payments within the time frame
+  count, and none of the ignored entry types. The page needs `view_suspects` and
   `view_evidence`: the connections are wallet counterparts
 - **Recalculate**: the markers and connections are calculated by a task and
   stored; the pages read the stored result and show when it was calculated.
@@ -89,7 +95,12 @@ every one with a standing below a configurable value.
   also makes its members hostile - as far as Auth knows them (see below)
 - **Settings page**: the Alliance, chosen from a searchable dropdown; the
   standing below which a contact is hostile (default: below 0); the number
-  of Corporation changes per year that sets a marker; a searchable table of
+  of Corporation changes per year that sets a marker; the time frame in days
+  (default 365, 0 takes everything): the hostile list is today's, and the
+  further back a payment, mail, contract or former Corporation, the likelier
+  the standing was different then; the ignored wallet entry types, chosen
+  from those in corptools' wallet journals (default `market_transaction`:
+  nobody picks the other side of a market order); a searchable table of
   the Alliance and its Corporations to tick the contact sources, each with
   whether aa-contacts has a token for it, the time of the contacts
   aa-contacts holds, the number of contacts and of hostiles. A ticked
@@ -100,7 +111,7 @@ every one with a standing below a configurable value.
 
 ## What the markers can see
 
-The markers make no ESI call. Who belongs to a hostile Corporation or Alliance
+The markers decide without ESI. Who belongs to a hostile Corporation or Alliance
 is known to them only for the characters and Corporations Auth has in its own
 tables; corptools stores the names of mail, wallet and contract partners
 without their Corporation. A mail, an ISK transfer or a contract with a
@@ -120,7 +131,9 @@ the task looks up its Corporation and Alliance - first in Auth's and
 corptools' tables, and only for what neither knows through ESI's public
 endpoints (names, character affiliation, Corporation), without a token. A
 failed request leaves that counterpart without Corporation; the
-calculation goes on.
+calculation goes on. The rows of *ISK with hostiles* and *Contracts with
+hostiles* get their counterpart's Corporation and Alliance from the same
+lookup; whether a counterpart is hostile is still decided without it.
 
 ## Where the contacts come from
 

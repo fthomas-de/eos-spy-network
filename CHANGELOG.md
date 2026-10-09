@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Settings: a time frame in days (default 365, 0 takes everything). Wallet
+  entries, contracts, mails, the network's payments and former Corporations
+  count only within it. The hostile list is today's: a payment to a
+  Corporation that was a friend three years ago marked the account as if it
+  had been hostile then. A mail without a date still counts; contacts have
+  no date in corptools and are checked as they are today
+- Settings: wallet entry types to ignore, chosen from the types in
+  corptools' wallet journals (default `market_transaction`). Buying from a
+  hostile's sell order is anonymous and made *ISK with hostiles* fire for
+  ordinary market trading; the ignored types drop out of the network's
+  payments as well
+- Corporation page: *ISK with hostiles* and *Contracts with hostiles* show
+  the counterpart's Corporation and Alliance, red with the standing when
+  hostile. Only the name was shown, so a character hostile through its
+  Alliance gave no hint which one. The task looks them up like the
+  network's partners (Auth, corptools, then ESI's public endpoints); a
+  snapshot of 0.0.5 or older shows the columns after the next run
+
+### Changed
+
+- *Hostile membership* from the Corporation history counts only a
+  membership that lasted into the time frame
+
 ## [0.0.5] - 2026-10-09
 
 ### Added

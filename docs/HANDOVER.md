@@ -8,6 +8,20 @@ Last updated 2026-10-09.
 
 ## State
 
+- Unreleased (2026-10-09, not committed): settings `lookback_days` (time
+  frame, `SpyConfiguration.since()`, 0 = everything) and
+  `ignored_ref_types` (JSON list, default `market_transaction`, choices
+  from the distinct `ref_type`s of corptools' journal, Tom Select multi),
+  migration 0004 applied to `aa_dev`. The time frame filters wallet,
+  contracts, mails (undated mails stay), network payments and the
+  Corporation history (a membership counts when it ended after `since`;
+  its end is the next record's start); contacts have no date. The ignored
+  types apply to the ISK marker and the network. ISK/contract marker rows
+  carry `counterpart_id`; `snapshot.build` resolves them together with the
+  network partners (`affiliate(..., more_ids)`) and `_affiliate_rows` adds
+  `category`, `corporation`, `alliance` (name + standing) for
+  `partials/dealings.html`. Celery worker restarted 17:55 in a background
+  shell of that session.
 - Version: `0.0.5`, 2026-10-09 (see `CHANGELOG.md`): network keeps only
   hostile partners (`network.hostile_only`, after `affiliate` in
   `snapshot.build`); the graph draws Corporation/Alliance only up to the
@@ -25,12 +39,13 @@ Last updated 2026-10-09.
 - A snapshot of 0.0.4 or older has no periods and marker rows; `Report`
   reads it anyway, the next recalculation fills them.
 - What the app does today: a settings page (Alliance, standing threshold,
-  Corporation changes per year, contact sources); Markers: the Corporations
+  Corporation changes per year, time frame, ignored wallet entry types,
+  contact sources); Markers: the Corporations
   as tiles, per Corporation the mains with markers (hostile membership now
   and in the history, frequent Corporation changes, friendly/watched hostile
   contacts, mails, ISK, contracts - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 126 without translation tests plus 3 translation tests, all green
+- Tests: 144 without translation tests plus 3 translation tests, all green
   in the dev instance; every new test checked against sabotaged code.
   `tests.base.SpyTestCase` patches `views.update_snapshot` and the three
   ESI calls of `affiliations.py` (`self.esi_names`, `self.esi_affiliations`,
