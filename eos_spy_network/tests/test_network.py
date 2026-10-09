@@ -1,15 +1,18 @@
+import re
 from datetime import timedelta
 
 from corptools.models import CharacterAudit, CharacterWalletJournalEntry, EveName
 
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from allianceauth.authentication.models import CharacterOwnership
 
-from eos_spy_network import snapshot
+from eos_spy_network import markers, snapshot
 from eos_spy_network.network import connections
 
-from eos_spy_network.models import ContactSource
+from eos_spy_network.models import ContactSource, SpyConfiguration
 
 from .base import (
     ALLIANCE_ID,
@@ -336,3 +339,56 @@ class TestHostileChain(NetworkTestCase):
         self.esi_affiliations.return_value = {OUTSIDER: (4001, None)}
 
         self.assertEqual(self.stored_accounts(), [])
+
+
+def _from(table):
+    """Matches a query that reads ``table`` first, in MySQL's and sqlite's quoting."""
+    return re.compile(rf'FROM [`"]?{table}[`"]?\s', re.IGNORECASE)
+
+
+CORPTOOLS_DATA = re.compile(
+    r'FROM [`"]?corptools_(characterwalletjournalentry|mailmessage|mailmessage_recipients|contract|'
+    r'charactercontact|corporationhistory)[`"]?\s',
+    re.IGNORECASE,
+)
+
+
+class TestQueries(NetworkTestCase):
+    """The big corptools tables are read by audit ID, and what both calculations need is read once."""
+
+    def setUp(self):
+        super().setUp()
+        self.make_hostile(OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+
+    def test_should_read_the_network_journal_without_characters_or_names(self):
+        with CaptureQueriesContext(connection) as queries:
+            self.account()
+
+        journal = [query["sql"] for query in queries if CORPTOOLS_DATA.search(query["sql"])]
+        self.assertEqual(len(journal), 1)
+        self.assertNotIn("eveonline_evecharacter", journal[0])
+        self.assertNotIn("corptools_evename", journal[0])
+
+    def test_should_read_the_marker_tables_without_eve_characters(self):
+        with CaptureQueriesContext(connection) as queries:
+            (tile,) = markers.corporation_tiles(corporation_id=2001)
+
+        self.assertEqual(tile.suspects[0].markers[markers.WALLET].count, 2)
+        corptools = [query["sql"] for query in queries if CORPTOOLS_DATA.search(query["sql"])]
+        # history, contacts, two for mails, wallet, contracts
+        self.assertEqual(len(corptools), 6)
+        for sql in corptools:
+            self.assertNotIn("eveonline_evecharacter", sql)
+
+    def test_should_read_hostiles_mains_and_characters_once_per_run(self):
+        with CaptureQueriesContext(connection) as queries:
+            snapshot.build(SpyConfiguration.get_solo())
+
+        def count(table):
+            return sum(1 for query in queries if _from(table).search(query["sql"]))
+
+        self.assertEqual(count("aa_contacts_alliancecontact"), 1)
+        self.assertEqual(count("authentication_userprofile"), 1)
+        self.assertEqual(count("authentication_characterownership"), 1)

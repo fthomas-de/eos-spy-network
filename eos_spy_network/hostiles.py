@@ -94,10 +94,11 @@ class HostileIndex:
         return f"{name} ({self.names.get(reason) or reason})"
 
 
-def hostile_index(config: SpyConfiguration | None = None) -> HostileIndex:
+def hostile_index(config: SpyConfiguration | None = None, hostiles: list[Hostile] | None = None) -> HostileIndex:
+    """``hostiles`` is ``hostile_entities()`` when the caller has read it already."""
     config = config or SpyConfiguration.get_solo()
     index = HostileIndex()
-    for hostile in hostile_entities(config):
+    for hostile in hostile_entities(config) if hostiles is None else hostiles:
         index.owner[hostile.id] = hostile.id
         index.names[hostile.id] = hostile.name
     groups = list(index.owner)

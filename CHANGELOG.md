@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Recalculation: corptools' wallet journal, mails, contracts, contacts and
+  Corporation history are read by the CharacterAudit IDs, looked up once.
+  Filtering on the EVE ID joined the audit and EveCharacter in every one of
+  these queries and left MySQL to guess the join order; now each query
+  ranges over corptools' (character, date) index
+- Network: the journal is read without the names of both parties. Two joins
+  on corptools' names per payment, although most payments are inside the
+  Alliance and drop out; the names of the partners that stay are looked up
+  afterwards
+- Recalculation: the hostile list, the mains and their characters are read
+  once per run; the markers and the network each read them again
+
 ## [0.0.7] - 2026-10-09
 
 ### Changed

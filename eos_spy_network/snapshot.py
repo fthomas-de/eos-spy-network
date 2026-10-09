@@ -16,12 +16,11 @@ from django.db import connection
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from allianceauth.authentication.models import UserProfile
 from allianceauth.services.hooks import get_extension_logger
 
 from .affiliations import ALLIANCE, CORPORATION, Entity
 from .hostiles import hostile_entities
-from .markers import CONTRACTS, WALLET, CorporationTile, Marker, Suspect, corporation_tiles
+from .markers import CONTRACTS, WALLET, CorporationTile, Marker, Suspect, corporation_tiles, roster
 from .models import Snapshot, SpyConfiguration
 from .network import Connections, Link, Standing, affiliate, connections, hostile_only
 
@@ -102,23 +101,24 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
     measurement = Measurement()
     stats = {}
     with measurement.phase(MARKERS):
-        tiles = corporation_tiles(config, step=step)
+        # both read once here, for the markers and the network alike
+        hostile_list = hostile_entities(config)
+        members = roster(config)
+        tiles = corporation_tiles(config, step=step, hostiles=hostile_list, members=members)
     step("connections")
+    mains = members.mains
     with measurement.phase(NETWORK):
-        mains = {
-            profile.user_id: profile.main_character
-            for profile in UserProfile.objects.filter(
-                main_character__corporation_id__in=[tile.id for tile in tiles]
-            ).select_related("main_character")
-        }
         found = connections(
-            mains, config.alliance.alliance_id, stats, config.since(), config.ignored_ref_types or ()
+            mains,
+            config.alliance.alliance_id,
+            stats,
+            config.since(),
+            config.ignored_ref_types or (),
+            members.characters,
         )
     step("affiliations")
     with measurement.phase(AFFILIATIONS):
-        hostiles = {
-            hostile.id: Standing(hostile.standing, hostile.sources) for hostile in hostile_entities(config)
-        }
+        hostiles = {hostile.id: Standing(hostile.standing, hostile.sources) for hostile in hostile_list}
         dealing_rows = [
             row
             for tile in tiles

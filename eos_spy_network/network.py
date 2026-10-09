@@ -32,6 +32,8 @@ from django.db.models import Q
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
+from .markers import character_audits
+
 TRADING = "player_trading"
 # ISK moved between two parties on purpose: donations, trades, contracts
 PAYMENT_REF_TYPES = (
@@ -274,13 +276,15 @@ def alliance_ids(alliance_id: int) -> set[int]:
 
 
 def connections(
-    mains: dict, alliance_id: int, stats: dict | None = None, since=None, ignored_ref_types=()
+    mains: dict, alliance_id: int, stats: dict | None = None, since=None, ignored_ref_types=(), characters=None
 ) -> dict:
     """The accounts with connections outside the Alliance, by user ID.
 
     ``mains`` maps the user ID of every account to check to its main
     EveCharacter. ``stats`` gets the number of journal entries read. Only
     payments from ``since`` on count, and none of ``ignored_ref_types``.
+    ``characters`` is ``markers.Roster.characters`` when the caller has read
+    the accounts' characters already.
     """
     if stats is not None:
         stats["journal_entries"] = 0
@@ -289,41 +293,37 @@ def connections(
         return {}
     from corptools.models import CharacterWalletJournalEntry
 
+    if characters is None:
+        characters = CharacterOwnership.objects.filter(user_id__in=mains).values_list(
+            "user_id", "character__character_id", "character__character_name"
+        )
     owner = {}
     names = {}
-    for user_id, character_id, name in CharacterOwnership.objects.filter(user_id__in=mains).values_list(
-        "user_id", "character__character_id", "character__character_name"
-    ):
+    for user_id, character_id, name, *_groups in characters:
         owner[character_id] = user_id
         names[character_id] = name
     if stats is not None:
         stats["characters"] = len(owner)
     inside = alliance_ids(alliance_id)
+    audits = character_audits(list(owner))
 
     # (user, own character, counterpart) -> link
     links = {}
-    counterpart_names = {}
     entries = CharacterWalletJournalEntry.objects.filter(
-        character__character__character_id__in=list(owner),
+        character_id__in=list(audits),
         ref_type__in=[ref_type for ref_type in PAYMENT_REF_TYPES if ref_type not in ignored_ref_types],
     )
     if since is not None:
         entries = entries.filter(date__gte=since)
-    entries = entries.values_list(
-        "character__character__character_id",
-        "ref_type",
-        "amount",
-        "date",
-        "first_party_id",
-        "first_party_name__name",
-        "second_party_id",
-        "second_party_name__name",
-    )
-    for character_id, ref_type, amount, date, first_id, first_name, second_id, second_name in entries.iterator():
+    # no names here: most entries are payments inside the Alliance and drop out; _fill_names
+    # looks up only the counterparts that stay
+    entries = entries.values_list("character_id", "ref_type", "amount", "date", "first_party_id", "second_party_id")
+    for audit_id, ref_type, amount, date, first_id, second_id in entries.iterator():
         if stats is not None:
             stats["journal_entries"] += 1
+        character_id = audits[audit_id]
         user_id = owner[character_id]
-        for party_id, party_name in ((first_id, first_name), (second_id, second_name)):
+        for party_id in (first_id, second_id):
             # an own alt, a member of the Alliance or an NPC is no connection outside
             if not party_id or party_id in inside or party_id in NPC_IDS or owner.get(party_id) == user_id:
                 continue
@@ -331,8 +331,6 @@ def connections(
             if link is None:
                 link = links[(user_id, character_id, party_id)] = Link(character_id, party_id)
             link.add(date.date().isoformat(), ref_type == TRADING, amount)
-            if party_name:
-                counterpart_names[party_id] = party_name
 
     by_user = defaultdict(list)
     for (user_id, _character_id, _counterpart_id), link in links.items():
@@ -353,7 +351,7 @@ def connections(
         account.characters = {
             character_id: name for character_id, name in names.items() if owner[character_id] == user_id
         }
-        account.counterparts = {counterpart_id: counterpart_names.get(counterpart_id) for counterpart_id in keep}
+        account.counterparts = dict.fromkeys(keep)
         result[user_id] = account
 
     _fill_names([account.counterparts for account in result.values()])
@@ -361,7 +359,7 @@ def connections(
 
 
 def _fill_names(tables: list[dict]) -> None:
-    """Names the journal left empty, from Auth's tables and corptools' names; else the ID."""
+    """The counterparts' names, from Auth's tables and corptools' names; else the ID."""
     missing = {eve_id for table in tables for eve_id, name in table.items() if not name}
     if not missing:
         return

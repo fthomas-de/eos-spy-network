@@ -180,37 +180,88 @@ def _no_step(_name: str) -> None:
     pass
 
 
-def corporation_tiles(
-    config: SpyConfiguration | None = None, corporation_id: int | None = None, step=_no_step
-) -> list:
-    """The Corporations of the configured Alliance, each with its marked accounts; with
-    ``corporation_id`` only that one. ``step`` is told the name of each check as it starts."""
-    config = config or SpyConfiguration.get_solo()
-    if not config.alliance:
-        return []
+@dataclass
+class Roster:
+    """The Corporations of the Alliance and their accounts; read once per run, the network uses it as well."""
+
+    corporations: list  # EveCorporationInfo, by name
+    mains: dict  # user ID -> main EveCharacter
+    # (user ID, EVE ID, name, Corporation ID, Alliance ID) of every character of these accounts
+    characters: list
+
+
+def roster(config: SpyConfiguration, corporation_id: int | None = None) -> Roster:
     corporations = EveCorporationInfo.objects.filter(alliance=config.alliance).order_by("corporation_name")
     if corporation_id is not None:
         corporations = corporations.filter(corporation_id=corporation_id)
+    corporations = list(corporations)
+    mains = {
+        profile.user_id: profile.main_character
+        for profile in UserProfile.objects.filter(
+            main_character__corporation_id__in=[corporation.corporation_id for corporation in corporations]
+        ).select_related("main_character")
+    }
+    characters = list(
+        CharacterOwnership.objects.filter(user_id__in=mains).values_list(
+            "user_id",
+            "character__character_id",
+            "character__character_name",
+            "character__corporation_id",
+            "character__alliance_id",
+        )
+    )
+    return Roster(corporations, mains, characters)
+
+
+def character_audits(character_ids) -> dict[int, int]:
+    """corptools' CharacterAudit ID -> EVE ID of the character.
+
+    corptools' tables point at the audit. Filtering on it directly lets a
+    query range over the (character, date) indexes; filtering on the EVE ID
+    joins the audit and EveCharacter for every row and leaves MySQL to guess
+    the join order.
+    """
+    from corptools.models import CharacterAudit
+
+    return dict(
+        CharacterAudit.objects.filter(character__character_id__in=character_ids).values_list(
+            "pk", "character__character_id"
+        )
+    )
+
+
+def corporation_tiles(
+    config: SpyConfiguration | None = None,
+    corporation_id: int | None = None,
+    step=_no_step,
+    hostiles: list | None = None,
+    members: Roster | None = None,
+) -> list:
+    """The Corporations of the configured Alliance, each with its marked accounts; with
+    ``corporation_id`` only that one. ``step`` is told the name of each check as it starts.
+    ``hostiles`` (``hostile_entities``) and ``members`` (``roster``) save reading them twice."""
+    config = config or SpyConfiguration.get_solo()
+    if not config.alliance:
+        return []
+    members = members or roster(config, corporation_id)
     tiles = {
         corporation.corporation_id: CorporationTile(
             corporation.corporation_id, corporation.corporation_name, corporation.corporation_ticker
         )
-        for corporation in corporations
+        for corporation in members.corporations
     }
     if not tiles:
         return []
 
     accounts = {}
-    for profile in UserProfile.objects.filter(main_character__corporation_id__in=tiles).select_related(
-        "main_character"
-    ):
-        accounts[profile.user_id] = Suspect(profile.user_id, profile.main_character, 0)
-        tiles[profile.main_character.corporation_id].mains += 1
+    for user_id, main in members.mains.items():
+        accounts[user_id] = Suspect(user_id, main, 0)
+        tiles[main.corporation_id].mains += 1
 
     step("hostiles")
-    index = hostile_index(config)
+    index = hostile_index(config, hostiles)
     if accounts and index:
-        _check(accounts, index, config, step)
+        _check(accounts, index, config, members.characters, step)
 
     for suspect in accounts.values():
         if suspect.markers:
@@ -220,20 +271,12 @@ def corporation_tiles(
     return list(tiles.values())
 
 
-def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, step=_no_step) -> None:
+def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, characters: list, step=_no_step) -> None:
     step("membership")
     # EVE ID of every character -> its account; a character of the own account is never a counterpart
     owner = {}
     names = {}
-    for user_id, character_id, name, corporation_id, alliance_id in CharacterOwnership.objects.filter(
-        user_id__in=accounts
-    ).values_list(
-        "user_id",
-        "character__character_id",
-        "character__character_name",
-        "character__corporation_id",
-        "character__alliance_id",
-    ):
+    for user_id, character_id, name, corporation_id, alliance_id in characters:
         owner[character_id] = user_id
         names[character_id] = name
         accounts[user_id].character_count += 1
@@ -252,34 +295,34 @@ def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, step=_
     def counterparts(user_id, *party_ids):
         return {party_id for party_id in party_ids if party_id in index and party_id not in own[user_id]}
 
-    characters = list(owner)
+    audits = character_audits(list(owner))
     hostile_ids = index.ids
     # the hostile list is today's: the further back, the likelier a hostile was a friend then
     since = config.since()
     step("history")
-    _check_history(accounts, index, config, owner, names, characters, since)
+    _check_history(accounts, index, config, owner, names, audits, since)
     step("contacts")
     # contacts carry no date in corptools: today's are checked whatever the time frame
-    _check_contacts(accounts, index, owner, names, characters, hostile_ids)
+    _check_contacts(accounts, index, owner, names, audits, hostile_ids)
     step("mails")
-    _check_mails(accounts, index, owner, characters, hostile_ids, counterparts, since)
+    _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, since)
     step("wallet")
     _check_wallet(
-        accounts, index, owner, names, characters, hostile_ids, counterparts, since, config.ignored_ref_types or ()
+        accounts, index, owner, names, audits, hostile_ids, counterparts, since, config.ignored_ref_types or ()
     )
     step("contracts")
-    _check_contracts(accounts, index, owner, names, characters, hostile_ids, counterparts, since)
+    _check_contracts(accounts, index, owner, names, audits, hostile_ids, counterparts, since)
 
 
-def _check_history(accounts, index, config, owner, names, characters, since=None):
+def _check_history(accounts, index, config, owner, names, audits, since=None):
     from corptools.models import CorporationHistory
 
     year_ago = timezone.now() - timedelta(days=365)
     records = defaultdict(list)  # character -> [(start date, Corporation ID, Corporation name)]
-    for character_id, corporation_id, corporation_name, start_date in CorporationHistory.objects.filter(
-        character__character__character_id__in=characters
-    ).values_list("character__character__character_id", "corporation_id", "corporation_name__name", "start_date"):
-        records[character_id].append((start_date, corporation_id, corporation_name or str(corporation_id)))
+    for audit_id, corporation_id, corporation_name, start_date in CorporationHistory.objects.filter(
+        character_id__in=list(audits)
+    ).values_list("character_id", "corporation_id", "corporation_name__name", "start_date"):
+        records[audits[audit_id]].append((start_date, corporation_id, corporation_name or str(corporation_id)))
 
     joined = defaultdict(list)  # character -> [(start date, Corporation name)]
     for character_id, history in records.items():
@@ -307,15 +350,16 @@ def _check_history(accounts, index, config, owner, names, characters, since=None
             )
 
 
-def _check_contacts(accounts, index, owner, names, characters, hostile_ids):
+def _check_contacts(accounts, index, owner, names, audits, hostile_ids):
     from corptools.models import CharacterContact
 
-    for character_id, contact_id, standing in CharacterContact.objects.filter(
+    for audit_id, contact_id, standing in CharacterContact.objects.filter(
         # PvP pilots watch their enemies: a watched hostile held negative is no friendship
         Q(standing__gt=0) | Q(watched=True, standing__gte=0),
-        character__character__character_id__in=characters,
+        character_id__in=list(audits),
         contact_id__in=hostile_ids,
-    ).values_list("character__character__character_id", "contact_id", "standing"):
+    ).values_list("character_id", "contact_id", "standing"):
+        character_id = audits[audit_id]
         accounts[owner[character_id]].mark(
             # normalize: 5, not the column's 5.00
             CONTACTS,
@@ -323,12 +367,12 @@ def _check_contacts(accounts, index, owner, names, characters, hostile_ids):
         )
 
 
-def _check_mails(accounts, index, owner, characters, hostile_ids, counterparts, since=None):
+def _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, since=None):
     from corptools.models import MailMessage
 
-    mails = MailMessage.objects.filter(character__character__character_id__in=characters)
+    mails = MailMessage.objects.filter(character_id__in=list(audits))
     recipients = MailMessage.recipients.through.objects.filter(
-        mailmessage__character__character__character_id__in=characters, mailrecipient_id__in=hostile_ids
+        mailmessage__character_id__in=list(audits), mailrecipient_id__in=hostile_ids
     )
     if since is not None:
         # corptools allows a mail without a timestamp: undated, it stays in rather than vanishing unseen
@@ -338,35 +382,36 @@ def _check_mails(accounts, index, owner, characters, hostile_ids, counterparts, 
         )
 
     found = defaultdict(set)  # (account, mail ID) -> hostile counterparts
-    for character_id, mail_id, from_id in mails.filter(from_id__in=hostile_ids).values_list(
-        "character__character__character_id", "mail_id", "from_id"
+    for audit_id, mail_id, from_id in mails.filter(from_id__in=hostile_ids).values_list(
+        "character_id", "mail_id", "from_id"
     ):
-        user_id = owner[character_id]
+        user_id = owner[audits[audit_id]]
         found[(user_id, mail_id)] |= counterparts(user_id, from_id)
-    for character_id, mail_id, recipient_id in recipients.values_list("mailmessage__character__character__character_id", "mailmessage__mail_id", "mailrecipient_id"):
-        user_id = owner[character_id]
+    for audit_id, mail_id, recipient_id in recipients.values_list(
+        "mailmessage__character_id", "mailmessage__mail_id", "mailrecipient_id"
+    ):
+        user_id = owner[audits[audit_id]]
         found[(user_id, mail_id)] |= counterparts(user_id, recipient_id)
     # a mail in the boxes of two own characters counts once
     _mark_found(accounts, index, found, MAILS)
 
 
-def _check_wallet(accounts, index, owner, names, characters, hostile_ids, counterparts, since=None, ignored=()):
+def _check_wallet(accounts, index, owner, names, audits, hostile_ids, counterparts, since=None, ignored=()):
     from corptools.models import CharacterWalletJournalEntry
 
     entries = CharacterWalletJournalEntry.objects.filter(
         Q(first_party_id__in=hostile_ids) | Q(second_party_id__in=hostile_ids),
-        character__character__character_id__in=characters,
+        character_id__in=list(audits),
     ).exclude(ref_type__in=ignored)
     if since is not None:
         entries = entries.filter(date__gte=since)
 
     found = defaultdict(set)
     dealings = defaultdict(Dealings)  # (account, own character, hostile) -> Dealings
-    for pk, character_id, first_party_id, second_party_id, date, ref_type, amount in (
-        entries.values_list(
-            "pk", "character__character__character_id", "first_party_id", "second_party_id", "date", "ref_type", "amount"
-        )
+    for pk, audit_id, first_party_id, second_party_id, date, ref_type, amount in entries.values_list(
+        "pk", "character_id", "first_party_id", "second_party_id", "date", "ref_type", "amount"
     ):
+        character_id = audits[audit_id]
         user_id = owner[character_id]
         parties = counterparts(user_id, first_party_id, second_party_id)
         found[(user_id, pk)] |= parties
@@ -376,17 +421,17 @@ def _check_wallet(accounts, index, owner, names, characters, hostile_ids, counte
     _add_rows(accounts, index, names, dealings, WALLET)
 
 
-def _check_contracts(accounts, index, owner, names, characters, hostile_ids, counterparts, since=None):
+def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counterparts, since=None):
     from corptools.models import Contract
 
-    contracts = Contract.objects.filter(character__character__character_id__in=characters)
+    contracts = Contract.objects.filter(character_id__in=list(audits))
     if since is not None:
         contracts = contracts.filter(date_issued__gte=since)
 
     found = defaultdict(set)
     dealings = defaultdict(Dealings)
     for (
-        character_id,
+        audit_id,
         contract_id,
         issuer_id,
         issuer_corporation_id,
@@ -400,7 +445,7 @@ def _check_contracts(accounts, index, owner, names, characters, hostile_ids, cou
         | Q(assignee_id__in=hostile_ids)
         | Q(acceptor_id__in=hostile_ids),
     ).values_list(
-        "character__character__character_id",
+        "character_id",
         "contract_id",
         "issuer_id",
         "issuer_corporation_id",
@@ -409,6 +454,7 @@ def _check_contracts(accounts, index, owner, names, characters, hostile_ids, cou
         "date_issued",
         "contract_type",
     ):
+        character_id = audits[audit_id]
         user_id = owner[character_id]
         parties = [issuer_id, assignee_id, acceptor_id]
         # the issuer's Corporation speaks for a stranger only: an own alt's Corporation is the membership marker
