@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.7] - 2026-10-09
+
 ### Changed
 
 - *Friendly to hostiles*: a watched hostile with a negative standing no

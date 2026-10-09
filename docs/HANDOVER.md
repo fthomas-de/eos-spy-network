@@ -8,7 +8,12 @@ Last updated 2026-10-09.
 
 ## State
 
-- Version: `0.0.6`, 2026-10-09 (see `CHANGELOG.md`): settings
+- Version: `0.0.7`, 2026-10-09 (see `CHANGELOG.md`): the contacts marker
+  skips a watched hostile with a negative standing
+  (`markers._check_contacts`); the graph lines carry the payment count
+  again (`network.js`); a test pins that two alts without the main are
+  enough and the main is still drawn.
+- Before (0.0.6): settings
   `lookback_days` (time frame, `SpyConfiguration.since()`, default 365,
   0 = everything) and `ignored_ref_types` (JSON list, default
   `market_transaction`, choices from the distinct `ref_type`s of
@@ -32,10 +37,10 @@ Last updated 2026-10-09.
   Corporation changes per year, time frame, ignored wallet entry types,
   contact sources); Markers: the Corporations
   as tiles, per Corporation the mains with markers (hostile membership now
-  and in the history, frequent Corporation changes, friendly/watched hostile
-  contacts, mails, ISK, contracts - over main and alts); Network: the ISK
+  and in the history, frequent Corporation changes, friendly hostile
+  contacts or watched ones not held negative, mails, ISK, contracts - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 144 without translation tests plus 3 translation tests, all green
+- Tests: 146 without translation tests plus 3 translation tests, all green
   in the dev instance; every new test checked against sabotaged code.
   `tests.base.SpyTestCase` patches `views.update_snapshot` and the three
   ESI calls of `affiliations.py` (`self.esi_names`, `self.esi_affiliations`,
@@ -58,10 +63,15 @@ Last updated 2026-10-09.
   their Corporation/Alliance columns, the multi-select of ignored wallet
   types and the Corporation-change tooltips. `aa_dev` has no ISK or
   contract marker, so the new columns were only seen in tests.
-- The translations of 0.0.6 (time frame, ignored wallet entry types) are
-  machine-made like the rest; not reviewed by the user. The graph layout was checked only with a
-  synthetic 14-partner graph served as a static page (labels no longer
-  overlap; lines still cross labels in a dense graph). `aa_dev` has no
+- The translations (0.0.6: time frame, ignored wallet entry types; 0.0.7:
+  the contacts marker description) are machine-made like the rest; not
+  reviewed by the user. The graph layout was checked only with a
+  synthetic 14-partner graph served as a static page, before the payment
+  counts came back on the lines (the user accepts the overlap).
+- The stored snapshot in `aa_dev` is still from 0.0.6: recalculate
+  (button or `snapshot.update()`) to see the contacts change.
+- Open with the user: should a watched hostile at standing 0 still count
+  (implemented: yes - only negative ones were declared irrelevant)? `aa_dev` has no
   hostile network partner and no ISK/contract marker, so the network pages
   there are empty since 0.0.5 (fenriscw1 is not hostile); rendered
   server-side without errors.
@@ -146,10 +156,11 @@ Last updated 2026-10-09.
   periodic task fires on its own.
 - The periodic task row `contacts` (id 7, every 15 minutes) is disabled; the
   `CELERYBEAT_SCHEDULE` entry in `local.py` (hourly) is the one to keep.
-- The Celery worker was restarted 2026-10-09 17:55 with the 0.0.6 code in a
-  background shell of the Claude session (`celery -A myauth worker -l info
-  -P solo`); it stops with that session - check `pgrep -af celery` and
-  start it again before testing the button.
+- The Celery worker last started 2026-10-09 17:55 with the 0.0.6 code in a
+  background shell of an earlier Claude session (`celery -A myauth worker
+  -l info -P solo`); it stops with that session and does not know the
+  0.0.7 marker code - check `pgrep -af celery` and start it again before
+  testing the button. `collectstatic` ran with the 0.0.7 `network.js`.
 
 ## Traps
 
