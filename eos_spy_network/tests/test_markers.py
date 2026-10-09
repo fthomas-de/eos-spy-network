@@ -235,9 +235,14 @@ class TestContacts(MarkerTestCase):
         self.assertEqual(marker.details, {f"{self.main.character_name}: Bad Corp (5)"})
 
     def test_should_mark_a_watched_hostile(self):
-        self.add_contact(HOSTILE_CORP, -10, watched=True)
+        self.add_contact(HOSTILE_CORP, 0, watched=True)
 
         self.assertEqual(self.kinds(), {markers.CONTACTS})
+
+    def test_should_ignore_a_watched_hostile_with_a_negative_standing(self):
+        self.add_contact(HOSTILE_CORP, -10, watched=True)
+
+        self.assertIsNone(self.suspect())
 
     def test_should_ignore_a_hostile_kept_as_enemy(self):
         self.add_contact(HOSTILE_CORP, -10)

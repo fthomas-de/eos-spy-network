@@ -117,10 +117,10 @@ TRANSLATIONS = {
         "Character вступил во многие Corporation за последние 365 дней.",
         "某个 Character 在过去 365 天内加入了许多 Corporation。",
     ),
-    "A character's own contacts hold a hostile with a positive standing or on the watch list.": (
-        "Die eigenen Kontakte eines Characters führen einen Feind mit positivem Standing oder auf der Beobachtungsliste.",
-        "В собственных контактах Character есть враг с положительным стендингом или в списке наблюдения.",
-        "某个 Character 自己的联系人中有敌对方，声望为正或在关注列表中。",
+    "A character's own contacts hold a hostile with a positive standing, or on the watch list without a negative one.": (
+        "Die eigenen Kontakte eines Characters führen einen Feind mit positivem Standing oder auf der Beobachtungsliste ohne negatives Standing.",
+        "В собственных контактах Character есть враг с положительным стендингом или в списке наблюдения без отрицательного стендинга.",
+        "某个 Character 自己的联系人中有敌对方，声望为正，或在关注列表中且声望不为负。",
     ),
     "Mails from or to hostiles.": ("Mails von oder an Feinde.", "Письма от врагов или к ним.", "来自或发往敌对方的邮件。"),
     "Wallet journal entries with hostiles.": (

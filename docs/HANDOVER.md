@@ -65,14 +65,6 @@ Last updated 2026-10-09.
   hostile network partner and no ISK/contract marker, so the network pages
   there are empty since 0.0.5 (fenriscw1 is not hostile); rendered
   server-side without errors.
-- Ask the user: should the payment count come back on the graph lines (moved
-  to the tooltip for less overlap)?
-- Ask the user (asked at the end of the session, no answer yet): does a
-  shared payment partner need the main among the characters, or are two
-  alts enough (implemented: any two)?
-- Ask the user: watching a hostile is a marker (README decision), but PvP
-  pilots watch enemies routinely - should a watched hostile with a negative
-  standing stay a marker?
 - Markers switchable and weighted, a score; account page with evidence
   (`view_evidence`: mail headers and subjects, wallet entries, contracts);
   review per suspect: status (new, seen, harmless, watch, confirmed), note,
@@ -102,6 +94,13 @@ Last updated 2026-10-09.
   of two own characters that counts; player trading shows on its own. A
   counterpart Auth does not know counts as outside; NPCs never. The graph
   is vis-network from cdnjs. The pages need `view_evidence` as well.
+- Shared partner (user, 2026-10-09): any two own characters, two alts
+  without the main are enough; the graph always draws the main with them.
+  The payment count stands on the lines again (user: overlap does not
+  matter).
+- Contacts (user, 2026-10-09): a watched hostile with a negative standing
+  is no marker - PvP pilots watch their enemies; positive, or watched at 0
+  or above, still counts.
 - Recalculation: stored in the database by a Celery task (not a cache, not
   live), started by the button, by saving the settings, or by a
   `CELERYBEAT_SCHEDULE` entry the admin adds (README).

@@ -38,7 +38,8 @@ every one with a standing below a configurable value.
   - *Frequent Corporation changes*: a character joined as many Corporations
     within the last 365 days as configured (default 4)
   - *Friendly to hostiles*: a character's own contacts hold a hostile with a
-    positive standing, or on the watch list (`CharacterContact`)
+    positive standing, or on the watch list without a negative standing
+    (`CharacterContact`; PvP pilots watch their enemies)
   - *Mails with hostiles*: mails from or to hostiles, counted once per mail
     (`MailMessage`; the body is never read)
   - *ISK with hostiles*: wallet journal entries with a hostile as a party,

@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const edge = (raw) => {
         const shown = { from: raw.from, to: raw.to, color: { color: edgeColours[raw.kind] } };
         if (raw.kind === "payment" || raw.kind === "trading") {
-            // the count stays in the tooltip: labels on a bundle of lines cover each other
+            shown.label = String(raw.payments);
             shown.width = raw.trades ? 3 : 1 + Math.min(raw.payments, 5) / 2;
             shown.title = `${text("payments", "Payments")}: ${raw.payments} · ${text("trades", "Player trading")}: ${raw.trades}`;
             if (raw.first) {

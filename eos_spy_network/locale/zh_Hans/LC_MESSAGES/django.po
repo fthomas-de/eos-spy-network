@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 18:00+0000\n"
-"PO-Revision-Date: 2026-10-09 18:00+0000\n"
+"POT-Creation-Date: 2026-10-09 18:36+0000\n"
+"PO-Revision-Date: 2026-10-09 18:36+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: zh_Hans\n"
 "Language: zh_Hans\n"
@@ -81,21 +81,21 @@ msgstr "某个 Character 现在或曾经在敌对的 Corporation 或 Alliance �
 msgid "A character joined many Corporations within the last 365 days."
 msgstr "某个 Character 在过去 365 天内加入了许多 Corporation。"
 
-#: markers.py:52
-msgid ""
-"A character's own contacts hold a hostile with a positive standing or on the"
-" watch list."
-msgstr "某个 Character 自己的联系人中有敌对方，声望为正或在关注列表中。"
-
 #: markers.py:53
+msgid ""
+"A character's own contacts hold a hostile with a positive standing, or on "
+"the watch list without a negative one."
+msgstr "某个 Character 自己的联系人中有敌对方，声望为正，或在关注列表中且声望不为负。"
+
+#: markers.py:56
 msgid "Mails from or to hostiles."
 msgstr "来自或发往敌对方的邮件。"
 
-#: markers.py:54
+#: markers.py:57
 msgid "Wallet journal entries with hostiles."
 msgstr "与敌对方的钱包日志条目。"
 
-#: markers.py:55
+#: markers.py:58
 msgid "Contracts with hostiles."
 msgstr "与敌对方的合同。"
 

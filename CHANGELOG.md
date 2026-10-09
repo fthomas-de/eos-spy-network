@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- *Friendly to hostiles*: a watched hostile with a negative standing no
+  longer counts. PvP pilots watch their enemies routinely, so the marker
+  fired for ordinary fleet work; a positive standing, or a watched hostile
+  at 0 or above, still counts
+- Network graph: the payment count is back on the lines; the tooltip alone
+  hid it
+
 ## [0.0.6] - 2026-10-09
 
 ### Added

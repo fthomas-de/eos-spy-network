@@ -81,6 +81,22 @@ class TestSharedCounterpart(NetworkTestCase):
         self.assertEqual(account.shared, {OUTSIDER})
         self.assertEqual({link.character_id for link in account.links}, {self.main.character_id, 5001})
 
+    def test_should_connect_two_alts_and_draw_the_main_with_them(self):
+        other_alt = make_character(5002)
+        CharacterOwnership.objects.create(user=self.user, character=other_alt, owner_hash="hash-5002")
+        self.audits[5002] = CharacterAudit.objects.create(character=other_alt)
+        self.pay(self.alt, OUTSIDER)
+        self.pay(other_alt, OUTSIDER)
+
+        account = self.account()
+        graph = account.graph()
+
+        self.assertEqual(account.shared, {OUTSIDER})
+        # the main paid nothing but anchors the account in the graph
+        self.assertIn(self.main.character_id, {node["id"] for node in graph["nodes"]})
+        accounts = {(edge["from"], edge["to"]) for edge in graph["edges"] if edge["kind"] == "account"}
+        self.assertEqual(accounts, {(self.main.character_id, 5001), (self.main.character_id, 5002)})
+
     def test_should_leave_an_outsider_paid_by_one_character_out(self):
         self.pay(self.main, OUTSIDER)
         self.pay(self.main, OUTSIDER)
