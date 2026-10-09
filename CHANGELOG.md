@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.8] - 2026-10-09
+
 ### Changed
 
 - Recalculation: corptools' wallet journal, mails, contracts, contacts and

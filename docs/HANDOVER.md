@@ -8,11 +8,18 @@ Last updated 2026-10-09.
 
 ## State
 
-- Version: `0.0.7`, 2026-10-09 (see `CHANGELOG.md`): the contacts marker
-  skips a watched hostile with a negative standing
-  (`markers._check_contacts`); the graph lines carry the payment count
-  again (`network.js`); a test pins that two alts without the main are
-  enough and the main is still drawn.
+- Version: `0.0.8`, 2026-10-09 (see `CHANGELOG.md`): query performance,
+  no behaviour change. corptools' tables are filtered by CharacterAudit ID
+  (`markers.character_audits()`, one lookup per run) instead of joining
+  CharacterAudit and EveCharacter per row; the network journal no longer
+  joins the parties' names (`network._fill_names` names the partners that
+  stay); `markers.roster()` / `Roster` (Corporations, mains, characters)
+  and `hostile_entities` are read once in `snapshot.build` and handed to
+  `corporation_tiles(hostiles=, members=)`, `hostile_index(config,
+  hostiles)` and `connections(..., characters)` - all optional, the old
+  calls still work. `test_network.TestQueries` pins this on the SQL.
+- Before (0.0.7): the contacts marker skips a watched hostile with a
+  negative standing; the graph lines carry the payment count again.
 - Before (0.0.6): settings
   `lookback_days` (time frame, `SpyConfiguration.since()`, default 365,
   0 = everything) and `ignored_ref_types` (JSON list, default
@@ -40,7 +47,7 @@ Last updated 2026-10-09.
   and in the history, frequent Corporation changes, friendly hostile
   contacts or watched ones not held negative, mails, ISK, contracts - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 146 without translation tests plus 3 translation tests, all green
+- Tests: 149 without translation tests plus 3 translation tests, all green
   in the dev instance; every new test checked against sabotaged code.
   `tests.base.SpyTestCase` patches `views.update_snapshot` and the three
   ESI calls of `affiliations.py` (`self.esi_names`, `self.esi_affiliations`,
@@ -69,7 +76,9 @@ Last updated 2026-10-09.
   synthetic 14-partner graph served as a static page, before the payment
   counts came back on the lines (the user accepts the overlap).
 - The stored snapshot in `aa_dev` is still from 0.0.6: recalculate
-  (button or `snapshot.update()`) to see the contacts change.
+  (button or `snapshot.update()`) to see the contacts change. A dry
+  `snapshot.build()` with 0.0.8 ran without errors (29 queries, 0.58 s,
+  mostly ESI in the affiliations phase).
 - Open with the user: should a watched hostile at standing 0 still count
   (implemented: yes - only negative ones were declared irrelevant)? `aa_dev` has no
   hostile network partner and no ISK/contract marker, so the network pages
@@ -82,6 +91,16 @@ Last updated 2026-10-09.
 - More markers: clones/assets in staging systems (needs a setting for the
   systems), owner changes, audit gaps as data gap.
 - Measure the calculation on prod-sized wallet journals (footer shows it).
+  `aa_dev` holds 6 journal entries, 0 mails, 1 contract: its EXPLAIN plans
+  say nothing about prod. Left as is after the 0.0.8 review: the network
+  still reads every payment in the time frame, inside the Alliance too
+  (dropped in Python - hard to express in SQL); mails and contracts have no
+  date index in corptools, so the time frame filters rows after the
+  character index; the hostile ID lists go into SQL as long `IN` lists
+  (fine for MySQL).
+- `aa_dev`: the configured Alliance holds 30 Corporations `T000`-`T029`
+  without mains, apparently leftover seed data of another app; untouched,
+  ask the user before removing anything.
 - The settings page help text still says "hostile list" ("Tick whose
   contacts make up the hostile list ...").
 - Check the release against https://github.com/fthomas-de/aa-app-checklist.
@@ -159,7 +178,7 @@ Last updated 2026-10-09.
 - The Celery worker last started 2026-10-09 17:55 with the 0.0.6 code in a
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
-  0.0.7 marker code - check `pgrep -af celery` and start it again before
+  0.0.7 or 0.0.8 code - check `pgrep -af celery` and start it again before
   testing the button. `collectstatic` ran with the 0.0.7 `network.js`.
 
 ## Traps
