@@ -1,0 +1,34 @@
+{% load i18n %}
+{# What keeps the markers from being complete; above the Corporations and every Corporation page. #}
+{% if not aa_contacts_installed %}
+    <div class="alert alert-danger">
+        {% translate "aa-contacts is not installed: the hostiles are made from its contacts." %}
+    </div>
+{% elif not config.alliance %}
+    <div class="alert alert-warning">
+        {% translate "No Alliance is configured yet." %}
+        {% if perms.eos_spy_network.manage_settings %}
+            <a href="{% url 'eos_spy_network:settings' %}" class="alert-link">{% translate "Open the settings" %}</a>
+        {% endif %}
+    </div>
+{% elif not source_count %}
+    <div class="alert alert-warning">
+        {% translate "No contact source is ticked, so nothing counts as hostile." %}
+        {% if perms.eos_spy_network.manage_settings %}
+            <a href="{% url 'eos_spy_network:settings' %}" class="alert-link">{% translate "Open the settings" %}</a>
+        {% endif %}
+    </div>
+{% endif %}
+
+{% if sources_without_contacts %}
+    <div class="alert alert-info">
+        {% translate "No contacts in aa-contacts yet, so these sources add no hostiles:" %}
+        {% for source in sources_without_contacts %}{{ source.name|default:source.entity_id }}{% if not forloop.last %}, {% endif %}{% endfor %}
+    </div>
+{% endif %}
+
+{% if not corptools_installed %}
+    <div class="alert alert-info">
+        {% translate "corptools is not installed: only the current Corporation and Alliance of the characters are checked." %}
+    </div>
+{% endif %}

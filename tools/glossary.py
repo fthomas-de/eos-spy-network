@@ -50,7 +50,6 @@ TRANSLATIONS = {
         "已勾选来源的联系人，其声望低于此值时视为敌对。",
     ),
     "Configuration": ("Konfiguration", "Конфигурация", "配置"),
-    "Hostile list": ("Feindliste", "Список врагов", "敌对列表"),
     "Settings": ("Einstellungen", "Настройки", "设置"),
     "aa-contacts is not installed: the hostile list is made from its contacts.": (
         "aa-contacts ist nicht installiert: Die Feindliste entsteht aus dessen Kontakten.",
@@ -68,21 +67,8 @@ TRANSLATIONS = {
         "Ни один источник контактов не отмечен, поэтому ничто не считается враждебным.",
         "未勾选任何联系人来源，因此没有任何对象被视为敌对。",
     ),
-    "No contacts in aa-contacts yet, so missing from this list:": (
-        "Noch keine Kontakte in aa-contacts, daher fehlen in dieser Liste:",
-        "В aa-contacts ещё нет контактов, поэтому в этом списке отсутствуют:",
-        "aa-contacts 中尚无联系人，因此此列表中缺少：",
-    ),
-    "Contacts with a standing below %(threshold)s": (
-        "Kontakte mit einem Standing unter %(threshold)s",
-        "Контакты со стендингом ниже %(threshold)s",
-        "声望低于 %(threshold)s 的联系人",
-    ),
     "Name": ("Name", "Название", "名称"),
     "Type": ("Typ", "Тип", "类型"),
-    "Standing": ("Standing", "Стендинг", "声望"),
-    "Sources": ("Quellen", "Источники", "来源"),
-    "No hostile contacts.": ("Keine feindlichen Kontakte.", "Нет враждебных контактов.", "没有敌对联系人。"),
     "Contact sources": ("Kontaktquellen", "Источники контактов", "联系人来源"),
     "Tick whose contacts make up the hostile list. The contacts come from aa-contacts: a source needs a token there, and aa-contacts' own task keeps them up to date.": (
         "Hake an, wessen Kontakte die Feindliste bilden. Die Kontakte kommen aus aa-contacts: Eine Quelle braucht dort einen Token, und der eigene Task von aa-contacts hält sie aktuell.",
@@ -106,6 +92,81 @@ TRANSLATIONS = {
     ),
     "Save": ("Speichern", "Сохранить", "保存"),
     "Settings saved.": ("Einstellungen gespeichert.", "Настройки сохранены.", "设置已保存。"),
+    # EVE jargon, English everywhere. The plurals carry the "eos-spy-network"
+    # context: under "EVE jargon" Alliance Auth shows the singular in ru and zh_Hans
+    "Corporations": ("Corporations", "Corporations", "Corporations"),
+    "Main": ("Main", "Main", "Main"),
+    "Mains": ("Mains", "Mains", "Mains"),
+    "Characters": ("Characters", "Characters", "Characters"),
+    "Suspects": ("Verdächtige", "Подозреваемые", "嫌疑人"),
+    "Hostile membership": ("Feindliche Mitgliedschaft", "Членство у врагов", "敌对成员身份"),
+    "Frequent Corporation changes": (
+        "Häufige Corporation-Wechsel",
+        "Частая смена Corporation",
+        "频繁更换 Corporation",
+    ),
+    "Friendly to hostiles": ("Freundlich zu Feinden", "Дружелюбен к врагам", "对敌对方友好"),
+    "Mails with hostiles": ("Mails mit Feinden", "Почта с врагами", "与敌对方的邮件"),
+    "ISK with hostiles": ("ISK mit Feinden", "ISK с врагами", "与敌对方的 ISK"),
+    "Contracts with hostiles": ("Contracts mit Feinden", "Контракты с врагами", "与敌对方的合同"),
+    "A character is or was in a hostile Corporation or Alliance.": (
+        "Ein Character ist oder war in einer feindlichen Corporation oder Alliance.",
+        "Character состоит или состоял во враждебной Corporation или Alliance.",
+        "某个 Character 现在或曾经在敌对的 Corporation 或 Alliance 中。",
+    ),
+    "A character joined many Corporations within the last 365 days.": (
+        "Ein Character ist in den letzten 365 Tagen vielen Corporations beigetreten.",
+        "Character вступил во многие Corporation за последние 365 дней.",
+        "某个 Character 在过去 365 天内加入了许多 Corporation。",
+    ),
+    "A character's own contacts hold a hostile with a positive standing or on the watch list.": (
+        "Die eigenen Kontakte eines Characters führen einen Feind mit positivem Standing oder auf der Beobachtungsliste.",
+        "В собственных контактах Character есть враг с положительным стендингом или в списке наблюдения.",
+        "某个 Character 自己的联系人中有敌对方，声望为正或在关注列表中。",
+    ),
+    "Mails from or to hostiles.": ("Mails von oder an Feinde.", "Письма от врагов или к ним.", "来自或发往敌对方的邮件。"),
+    "Wallet journal entries with hostiles.": (
+        "Wallet-Journal-Einträge mit Feinden.",
+        "Записи журнала кошелька с врагами.",
+        "与敌对方的钱包日志条目。",
+    ),
+    "Contracts with hostiles.": ("Contracts mit Feinden.", "Контракты с врагами.", "与敌对方的合同。"),
+    "Corporation changes per year": (
+        "Corporation-Wechsel pro Jahr",
+        "Смен Corporation в год",
+        "每年更换 Corporation 次数",
+    ),
+    "A character that joined this many Corporations within the last 365 days gets a marker.": (
+        "Ein Character, der in den letzten 365 Tagen so vielen Corporations beigetreten ist, bekommt einen Marker.",
+        "Character, вступивший в столько Corporation за последние 365 дней, получает маркер.",
+        "在过去 365 天内加入这么多 Corporation 的 Character 会被标记。",
+    ),
+    "Mains with markers": ("Mains mit Markern", "Mains с маркерами", "有标记的 Mains"),
+    "Markers": ("Marker", "Маркеры", "标记"),
+    "No markers.": ("Keine Marker.", "Нет маркеров.", "没有标记。"),
+    # Alliance Auth's own wording, which wins the msgid anyway
+    "View details": ("Details anzeigen", "Подробнее", "查看详情"),
+    "Back": ("Zurück", "Назад", "返回"),
+    "Auth knows no Corporation of this Alliance.": (
+        "Auth kennt keine Corporation dieser Alliance.",
+        "Auth не знает ни одной Corporation этого Alliance.",
+        "Auth 不知道此 Alliance 的任何 Corporation。",
+    ),
+    "aa-contacts is not installed: the hostiles are made from its contacts.": (
+        "aa-contacts ist nicht installiert: Die Feinde entstehen aus dessen Kontakten.",
+        "aa-contacts не установлен: враги определяются по его контактам.",
+        "未安装 aa-contacts：敌对方由其联系人生成。",
+    ),
+    "No contacts in aa-contacts yet, so these sources add no hostiles:": (
+        "Noch keine Kontakte in aa-contacts, daher liefern diese Quellen keine Feinde:",
+        "В aa-contacts ещё нет контактов, поэтому эти источники не дают врагов:",
+        "aa-contacts 中尚无联系人，因此这些来源不提供敌对方：",
+    ),
+    "corptools is not installed: only the current Corporation and Alliance of the characters are checked.": (
+        "corptools ist nicht installiert: Geprüft werden nur die aktuelle Corporation und Alliance der Characters.",
+        "corptools не установлен: проверяются только текущие Corporation и Alliance каждого Character.",
+        "未安装 corptools：只检查各 Character 当前的 Corporation 和 Alliance。",
+    ),
 }
 
 PLURALS = {}

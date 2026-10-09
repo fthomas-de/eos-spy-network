@@ -12,7 +12,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 
-from allianceauth.eveonline.models import EveCorporationInfo
+from django.db.models import Q
+
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from . import contacts
 from .models import ContactSource, SpyConfiguration
@@ -57,6 +59,64 @@ def hostile_entities(config: SpyConfiguration | None = None) -> list[Hostile]:
         source = sources[row.source]
         hostile.sources.append((source.name or str(source.entity_id), row.standing))
     return sorted(found.values(), key=lambda hostile: (hostile.standing, hostile.name.lower(), hostile.id))
+
+
+@dataclass
+class HostileIndex:
+    """Which EVE IDs count as hostile, and on whose account.
+
+    A hostile Corporation or Alliance also makes its members hostile - but
+    only those Auth knows: the app makes no ESI call, and corptools leaves
+    the affiliation of the names it stores empty. A character Auth has never
+    seen is hostile only when it is a contact itself.
+    """
+
+    # every hostile ID, mapped to the one that makes it hostile (itself for a contact)
+    owner: dict = field(default_factory=dict)
+    names: dict = field(default_factory=dict)
+
+    def __contains__(self, entity_id) -> bool:
+        return entity_id in self.owner
+
+    def __bool__(self) -> bool:
+        return bool(self.owner)
+
+    @property
+    def ids(self) -> list[int]:
+        return list(self.owner)
+
+    def describe(self, entity_id: int) -> str:
+        """The name, and for a member found through its group the group's name as well."""
+        name = self.names.get(entity_id) or str(entity_id)
+        reason = self.owner[entity_id]
+        if reason == entity_id:
+            return name
+        return f"{name} ({self.names.get(reason) or reason})"
+
+
+def hostile_index(config: SpyConfiguration | None = None) -> HostileIndex:
+    config = config or SpyConfiguration.get_solo()
+    index = HostileIndex()
+    for hostile in hostile_entities(config):
+        index.owner[hostile.id] = hostile.id
+        index.names[hostile.id] = hostile.name
+    groups = list(index.owner)
+    if not groups:
+        return index
+
+    for corporation_id, name, alliance_id in EveCorporationInfo.objects.filter(
+        alliance__alliance_id__in=groups
+    ).values_list("corporation_id", "corporation_name", "alliance__alliance_id"):
+        index.owner.setdefault(corporation_id, alliance_id)
+        index.names.setdefault(corporation_id, name)
+
+    for character_id, name, corporation_id, alliance_id in EveCharacter.objects.filter(
+        Q(corporation_id__in=groups) | Q(alliance_id__in=groups)
+    ).values_list("character_id", "character_name", "corporation_id", "alliance_id"):
+        # the Corporation first: it is the closer reason
+        index.owner.setdefault(character_id, corporation_id if corporation_id in index.owner else alliance_id)
+        index.names.setdefault(character_id, name)
+    return index
 
 
 @dataclass

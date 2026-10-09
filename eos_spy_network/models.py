@@ -17,7 +17,7 @@ class General(models.Model):
         managed = False
         default_permissions = ()
         permissions = (
-            ("view_suspects", "Can view the suspects and the hostile list"),
+            ("view_suspects", "Can view the suspects per Corporation"),
             ("view_evidence", "Can view the evidence: mail headers and subjects, wallet and contracts"),
             ("manage_settings", "Can change the Alliance, the contact sources and the thresholds"),
         )
@@ -42,6 +42,12 @@ class SpyConfiguration(SingletonModel):
         validators=[MinValueValidator(Decimal("-10")), MaxValueValidator(Decimal("10"))],
         verbose_name=_("Hostile below standing"),
         help_text=_("A contact of a ticked source counts as hostile when its standing is below this value."),
+    )
+    corp_changes_per_year = models.PositiveSmallIntegerField(
+        default=4,
+        validators=[MinValueValidator(2), MaxValueValidator(50)],
+        verbose_name=_("Corporation changes per year"),
+        help_text=_("A character that joined this many Corporations within the last 365 days gets a marker."),
     )
 
     class Meta:

@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 13:19+0000\n"
-"PO-Revision-Date: 2026-10-09 13:19+0000\n"
+"POT-Creation-Date: 2026-10-09 14:09+0000\n"
+"PO-Revision-Date: 2026-10-09 14:09+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: ru\n"
 "Language: ru\n"
@@ -26,12 +26,12 @@ msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:66
+#: contacts.py:26 models.py:72
 msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:11 models.py:35 models.py:65
+#: contacts.py:27 forms.py:11 models.py:35 models.py:71
 #: templates/eos_spy_network/settings.html:11
 msgctxt "EVE jargon"
 msgid "Alliance"
@@ -41,6 +41,58 @@ msgstr "Alliance"
 msgctxt "EVE jargon"
 msgid "Faction"
 msgstr "Faction"
+
+#: markers.py:40
+msgid "Hostile membership"
+msgstr "Членство у врагов"
+
+#: markers.py:41
+msgid "Frequent Corporation changes"
+msgstr "Частая смена Corporation"
+
+#: markers.py:42
+msgid "Friendly to hostiles"
+msgstr "Дружелюбен к врагам"
+
+#: markers.py:43
+msgid "Mails with hostiles"
+msgstr "Почта с врагами"
+
+#: markers.py:44
+msgid "ISK with hostiles"
+msgstr "ISK с врагами"
+
+#: markers.py:45
+msgid "Contracts with hostiles"
+msgstr "Контракты с врагами"
+
+#: markers.py:49
+msgid "A character is or was in a hostile Corporation or Alliance."
+msgstr "Character состоит или состоял во враждебной Corporation или Alliance."
+
+#: markers.py:50
+msgid "A character joined many Corporations within the last 365 days."
+msgstr "Character вступил во многие Corporation за последние 365 дней."
+
+#: markers.py:51
+msgid ""
+"A character's own contacts hold a hostile with a positive standing or on the"
+" watch list."
+msgstr ""
+"В собственных контактах Character есть враг с положительным стендингом или в"
+" списке наблюдения."
+
+#: markers.py:52
+msgid "Mails from or to hostiles."
+msgstr "Письма от врагов или к ним."
+
+#: markers.py:53
+msgid "Wallet journal entries with hostiles."
+msgstr "Записи журнала кошелька с врагами."
+
+#: markers.py:54
+msgid "Contracts with hostiles."
+msgstr "Контракты с врагами."
 
 #: models.py:36
 msgid "The Alliance whose members are checked."
@@ -58,78 +110,112 @@ msgstr ""
 "Контакт отмеченного источника считается враждебным, если его стендинг ниже "
 "этого значения."
 
-#: models.py:49 models.py:52
+#: models.py:49
+msgid "Corporation changes per year"
+msgstr "Смен Corporation в год"
+
+#: models.py:50
+msgid ""
+"A character that joined this many Corporations within the last 365 days gets"
+" a marker."
+msgstr ""
+"Character, вступивший в столько Corporation за последние 365 дней, получает "
+"маркер."
+
+#: models.py:55 models.py:58
 msgid "Configuration"
 msgstr "Конфигурация"
 
-#: templates/eos_spy_network/base.html:12 views.py:13
-msgid "Hostile list"
-msgstr "Список врагов"
+#: templates/eos_spy_network/base.html:12 views.py:16
+msgctxt "eos-spy-network"
+msgid "Corporations"
+msgstr "Corporations"
 
-#: templates/eos_spy_network/base.html:18 views.py:14
+#: templates/eos_spy_network/base.html:18 views.py:18
 msgid "Settings"
 msgstr "Настройки"
 
-#: templates/eos_spy_network/hostiles.html:7
-#: templates/eos_spy_network/settings.html:31
-msgid ""
-"aa-contacts is not installed: the hostile list is made from its contacts."
-msgstr "aa-contacts не установлен: список врагов строится из его контактов."
+#: templates/eos_spy_network/corporation.html:18
+#: templates/eos_spy_network/corporations.html:21
+#: templates/eos_spy_network/corporations.html:30
+msgctxt "eos-spy-network"
+msgid "Mains"
+msgstr "Mains"
 
-#: templates/eos_spy_network/hostiles.html:11
+#: templates/eos_spy_network/corporation.html:19
+#: templates/eos_spy_network/corporation.html:31
+#: templates/eos_spy_network/corporations.html:22
+msgid "Mains with markers"
+msgstr "Mains с маркерами"
+
+#: templates/eos_spy_network/corporation.html:23
+msgid "Back"
+msgstr "Назад"
+
+#: templates/eos_spy_network/corporation.html:39
+msgctxt "EVE jargon"
+msgid "Main"
+msgstr "Main"
+
+#: templates/eos_spy_network/corporation.html:40
+msgctxt "eos-spy-network"
+msgid "Characters"
+msgstr "Characters"
+
+#: templates/eos_spy_network/corporation.html:41
+msgid "Markers"
+msgstr "Маркеры"
+
+#: templates/eos_spy_network/corporation.html:76
+#: templates/eos_spy_network/corporations.html:37
+msgid "No markers."
+msgstr "Нет маркеров."
+
+#: templates/eos_spy_network/corporations.html:43
+msgid "View details"
+msgstr "Подробнее"
+
+#: templates/eos_spy_network/corporations.html:52
+msgid "Auth knows no Corporation of this Alliance."
+msgstr "Auth не знает ни одной Corporation этого Alliance."
+
+#: templates/eos_spy_network/partials/notices.html:5
+msgid "aa-contacts is not installed: the hostiles are made from its contacts."
+msgstr "aa-contacts не установлен: враги определяются по его контактам."
+
+#: templates/eos_spy_network/partials/notices.html:9
 msgid "No Alliance is configured yet."
 msgstr "Alliance ещё не настроен."
 
-#: templates/eos_spy_network/hostiles.html:13
-#: templates/eos_spy_network/hostiles.html:20
+#: templates/eos_spy_network/partials/notices.html:11
+#: templates/eos_spy_network/partials/notices.html:18
 msgid "Open the settings"
 msgstr "Открыть настройки"
 
-#: templates/eos_spy_network/hostiles.html:18
+#: templates/eos_spy_network/partials/notices.html:16
 msgid "No contact source is ticked, so nothing counts as hostile."
 msgstr ""
 "Ни один источник контактов не отмечен, поэтому ничто не считается "
 "враждебным."
 
-#: templates/eos_spy_network/hostiles.html:27
-msgid "No contacts in aa-contacts yet, so missing from this list:"
-msgstr "В aa-contacts ещё нет контактов, поэтому в этом списке отсутствуют:"
+#: templates/eos_spy_network/partials/notices.html:25
+msgid "No contacts in aa-contacts yet, so these sources add no hostiles:"
+msgstr ""
+"В aa-contacts ещё нет контактов, поэтому эти источники не дают врагов:"
 
-#: templates/eos_spy_network/hostiles.html:35
-#, python-format
-msgid "Contacts with a standing below %(threshold)s"
-msgstr "Контакты со стендингом ниже %(threshold)s"
+#: templates/eos_spy_network/partials/notices.html:32
+msgid ""
+"corptools is not installed: only the current Corporation and Alliance of the"
+" characters are checked."
+msgstr ""
+"corptools не установлен: проверяются только текущие Corporation и Alliance "
+"каждого Character."
 
-#: templates/eos_spy_network/hostiles.html:44
-#: templates/eos_spy_network/settings.html:40
-msgctxt "eos-spy-network"
-msgid "Name"
-msgstr "Название"
-
-#: templates/eos_spy_network/hostiles.html:45
-#: templates/eos_spy_network/settings.html:41
-msgctxt "eos-spy-network"
-msgid "Type"
-msgstr "Тип"
-
-#: templates/eos_spy_network/hostiles.html:46
-msgctxt "eos-spy-network"
-msgid "Standing"
-msgstr "Стендинг"
-
-#: templates/eos_spy_network/hostiles.html:47
-msgid "Sources"
-msgstr "Источники"
-
-#: templates/eos_spy_network/hostiles.html:69
-msgid "No hostile contacts."
-msgstr "Нет враждебных контактов."
-
-#: templates/eos_spy_network/settings.html:21
+#: templates/eos_spy_network/settings.html:22
 msgid "Contact sources"
 msgstr "Источники контактов"
 
-#: templates/eos_spy_network/settings.html:26
+#: templates/eos_spy_network/settings.html:27
 msgid ""
 "Tick whose contacts make up the hostile list. The contacts come from aa-"
 "contacts: a source needs a token there, and aa-contacts' own task keeps them"
@@ -139,60 +225,79 @@ msgstr ""
 "contacts: источнику нужен там токен, а собственная задача aa-contacts "
 "поддерживает их в актуальном состоянии."
 
-#: templates/eos_spy_network/settings.html:27
+#: templates/eos_spy_network/settings.html:28
 msgid "Open aa-contacts"
 msgstr "Открыть aa-contacts"
 
-#: templates/eos_spy_network/settings.html:39
+#: templates/eos_spy_network/settings.html:32
+msgid ""
+"aa-contacts is not installed: the hostile list is made from its contacts."
+msgstr "aa-contacts не установлен: список врагов строится из его контактов."
+
+#: templates/eos_spy_network/settings.html:40
 msgid "Ticked"
 msgstr "Отмечено"
 
+#: templates/eos_spy_network/settings.html:41
+msgctxt "eos-spy-network"
+msgid "Name"
+msgstr "Название"
+
 #: templates/eos_spy_network/settings.html:42
+msgctxt "eos-spy-network"
+msgid "Type"
+msgstr "Тип"
+
+#: templates/eos_spy_network/settings.html:43
 msgid "Token in aa-contacts"
 msgstr "Токен в aa-contacts"
 
-#: templates/eos_spy_network/settings.html:43
+#: templates/eos_spy_network/settings.html:44
 msgid "Contacts as of"
 msgstr "Контакты на"
 
-#: templates/eos_spy_network/settings.html:44
+#: templates/eos_spy_network/settings.html:45
 msgid "Contacts"
 msgstr "Контакты"
 
-#: templates/eos_spy_network/settings.html:45
+#: templates/eos_spy_network/settings.html:46
 msgctxt "eos-spy-network"
 msgid "Hostile"
 msgstr "Враждебные"
 
-#: templates/eos_spy_network/settings.html:57
+#: templates/eos_spy_network/settings.html:58
 msgid "Not in the Alliance"
 msgstr "Не в Alliance"
 
-#: templates/eos_spy_network/settings.html:63
+#: templates/eos_spy_network/settings.html:64
 msgctxt "eos-spy-network"
 msgid "Yes"
 msgstr "Да"
 
-#: templates/eos_spy_network/settings.html:65
+#: templates/eos_spy_network/settings.html:66
 msgctxt "eos-spy-network"
 msgid "No"
 msgstr "Нет"
 
-#: templates/eos_spy_network/settings.html:72
+#: templates/eos_spy_network/settings.html:73
 msgid "Not read yet"
 msgstr "Ещё не прочитано"
 
-#: templates/eos_spy_network/settings.html:83
+#: templates/eos_spy_network/settings.html:84
 msgid ""
 "Choose an Alliance first: its Corporations are listed here once it is saved."
 msgstr ""
 "Сначала выберите Alliance: её Corporation появятся здесь после сохранения."
 
-#: templates/eos_spy_network/settings.html:88
+#: templates/eos_spy_network/settings.html:89
 msgctxt "eos-spy-network"
 msgid "Save"
 msgstr "Сохранить"
 
-#: views.py:78
+#: views.py:17
+msgid "Suspects"
+msgstr "Подозреваемые"
+
+#: views.py:102
 msgid "Settings saved."
 msgstr "Настройки сохранены."

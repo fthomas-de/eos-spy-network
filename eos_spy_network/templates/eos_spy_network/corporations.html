@@ -1,0 +1,54 @@
+{% extends "eos_spy_network/base.html" %}
+{% load i18n %}
+{% load evelinks %}
+
+{% block details %}
+    {% include "eos_spy_network/partials/notices.html" %}
+
+    {% if tiles %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+            {% for tile in tiles %}
+                <div class="col">
+                    <div class="card h-100 {% if tile.suspects %}border-danger{% else %}border-success{% endif %}">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <img src="{{ tile.id|corporation_logo_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
+                                <span class="fw-bold text-truncate">{{ tile.name }}</span>
+                                <span class="text-body-secondary small">[{{ tile.ticker }}]</span>
+                            </div>
+
+                            <div class="small mb-2">
+                                {% translate "Mains" context "eos-spy-network" %}: {{ tile.mains }} ·
+                                {% translate "Mains with markers" %}: <span class="fw-semibold {% if tile.suspects %}text-danger{% else %}text-success{% endif %}">{{ tile.suspects|length }}</span>
+                            </div>
+
+                            {% if tile.suspects %}
+                                <ul class="list-group list-group-flush mb-2">
+                                    {% for label, description, count in tile.counts %}
+                                        <li class="list-group-item d-flex align-items-center gap-2 px-0">
+                                            <span class="badge text-bg-danger text-wrap" title="{{ description }}">{{ label }}</span>
+                                            <span class="small text-body-secondary ms-auto text-nowrap">{% translate "Mains" context "eos-spy-network" %}: {{ count }}</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="text-center text-success my-3">
+                                    <i class="fas fa-circle-check fa-2x mb-2"></i>
+                                    <p class="mb-0">{% translate "No markers." %}</p>
+                                </div>
+                            {% endif %}
+
+                            <div class="text-center mt-auto">
+                                <a href="{% url 'eos_spy_network:corporation' tile.id %}" class="btn btn-sm btn-primary">
+                                    {% translate "View details" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% elif config.alliance %}
+        <p class="text-body-secondary">{% translate "Auth knows no Corporation of this Alliance." %}</p>
+    {% endif %}
+{% endblock %}

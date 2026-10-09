@@ -14,6 +14,11 @@ ALLIANCE_ID = 3001
 OTHER_ALLIANCE_ID = 3999
 
 
+def ticker(prefix, entity_id):
+    # MySQL refuses a ticker over five characters, which real EVE IDs give
+    return f"{prefix}{str(entity_id)[-4:]}"
+
+
 # django-solo keeps the configuration in the cache named by SOLO_CACHE - on
 # the dev instance its own Redis. The test transaction rolls back, the cache
 # does not: what one test stored would leak into the next, and into the
@@ -34,7 +39,7 @@ def make_alliance(alliance_id=ALLIANCE_ID):
         alliance_id=alliance_id,
         defaults={
             "alliance_name": f"Alliance {alliance_id}",
-            "alliance_ticker": f"A{alliance_id}",
+            "alliance_ticker": ticker("A", alliance_id),
             "executor_corp_id": 0,
         },
     )
@@ -47,7 +52,7 @@ def make_corporation(corporation_id, alliance_id=ALLIANCE_ID):
         corporation_id=corporation_id,
         defaults={
             "corporation_name": f"Corp {corporation_id}",
-            "corporation_ticker": f"C{corporation_id}",
+            "corporation_ticker": ticker("C", corporation_id),
             "member_count": 1,
             "alliance": alliance,
         },
@@ -66,7 +71,7 @@ def make_user(name, *perms, corporation_id=2001, alliance_id=ALLIANCE_ID):
         character_id=user.pk + 1000,
         corp_id=corporation_id,
         corp_name=f"Corp {corporation_id}",
-        corp_ticker=f"C{corporation_id}",
+        corp_ticker=ticker("C", corporation_id),
         alliance_id=alliance_id,
         alliance_name=f"Alliance {alliance_id}" if alliance_id else "",
     )
@@ -84,7 +89,7 @@ def make_character(character_id, corporation_id=2001, alliance_id=ALLIANCE_ID):
         character_name=f"Char {character_id}",
         corporation_id=corporation_id,
         corporation_name=f"Corp {corporation_id}",
-        corporation_ticker=f"C{corporation_id}",
+        corporation_ticker=ticker("C", corporation_id),
         alliance_id=alliance_id,
         alliance_name=f"Alliance {alliance_id}" if alliance_id else "",
     )

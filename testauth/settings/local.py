@@ -27,8 +27,10 @@ DEBUG = False
 INSTALLED_APPS += [
     "modeltranslation",
     "allianceauth.theme.bootstrap",
-    # read when installed; installed here so its tables exist in the tests
+    # read when installed; installed here so their tables exist in the tests
     "aa_contacts",
+    "eve_sde",  # corptools' migrations depend on it
+    "corptools",
     "eos_spy_network",
 ]
 

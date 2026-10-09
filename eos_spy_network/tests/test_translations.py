@@ -41,7 +41,7 @@ class TestTranslations(SpyTestCase):
         # a catalogue that was not compiled falls back to English silently
         for language in LANGUAGES.values():
             with self.subTest(language), translation.override(language):
-                self.assertNotEqual(translation.gettext("Hostile list"), "Hostile list")
+                self.assertNotEqual(translation.gettext("Mains with markers"), "Mains with markers")
 
     def test_should_keep_eve_jargon_english(self):
         for language in LANGUAGES.values():

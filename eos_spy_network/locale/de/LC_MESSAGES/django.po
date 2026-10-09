@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 13:19+0000\n"
-"PO-Revision-Date: 2026-10-09 13:19+0000\n"
+"POT-Creation-Date: 2026-10-09 14:09+0000\n"
+"PO-Revision-Date: 2026-10-09 14:09+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: de\n"
 "Language: de\n"
@@ -26,12 +26,12 @@ msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:66
+#: contacts.py:26 models.py:72
 msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:11 models.py:35 models.py:65
+#: contacts.py:27 forms.py:11 models.py:35 models.py:71
 #: templates/eos_spy_network/settings.html:11
 msgctxt "EVE jargon"
 msgid "Alliance"
@@ -41,6 +41,60 @@ msgstr "Alliance"
 msgctxt "EVE jargon"
 msgid "Faction"
 msgstr "Faction"
+
+#: markers.py:40
+msgid "Hostile membership"
+msgstr "Feindliche Mitgliedschaft"
+
+#: markers.py:41
+msgid "Frequent Corporation changes"
+msgstr "Häufige Corporation-Wechsel"
+
+#: markers.py:42
+msgid "Friendly to hostiles"
+msgstr "Freundlich zu Feinden"
+
+#: markers.py:43
+msgid "Mails with hostiles"
+msgstr "Mails mit Feinden"
+
+#: markers.py:44
+msgid "ISK with hostiles"
+msgstr "ISK mit Feinden"
+
+#: markers.py:45
+msgid "Contracts with hostiles"
+msgstr "Contracts mit Feinden"
+
+#: markers.py:49
+msgid "A character is or was in a hostile Corporation or Alliance."
+msgstr ""
+"Ein Character ist oder war in einer feindlichen Corporation oder Alliance."
+
+#: markers.py:50
+msgid "A character joined many Corporations within the last 365 days."
+msgstr ""
+"Ein Character ist in den letzten 365 Tagen vielen Corporations beigetreten."
+
+#: markers.py:51
+msgid ""
+"A character's own contacts hold a hostile with a positive standing or on the"
+" watch list."
+msgstr ""
+"Die eigenen Kontakte eines Characters führen einen Feind mit positivem "
+"Standing oder auf der Beobachtungsliste."
+
+#: markers.py:52
+msgid "Mails from or to hostiles."
+msgstr "Mails von oder an Feinde."
+
+#: markers.py:53
+msgid "Wallet journal entries with hostiles."
+msgstr "Wallet-Journal-Einträge mit Feinden."
+
+#: markers.py:54
+msgid "Contracts with hostiles."
+msgstr "Contracts mit Feinden."
 
 #: models.py:36
 msgid "The Alliance whose members are checked."
@@ -58,78 +112,113 @@ msgstr ""
 "Ein Kontakt einer angehakten Quelle gilt als feindlich, wenn sein Standing "
 "unter diesem Wert liegt."
 
-#: models.py:49 models.py:52
+#: models.py:49
+msgid "Corporation changes per year"
+msgstr "Corporation-Wechsel pro Jahr"
+
+#: models.py:50
+msgid ""
+"A character that joined this many Corporations within the last 365 days gets"
+" a marker."
+msgstr ""
+"Ein Character, der in den letzten 365 Tagen so vielen Corporations "
+"beigetreten ist, bekommt einen Marker."
+
+#: models.py:55 models.py:58
 msgid "Configuration"
 msgstr "Konfiguration"
 
-#: templates/eos_spy_network/base.html:12 views.py:13
-msgid "Hostile list"
-msgstr "Feindliste"
+#: templates/eos_spy_network/base.html:12 views.py:16
+msgctxt "eos-spy-network"
+msgid "Corporations"
+msgstr "Corporations"
 
-#: templates/eos_spy_network/base.html:18 views.py:14
+#: templates/eos_spy_network/base.html:18 views.py:18
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: templates/eos_spy_network/hostiles.html:7
-#: templates/eos_spy_network/settings.html:31
-msgid ""
-"aa-contacts is not installed: the hostile list is made from its contacts."
+#: templates/eos_spy_network/corporation.html:18
+#: templates/eos_spy_network/corporations.html:21
+#: templates/eos_spy_network/corporations.html:30
+msgctxt "eos-spy-network"
+msgid "Mains"
+msgstr "Mains"
+
+#: templates/eos_spy_network/corporation.html:19
+#: templates/eos_spy_network/corporation.html:31
+#: templates/eos_spy_network/corporations.html:22
+msgid "Mains with markers"
+msgstr "Mains mit Markern"
+
+#: templates/eos_spy_network/corporation.html:23
+msgid "Back"
+msgstr "Zurück"
+
+#: templates/eos_spy_network/corporation.html:39
+msgctxt "EVE jargon"
+msgid "Main"
+msgstr "Main"
+
+#: templates/eos_spy_network/corporation.html:40
+msgctxt "eos-spy-network"
+msgid "Characters"
+msgstr "Characters"
+
+#: templates/eos_spy_network/corporation.html:41
+msgid "Markers"
+msgstr "Marker"
+
+#: templates/eos_spy_network/corporation.html:76
+#: templates/eos_spy_network/corporations.html:37
+msgid "No markers."
+msgstr "Keine Marker."
+
+#: templates/eos_spy_network/corporations.html:43
+msgid "View details"
+msgstr "Details anzeigen"
+
+#: templates/eos_spy_network/corporations.html:52
+msgid "Auth knows no Corporation of this Alliance."
+msgstr "Auth kennt keine Corporation dieser Alliance."
+
+#: templates/eos_spy_network/partials/notices.html:5
+msgid "aa-contacts is not installed: the hostiles are made from its contacts."
 msgstr ""
-"aa-contacts ist nicht installiert: Die Feindliste entsteht aus dessen "
+"aa-contacts ist nicht installiert: Die Feinde entstehen aus dessen "
 "Kontakten."
 
-#: templates/eos_spy_network/hostiles.html:11
+#: templates/eos_spy_network/partials/notices.html:9
 msgid "No Alliance is configured yet."
 msgstr "Es ist noch keine Alliance eingestellt."
 
-#: templates/eos_spy_network/hostiles.html:13
-#: templates/eos_spy_network/hostiles.html:20
+#: templates/eos_spy_network/partials/notices.html:11
+#: templates/eos_spy_network/partials/notices.html:18
 msgid "Open the settings"
 msgstr "Einstellungen öffnen"
 
-#: templates/eos_spy_network/hostiles.html:18
+#: templates/eos_spy_network/partials/notices.html:16
 msgid "No contact source is ticked, so nothing counts as hostile."
 msgstr "Keine Kontaktquelle ist angehakt, daher gilt nichts als feindlich."
 
-#: templates/eos_spy_network/hostiles.html:27
-msgid "No contacts in aa-contacts yet, so missing from this list:"
-msgstr "Noch keine Kontakte in aa-contacts, daher fehlen in dieser Liste:"
+#: templates/eos_spy_network/partials/notices.html:25
+msgid "No contacts in aa-contacts yet, so these sources add no hostiles:"
+msgstr ""
+"Noch keine Kontakte in aa-contacts, daher liefern diese Quellen keine "
+"Feinde:"
 
-#: templates/eos_spy_network/hostiles.html:35
-#, python-format
-msgid "Contacts with a standing below %(threshold)s"
-msgstr "Kontakte mit einem Standing unter %(threshold)s"
+#: templates/eos_spy_network/partials/notices.html:32
+msgid ""
+"corptools is not installed: only the current Corporation and Alliance of the"
+" characters are checked."
+msgstr ""
+"corptools ist nicht installiert: Geprüft werden nur die aktuelle Corporation"
+" und Alliance der Characters."
 
-#: templates/eos_spy_network/hostiles.html:44
-#: templates/eos_spy_network/settings.html:40
-msgctxt "eos-spy-network"
-msgid "Name"
-msgstr "Name"
-
-#: templates/eos_spy_network/hostiles.html:45
-#: templates/eos_spy_network/settings.html:41
-msgctxt "eos-spy-network"
-msgid "Type"
-msgstr "Typ"
-
-#: templates/eos_spy_network/hostiles.html:46
-msgctxt "eos-spy-network"
-msgid "Standing"
-msgstr "Standing"
-
-#: templates/eos_spy_network/hostiles.html:47
-msgid "Sources"
-msgstr "Quellen"
-
-#: templates/eos_spy_network/hostiles.html:69
-msgid "No hostile contacts."
-msgstr "Keine feindlichen Kontakte."
-
-#: templates/eos_spy_network/settings.html:21
+#: templates/eos_spy_network/settings.html:22
 msgid "Contact sources"
 msgstr "Kontaktquellen"
 
-#: templates/eos_spy_network/settings.html:26
+#: templates/eos_spy_network/settings.html:27
 msgid ""
 "Tick whose contacts make up the hostile list. The contacts come from aa-"
 "contacts: a source needs a token there, and aa-contacts' own task keeps them"
@@ -139,61 +228,82 @@ msgstr ""
 "contacts: Eine Quelle braucht dort einen Token, und der eigene Task von aa-"
 "contacts hält sie aktuell."
 
-#: templates/eos_spy_network/settings.html:27
+#: templates/eos_spy_network/settings.html:28
 msgid "Open aa-contacts"
 msgstr "aa-contacts öffnen"
 
-#: templates/eos_spy_network/settings.html:39
+#: templates/eos_spy_network/settings.html:32
+msgid ""
+"aa-contacts is not installed: the hostile list is made from its contacts."
+msgstr ""
+"aa-contacts ist nicht installiert: Die Feindliste entsteht aus dessen "
+"Kontakten."
+
+#: templates/eos_spy_network/settings.html:40
 msgid "Ticked"
 msgstr "Angehakt"
 
+#: templates/eos_spy_network/settings.html:41
+msgctxt "eos-spy-network"
+msgid "Name"
+msgstr "Name"
+
 #: templates/eos_spy_network/settings.html:42
+msgctxt "eos-spy-network"
+msgid "Type"
+msgstr "Typ"
+
+#: templates/eos_spy_network/settings.html:43
 msgid "Token in aa-contacts"
 msgstr "Token in aa-contacts"
 
-#: templates/eos_spy_network/settings.html:43
+#: templates/eos_spy_network/settings.html:44
 msgid "Contacts as of"
 msgstr "Kontakte vom"
 
-#: templates/eos_spy_network/settings.html:44
+#: templates/eos_spy_network/settings.html:45
 msgid "Contacts"
 msgstr "Kontakte"
 
-#: templates/eos_spy_network/settings.html:45
+#: templates/eos_spy_network/settings.html:46
 msgctxt "eos-spy-network"
 msgid "Hostile"
 msgstr "Feindlich"
 
-#: templates/eos_spy_network/settings.html:57
+#: templates/eos_spy_network/settings.html:58
 msgid "Not in the Alliance"
 msgstr "Nicht in der Alliance"
 
-#: templates/eos_spy_network/settings.html:63
+#: templates/eos_spy_network/settings.html:64
 msgctxt "eos-spy-network"
 msgid "Yes"
 msgstr "Ja"
 
-#: templates/eos_spy_network/settings.html:65
+#: templates/eos_spy_network/settings.html:66
 msgctxt "eos-spy-network"
 msgid "No"
 msgstr "Nein"
 
-#: templates/eos_spy_network/settings.html:72
+#: templates/eos_spy_network/settings.html:73
 msgid "Not read yet"
 msgstr "Noch nicht gelesen"
 
-#: templates/eos_spy_network/settings.html:83
+#: templates/eos_spy_network/settings.html:84
 msgid ""
 "Choose an Alliance first: its Corporations are listed here once it is saved."
 msgstr ""
 "Wähle zuerst eine Alliance: Ihre Corporations erscheinen hier, sobald sie "
 "gespeichert ist."
 
-#: templates/eos_spy_network/settings.html:88
+#: templates/eos_spy_network/settings.html:89
 msgctxt "eos-spy-network"
 msgid "Save"
 msgstr "Speichern"
 
-#: views.py:78
+#: views.py:17
+msgid "Suspects"
+msgstr "Verdächtige"
+
+#: views.py:102
 msgid "Settings saved."
 msgstr "Einstellungen gespeichert."

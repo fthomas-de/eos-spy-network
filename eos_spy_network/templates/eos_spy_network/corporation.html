@@ -1,0 +1,80 @@
+{% extends "eos_spy_network/base.html" %}
+{% load i18n %}
+{% load evelinks %}
+
+{% block details %}
+    {% include "eos_spy_network/partials/notices.html" %}
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex align-items-start gap-3">
+                <img src="{{ tile.id|corporation_logo_url:64 }}" width="64" height="64" class="rounded flex-shrink-0" alt="">
+                <div class="flex-grow-1 overflow-hidden">
+                    <h5 class="mb-1 text-break">
+                        {{ tile.name }}
+                        <span class="text-body-secondary small">[{{ tile.ticker }}]</span>
+                    </h5>
+                    <div class="small">
+                        {% translate "Mains" context "eos-spy-network" %}: {{ tile.mains }} ·
+                        {% translate "Mains with markers" %}: {{ tile.suspects|length }}
+                    </div>
+                </div>
+                <a href="{% url 'eos_spy_network:corporations' %}" class="btn btn-sm btn-secondary flex-shrink-0">
+                    {% translate "Back" %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title mb-0">{% translate "Mains with markers" %}</div>
+        </div>
+        <div class="card-body">
+            {% if tile.suspects %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped table-hover w-100 align-middle eos-spy-network-sortable">
+                        <thead>
+                            <tr>
+                                <th>{% translate "Main" context "EVE jargon" %}</th>
+                                <th>{% translate "Characters" context "eos-spy-network" %}</th>
+                                <th>{% translate "Markers" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for suspect in tile.suspects %}
+                                <tr>
+                                    <td data-order="{{ suspect.main.character_name|lower }}">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="{{ suspect.main.character_id|character_portrait_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
+                                            {% url 'corptools:reactmain' suspect.main.character_id as audit_url %}
+                                            {% if audit_url %}
+                                                <a href="{{ audit_url }}" class="text-break">{{ suspect.main.character_name }}</a>
+                                            {% else %}
+                                                <span class="text-break">{{ suspect.main.character_name }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>{{ suspect.character_count }}</td>
+                                    <td data-order="{{ suspect.markers|length }}">
+                                        {% for marker in suspect.marker_list %}
+                                            <div class="mb-1">
+                                                <span class="badge text-bg-danger text-wrap" title="{{ marker.description }}">{{ marker.label }}{% if marker.count > 1 %} ({{ marker.count }}){% endif %}</span>
+                                                {# mails, ISK and contracts are evidence: their counterparts only with view_evidence #}
+                                                {% if not marker.is_evidence or perms.eos_spy_network.view_evidence %}
+                                                    <span class="small text-break">{{ marker.sorted_details|join:", " }}</span>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="mb-0 text-body-secondary">{% translate "No markers." %}</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
