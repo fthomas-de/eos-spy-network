@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.1] - 2026-10-09
+
 ### Added
 
 - Package skeleton after eos-auth-monitor: hatchling, permissions

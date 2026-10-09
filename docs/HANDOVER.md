@@ -8,14 +8,17 @@ Last updated 2026-10-09.
 
 ## State
 
-- Version: `0.0.1`, not released, nothing committed yet beyond GitHub's
-  initial commit (`.gitignore`, `LICENSE`)
+- Version: `0.0.1`, 2026-10-09 - the first release (see `CHANGELOG.md`):
+  package skeleton, settings page, hostile list from aa-contacts.
 - What the app does today: a settings page to choose the Alliance, the
   standing threshold and the contact sources (the Alliance and its
   Corporations); a hostile list of every contact below the threshold, read
   from aa-contacts. The member checks do not exist yet.
-- Tests: 39 without translation tests, all green (standalone and in the dev
-  instance); every test checked against sabotaged code.
+- Tests: 39 without translation tests plus 3 translation tests, all green
+  (standalone and in the dev instance); every test checked against
+  sabotaged code.
+- Translations: de, ru, zh_Hans, machine-generated, 37 messages in
+  `tools/glossary.py`; not reviewed by the user yet.
 
 | Page | Permission | What |
 |---|---|---|
@@ -32,7 +35,10 @@ Last updated 2026-10-09.
 - Suspects list with score, account page with evidence (`view_evidence`),
   review per suspect: status (new, seen, harmless, watch, confirmed), note,
   history; a harmless one comes back only with new signals.
-- Translations: the glossary is empty; the first `/commit` fills it.
+- Not tried in the browser yet: once aa-contacts' task has read the
+  contacts, choose the Alliance on the settings page, tick the sources and
+  look at the hostile list.
+- Check the release against https://github.com/fthomas-de/aa-app-checklist.
 - Staging systems for the clone/asset signal need a setting of their own.
 
 ## Decisions
@@ -71,3 +77,9 @@ Last updated 2026-10-09.
   has no pages, and `tables.js` clears the search before the form is sent.
 - `user_passes_test` sends a user without permission to the login page with
   `?next=/eos_spy_network/...`; assert on the login URL, not on the app name.
+- GitHub's Python `.gitignore` ignored `*.mo`; the line is gone, the compiled
+  catalogues are committed. Check `git status` shows them after a
+  translation run.
+- Another installed app translates "Standing" and "Hostile" differently;
+  both carry the `eos-spy-network` context. `tools/translate.py` names every
+  new clash of that kind.
