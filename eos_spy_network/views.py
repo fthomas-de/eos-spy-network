@@ -3,13 +3,13 @@ import time
 from kombu.exceptions import OperationalError
 
 from django.contrib import messages
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import __version__, contacts
+from . import __version__, contacts, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
@@ -79,6 +79,8 @@ def _notices(config) -> dict:
         "corptools_installed": corptools_installed(),
         "source_count": len(sources),
         "sources_without_contacts": unread,
+        # a running recalculation shows its bar instead of the button
+        "progress": progress.current(),
     }
 
 
@@ -156,10 +158,12 @@ def network_corporation(request, corporation_id):
 
 def _start_rebuild() -> bool:
     """Queue the task; False when the broker cannot take it."""
+    progress.queued()
     try:
         update_snapshot.delay()
     except OperationalError:
         # Redis or the broker is down; a 500 would hide what else the request did
+        progress.finished()
         return False
     return True
 
@@ -168,7 +172,7 @@ def _start_rebuild() -> bool:
 @require_POST
 def rebuild(request):
     if _start_rebuild():
-        messages.info(request, _("The markers and connections are being recalculated. Reload the page in a moment."))
+        messages.info(request, _("The markers and connections are being recalculated."))
     else:
         messages.error(request, _("The recalculation could not be started: the task queue is not reachable."))
     # back to the page the button was on; only our own pages, never elsewhere
@@ -176,6 +180,13 @@ def rebuild(request):
     if not url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}):
         target = ""
     return redirect(target or "eos_spy_network:index")
+
+
+@any_permission_required(VIEW_SUSPECTS)
+def rebuild_progress(request):
+    """The running step for progress.js; ``running`` false once the task is done."""
+    state = progress.current()
+    return JsonResponse({"running": state is not None, **(state or {})})
 
 
 @any_permission_required(MANAGE_SETTINGS)

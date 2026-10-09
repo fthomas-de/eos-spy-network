@@ -19,15 +19,22 @@ from django.utils.translation import gettext_lazy as _
 from allianceauth.authentication.models import UserProfile
 from allianceauth.services.hooks import get_extension_logger
 
+from .affiliations import Entity
+from .hostiles import hostile_entities
 from .markers import CorporationTile, Marker, Suspect, corporation_tiles
 from .models import Snapshot, SpyConfiguration
-from .network import Connections, Link, connections
+from .network import Connections, Link, Standing, affiliate, connections
 
 logger = get_extension_logger(__name__)
 
 MARKERS = "markers"
 NETWORK = "network"
-PHASE_LABELS = {MARKERS: _("Markers"), NETWORK: _("Network")}
+AFFILIATIONS = "affiliations"
+PHASE_LABELS = {MARKERS: _("Markers"), NETWORK: _("Network"), AFFILIATIONS: _("Affiliations")}
+
+
+def _no_step(_name: str) -> None:
+    pass
 
 
 @dataclass
@@ -55,6 +62,10 @@ class NetworkTile:
     @property
     def trading_count(self) -> int:
         return sum(1 for account in self.accounts if account.trading)
+
+    @property
+    def hostile_count(self) -> int:
+        return sum(1 for account in self.accounts if account.hostile)
 
 
 class Measurement:
@@ -84,14 +95,15 @@ class Measurement:
         self.seconds += elapsed
 
 
-def build(config: SpyConfiguration) -> dict | None:
-    """The data to store; None without an Alliance."""
+def build(config: SpyConfiguration, step=_no_step) -> dict | None:
+    """The data to store; None without an Alliance. ``step`` is told each step as it starts."""
     if not config.alliance:
         return None
     measurement = Measurement()
     stats = {}
     with measurement.phase(MARKERS):
-        tiles = corporation_tiles(config)
+        tiles = corporation_tiles(config, step=step)
+    step("connections")
     with measurement.phase(NETWORK):
         mains = {
             profile.user_id: profile.main_character
@@ -100,6 +112,12 @@ def build(config: SpyConfiguration) -> dict | None:
             ).select_related("main_character")
         }
         found = connections(mains, config.alliance.alliance_id, stats)
+    step("affiliations")
+    with measurement.phase(AFFILIATIONS):
+        hostiles = {
+            hostile.id: Standing(hostile.standing, hostile.sources) for hostile in hostile_entities(config)
+        }
+        entities = affiliate(found.values(), hostiles)
 
     by_corporation = {}
     for account in found.values():
@@ -123,6 +141,17 @@ def build(config: SpyConfiguration) -> dict | None:
                 ],
             }
             for tile in tiles
+        ],
+        # once for every account: the counterparts' Corporations and Alliances, and the hostile ones
+        "entities": [
+            [entity.id, entity.name, entity.category, entity.corporation_id, entity.alliance_id]
+            for entity in entities.values()
+        ],
+        "hostiles": [
+            [eve_id, str(hostile.standing), [[name, str(standing)] for name, standing in hostile.sources]]
+            for eve_id, hostile in hostiles.items()
+            # only what a graph can show; the full hostile list would bloat the row
+            if eve_id in entities
         ],
     }
     data["metrics"] = {
@@ -168,9 +197,10 @@ def _connections_data(account: Connections) -> dict:
     }
 
 
-def update() -> Snapshot | None:
+def update(step=_no_step) -> Snapshot | None:
     """Recalculate and store; without an Alliance the old result goes."""
-    data = build(SpyConfiguration.get_solo())
+    data = build(SpyConfiguration.get_solo(), step)
+    step("saving")
     if data is None:
         Snapshot.objects.all().delete()
         return None
@@ -194,6 +224,13 @@ class Report:
         self.alliance_id = data["alliance_id"]
         self.alliance_name = data["alliance_name"]
         rows = data["corporations"]
+        self.entities = {
+            row[0]: Entity(row[0], row[1], row[2], row[3], row[4]) for row in data.get("entities", [])
+        }
+        self.hostiles = {
+            eve_id: Standing(Decimal(standing), [(name, Decimal(value)) for name, value in sources])
+            for eve_id, standing, sources in data.get("hostiles", [])
+        }
         self.tiles = [self._tile(row) for row in rows]
         self.network_tiles = [self._network_tile(row) for row in rows]
         self.metrics = self._metrics(data.get("metrics"))
@@ -212,8 +249,7 @@ class Report:
             tile.suspects.append(suspect)
         return tile
 
-    @staticmethod
-    def _network_tile(row) -> NetworkTile:
+    def _network_tile(self, row) -> NetworkTile:
         tile = NetworkTile(row["id"], row["name"], row["ticker"], row["mains"])
         for stored in row.get("connections", []):
             account = Connections(stored["user_id"], stored["main_id"], stored["main_name"], stored["corporation_id"])
@@ -223,6 +259,8 @@ class Report:
                 Link(character_id, counterpart_id, payments, trades, Decimal(isk))
                 for character_id, counterpart_id, payments, trades, isk in stored["links"]
             ]
+            account.entities = self.entities
+            account.hostiles = self.hostiles
             tile.accounts.append(account)
         return tile
 

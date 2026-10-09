@@ -79,9 +79,12 @@ is no binary log and there are no dumps.
 
 ## Code
 
-- The app only reads other apps' tables and writes nothing but its own. It
-  makes no ESI call: the contacts come from aa-contacts (`contacts.py`),
-  corptools' data from corptools. Never use aa-contacts' `contact_name`
+- The app only reads other apps' tables and writes nothing but its own. The
+  contacts come from aa-contacts (`contacts.py`), corptools' data from
+  corptools. The one ESI use is `affiliations.py`, in the task only: the
+  Corporation and Alliance of network counterparts neither Auth nor corptools
+  knows, through public endpoints without a token. Tests never reach ESI:
+  `SpyTestCase` patches its three calls. Never use aa-contacts' `contact_name`
   property - for an entity Auth does not know it creates rows from ESI;
   read names through `with_contact_name()`.
 - Every foreign app is optional: guard it with `apps.is_installed(...)` and

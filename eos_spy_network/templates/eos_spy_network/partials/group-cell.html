@@ -1,0 +1,14 @@
+{% load i18n %}
+{# A Corporation or Alliance cell of the network table; red with its standing when it is a hostile contact. #}
+{% if group %}
+    {% if group.standing is not None %}
+        <td class="text-break text-danger fw-semibold" data-order="{{ group.name }}">
+            {{ group.name }}
+            <span class="badge text-bg-danger" title="{% translate 'Standing' context 'eos-spy-network' %}">{{ group.standing|floatformat:"-1" }}</span>
+        </td>
+    {% else %}
+        <td class="text-break">{{ group.name }}</td>
+    {% endif %}
+{% else %}
+    <td class="text-body-secondary">{% translate "unknown" %}</td>
+{% endif %}

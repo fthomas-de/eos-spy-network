@@ -1,0 +1,14 @@
+{% load i18n %}
+{# What the colours of the graph mean; network.js takes the colours from these icons, so both always agree. #}
+<div class="d-flex flex-wrap gap-3 small mb-2">
+    <span><i class="fas fa-circle eos-spy-network-legend-main"></i> {% translate "Main" context "EVE jargon" %}</span>
+    <span><i class="fas fa-circle eos-spy-network-legend-alt"></i> {% translate "Alt" %}</span>
+    <span><i class="fas fa-diamond eos-spy-network-legend-partner"></i> {% translate "Partner outside the Alliance" %}</span>
+    <span><i class="fas fa-diamond eos-spy-network-legend-hostile_partner"></i> {% translate "Hostile partner" %}</span>
+    <span><i class="fas fa-square eos-spy-network-legend-corporation"></i> {% translate "Corporation" context "EVE jargon" %}</span>
+    <span><i class="fas fa-square eos-spy-network-legend-hostile_corporation"></i> {% translate "Hostile Corporation" %}</span>
+    <span><i class="fas fa-shield-halved eos-spy-network-legend-alliance"></i> {% translate "Alliance" context "EVE jargon" %}</span>
+    <span><i class="fas fa-shield-halved eos-spy-network-legend-hostile_alliance"></i> {% translate "Hostile Alliance" %}</span>
+    <span><i class="fas fa-minus eos-spy-network-legend-payment-edge"></i> {% translate "Payments" %}</span>
+    <span><i class="fas fa-minus eos-spy-network-legend-trading-edge"></i> {% translate "Player trading" %}</span>
+</div>

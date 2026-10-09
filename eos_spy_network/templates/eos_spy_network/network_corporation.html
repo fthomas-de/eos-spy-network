@@ -29,67 +29,99 @@
     </div>
 
     {% if tile.accounts %}
-        {# the texts network.js puts into the graph's tooltips and legend #}
-        <div class="d-flex flex-wrap gap-3 small mb-3"
-             data-eos-spy-network-graph-labels
-             data-payments="{% translate 'Payments' %}"
-             data-trades="{% translate 'Player trading' %}">
-            <span><i class="fas fa-circle eos-spy-network-legend-main"></i> {% translate "Main" context "EVE jargon" %}</span>
-            <span><i class="fas fa-circle eos-spy-network-legend-alt"></i> {% translate "Alt" %}</span>
-            <span><i class="fas fa-circle eos-spy-network-legend-shared"></i> {% translate "Shared payment partner" %}</span>
-            <span><i class="fas fa-circle eos-spy-network-legend-trading"></i> {% translate "Player trading partner" %}</span>
-            <span><i class="fas fa-minus eos-spy-network-legend-payment-edge"></i> {% translate "Payments" %}</span>
-            <span><i class="fas fa-minus eos-spy-network-legend-trading-edge"></i> {% translate "Player trading" %}</span>
-        </div>
-
-        {% for account in tile.accounts %}
-            <div class="card mb-3">
-                <div class="card-header d-flex align-items-center gap-2 flex-wrap">
-                    <img src="{{ account.main_id|character_portrait_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
-                    {% url 'corptools:reactmain' account.main_id as audit_url %}
-                    {% if audit_url %}
-                        <a href="{{ audit_url }}" class="fw-bold text-break">{{ account.main_name }}</a>
-                    {% else %}
-                        <span class="fw-bold text-break">{{ account.main_name }}</span>
-                    {% endif %}
-                    {% if account.shared %}
-                        <span class="badge text-bg-warning">{% translate "Shared payment partner" %}: {{ account.shared|length }}</span>
-                    {% endif %}
-                    {% if account.trading %}
-                        <span class="badge text-bg-info">{% translate "Player trading" %}: {{ account.trading|length }}</span>
-                    {% endif %}
-                </div>
-                <div class="card-body">
-                    <div class="eos-spy-network-graph mb-3" data-eos-spy-network-graph></div>
-                    {{ account.graph|json_script }}
-
-                    <div class="table-responsive">
-                        <table class="table table-sm table-striped table-hover w-100 align-middle eos-spy-network-sortable">
-                            <thead>
-                                <tr>
-                                    <th>{% translate "Character" context "EVE jargon" %}</th>
-                                    <th>{% translate "Counterpart" %}</th>
-                                    <th>{% translate "Payments" %}</th>
-                                    <th>{% translate "Player trading" %}</th>
-                                    <th>ISK</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for character, counterpart, payments, trades, isk in account.rows %}
-                                    <tr>
-                                        <td class="text-break">{{ character }}</td>
-                                        <td class="text-break">{{ counterpart }}</td>
-                                        <td>{{ payments }}</td>
-                                        <td>{{ trades }}</td>
-                                        <td data-order="{{ isk }}" class="text-nowrap">{{ isk|floatformat:"0g" }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="row g-3">
+            {# the mains; network.js shows the graph and table of the one clicked #}
+            <div class="col-lg-4">
+                <div class="list-group" data-eos-spy-network-mains>
+                    {% for account in tile.accounts %}
+                        <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-2" data-eos-spy-network-show="{{ account.main_id }}">
+                            <img src="{{ account.main_id|character_portrait_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
+                            <span class="fw-semibold text-break me-auto">{{ account.main_name }}</span>
+                            {% if account.hostile %}
+                                <span class="badge text-bg-danger" title="{% translate 'Hostile partner' %}">{{ account.hostile|length }}</span>
+                            {% endif %}
+                            {% if account.shared %}
+                                <span class="badge text-bg-warning" title="{% translate 'Shared payment partner' %}">{{ account.shared|length }}</span>
+                            {% endif %}
+                            {% if account.trading %}
+                                <span class="badge text-bg-info" title="{% translate 'Player trading' %}">{{ account.trading|length }}</span>
+                            {% endif %}
+                        </button>
+                    {% endfor %}
                 </div>
             </div>
-        {% endfor %}
+
+            <div class="col-lg-8">
+                <div class="text-body-secondary text-center border rounded p-5" data-eos-spy-network-placeholder>
+                    <i class="fas fa-diagram-project fa-2x mb-2"></i>
+                    <p class="mb-0">{% translate "Click a main to see its connections." %}</p>
+                </div>
+
+                {# the texts network.js puts into the graph's tooltips #}
+                <div class="d-none"
+                     data-eos-spy-network-graph-labels
+                     data-payments="{% translate 'Payments' %}"
+                     data-trades="{% translate 'Player trading' %}"
+                     data-standing="{% translate 'Standing' context 'eos-spy-network' %}"></div>
+
+                {% for account in tile.accounts %}
+                    <div class="card d-none" data-eos-spy-network-account="{{ account.main_id }}">
+                        <div class="card-header d-flex align-items-center gap-2 flex-wrap">
+                            <img src="{{ account.main_id|character_portrait_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
+                            {% url 'corptools:reactmain' account.main_id as audit_url %}
+                            {% if audit_url %}
+                                <a href="{{ audit_url }}" class="fw-bold text-break">{{ account.main_name }}</a>
+                            {% else %}
+                                <span class="fw-bold text-break">{{ account.main_name }}</span>
+                            {% endif %}
+                            {% if account.hostile %}
+                                <span class="badge text-bg-danger">{% translate "Hostile partner" %}: {{ account.hostile|length }}</span>
+                            {% endif %}
+                            {% if account.shared %}
+                                <span class="badge text-bg-warning">{% translate "Shared payment partner" %}: {{ account.shared|length }}</span>
+                            {% endif %}
+                            {% if account.trading %}
+                                <span class="badge text-bg-info">{% translate "Player trading" %}: {{ account.trading|length }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            {% include "eos_spy_network/partials/network-legend.html" %}
+                            <div class="eos-spy-network-graph mb-3" data-eos-spy-network-graph></div>
+                            {{ account.graph|json_script }}
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped table-hover w-100 align-middle eos-spy-network-sortable">
+                                    <thead>
+                                        <tr>
+                                            <th>{% translate "Character" context "EVE jargon" %}</th>
+                                            <th>{% translate "Counterpart" %}</th>
+                                            <th>{% translate "Corporation" context "EVE jargon" %}</th>
+                                            <th>{% translate "Alliance" context "EVE jargon" %}</th>
+                                            <th>{% translate "Payments" %}</th>
+                                            <th>{% translate "Player trading" %}</th>
+                                            <th>ISK</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in account.rows %}
+                                            <tr>
+                                                <td class="text-break">{{ row.character }}</td>
+                                                <td class="text-break{% if row.hostile %} text-danger fw-semibold{% endif %}">{{ row.counterpart }}</td>
+                                                {% include "eos_spy_network/partials/group-cell.html" with group=row.corporation %}
+                                                {% include "eos_spy_network/partials/group-cell.html" with group=row.alliance %}
+                                                <td>{{ row.payments }}</td>
+                                                <td>{{ row.trades }}</td>
+                                                <td data-order="{{ row.isk }}" class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     {% else %}
         <p class="text-body-secondary">{% translate "No connections outside the Alliance." %}</p>
     {% endif %}

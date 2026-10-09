@@ -192,7 +192,6 @@ TRANSLATIONS = {
     ),
     "Payments": ("Zahlungen", "Платежи", "付款"),
     "Alt": ("Alt", "Alt", "Alt"),
-    "Player trading partner": ("Player-Trading-Partner", "Партнёр по player trading", "Player trading 对象"),
     "Counterpart": ("Gegenüber", "Контрагент", "对方"),
     # recalculation and its footer
     "Last calculation %(seconds)s s, %(queries)s queries (%(query_seconds)s s)": (
@@ -215,11 +214,63 @@ TRANSLATIONS = {
     "Calculated %(built_at)s": ("Berechnet %(built_at)s", "Рассчитано %(built_at)s", "计算于 %(built_at)s"),
     "Not calculated yet.": ("Noch nicht berechnet.", "Ещё не рассчитано.", "尚未计算。"),
     "Recalculate": ("Neu berechnen", "Пересчитать", "重新计算"),
-    "The markers and connections are being recalculated. Reload the page in a moment.": (
-        "Marker und Verbindungen werden neu berechnet. Lade die Seite gleich neu.",
-        "Маркеры и связи пересчитываются. Обновите страницу через минуту.",
-        "正在重新计算标记和关联。请稍后刷新页面。",
+    "The markers and connections are being recalculated.": (
+        "Marker und Verbindungen werden neu berechnet.",
+        "Маркеры и связи пересчитываются.",
+        "正在重新计算标记和关联。",
     ),
+    "Recalculating": ("Neuberechnung läuft", "Идёт пересчёт", "正在重新计算"),
+    # the steps of the progress bar
+    "Waiting for the task queue": ("Warte auf die Task-Queue", "Ожидание очереди задач", "等待任务队列"),
+    "Reading the hostile contacts": ("Lese die feindlichen Kontakte", "Чтение враждебных контактов", "读取敌对联系人"),
+    "Checking memberships": ("Prüfe Mitgliedschaften", "Проверка членства", "检查成员关系"),
+    "Checking Corporation histories": (
+        "Prüfe Corporation-Historien",
+        "Проверка истории Corporation",
+        "检查 Corporation 历史",
+    ),
+    "Checking contacts": ("Prüfe Kontakte", "Проверка контактов", "检查联系人"),
+    "Checking mails": ("Prüfe Mails", "Проверка писем", "检查邮件"),
+    "Checking wallet journals": ("Prüfe Wallet-Journale", "Проверка журналов кошелька", "检查钱包日志"),
+    "Checking contracts": ("Prüfe Verträge", "Проверка контрактов", "检查合同"),
+    "Finding connections outside the Alliance": (
+        "Suche Verbindungen außerhalb der Alliance",
+        "Поиск связей за пределами Alliance",
+        "查找 Alliance 外部的关联",
+    ),
+    "Looking up Corporations and Alliances": (
+        "Ermittle Corporations und Alliances",
+        "Определение Corporation и Alliance",
+        "查询 Corporation 和 Alliance",
+    ),
+    "Saving the result": ("Speichere das Ergebnis", "Сохранение результата", "保存结果"),
+    "Affiliations": ("Zugehörigkeiten", "Принадлежность", "所属关系"),
+    # network page
+    "Hide Corporations without connections": (
+        "Corporations ohne Verbindungen ausblenden",
+        "Скрыть Corporation без связей",
+        "隐藏没有关联的 Corporation",
+    ),
+    "The partner, its Corporation or its Alliance is a hostile contact.": (
+        "Der Partner, seine Corporation oder seine Alliance ist ein feindlicher Kontakt.",
+        "Партнёр, его Corporation или его Alliance — враждебный контакт.",
+        "该对象、其 Corporation 或其 Alliance 是敌对联系人。",
+    ),
+    "Hostile partner": ("Feindlicher Partner", "Враждебный партнёр", "敌对对象"),
+    "Click a main to see its connections.": (
+        "Klicke auf einen Main, um seine Verbindungen zu sehen.",
+        "Нажмите на Main, чтобы увидеть его связи.",
+        "点击一个 Main 查看其关联。",
+    ),
+    "Standing": ("Standing", "Standing", "Standing"),
+    "unknown": ("unbekannt", "неизвестно", "未知"),
+    "Partner outside the Alliance": (
+        "Partner außerhalb der Alliance",
+        "Партнёр за пределами Alliance",
+        "Alliance 外部的对象",
+    ),
+    "Hostile Corporation": ("Feindliche Corporation", "Враждебная Corporation", "敌对 Corporation"),
+    "Hostile Alliance": ("Feindliche Alliance", "Враждебный Alliance", "敌对 Alliance"),
     "The recalculation could not be started: the task queue is not reachable.": (
         "Die Neuberechnung konnte nicht gestartet werden: Die Task-Queue ist nicht erreichbar.",
         "Не удалось запустить пересчёт: очередь задач недоступна.",

@@ -40,10 +40,14 @@ Last updated 2026-10-09.
 
 ## Open
 
-- Not tried in the browser yet (EVE SSO login): the tiles, the switch, the
-  graph and the *Recalculate* button. Rendered server-side against `aa_dev`
-  without errors: Ether Element shows E 'o with two watched hostiles at -5,
-  and on Network E 'o and BigBlackout C both paying fenriscw1.
+- Committed, not released (2026-10-09): affiliation chain, click-to-show
+  mains, network switch, colours/columns, progress bar (see `[Unreleased]`).
+  116 tests plus translation tests green; version bump follows with `/push`.
+- Not tried in the browser yet (EVE SSO login): the tiles, the switches, the
+  click-to-show graph, its layout and the progress bar. Rendered server-side
+  against `aa_dev` without errors: on Network E 'o and BigBlackout C both
+  paying fenriscw1, who ESI puts into Royal Amarr Institute (NPC starter
+  Corporation, no Alliance, not hostile).
 - Ask the user (asked at the end of the session, no answer yet): does a
   shared payment partner need the main among the characters, or are two
   alts enough (implemented: any two)?
@@ -80,10 +84,20 @@ Last updated 2026-10-09.
 - Recalculation: stored in the database by a Celery task (not a cache, not
   live), started by the button, by saving the settings, or by a
   `CELERYBEAT_SCHEDULE` entry the admin adds (README).
-- No ESI call at all, not even an affiliation lookup: a counterpart is
-  hostile only when it is a hostile contact itself or a member Auth knows
-  (`EveCharacter`, `EveCorporationInfo`); corptools' `EveName` has no
-  affiliation. Contacts come from aa-contacts; no task of our own.
+- ESI (changed 2026-10-09): the markers make no ESI call - a counterpart
+  there is hostile only as a hostile contact itself or a member Auth knows.
+  The network task looks up each counterpart's Corporation and Alliance:
+  Auth and corptools first, ESI's public endpoints only for the rest
+  (`affiliations.py`). corptools' `EveName` has the fields but leaves them
+  empty (0 of 1393 in `aa_dev`). Contacts come from aa-contacts.
+- Network graph (2026-10-09): the chain goes counterpart -> Corporation ->
+  Alliance; the hostile one is the reason node, labelled with its standing.
+  Own side green (main darker, alts lighter), hostiles red, others neutral;
+  columns left to right. The Corporation page lists the mains, graph and
+  table only after a click. The switch on the tiles hides Corporations
+  without connections.
+- Progress: the task writes its step into the cache (`progress.py`), the
+  pages poll `rebuild/progress/` and reload when it is gone.
 - Mails: headers and subject, never the body.
 - Review with status, note and history.
 - Scope: one Alliance, as in eos-auth-monitor.

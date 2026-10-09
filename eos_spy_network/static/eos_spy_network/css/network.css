@@ -1,27 +1,57 @@
 /*
  * The connection graphs. The legend's colours are the theme's; network.js
  * reads them from the legend icons, so graph and legend always agree.
+ *
+ * Own side in greens (main full, alts lighter), hostiles in reds (the
+ * partner lighter, the Corporation full, the Alliance deepest), everything
+ * else outside the Alliance neutral.
  */
 .eos-spy-network-graph {
-    height: 420px;
+    height: 520px;
     border: 1px solid var(--bs-border-color);
     border-radius: var(--bs-border-radius);
 }
 
+.eos-spy-network-progress {
+    min-width: 16rem;
+}
+
 .eos-spy-network-legend-main {
-    color: var(--bs-primary);
+    color: var(--bs-success);
 }
 
 .eos-spy-network-legend-alt {
+    color: rgba(var(--bs-success-rgb), 0.55);
+}
+
+.eos-spy-network-legend-partner {
+    color: var(--bs-warning);
+}
+
+.eos-spy-network-legend-corporation {
     color: var(--bs-secondary);
 }
 
-.eos-spy-network-legend-shared,
+.eos-spy-network-legend-alliance {
+    color: rgba(var(--bs-secondary-rgb), 0.6);
+}
+
+.eos-spy-network-legend-hostile_partner {
+    color: rgba(var(--bs-danger-rgb), 0.6);
+}
+
+.eos-spy-network-legend-hostile_corporation {
+    color: var(--bs-danger);
+}
+
+.eos-spy-network-legend-hostile_alliance {
+    color: #8b1a1a;
+}
+
 .eos-spy-network-legend-payment-edge {
     color: var(--bs-warning);
 }
 
-.eos-spy-network-legend-trading,
 .eos-spy-network-legend-trading-edge {
     color: var(--bs-info);
 }

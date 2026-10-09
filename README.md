@@ -42,9 +42,15 @@ every one with a standing below a configurable value.
   Mails, ISK and contracts between characters of the same account never
   count.
 - **Network**: a tile per Corporation with the mains that have ISK
-  connections outside the Alliance, and per Corporation every such main with
-  a graph of its characters and their counterparts and a table of the
-  connections. A main shows up when
+  connections outside the Alliance (a switch hides the Corporations without
+  any), and per Corporation the list of such mains; a click on a main shows
+  the graph of its characters, their counterparts and the counterparts'
+  Corporations and Alliances, and a table of the connections. In the graph
+  the own characters are green (main darker, alts lighter), hostiles red,
+  everything else outside the Alliance neutral; a hostile Corporation or
+  Alliance carries its standing, the sources in its tooltip. A counterpart
+  is a *hostile partner* when it, its Corporation or its Alliance is a
+  hostile contact. A main shows up when
   - *Shared payment partner*: at least two characters of the account - main
     and alt, or two alts - exchanged ISK with the same character outside the
     Alliance; one payment each is enough. Payments are the wallet journal's
@@ -61,7 +67,9 @@ every one with a standing below a configurable value.
 - **Recalculate**: the markers and connections are calculated by a task and
   stored; the pages read the stored result and show when it was calculated.
   The button *Recalculate* on the pages, saving the settings and the
-  periodic task (see [Installation](#installation)) start it. A footer shows
+  periodic task (see [Installation](#installation)) start it. While it runs, a
+  progress bar with the current step replaces the button, and the page
+  reloads once the result is stored. A footer shows
   what the last calculation cost: time per phase, queries, accounts,
   characters, wallet entries read, the size stored, and the time the page
   took
@@ -83,8 +91,8 @@ every one with a standing below a configurable value.
 
 ## What the markers can see
 
-The app makes no ESI call. Who belongs to a hostile Corporation or Alliance
-is known only for the characters and Corporations Auth has in its own
+The markers make no ESI call. Who belongs to a hostile Corporation or Alliance
+is known to them only for the characters and Corporations Auth has in its own
 tables; corptools stores the names of mail, wallet and contract partners
 without their Corporation. A mail, an ISK transfer or a contract with a
 character Auth has never seen counts only when that character is a hostile
@@ -97,6 +105,13 @@ The markers read corptools' data; an account without a working Character
 Audit simply shows fewer markers. corptools is read when installed and is
 not a dependency; without it only the current Corporation and Alliance of
 the characters are checked.
+
+The network is the exception: for each counterpart outside the Alliance
+the task looks up its Corporation and Alliance - first in Auth's and
+corptools' tables, and only for what neither knows through ESI's public
+endpoints (names, character affiliation, Corporation), without a token. A
+failed request leaves that counterpart without Corporation; the
+calculation goes on.
 
 ## Where the contacts come from
 

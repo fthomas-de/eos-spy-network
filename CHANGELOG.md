@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Network graph follows each counterpart to its Corporation and Alliance, so
+  the reason a partner is hostile - a Corporation or Alliance below the
+  standing threshold - shows as a node of its own with its standing and
+  sources. The affiliation comes from Auth and corptools first; only for
+  counterparts neither knows the task asks ESI's public endpoints (corptools
+  never fills a counterpart's Corporation, so without that the chain ended
+  at the character)
+- Network: *Hostile partner* count per main and per Corporation tile, and
+  Corporation and Alliance columns with standings in the connection table
+- Switch on the network tiles to hide the Corporations without connections
+- Progress bar with the current step while the recalculation runs; the page
+  reloads when it is done instead of asking the viewer to reload
+
+### Changed
+
+- Network Corporation page lists the mains first; graph and table appear
+  only after a click on a main (and with `#main-<id>` in the address), where
+  every graph used to be drawn at once
+- Graph colours and layout: own characters in greens, hostiles in reds,
+  laid out in columns left to right - main, alts, partners, Corporations,
+  Alliances
+
 ## [0.0.3] - 2026-10-09
 
 ### Added

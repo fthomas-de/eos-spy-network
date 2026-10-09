@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 14:35+0000\n"
-"PO-Revision-Date: 2026-10-09 14:35+0000\n"
+"POT-Creation-Date: 2026-10-09 15:52+0000\n"
+"PO-Revision-Date: 2026-10-09 15:52+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: zh_Hans\n"
 "Language: zh_Hans\n"
@@ -21,17 +21,21 @@ msgstr ""
 msgid "Spy Network"
 msgstr "Spy Network"
 
-#: contacts.py:25 templates/eos_spy_network/network_corporation.html:70
+#: contacts.py:25 templates/eos_spy_network/network_corporation.html:96
 msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
 #: contacts.py:26 models.py:89
+#: templates/eos_spy_network/network_corporation.html:98
+#: templates/eos_spy_network/partials/network-legend.html:8
 msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
 #: contacts.py:27 forms.py:11 models.py:35 models.py:88
+#: templates/eos_spy_network/network_corporation.html:99
+#: templates/eos_spy_network/partials/network-legend.html:10
 #: templates/eos_spy_network/settings.html:11
 msgctxt "EVE jargon"
 msgid "Alliance"
@@ -120,15 +124,63 @@ msgstr "在过去 365 天内加入这么多 Corporation 的 Character 会被标�
 msgid "Configuration"
 msgstr "配置"
 
-#: snapshot.py:30 templates/eos_spy_network/base.html:12
+#: progress.py:18
+msgid "Waiting for the task queue"
+msgstr "等待任务队列"
+
+#: progress.py:19
+msgid "Reading the hostile contacts"
+msgstr "读取敌对联系人"
+
+#: progress.py:20
+msgid "Checking memberships"
+msgstr "检查成员关系"
+
+#: progress.py:21
+msgid "Checking Corporation histories"
+msgstr "检查 Corporation 历史"
+
+#: progress.py:22
+msgid "Checking contacts"
+msgstr "检查联系人"
+
+#: progress.py:23
+msgid "Checking mails"
+msgstr "检查邮件"
+
+#: progress.py:24
+msgid "Checking wallet journals"
+msgstr "检查钱包日志"
+
+#: progress.py:25
+msgid "Checking contracts"
+msgstr "检查合同"
+
+#: progress.py:26
+msgid "Finding connections outside the Alliance"
+msgstr "查找 Alliance 外部的关联"
+
+#: progress.py:27
+msgid "Looking up Corporations and Alliances"
+msgstr "查询 Corporation 和 Alliance"
+
+#: progress.py:28
+msgid "Saving the result"
+msgstr "保存结果"
+
+#: snapshot.py:33 templates/eos_spy_network/base.html:12
 #: templates/eos_spy_network/corporation.html:42 views.py:30
 msgid "Markers"
 msgstr "标记"
 
-#: snapshot.py:30 templates/eos_spy_network/base.html:19 views.py:32
+#: snapshot.py:33 templates/eos_spy_network/base.html:19 views.py:32
 #: views.py:33
 msgid "Network"
 msgstr "关系网"
+
+#: snapshot.py:33
+msgid "Affiliations"
+msgstr "所属关系"
 
 #: templates/eos_spy_network/base.html:25 views.py:34
 msgid "Settings"
@@ -137,9 +189,10 @@ msgstr "设置"
 #: templates/eos_spy_network/corporation.html:19
 #: templates/eos_spy_network/corporations.html:29
 #: templates/eos_spy_network/corporations.html:38
-#: templates/eos_spy_network/network.html:22
-#: templates/eos_spy_network/network.html:31
-#: templates/eos_spy_network/network.html:37
+#: templates/eos_spy_network/network.html:29
+#: templates/eos_spy_network/network.html:38
+#: templates/eos_spy_network/network.html:44
+#: templates/eos_spy_network/network.html:50
 #: templates/eos_spy_network/network_corporation.html:20
 msgctxt "eos-spy-network"
 msgid "Mains"
@@ -157,7 +210,7 @@ msgid "Back"
 msgstr "返回"
 
 #: templates/eos_spy_network/corporation.html:40
-#: templates/eos_spy_network/network_corporation.html:37
+#: templates/eos_spy_network/partials/network-legend.html:4
 msgctxt "EVE jargon"
 msgid "Main"
 msgstr "Main"
@@ -177,66 +230,88 @@ msgid "Hide Corporations without markers"
 msgstr "隐藏无标记的 Corporations"
 
 #: templates/eos_spy_network/corporations.html:51
-#: templates/eos_spy_network/network.html:50
+#: templates/eos_spy_network/network.html:63
 msgid "View details"
 msgstr "查看详情"
 
 #: templates/eos_spy_network/corporations.html:60
-#: templates/eos_spy_network/network.html:59
+#: templates/eos_spy_network/network.html:72
 msgid "Auth knows no Corporation of this Alliance."
 msgstr "Auth 不知道此 Alliance 的任何 Corporation。"
 
-#: templates/eos_spy_network/network.html:23
+#: templates/eos_spy_network/network.html:14
+msgid "Hide Corporations without connections"
+msgstr "隐藏没有关联的 Corporation"
+
+#: templates/eos_spy_network/network.html:30
 #: templates/eos_spy_network/network_corporation.html:21
 msgid "Mains with connections"
 msgstr "有关联的 Mains"
 
-#: templates/eos_spy_network/network.html:30
+#: templates/eos_spy_network/network.html:37
+msgid "The partner, its Corporation or its Alliance is a hostile contact."
+msgstr "该对象、其 Corporation 或其 Alliance 是敌对联系人。"
+
+#: templates/eos_spy_network/network.html:37
+#: templates/eos_spy_network/network_corporation.html:41
+#: templates/eos_spy_network/network_corporation.html:78
+#: templates/eos_spy_network/partials/network-legend.html:7
+msgid "Hostile partner"
+msgstr "敌对对象"
+
+#: templates/eos_spy_network/network.html:43
 msgid ""
 "At least two characters of the account exchanged ISK with the same character"
 " outside the Alliance."
 msgstr "该账号至少有两个 Character 与 Alliance 外的同一 Character 有过 ISK 往来。"
 
-#: templates/eos_spy_network/network.html:30
-#: templates/eos_spy_network/network_corporation.html:39
-#: templates/eos_spy_network/network_corporation.html:56
+#: templates/eos_spy_network/network.html:43
+#: templates/eos_spy_network/network_corporation.html:44
+#: templates/eos_spy_network/network_corporation.html:81
 msgid "Shared payment partner"
 msgstr "共同付款对象"
 
-#: templates/eos_spy_network/network.html:36
+#: templates/eos_spy_network/network.html:49
 msgid "Player trading with characters outside the Alliance."
 msgstr "与 Alliance 外 Character 的 Player trading。"
 
-#: templates/eos_spy_network/network.html:36
-#: templates/eos_spy_network/network_corporation.html:36
-#: templates/eos_spy_network/network_corporation.html:42
-#: templates/eos_spy_network/network_corporation.html:59
-#: templates/eos_spy_network/network_corporation.html:73
+#: templates/eos_spy_network/network.html:49
+#: templates/eos_spy_network/network_corporation.html:47
+#: templates/eos_spy_network/network_corporation.html:64
+#: templates/eos_spy_network/network_corporation.html:84
+#: templates/eos_spy_network/network_corporation.html:101
+#: templates/eos_spy_network/partials/network-legend.html:13
 msgid "Player trading"
 msgstr "Player trading"
 
-#: templates/eos_spy_network/network.html:44
-#: templates/eos_spy_network/network_corporation.html:94
+#: templates/eos_spy_network/network.html:57
+#: templates/eos_spy_network/network_corporation.html:126
 msgid "No connections outside the Alliance."
 msgstr "没有与 Alliance 外的关联。"
 
-#: templates/eos_spy_network/network_corporation.html:35
-#: templates/eos_spy_network/network_corporation.html:41
-#: templates/eos_spy_network/network_corporation.html:72
+#: templates/eos_spy_network/network_corporation.html:57
+msgid "Click a main to see its connections."
+msgstr "点击一个 Main 查看其关联。"
+
+#: templates/eos_spy_network/network_corporation.html:63
+#: templates/eos_spy_network/network_corporation.html:100
+#: templates/eos_spy_network/partials/network-legend.html:12
 msgid "Payments"
 msgstr "付款"
 
-#: templates/eos_spy_network/network_corporation.html:38
-msgid "Alt"
-msgstr "Alt"
+#: templates/eos_spy_network/network_corporation.html:65
+#: templates/eos_spy_network/partials/group-cell.html:7
+msgctxt "eos-spy-network"
+msgid "Standing"
+msgstr "Standing"
 
-#: templates/eos_spy_network/network_corporation.html:40
-msgid "Player trading partner"
-msgstr "Player trading 对象"
-
-#: templates/eos_spy_network/network_corporation.html:71
+#: templates/eos_spy_network/network_corporation.html:97
 msgid "Counterpart"
 msgstr "对方"
+
+#: templates/eos_spy_network/partials/group-cell.html:13
+msgid "unknown"
+msgstr "未知"
 
 #: templates/eos_spy_network/partials/metrics.html:7
 #, python-format
@@ -268,6 +343,22 @@ msgstr "已存储 %(kilobytes)s KB"
 msgid "page %(milliseconds)s ms"
 msgstr "页面 %(milliseconds)s 毫秒"
 
+#: templates/eos_spy_network/partials/network-legend.html:5
+msgid "Alt"
+msgstr "Alt"
+
+#: templates/eos_spy_network/partials/network-legend.html:6
+msgid "Partner outside the Alliance"
+msgstr "Alliance 外部的对象"
+
+#: templates/eos_spy_network/partials/network-legend.html:9
+msgid "Hostile Corporation"
+msgstr "敌对 Corporation"
+
+#: templates/eos_spy_network/partials/network-legend.html:11
+msgid "Hostile Alliance"
+msgstr "敌对 Alliance"
+
 #: templates/eos_spy_network/partials/notices.html:5
 msgid "aa-contacts is not installed: the hostiles are made from its contacts."
 msgstr "未安装 aa-contacts：敌对方由其联系人生成。"
@@ -295,16 +386,21 @@ msgid ""
 " characters are checked."
 msgstr "未安装 corptools：只检查各 Character 当前的 Corporation 和 Alliance。"
 
-#: templates/eos_spy_network/partials/state.html:8
+#: templates/eos_spy_network/partials/state.html:9
 #, python-format
 msgid "Calculated %(built_at)s"
 msgstr "计算于 %(built_at)s"
 
-#: templates/eos_spy_network/partials/state.html:13
+#: templates/eos_spy_network/partials/state.html:14
 msgid "Not calculated yet."
 msgstr "尚未计算。"
 
-#: templates/eos_spy_network/partials/state.html:20
+#: templates/eos_spy_network/partials/state.html:21
+#: templates/eos_spy_network/partials/state.html:23
+msgid "Recalculating"
+msgstr "正在重新计算"
+
+#: templates/eos_spy_network/partials/state.html:32
 msgid "Recalculate"
 msgstr "重新计算"
 
@@ -392,22 +488,20 @@ msgstr "保存"
 msgid "Suspects"
 msgstr "嫌疑人"
 
-#: views.py:171
-msgid ""
-"The markers and connections are being recalculated. Reload the page in a "
-"moment."
-msgstr "正在重新计算标记和关联。请稍后刷新页面。"
+#: views.py:175
+msgid "The markers and connections are being recalculated."
+msgstr "正在重新计算标记和关联。"
 
-#: views.py:173
+#: views.py:177
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr "无法开始重新计算：任务队列不可达。"
 
-#: views.py:192
+#: views.py:203
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr "设置已保存。正在重新计算标记和关联。"
 
-#: views.py:196
+#: views.py:207
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

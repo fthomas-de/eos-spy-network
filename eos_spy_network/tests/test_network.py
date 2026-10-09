@@ -7,7 +7,19 @@ from allianceauth.authentication.models import CharacterOwnership
 from eos_spy_network import snapshot
 from eos_spy_network.network import connections
 
-from .base import ALLIANCE_ID, SpyTestCase, configure, make_character, make_corporation, make_user
+from eos_spy_network.models import ContactSource
+
+from .base import (
+    ALLIANCE_ID,
+    OTHER_ALLIANCE_ID,
+    SpyTestCase,
+    add_contact,
+    add_token,
+    configure,
+    make_character,
+    make_corporation,
+    make_user,
+)
 
 OUTSIDER = 90000100  # a character Auth has never seen
 OTHER_OUTSIDER = 90000101
@@ -131,10 +143,12 @@ class TestSnapshot(NetworkTestCase):
         self.assertEqual(account.trading, {OUTSIDER})
         graph = account.graph()
         self.assertEqual(
-            {node["id"]: node["group"] for node in graph["nodes"]},
-            {self.main.character_id: "main", 5001: "alt", OUTSIDER: "shared"},
+            {node["id"]: (node["group"], node["level"]) for node in graph["nodes"]},
+            {self.main.character_id: ("main", 0), 5001: ("alt", 1), OUTSIDER: ("partner", 2)},
         )
-        self.assertEqual(len(graph["edges"]), 2)
+        self.assertEqual(
+            sorted(edge["kind"] for edge in graph["edges"]), ["account", "payment", "trading"]
+        )
 
     def test_should_store_the_metrics(self):
         self.pay(self.main, OUTSIDER)
@@ -151,3 +165,61 @@ class TestSnapshot(NetworkTestCase):
 
         self.assertIsNone(snapshot.update())
         self.assertIsNone(snapshot.current())
+
+
+HOSTILE_CORP = 98000500
+
+
+class TestHostileChain(NetworkTestCase):
+    """An outsider in a Corporation the Alliance holds at -10, in a neutral Alliance."""
+
+    def setUp(self):
+        super().setUp()
+        ContactSource.objects.create(kind=ContactSource.ALLIANCE, entity_id=ALLIANCE_ID, name="Us")
+        add_token(ContactSource.ALLIANCE, ALLIANCE_ID)
+        make_corporation(HOSTILE_CORP, alliance_id=OTHER_ALLIANCE_ID)
+        add_contact(ContactSource.ALLIANCE, ALLIANCE_ID, HOSTILE_CORP, -10)
+        # Auth has never seen the outsider: its Corporation comes from ESI
+        self.esi_names.return_value = {OUTSIDER: ("Outsider", "character")}
+        self.esi_affiliations.return_value = {OUTSIDER: (HOSTILE_CORP, OTHER_ALLIANCE_ID)}
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+
+    def account(self):
+        (account,) = snapshot.Report(snapshot.update()).network_tile(2001).accounts
+        return account
+
+    def test_should_follow_the_partner_to_its_hostile_corporation(self):
+        graph = self.account().graph()
+
+        nodes = {node["id"]: node for node in graph["nodes"]}
+        self.assertEqual(nodes[OUTSIDER]["group"], "hostile_partner")
+        self.assertEqual(nodes[HOSTILE_CORP]["group"], "hostile_corporation")
+        self.assertEqual(nodes[HOSTILE_CORP]["standing"], "-10.0")
+        self.assertEqual(nodes[HOSTILE_CORP]["sources"], [["Us", "-10.0"]])
+        self.assertEqual(nodes[OTHER_ALLIANCE_ID]["group"], "alliance")
+        self.assertEqual(
+            [nodes[OUTSIDER]["level"], nodes[HOSTILE_CORP]["level"], nodes[OTHER_ALLIANCE_ID]["level"]], [2, 3, 4]
+        )
+        members = {(edge["from"], edge["to"]) for edge in graph["edges"] if edge["kind"] == "member"}
+        self.assertEqual(members, {(OUTSIDER, HOSTILE_CORP), (HOSTILE_CORP, OTHER_ALLIANCE_ID)})
+
+    def test_should_name_corporation_and_alliance_in_the_table(self):
+        (row,) = self.account().rows
+
+        self.assertTrue(row["hostile"])
+        self.assertEqual(row["corporation"]["name"], f"Corp {HOSTILE_CORP}")
+        self.assertEqual(str(row["corporation"]["standing"]), "-10.0")
+        self.assertIsNone(row["alliance"]["standing"])
+
+    def test_should_count_the_hostile_partner_on_the_tile(self):
+        tile = snapshot.Report(snapshot.update()).network_tile(2001)
+
+        self.assertEqual(tile.hostile_count, 1)
+
+    def test_should_keep_a_partner_in_a_neutral_corporation_neutral(self):
+        self.esi_affiliations.return_value = {OUTSIDER: (4001, None)}
+
+        account = self.account()
+
+        self.assertEqual(account.hostile, set())
+        self.assertEqual({node["id"]: node["group"] for node in account.graph()["nodes"]}[4001], "corporation")

@@ -123,9 +123,15 @@ def corptools_installed() -> bool:
     return apps.is_installed(CORPTOOLS)
 
 
-def corporation_tiles(config: SpyConfiguration | None = None, corporation_id: int | None = None) -> list:
+def _no_step(_name: str) -> None:
+    pass
+
+
+def corporation_tiles(
+    config: SpyConfiguration | None = None, corporation_id: int | None = None, step=_no_step
+) -> list:
     """The Corporations of the configured Alliance, each with its marked accounts; with
-    ``corporation_id`` only that one."""
+    ``corporation_id`` only that one. ``step`` is told the name of each check as it starts."""
     config = config or SpyConfiguration.get_solo()
     if not config.alliance:
         return []
@@ -148,9 +154,10 @@ def corporation_tiles(config: SpyConfiguration | None = None, corporation_id: in
         accounts[profile.user_id] = Suspect(profile.user_id, profile.main_character, 0)
         tiles[profile.main_character.corporation_id].mains += 1
 
+    step("hostiles")
     index = hostile_index(config)
     if accounts and index:
-        _check(accounts, index, config)
+        _check(accounts, index, config, step)
 
     for suspect in accounts.values():
         if suspect.markers:
@@ -160,7 +167,8 @@ def corporation_tiles(config: SpyConfiguration | None = None, corporation_id: in
     return list(tiles.values())
 
 
-def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration) -> None:
+def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, step=_no_step) -> None:
+    step("membership")
     # EVE ID of every character -> its account; a character of the own account is never a counterpart
     owner = {}
     names = {}
@@ -193,10 +201,15 @@ def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration) -> Non
 
     characters = list(owner)
     hostile_ids = index.ids
+    step("history")
     _check_history(accounts, index, config, owner, names, characters)
+    step("contacts")
     _check_contacts(accounts, index, owner, names, characters, hostile_ids)
+    step("mails")
     _check_mails(accounts, index, owner, characters, hostile_ids, counterparts)
+    step("wallet")
     _check_wallet(accounts, index, owner, characters, hostile_ids, counterparts)
+    step("contracts")
     _check_contracts(accounts, index, owner, characters, hostile_ids, counterparts)
 
 

@@ -319,10 +319,24 @@ class TestNetworkPages(SuspectPageTestCase):
         self.assertContains(response, reverse("eos_spy_network:network_corporation", args=[2001]))
         self.assertContains(response, "Player trading")
 
-    def test_should_show_the_graph_of_a_connected_main(self):
+    def test_should_offer_to_hide_corporations_without_connections(self):
+        make_corporation(2002)
+        snapshot.update()
+
+        response = self.client.get(reverse("eos_spy_network:network"))
+
+        self.assertContains(response, 'data-eos-spy-network-hide-clean="network"')
+        # only the tile without connections is marked for the switch
+        self.assertContains(response, "data-eos-spy-network-clean", count=1)
+        self.assertContains(response, "eos_spy_network/js/tiles.")
+
+    def test_should_list_the_mains_and_keep_their_graphs_for_the_click(self):
         response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
 
-        self.assertContains(response, self.suspect_main.character_name)
+        main_id = self.suspect_main.character_id
+        self.assertContains(response, f'data-eos-spy-network-show="{main_id}"')
+        self.assertContains(response, f'class="card d-none" data-eos-spy-network-account="{main_id}"')
+        self.assertContains(response, "data-eos-spy-network-placeholder")
         self.assertContains(response, "Stranger")
         self.assertContains(response, "data-eos-spy-network-graph")
         self.assertContains(response, "vis-network.min.js")

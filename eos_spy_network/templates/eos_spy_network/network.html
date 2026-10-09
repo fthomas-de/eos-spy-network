@@ -1,16 +1,23 @@
 {% extends "eos_spy_network/base.html" %}
 {% load i18n %}
 {% load evelinks %}
+{% load sri %}
 
 {% block details %}
     {% include "eos_spy_network/partials/notices.html" %}
     {% include "eos_spy_network/partials/state.html" %}
 
     {% if tiles %}
+        {# tiles.js hides the tiles marked clean while the switch is on, and remembers it per browser #}
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" role="switch" id="eos-spy-network-hide-clean" data-eos-spy-network-hide-clean="network">
+            <label class="form-check-label" for="eos-spy-network-hide-clean">{% translate "Hide Corporations without connections" %}</label>
+        </div>
+
         <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
             {% for tile in tiles %}
-                <div class="col">
-                    <div class="card h-100 {% if tile.accounts %}border-warning{% else %}border-success{% endif %}">
+                <div class="col"{% if not tile.accounts %} data-eos-spy-network-clean{% endif %}>
+                    <div class="card h-100 {% if tile.hostile_count %}border-danger{% elif tile.accounts %}border-warning{% else %}border-success{% endif %}">
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex align-items-center gap-2 mb-2">
                                 <img src="{{ tile.id|corporation_logo_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
@@ -25,6 +32,12 @@
 
                             {% if tile.accounts %}
                                 <ul class="list-group list-group-flush mb-2">
+                                    {% if tile.hostile_count %}
+                                        <li class="list-group-item d-flex align-items-center gap-2 px-0">
+                                            <span class="badge text-bg-danger text-wrap" title="{% translate 'The partner, its Corporation or its Alliance is a hostile contact.' %}">{% translate "Hostile partner" %}</span>
+                                            <span class="small text-body-secondary ms-auto text-nowrap">{% translate "Mains" context "eos-spy-network" %}: {{ tile.hostile_count }}</span>
+                                        </li>
+                                    {% endif %}
                                     {% if tile.shared_count %}
                                         <li class="list-group-item d-flex align-items-center gap-2 px-0">
                                             <span class="badge text-bg-warning text-wrap" title="{% translate 'At least two characters of the account exchanged ISK with the same character outside the Alliance.' %}">{% translate "Shared payment partner" %}</span>
@@ -58,4 +71,9 @@
     {% elif report %}
         <p class="text-body-secondary">{% translate "Auth knows no Corporation of this Alliance." %}</p>
     {% endif %}
+{% endblock %}
+
+{% block extra_javascript %}
+    {{ block.super }}
+    {% sri_static "eos_spy_network/js/tiles.js" %}
 {% endblock %}

@@ -1,5 +1,6 @@
 {% load i18n %}
 {# When the shown result was calculated, and the button to calculate it again; above the marker and network pages. #}
+{# While a recalculation runs, a progress bar takes the button's place; progress.js polls it and reloads the page when done. #}
 {% if config.alliance %}
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
         {% if report %}
@@ -13,12 +14,24 @@
                 {% translate "Not calculated yet." %}
             </span>
         {% endif %}
-        <form method="post" action="{% url 'eos_spy_network:rebuild' %}" class="d-inline ms-auto">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            <button type="submit" class="btn btn-primary btn-sm">
-                <i class="fas fa-rotate"></i> {% translate "Recalculate" %}
-            </button>
-        </form>
+        {% if progress %}
+            <div class="ms-auto eos-spy-network-progress" data-eos-spy-network-progress="{% url 'eos_spy_network:rebuild_progress' %}">
+                <div class="small text-body-secondary mb-1">
+                    <i class="fas fa-rotate fa-spin"></i>
+                    {% translate "Recalculating" %}: <span data-eos-spy-network-progress-label>{{ progress.label }}</span>
+                </div>
+                <div class="progress" role="progressbar" aria-label="{% translate 'Recalculating' %}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress.percent }}" data-eos-spy-network-progress-track>
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{ progress.percent }}%" data-eos-spy-network-progress-bar>{{ progress.percent }} %</div>
+                </div>
+            </div>
+        {% else %}
+            <form method="post" action="{% url 'eos_spy_network:rebuild' %}" class="d-inline ms-auto">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-rotate"></i> {% translate "Recalculate" %}
+                </button>
+            </form>
+        {% endif %}
     </div>
 {% endif %}

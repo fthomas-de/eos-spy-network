@@ -38,6 +38,15 @@ class SpyTestCase(TestCase):
         patcher = patch("eos_spy_network.views.update_snapshot")
         self.update_snapshot = patcher.start()
         self.addCleanup(patcher.stop)
+        # no test asks the real ESI; a test that wants an answer sets the return value
+        self.esi_names = self._patch("eos_spy_network.affiliations._esi_names", {})
+        self.esi_affiliations = self._patch("eos_spy_network.affiliations._esi_affiliations", {})
+        self.esi_corporation_alliance = self._patch("eos_spy_network.affiliations._esi_corporation_alliance", None)
+
+    def _patch(self, target, return_value):
+        patcher = patch(target, return_value=return_value)
+        self.addCleanup(patcher.stop)
+        return patcher.start()
 
 
 def make_alliance(alliance_id=ALLIANCE_ID):
