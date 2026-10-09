@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.6] - 2026-10-09
+
 ### Added
 
 - Settings: a time frame in days (default 365, 0 takes everything). Wallet

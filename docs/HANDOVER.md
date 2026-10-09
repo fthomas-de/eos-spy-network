@@ -8,36 +8,26 @@ Last updated 2026-10-09.
 
 ## State
 
-- Unreleased (2026-10-09, not committed): settings `lookback_days` (time
-  frame, `SpyConfiguration.since()`, 0 = everything) and
-  `ignored_ref_types` (JSON list, default `market_transaction`, choices
-  from the distinct `ref_type`s of corptools' journal, Tom Select multi),
-  migration 0004 applied to `aa_dev`. The time frame filters wallet,
-  contracts, mails (undated mails stay), network payments and the
-  Corporation history (a membership counts when it ended after `since`;
-  its end is the next record's start); contacts have no date. The ignored
-  types apply to the ISK marker and the network. ISK/contract marker rows
-  carry `counterpart_id`; `snapshot.build` resolves them together with the
-  network partners (`affiliate(..., more_ids)`) and `_affiliate_rows` adds
-  `category`, `corporation`, `alliance` (name + standing) for
-  `partials/dealings.html`. Celery worker restarted 17:55 in a background
-  shell of that session.
-- Version: `0.0.5`, 2026-10-09 (see `CHANGELOG.md`): network keeps only
-  hostile partners (`network.hostile_only`, after `affiliate` in
-  `snapshot.build`); the graph draws Corporation/Alliance only up to the
-  reason (the Corporation stays between partner and a hostile Alliance),
-  the rest in the partner's tooltip (`affiliation`); periods (first/last
-  payment, ISO dates) per link in table and line tooltip; ISK and contract
-  markers carry `rows` per own character and hostile (count, ISK, period,
-  kinds, `partials/dealings.html`), Corporation changes the Corporations
-  joined (`<abbr>` tooltip); graph layout: wider columns, repulsion run then
-  frozen, height by the fullest column, payment count only in the tooltip.
-- Before (0.0.4): counterparts followed to Corporation and Alliance
-  (`affiliations.py`: Auth, corptools, then public ESI in the task); mains
-  listed first, graph and table on click (`#main-<id>`); progress bar
-  (`progress.py`, polled at `rebuild/progress/`).
-- A snapshot of 0.0.4 or older has no periods and marker rows; `Report`
-  reads it anyway, the next recalculation fills them.
+- Version: `0.0.6`, 2026-10-09 (see `CHANGELOG.md`): settings
+  `lookback_days` (time frame, `SpyConfiguration.since()`, default 365,
+  0 = everything) and `ignored_ref_types` (JSON list, default
+  `market_transaction`, choices from the distinct `ref_type`s of
+  corptools' journal, Tom Select multi; migration 0004). The time frame
+  filters wallet, contracts, mails (undated mails stay), network payments
+  and the Corporation history (a membership counts when it ended after
+  `since`; its end is the next record's start); contacts have no date in
+  corptools and stay unfiltered. The ignored types apply to the ISK marker
+  and the network. ISK/contract marker rows carry `counterpart_id`;
+  `snapshot.build` resolves them together with the network partners
+  (`affiliate(..., more_ids)`), `_affiliate_rows` adds `category`,
+  `corporation`, `alliance` (name + standing) for
+  `partials/dealings.html` (`Marker.affiliated`).
+- Before (0.0.5): network only with hostile partners, graph up to the
+  reason, periods per link, ISK/contract `rows`; (0.0.4) affiliations via
+  `affiliations.py`, progress bar.
+- A snapshot of 0.0.5 or older has no Corporation/Alliance in the marker
+  rows (0.0.4: no periods and rows either); `Report` reads it anyway, the
+  next recalculation fills them.
 - What the app does today: a settings page (Alliance, standing threshold,
   Corporation changes per year, time frame, ignored wallet entry types,
   contact sources); Markers: the Corporations
@@ -64,8 +54,12 @@ Last updated 2026-10-09.
 ## Open
 
 - Not tried in the real app in the browser yet (EVE SSO login): tiles,
-  switches, click-to-show graph, progress bar, the new dealings tables and
-  the Corporation-change tooltips. The graph layout was checked only with a
+  switches, click-to-show graph, progress bar, the dealings tables with
+  their Corporation/Alliance columns, the multi-select of ignored wallet
+  types and the Corporation-change tooltips. `aa_dev` has no ISK or
+  contract marker, so the new columns were only seen in tests.
+- The translations of 0.0.6 (time frame, ignored wallet entry types) are
+  machine-made like the rest; not reviewed by the user. The graph layout was checked only with a
   synthetic 14-partner graph served as a static page (labels no longer
   overlap; lines still cross labels in a dense graph). `aa_dev` has no
   hostile network partner and no ISK/contract marker, so the network pages
@@ -125,6 +119,14 @@ Last updated 2026-10-09.
   without connections.
 - Progress: the task writes its step into the cache (`progress.py`), the
   pages poll `rebuild/progress/` and reload when it is gone.
+- Time frame (2026-10-09): "last N days" in the settings, not fixed dates;
+  it limits mails, ISK, contracts, network payments and the Corporation
+  history, because standings change and the hostile list is today's.
+- Ignored wallet types (2026-10-09): one list for the ISK marker and the
+  network; default `market_transaction` (the user's example).
+- Corporation/Alliance of ISK and contract counterparts (2026-10-09): from
+  the same lookup as the network (Auth, corptools, then public ESI in the
+  task); whether a counterpart is hostile is still decided without ESI.
 - Mails: headers and subject, never the body.
 - Review with status, note and history.
 - Scope: one Alliance, as in eos-auth-monitor.
@@ -134,20 +136,21 @@ Last updated 2026-10-09.
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0003
-  applied to `aa_dev`, `collectstatic` run. A snapshot was built once by
-  hand (`snapshot.update()` in the shell); no `CELERYBEAT_SCHEDULE` entry
-  for it in `local.py`.
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0004
+  applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
+  hand with 0.0.6 (`snapshot.update()` in the shell; time frame 365,
+  ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
+  `local.py`.
 - aa-contacts holds tokens for Invidia Gloriae Comes (99003995) and Ether
   Element (98633815); first read 2026-10-09 by hand (159 Alliance, 54
   Corporation contacts). No `celery beat` runs in the dev instance, so no
   periodic task fires on its own.
 - The periodic task row `contacts` (id 7, every 15 minutes) is disabled; the
   `CELERYBEAT_SCHEDULE` entry in `local.py` (hourly) is the one to keep.
-- The Celery worker was restarted 2026-10-09 15:00 in a terminal tab of the
-  Claude session (`celery -A myauth worker -l info -P solo`) and lists
-  `eos_spy_network.tasks.update_snapshot`; it stops with that session. A
-  snapshot of 0.0.4 was built by hand (`snapshot.update()`).
+- The Celery worker was restarted 2026-10-09 17:55 with the 0.0.6 code in a
+  background shell of the Claude session (`celery -A myauth worker -l info
+  -P solo`); it stops with that session - check `pgrep -af celery` and
+  start it again before testing the button.
 
 ## Traps
 
@@ -185,3 +188,11 @@ Last updated 2026-10-09.
   the repo root would land in `git status` and the next commit.
 - An assertion on the URL `/eos_spy_network/rebuild/` also matches
   `rebuild/progress/`; assert on `action="..."` instead.
+- `django.test.Client()` in `manage.py shell` gets 400 (host `testserver`)
+  and a superuser without a main is redirected: use
+  `Client(HTTP_HOST="127.0.0.1:8000")` and a user with
+  `profile.main_character`.
+- `wsl.exe ... bash -lc '... | grep ...'` from the PowerShell tool breaks
+  the pipes; run such lines through the Bash tool.
+- Inheriting a test class to borrow a helper runs all its tests twice;
+  assign the helper instead (`add_entry = TestWallet.add_entry`).
