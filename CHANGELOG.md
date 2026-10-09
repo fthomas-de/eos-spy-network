@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.2] - 2026-10-09
+
 ### Added
 
 - Corporations page: a tile per Corporation of the Alliance with its mains,
