@@ -1,0 +1,5 @@
+{# One entry of the app navbar, written the way Alliance Auth's own apps do (groupmanagement): the theme styles the active link. #}
+{# Active by the view's `nav`, not by URL name: a Corporation page is the My Corporation tab for the own Corporation only. #}
+<li class="nav-item">
+    <a class="nav-link {% if nav == nav_key %}active{% endif %}" href="{{ nav_url }}"{% if nav == nav_key %} aria-current="page"{% endif %}>{{ nav_title }}</a>
+</li>

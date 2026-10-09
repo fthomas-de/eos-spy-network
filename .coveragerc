@@ -1,0 +1,9 @@
+[run]
+source = eos_spy_network
+omit =
+    eos_spy_network/migrations/*
+    eos_spy_network/tests/*
+
+[report]
+show_missing = True
+skip_covered = True

@@ -1,0 +1,45 @@
+{% extends "allianceauth/base-bs5.html" %}
+{% load i18n %}
+{% load aa_i18n %}
+{% load sri %}
+
+{% block page_title %}{% translate "Spy Network" %}{% endblock %}
+
+{% block header_nav_collapse_left %}
+    {# `nav` names the current tab #}
+    {% if perms.eos_spy_network.view_suspects %}
+        {% url "eos_spy_network:hostiles" as hostiles_url %}
+        {% translate "Hostile list" as hostiles_title %}
+        {% include "eos_spy_network/partials/nav-item.html" with nav_url=hostiles_url nav_title=hostiles_title nav_key="hostiles" %}
+    {% endif %}
+
+    {% if perms.eos_spy_network.manage_settings %}
+        {% url "eos_spy_network:settings" as settings_url %}
+        {% translate "Settings" as settings_title %}
+        {% include "eos_spy_network/partials/nav-item.html" with nav_url=settings_url nav_title=settings_title nav_key="settings" %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% get_current_language as current_language %}
+    {% get_datatables_language_static current_language as datatables_language %}
+    {# tables.js hands this to DataTables, the way Alliance Auth's own pages do #}
+    <div class="eos_spy_network" data-eos-spy-network-datatables-language="{{ datatables_language }}">
+        {% translate "Spy Network" as app_name %}
+        {# the version beside the name; below it, which page of the app this is #}
+        {% with page_title=app_name|add:" ("|add:version|add:")" %}
+            {% include "framework/header/page-header.html" with title=page_title subtitle=location %}
+        {% endwith %}
+
+        {% block details %}{% endblock %}
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+    {% include "bundles/datatables-2-css-bs5.html" %}
+{% endblock %}
+
+{% block extra_javascript %}
+    {% include "bundles/datatables-2-js-bs5.html" %}
+    {% sri_static "eos_spy_network/js/tables.js" %}
+{% endblock %}

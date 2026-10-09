@@ -1,0 +1,92 @@
+# hatchling instead of flit: flit cannot leave the tests out of the wheel
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "eos_spy_network"
+description = "Suspected spies among the members of an Alliance, read from corptools and aa-contacts"
+dynamic = ["version"]
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+authors = [
+    { name = "Flo", email = "xxxeoeoxxx@gmail.com" },
+]
+classifiers = [
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 5.2",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+dependencies = [
+    # the same floor as eos-auth-monitor: the DataTables 2 bundles and
+    # page-header.html
+    "allianceauth>=5.1.4,<6",
+    # the settings page is a singleton; AA ships django-solo, but we import it
+    "django-solo",
+]
+# aa-contacts and corptools are read when installed and are deliberately not
+# dependencies: pip would install them - or upgrade the versions a site has pinned.
+
+[project.optional-dependencies]
+# tools/translate.py needs polib; tox and coverage run the suite standalone
+dev = [
+    "coverage",
+    "polib",
+    "tox",
+]
+
+[project.urls]
+Homepage = "https://github.com/fthomas-de/eos-spy-network"
+Source = "https://github.com/fthomas-de/eos-spy-network"
+Changelog = "https://github.com/fthomas-de/eos-spy-network/blob/main/CHANGELOG.md"
+Tracker = "https://github.com/fthomas-de/eos-spy-network/issues"
+
+[tool.hatch.version]
+path = "eos_spy_network/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["eos_spy_network"]
+exclude = ["eos_spy_network/tests"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/eos_spy_network", "/CHANGELOG.md"]
+exclude = ["/eos_spy_network/tests"]
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+sections = [
+    "FUTURE",
+    "STDLIB",
+    "THIRDPARTY",
+    "DJANGO",
+    "ALLIANCEAUTH",
+    "FIRSTPARTY",
+    "LOCALFOLDER"
+]
+known_allianceauth = ["allianceauth", "app_utils"]
+known_django = ["django", "solo"]
+
+[tool.pylint.'MASTER']
+ignore-patterns = ["test_.*.py,__init__.py", "generate_.*.py"]
+ignore-paths = ["^.*//migrations//.*$"]
+
+[tool.pylint.'BASIC']
+good-names = ["i", "j", "k", "x", "f", "ex"]
+
+[tool.pylint.'FORMAT']
+max-line-length = 120
+
+[tool.pylint.'MESSAGES CONTROL']
+disable = ["E0213", "E1101", "C0209", "C"]

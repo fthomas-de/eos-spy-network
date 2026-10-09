@@ -1,0 +1,100 @@
+{% extends "eos_spy_network/base.html" %}
+{% load django_bootstrap5 %}
+{% load i18n %}
+
+{% block details %}
+    <form method="post" action="{% url 'eos_spy_network:settings' %}">
+        {% csrf_token %}
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="card-title mb-0">{% translate "Alliance" context "EVE jargon" %}</div>
+            </div>
+            <div class="card-body">
+                {% bootstrap_field form.alliance %}
+                {% bootstrap_field form.hostile_below %}
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="card-title mb-0">{% translate "Contact sources" %}</div>
+            </div>
+            <div class="card-body">
+                {% if aa_contacts_installed %}
+                    <p class="small text-body-secondary">
+                        {% translate "Tick whose contacts make up the hostile list. The contacts come from aa-contacts: a source needs a token there, and aa-contacts' own task keeps them up to date." %}
+                        <a href="{% url 'aa_contacts:index' %}">{% translate "Open aa-contacts" %}</a>
+                    </p>
+                {% else %}
+                    <div class="alert alert-danger">
+                        {% translate "aa-contacts is not installed: the hostile list is made from its contacts." %}
+                    </div>
+                {% endif %}
+                {% if rows %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped table-hover w-100 eos-spy-network-sortable eos-spy-network-form-table">
+                            <thead>
+                                <tr>
+                                    <th class="eos-spy-network-no-sort"><span class="visually-hidden">{% translate "Ticked" %}</span></th>
+                                    <th>{% translate "Name" context "eos-spy-network" %}</th>
+                                    <th>{% translate "Type" context "eos-spy-network" %}</th>
+                                    <th>{% translate "Token in aa-contacts" %}</th>
+                                    <th>{% translate "Contacts as of" %}</th>
+                                    <th>{% translate "Contacts" %}</th>
+                                    <th>{% translate "Hostile" context "eos-spy-network" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in rows %}
+                                    <tr>
+                                        <td data-order="{% if row.source %}0{% else %}1{% endif %}">
+                                            <input class="form-check-input" type="checkbox" name="source" value="{{ row.key }}" id="source-{{ row.key }}"{% if row.source %} checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <label for="source-{{ row.key }}">{{ row.name|default:row.entity_id }}{% if row.ticker %} [{{ row.ticker }}]{% endif %}</label>
+                                            {% if not row.in_alliance %}
+                                                <span class="badge text-bg-secondary">{% translate "Not in the Alliance" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ row.kind_label }}</td>
+                                        <td data-order="{% if row.has_token %}1{% else %}0{% endif %}">
+                                            {% if row.has_token %}
+                                                <span class="badge text-bg-success">{% translate "Yes" context "eos-spy-network" %}</span>
+                                            {% else %}
+                                                <span class="badge text-bg-danger">{% translate "No" context "eos-spy-network" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td data-order="{{ row.contacts_modified|date:'U' }}">
+                                            {% if row.contacts_modified %}
+                                                {{ row.contacts_modified|date:"Y-m-d H:i" }}
+                                            {% elif row.has_token %}
+                                                <span class="text-body-secondary">{% translate "Not read yet" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{% if row.has_token %}{{ row.contact_count }}{% endif %}</td>
+                                        <td>{% if row.has_token %}{{ row.hostile_count }}{% endif %}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="mb-0 text-body-secondary">{% translate "Choose an Alliance first: its Corporations are listed here once it is saved." %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">{% translate "Save" context "eos-spy-network" %}</button>
+    </form>
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    {% include "eos_spy_network/bundles/tom-select-css.html" %}
+{% endblock %}
+
+{% block extra_javascript %}
+    {{ block.super }}
+    {% include "eos_spy_network/bundles/tom-select-js.html" %}
+{% endblock %}

@@ -1,0 +1,58 @@
+/*
+ * Tom Select's Bootstrap 5 theme paints the control and the dropdown with
+ * --bs-body-bg and hard-coded dark text. That only fits themes whose inputs
+ * share the page background. Darkly, for one, has white inputs on a dark page:
+ * the library then shows a dark dropdown under a white field, and any fix via
+ * --bs-body-color turns the field's text white on white.
+ *
+ * searchable.js therefore copies the background and text colour the theme
+ * gives the original <select class="form-select"> into two variables on the
+ * wrapper, and everything below follows them - the widget looks like the
+ * theme's own dropdowns, whichever theme that is.
+ */
+
+.ts-wrapper .ts-control,
+.ts-wrapper.single.input-active .ts-control,
+.ts-wrapper .ts-dropdown {
+    background: var(--eos-spy-network-ts-bg, var(--bs-body-bg));
+    color: var(--eos-spy-network-ts-color, var(--bs-body-color));
+}
+
+.ts-wrapper.disabled .ts-control {
+    background-color: var(--bs-secondary-bg);
+}
+
+.ts-wrapper .ts-control input,
+.ts-wrapper .ts-dropdown .option {
+    color: inherit;
+}
+
+.ts-wrapper .ts-control input::placeholder {
+    color: inherit;
+    opacity: 0.6;
+}
+
+.ts-wrapper .ts-dropdown .optgroup-header,
+.ts-wrapper .ts-dropdown .create,
+.ts-wrapper .ts-dropdown .no-results {
+    background: inherit;
+    color: inherit;
+    opacity: 0.6;
+}
+
+/* the highlight of Bootstrap's own .dropdown-item:active, readable on any theme */
+.ts-wrapper .ts-dropdown .active,
+.ts-wrapper .ts-dropdown .active.create {
+    background-color: var(--bs-primary);
+    color: var(--bs-white);
+    opacity: 1;
+}
+
+.ts-wrapper .ts-dropdown {
+    border-color: var(--bs-border-color);
+}
+
+.ts-wrapper.focus .ts-control {
+    border-color: var(--bs-primary-border-subtle);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
