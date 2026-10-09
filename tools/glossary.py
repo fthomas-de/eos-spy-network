@@ -91,10 +91,8 @@ TRANSLATIONS = {
         "请先选择 Alliance：保存后，其 Corporation 会列在这里。",
     ),
     "Save": ("Speichern", "Сохранить", "保存"),
-    "Settings saved.": ("Einstellungen gespeichert.", "Настройки сохранены.", "设置已保存。"),
     # EVE jargon, English everywhere. The plurals carry the "eos-spy-network"
     # context: under "EVE jargon" Alliance Auth shows the singular in ru and zh_Hans
-    "Corporations": ("Corporations", "Corporations", "Corporations"),
     "Main": ("Main", "Main", "Main"),
     "Mains": ("Mains", "Mains", "Mains"),
     "Characters": ("Characters", "Characters", "Characters"),
@@ -166,6 +164,76 @@ TRANSLATIONS = {
         "corptools ist nicht installiert: Geprüft werden nur die aktuelle Corporation und Alliance der Characters.",
         "corptools не установлен: проверяются только текущие Corporation и Alliance каждого Character.",
         "未安装 corptools：只检查各 Character 当前的 Corporation 和 Alliance。",
+    ),
+    # network pages
+    "Network": ("Network", "Сеть", "关系网"),
+    "Hide Corporations without markers": (
+        "Corporations ohne Marker ausblenden",
+        "Скрыть Corporations без маркеров",
+        "隐藏无标记的 Corporations",
+    ),
+    "Mains with connections": ("Mains mit Verbindungen", "Mains со связями", "有关联的 Mains"),
+    "At least two characters of the account exchanged ISK with the same character outside the Alliance.": (
+        "Mindestens zwei Characters des Accounts haben ISK mit demselben Character außerhalb der Alliance getauscht.",
+        "Как минимум два Character аккаунта обменивались ISK с одним и тем же Character вне Alliance.",
+        "该账号至少有两个 Character 与 Alliance 外的同一 Character 有过 ISK 往来。",
+    ),
+    "Shared payment partner": ("Gemeinsamer Zahlungspartner", "Общий платёжный партнёр", "共同付款对象"),
+    "Player trading with characters outside the Alliance.": (
+        "Player Trading mit Characters außerhalb der Alliance.",
+        "Player trading с Character вне Alliance.",
+        "与 Alliance 外 Character 的 Player trading。",
+    ),
+    "Player trading": ("Player Trading", "Player trading", "Player trading"),
+    "No connections outside the Alliance.": (
+        "Keine Verbindungen außerhalb der Alliance.",
+        "Нет связей вне Alliance.",
+        "没有与 Alliance 外的关联。",
+    ),
+    "Payments": ("Zahlungen", "Платежи", "付款"),
+    "Alt": ("Alt", "Alt", "Alt"),
+    "Player trading partner": ("Player-Trading-Partner", "Партнёр по player trading", "Player trading 对象"),
+    "Counterpart": ("Gegenüber", "Контрагент", "对方"),
+    # recalculation and its footer
+    "Last calculation %(seconds)s s, %(queries)s queries (%(query_seconds)s s)": (
+        "Letzte Berechnung %(seconds)s s, %(queries)s Abfragen (%(query_seconds)s s)",
+        "Последний расчёт %(seconds)s с, %(queries)s запросов (%(query_seconds)s с)",
+        "上次计算 %(seconds)s 秒，%(queries)s 次查询（%(query_seconds)s 秒）",
+    ),
+    "%(corporations)s Corporations, %(accounts)s accounts, %(characters)s characters": (
+        "%(corporations)s Corporations, %(accounts)s Accounts, %(characters)s Characters",
+        "Corporations: %(corporations)s, аккаунтов: %(accounts)s, Characters: %(characters)s",
+        "%(corporations)s 个 Corporations，%(accounts)s 个账号，%(characters)s 个 Characters",
+    ),
+    "%(entries)s wallet entries": (
+        "%(entries)s Wallet-Einträge",
+        "записей кошелька: %(entries)s",
+        "%(entries)s 条钱包记录",
+    ),
+    "%(kilobytes)s KB stored": ("%(kilobytes)s KB gespeichert", "сохранено %(kilobytes)s КБ", "已存储 %(kilobytes)s KB"),
+    "page %(milliseconds)s ms": ("Seite %(milliseconds)s ms", "страница %(milliseconds)s мс", "页面 %(milliseconds)s 毫秒"),
+    "Calculated %(built_at)s": ("Berechnet %(built_at)s", "Рассчитано %(built_at)s", "计算于 %(built_at)s"),
+    "Not calculated yet.": ("Noch nicht berechnet.", "Ещё не рассчитано.", "尚未计算。"),
+    "Recalculate": ("Neu berechnen", "Пересчитать", "重新计算"),
+    "The markers and connections are being recalculated. Reload the page in a moment.": (
+        "Marker und Verbindungen werden neu berechnet. Lade die Seite gleich neu.",
+        "Маркеры и связи пересчитываются. Обновите страницу через минуту.",
+        "正在重新计算标记和关联。请稍后刷新页面。",
+    ),
+    "The recalculation could not be started: the task queue is not reachable.": (
+        "Die Neuberechnung konnte nicht gestartet werden: Die Task-Queue ist nicht erreichbar.",
+        "Не удалось запустить пересчёт: очередь задач недоступна.",
+        "无法开始重新计算：任务队列不可达。",
+    ),
+    "Settings saved. The markers and connections are being recalculated.": (
+        "Einstellungen gespeichert. Marker und Verbindungen werden neu berechnet.",
+        "Настройки сохранены. Маркеры и связи пересчитываются.",
+        "设置已保存。正在重新计算标记和关联。",
+    ),
+    "Settings saved, but the task queue is not reachable: recalculate once it is back.": (
+        "Einstellungen gespeichert, aber die Task-Queue ist nicht erreichbar: Neu berechnen, sobald sie wieder da ist.",
+        "Настройки сохранены, но очередь задач недоступна: пересчитайте, когда она снова заработает.",
+        "设置已保存，但任务队列不可达：恢复后请重新计算。",
     ),
 }
 

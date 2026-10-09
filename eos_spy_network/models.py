@@ -58,6 +58,23 @@ class SpyConfiguration(SingletonModel):
         return str(_("Configuration"))
 
 
+class Snapshot(models.Model):
+    """The last result of the calculation; one row, overwritten each run.
+
+    Not a solo model on purpose: SOLO_CACHE would put the whole result into the
+    cache on every read.
+    """
+
+    built_at = models.DateTimeField()
+    data = models.JSONField(default=dict)
+
+    class Meta:
+        default_permissions = ()
+
+    def __str__(self):
+        return f"Snapshot {self.built_at:%Y-%m-%d %H:%M}"
+
+
 class ContactSource(models.Model):
     """The Alliance or one of its Corporations whose aa-contacts contacts make up the hostile list.
 

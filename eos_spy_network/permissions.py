@@ -29,3 +29,18 @@ def any_permission_required(*perms):
         return wrapper
 
     return decorator
+
+
+def all_permissions_required(*perms):
+    """login_required plus every one of ``perms``."""
+
+    def decorator(view):
+        @login_required
+        @user_passes_test(lambda user: all(user.has_perm(perm) for perm in perms))
+        @wraps(view)
+        def wrapper(request, *args, **kwargs):
+            return view(request, *args, **kwargs)
+
+        return wrapper
+
+    return decorator

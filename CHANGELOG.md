@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Network page: per Corporation the mains whose main and alts exchanged ISK
+  with the same character outside the Alliance (donations, player trading,
+  contract payments), or traded with someone outside it, with a graph of the
+  connections (vis-network) and a table per main. Needs `view_suspects` and
+  `view_evidence`: the connections are wallet counterparts
+- Recalculate: markers and connections are calculated by the task
+  `update_snapshot` and stored (migration 0003); a button on the pages and
+  saving the settings start it. The pages had computed everything on every
+  view, over every wallet journal of the Alliance
+- Footer with what the last calculation cost and how long the page took
+- Switch on the marker tiles to hide the Corporations without markers
+
+### Changed
+
+- The Corporations tab is now called Markers; the new tab is Network
+
 ## [0.0.2] - 2026-10-09
 
 ### Added

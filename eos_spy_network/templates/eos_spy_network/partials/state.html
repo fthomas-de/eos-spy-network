@@ -1,0 +1,24 @@
+{% load i18n %}
+{# When the shown result was calculated, and the button to calculate it again; above the marker and network pages. #}
+{% if config.alliance %}
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        {% if report %}
+            <span class="small text-body-secondary">
+                <i class="fas fa-clock"></i>
+                {% blocktranslate with built_at=report.built_at|date:"Y-m-d H:i" %}Calculated {{ built_at }}{% endblocktranslate %}
+            </span>
+        {% else %}
+            <span class="small text-warning">
+                <i class="fas fa-triangle-exclamation"></i>
+                {% translate "Not calculated yet." %}
+            </span>
+        {% endif %}
+        <form method="post" action="{% url 'eos_spy_network:rebuild' %}" class="d-inline ms-auto">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-rotate"></i> {% translate "Recalculate" %}
+            </button>
+        </form>
+    </div>
+{% endif %}

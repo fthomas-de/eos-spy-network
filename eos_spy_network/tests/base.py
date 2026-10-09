@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from esi.models import Scope, Token
 
 from django.core.cache import cache
@@ -32,6 +34,10 @@ class SpyTestCase(TestCase):
     def setUp(self):
         super().setUp()
         cache.clear()
+        # the dev instance's broker is real: a queued task would run in its worker, against aa_dev
+        patcher = patch("eos_spy_network.views.update_snapshot")
+        self.update_snapshot = patcher.start()
+        self.addCleanup(patcher.stop)
 
 
 def make_alliance(alliance_id=ALLIANCE_ID):

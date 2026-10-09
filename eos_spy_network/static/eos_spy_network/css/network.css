@@ -1,0 +1,27 @@
+/*
+ * The connection graphs. The legend's colours are the theme's; network.js
+ * reads them from the legend icons, so graph and legend always agree.
+ */
+.eos-spy-network-graph {
+    height: 420px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+}
+
+.eos-spy-network-legend-main {
+    color: var(--bs-primary);
+}
+
+.eos-spy-network-legend-alt {
+    color: var(--bs-secondary);
+}
+
+.eos-spy-network-legend-shared,
+.eos-spy-network-legend-payment-edge {
+    color: var(--bs-warning);
+}
+
+.eos-spy-network-legend-trading,
+.eos-spy-network-legend-trading-edge {
+    color: var(--bs-info);
+}

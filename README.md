@@ -16,9 +16,10 @@ every one with a standing below a configurable value.
 
 ## Features
 
-- **Corporations**: a tile per Corporation of the Alliance with its number
+- **Markers**: a tile per Corporation of the Alliance with its number
   of mains, how many of them have markers, and per marker how many mains
-  have it
+  have it. A switch hides the Corporations without markers; the browser
+  remembers it
 - **Corporation page**: every main of the Corporation with at least one
   marker, the most marked first, with the number of characters on the
   account and per marker what was found. The counterparts of mails, ISK and
@@ -40,6 +41,30 @@ every one with a standing below a configurable value.
 
   Mails, ISK and contracts between characters of the same account never
   count.
+- **Network**: a tile per Corporation with the mains that have ISK
+  connections outside the Alliance, and per Corporation every such main with
+  a graph of its characters and their counterparts and a table of the
+  connections. A main shows up when
+  - *Shared payment partner*: at least two characters of the account - main
+    and alt, or two alts - exchanged ISK with the same character outside the
+    Alliance; one payment each is enough. Payments are the wallet journal's
+    `player_donation`, `player_trading` and contract payments
+    (`contract_price`, `contract_price_payment_corp`, `contract_reward`,
+    `contract_collateral`, `contract_collateral_payout`)
+  - *Player trading*: any trade window deal (`player_trading`) of one of its
+    characters with someone outside the Alliance
+
+  "Outside" is everything Auth does not know as part of the Alliance, so a
+  character Auth has never seen counts as outside. NPCs (agents, NPC
+  Corporations, factions) never count. The page needs `view_suspects` and
+  `view_evidence`: the connections are wallet counterparts
+- **Recalculate**: the markers and connections are calculated by a task and
+  stored; the pages read the stored result and show when it was calculated.
+  The button *Recalculate* on the pages, saving the settings and the
+  periodic task (see [Installation](#installation)) start it. A footer shows
+  what the last calculation cost: time per phase, queries, accounts,
+  characters, wallet entries read, the size stored, and the time the page
+  took
 - **Hostiles**: every contact of a ticked source with a standing below the
   threshold. One source is enough: the Alliance may stay neutral to an
   entity one of its Corporations is at war with. The Alliance itself and its
@@ -53,7 +78,7 @@ every one with a standing below a configurable value.
   aa-contacts holds, the number of contacts and of hostiles. A ticked
   Corporation that left the Alliance stays in the table, marked, until it is
   unticked
-- **Notices** above the Corporations for every ticked source aa-contacts has
+- **Notices** above the marker and network pages for every ticked source aa-contacts has
   no contacts of yet, and when aa-contacts or corptools is not installed
 
 ## What the markers can see
@@ -91,8 +116,8 @@ know yet is shown by its ID.
 
 | Permission | What it allows |
 |---|---|
-| `eos_spy_network.view_suspects` | the Corporations and their mains with markers |
-| `eos_spy_network.view_evidence` | the counterparts behind the mail, ISK and contract markers (later: mail headers and subjects, wallet entries, contracts) |
+| `eos_spy_network.view_suspects` | the Corporations and their mains with markers; the *Recalculate* button |
+| `eos_spy_network.view_evidence` | the counterparts behind the mail, ISK and contract markers; together with `view_suspects` the network pages (later: mail headers and subjects, wallet entries, contracts) |
 | `eos_spy_network.manage_settings` | the settings page |
 
 The menu entry shows for anyone holding one of them.
@@ -116,8 +141,19 @@ The menu entry shows for anyone holding one of them.
    python manage.py collectstatic --noinput
    ```
 
-5. Give the permissions to the groups or states that should have them, then
+5. Add the periodic recalculation to `myauth/settings/local.py`, then
+   restart Celery (worker and beat):
+
+   ```python
+   CELERYBEAT_SCHEDULE["eos_spy_network_update_snapshot"] = {
+       "task": "eos_spy_network.tasks.update_snapshot",
+       "schedule": crontab(minute="30", hour="*/4"),
+   }
+   ```
+
+6. Give the permissions to the groups or states that should have them, then
    open *Spy Network* > *Settings*, choose the Alliance and tick the sources.
+   Saving starts the first calculation.
 
 ## Planned
 

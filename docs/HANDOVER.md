@@ -18,22 +18,39 @@ Last updated 2026-10-09.
   mains with markers: hostile membership (now and Corporation history),
   frequent Corporation changes, friendly/watched hostile contacts, mails,
   ISK, contracts - over the main and all its alts.
-- Tests: 69 without translation tests plus 3 translation tests, all green
-  (standalone and in the dev instance); every new test checked against
-  sabotaged code. `testauth` now installs `corptools` and `eve_sde`.
+- Unreleased (committed, not pushed): Network tab (`network.py`): mains whose
+  characters share an ISK partner outside the Alliance (>= 2 own characters,
+  one payment each; donations, player trading, contract payments) or did
+  player trading outside it, as a vis-network graph per main. Markers and
+  connections are now computed by the task `update_snapshot` into the
+  `Snapshot` row (migration 0003, `snapshot.py`, as in eos-auth-monitor);
+  button *Recalculate*, footer with the calculation's cost. Corporations tab
+  renamed Markers, with a switch hiding Corporations without markers. The
+  footer's counts line carries the `eos-spy-network` context: eos-auth-monitor
+  has the same msgid with another translation.
+- Tests: 93 without translation tests plus 3 translation tests, all green
+  in the dev instance; every new test checked against sabotaged code.
+  `tests.base.SpyTestCase` patches `views.update_snapshot`, so no test
+  queues a task into the dev worker.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
   not reviewed by the user yet.
 
 | Page | Permission | What |
 |---|---|---|
-| Corporations | `view_suspects` | a tile per Corporation: mains, mains with markers, count per marker |
+| Markers | `view_suspects` | a tile per Corporation: mains, mains with markers, count per marker; switch to hide clean ones |
 | Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found |
+| Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections outside the Alliance |
+| Network Corporation | `view_suspects` + `view_evidence` | per main a graph and a table of its connections |
 | Settings | `manage_settings` | Alliance, threshold, Corporation changes per year, contact sources with aa-contacts' token state |
 
 ## Open
 
-- Not tried in the browser yet: the Corporation tiles and a Corporation
-  page. On `aa_dev`, Ether Element shows E 'o with two watched hostiles at -5.
+- Not tried in the browser yet (EVE SSO login): the tiles, the switch, the
+  graph and the *Recalculate* button. Rendered server-side against `aa_dev`
+  without errors: Ether Element shows E 'o with two watched hostiles at -5,
+  and on Network E 'o and BigBlackout C both paying fenriscw1.
+- Ask the user: does a shared payment partner need the main among the
+  characters, or are two alts enough (implemented: any two)?
 - Ask the user: watching a hostile is a marker (README decision), but PvP
   pilots watch enemies routinely - should a watched hostile with a negative
   standing stay a marker?
@@ -43,8 +60,7 @@ Last updated 2026-10-09.
   history; a harmless one comes back only with new signals.
 - More markers: clones/assets in staging systems (needs a setting for the
   systems), owner changes, audit gaps as data gap.
-- The markers are computed on every page view, over the whole Alliance for
-  the tiles. Fine for the dev data; measure on prod-sized wallet journals.
+- Measure the calculation on prod-sized wallet journals (footer shows it).
 - The settings page help text still says "hostile list" ("Tick whose
   contacts make up the hostile list ...").
 - Check the release against https://github.com/fthomas-de/aa-app-checklist.

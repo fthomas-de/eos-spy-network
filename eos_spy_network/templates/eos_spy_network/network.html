@@ -1,23 +1,16 @@
 {% extends "eos_spy_network/base.html" %}
 {% load i18n %}
 {% load evelinks %}
-{% load sri %}
 
 {% block details %}
     {% include "eos_spy_network/partials/notices.html" %}
     {% include "eos_spy_network/partials/state.html" %}
 
     {% if tiles %}
-        {# tiles.js hides the tiles marked clean while the switch is on, and remembers it per browser #}
-        <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" role="switch" id="eos-spy-network-hide-clean" data-eos-spy-network-hide-clean>
-            <label class="form-check-label" for="eos-spy-network-hide-clean">{% translate "Hide Corporations without markers" %}</label>
-        </div>
-
         <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
             {% for tile in tiles %}
-                <div class="col"{% if not tile.suspects %} data-eos-spy-network-clean{% endif %}>
-                    <div class="card h-100 {% if tile.suspects %}border-danger{% else %}border-success{% endif %}">
+                <div class="col">
+                    <div class="card h-100 {% if tile.accounts %}border-warning{% else %}border-success{% endif %}">
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex align-items-center gap-2 mb-2">
                                 <img src="{{ tile.id|corporation_logo_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
@@ -27,27 +20,33 @@
 
                             <div class="small mb-2">
                                 {% translate "Mains" context "eos-spy-network" %}: {{ tile.mains }} ·
-                                {% translate "Mains with markers" %}: <span class="fw-semibold {% if tile.suspects %}text-danger{% else %}text-success{% endif %}">{{ tile.suspects|length }}</span>
+                                {% translate "Mains with connections" %}: <span class="fw-semibold {% if tile.accounts %}text-warning{% else %}text-success{% endif %}">{{ tile.accounts|length }}</span>
                             </div>
 
-                            {% if tile.suspects %}
+                            {% if tile.accounts %}
                                 <ul class="list-group list-group-flush mb-2">
-                                    {% for label, description, count in tile.counts %}
+                                    {% if tile.shared_count %}
                                         <li class="list-group-item d-flex align-items-center gap-2 px-0">
-                                            <span class="badge text-bg-danger text-wrap" title="{{ description }}">{{ label }}</span>
-                                            <span class="small text-body-secondary ms-auto text-nowrap">{% translate "Mains" context "eos-spy-network" %}: {{ count }}</span>
+                                            <span class="badge text-bg-warning text-wrap" title="{% translate 'At least two characters of the account exchanged ISK with the same character outside the Alliance.' %}">{% translate "Shared payment partner" %}</span>
+                                            <span class="small text-body-secondary ms-auto text-nowrap">{% translate "Mains" context "eos-spy-network" %}: {{ tile.shared_count }}</span>
                                         </li>
-                                    {% endfor %}
+                                    {% endif %}
+                                    {% if tile.trading_count %}
+                                        <li class="list-group-item d-flex align-items-center gap-2 px-0">
+                                            <span class="badge text-bg-info text-wrap" title="{% translate 'Player trading with characters outside the Alliance.' %}">{% translate "Player trading" %}</span>
+                                            <span class="small text-body-secondary ms-auto text-nowrap">{% translate "Mains" context "eos-spy-network" %}: {{ tile.trading_count }}</span>
+                                        </li>
+                                    {% endif %}
                                 </ul>
                             {% else %}
                                 <div class="text-center text-success my-3">
                                     <i class="fas fa-circle-check fa-2x mb-2"></i>
-                                    <p class="mb-0">{% translate "No markers." %}</p>
+                                    <p class="mb-0">{% translate "No connections outside the Alliance." %}</p>
                                 </div>
                             {% endif %}
 
                             <div class="text-center mt-auto">
-                                <a href="{% url 'eos_spy_network:corporation' tile.id %}" class="btn btn-sm btn-primary">
+                                <a href="{% url 'eos_spy_network:network_corporation' tile.id %}" class="btn btn-sm btn-primary">
                                     {% translate "View details" %}
                                 </a>
                             </div>
@@ -59,9 +58,4 @@
     {% elif report %}
         <p class="text-body-secondary">{% translate "Auth knows no Corporation of this Alliance." %}</p>
     {% endif %}
-{% endblock %}
-
-{% block extra_javascript %}
-    {{ block.super }}
-    {% sri_static "eos_spy_network/js/tiles.js" %}
 {% endblock %}

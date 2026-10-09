@@ -1,0 +1,17 @@
+{% load i18n %}
+{# What the last calculation cost and how long this page took, so a large Alliance shows where the time goes. #}
+{% if report.metrics %}
+    {% with metrics=report.metrics %}
+        <footer class="small text-body-secondary text-end mt-4">
+            <i class="fas fa-gauge-high"></i>
+            {% blocktranslate with seconds=metrics.seconds queries=metrics.queries query_seconds=metrics.query_seconds %}Last calculation {{ seconds }} s, {{ queries }} queries ({{ query_seconds }} s){% endblocktranslate %}
+            ({% for label, seconds in metrics.phases %}{{ label }} {{ seconds }} s{% if not forloop.last %}, {% endif %}{% endfor %})
+            · {% blocktranslate with corporations=metrics.corporations accounts=metrics.accounts characters=metrics.characters context "eos-spy-network" %}{{ corporations }} Corporations, {{ accounts }} accounts, {{ characters }} characters{% endblocktranslate %}
+            · {% blocktranslate with entries=metrics.journal_entries %}{{ entries }} wallet entries{% endblocktranslate %}
+            · {% blocktranslate with kilobytes=metrics.kilobytes %}{{ kilobytes }} KB stored{% endblocktranslate %}
+            {% if page_ms is not None %}
+                · {% blocktranslate with milliseconds=page_ms %}page {{ milliseconds }} ms{% endblocktranslate %}
+            {% endif %}
+        </footer>
+    {% endwith %}
+{% endif %}

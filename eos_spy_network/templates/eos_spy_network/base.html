@@ -8,9 +8,16 @@
 {% block header_nav_collapse_left %}
     {# `nav` names the current tab #}
     {% if perms.eos_spy_network.view_suspects %}
-        {% url "eos_spy_network:corporations" as corporations_url %}
-        {% translate "Corporations" context "eos-spy-network" as corporations_title %}
-        {% include "eos_spy_network/partials/nav-item.html" with nav_url=corporations_url nav_title=corporations_title nav_key="corporations" %}
+        {% url "eos_spy_network:corporations" as markers_url %}
+        {% translate "Markers" as markers_title %}
+        {% include "eos_spy_network/partials/nav-item.html" with nav_url=markers_url nav_title=markers_title nav_key="markers" %}
+    {% endif %}
+
+    {# the connections are counterparts of wallet entries: evidence #}
+    {% if perms.eos_spy_network.view_suspects and perms.eos_spy_network.view_evidence %}
+        {% url "eos_spy_network:network" as network_url %}
+        {% translate "Network" as network_title %}
+        {% include "eos_spy_network/partials/nav-item.html" with nav_url=network_url nav_title=network_title nav_key="network" %}
     {% endif %}
 
     {% if perms.eos_spy_network.manage_settings %}
@@ -32,6 +39,8 @@
         {% endwith %}
 
         {% block details %}{% endblock %}
+
+        {% include "eos_spy_network/partials/metrics.html" %}
     </div>
 {% endblock %}
 

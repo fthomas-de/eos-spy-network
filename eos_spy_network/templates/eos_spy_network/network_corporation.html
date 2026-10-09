@@ -1,0 +1,107 @@
+{% extends "eos_spy_network/base.html" %}
+{% load i18n %}
+{% load evelinks %}
+{% load sri %}
+
+{% block details %}
+    {% include "eos_spy_network/partials/notices.html" %}
+    {% include "eos_spy_network/partials/state.html" %}
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex align-items-start gap-3">
+                <img src="{{ tile.id|corporation_logo_url:64 }}" width="64" height="64" class="rounded flex-shrink-0" alt="">
+                <div class="flex-grow-1 overflow-hidden">
+                    <h5 class="mb-1 text-break">
+                        {{ tile.name }}
+                        <span class="text-body-secondary small">[{{ tile.ticker }}]</span>
+                    </h5>
+                    <div class="small">
+                        {% translate "Mains" context "eos-spy-network" %}: {{ tile.mains }} ·
+                        {% translate "Mains with connections" %}: {{ tile.accounts|length }}
+                    </div>
+                </div>
+                <a href="{% url 'eos_spy_network:network' %}" class="btn btn-sm btn-secondary flex-shrink-0">
+                    {% translate "Back" %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if tile.accounts %}
+        {# the texts network.js puts into the graph's tooltips and legend #}
+        <div class="d-flex flex-wrap gap-3 small mb-3"
+             data-eos-spy-network-graph-labels
+             data-payments="{% translate 'Payments' %}"
+             data-trades="{% translate 'Player trading' %}">
+            <span><i class="fas fa-circle eos-spy-network-legend-main"></i> {% translate "Main" context "EVE jargon" %}</span>
+            <span><i class="fas fa-circle eos-spy-network-legend-alt"></i> {% translate "Alt" %}</span>
+            <span><i class="fas fa-circle eos-spy-network-legend-shared"></i> {% translate "Shared payment partner" %}</span>
+            <span><i class="fas fa-circle eos-spy-network-legend-trading"></i> {% translate "Player trading partner" %}</span>
+            <span><i class="fas fa-minus eos-spy-network-legend-payment-edge"></i> {% translate "Payments" %}</span>
+            <span><i class="fas fa-minus eos-spy-network-legend-trading-edge"></i> {% translate "Player trading" %}</span>
+        </div>
+
+        {% for account in tile.accounts %}
+            <div class="card mb-3">
+                <div class="card-header d-flex align-items-center gap-2 flex-wrap">
+                    <img src="{{ account.main_id|character_portrait_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
+                    {% url 'corptools:reactmain' account.main_id as audit_url %}
+                    {% if audit_url %}
+                        <a href="{{ audit_url }}" class="fw-bold text-break">{{ account.main_name }}</a>
+                    {% else %}
+                        <span class="fw-bold text-break">{{ account.main_name }}</span>
+                    {% endif %}
+                    {% if account.shared %}
+                        <span class="badge text-bg-warning">{% translate "Shared payment partner" %}: {{ account.shared|length }}</span>
+                    {% endif %}
+                    {% if account.trading %}
+                        <span class="badge text-bg-info">{% translate "Player trading" %}: {{ account.trading|length }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="eos-spy-network-graph mb-3" data-eos-spy-network-graph></div>
+                    {{ account.graph|json_script }}
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped table-hover w-100 align-middle eos-spy-network-sortable">
+                            <thead>
+                                <tr>
+                                    <th>{% translate "Character" context "EVE jargon" %}</th>
+                                    <th>{% translate "Counterpart" %}</th>
+                                    <th>{% translate "Payments" %}</th>
+                                    <th>{% translate "Player trading" %}</th>
+                                    <th>ISK</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for character, counterpart, payments, trades, isk in account.rows %}
+                                    <tr>
+                                        <td class="text-break">{{ character }}</td>
+                                        <td class="text-break">{{ counterpart }}</td>
+                                        <td>{{ payments }}</td>
+                                        <td>{{ trades }}</td>
+                                        <td data-order="{{ isk }}" class="text-nowrap">{{ isk|floatformat:"0g" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-body-secondary">{% translate "No connections outside the Alliance." %}</p>
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    {% sri_static "eos_spy_network/css/network.css" %}
+{% endblock %}
+
+{% block extra_javascript %}
+    {{ block.super }}
+    {% include "eos_spy_network/bundles/vis-network-js.html" %}
+    {% sri_static "eos_spy_network/js/network.js" %}
+{% endblock %}
