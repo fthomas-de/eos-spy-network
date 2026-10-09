@@ -16,6 +16,17 @@ Last updated 2026-10-09.
   Corporations | Alliances, own side green, hostiles red; switch hiding
   Corporations without connections; progress bar while the task runs
   (`progress.py`, cache key, polled at `rebuild/progress/`).
+- Unreleased (2026-10-09, committed, not released): network keeps only hostile
+  partners (`network.hostile_only`, after `affiliate` in `snapshot.build`);
+  graph draws Corporation/Alliance only up to the reason (Corporation stays
+  between partner and a hostile Alliance), neutral groups in the partner's
+  tooltip; periods (first/last payment) per link; ISK and contract markers
+  carry `rows` per own character and hostile (count, ISK, period, kinds),
+  Corporation changes the Corporations joined (tooltip); graph layout wider
+  columns, repulsion run, height by fullest column, no edge labels. Checked
+  in the browser with a synthetic 14-partner graph only; `aa_dev` has no
+  hostile network partner and no ISK/contract marker to show. Count, Period
+  and Kind are in the glossary and catalogues.
 - Before (0.0.3): Network tab (`network.py`) - shared ISK partners outside
   the Alliance and player trading; markers and connections stored by the
   task `update_snapshot` in the `Snapshot` row; Markers tab with its switch.
@@ -78,6 +89,8 @@ Last updated 2026-10-09.
   ticked in a searchable table) with a standing below a configurable value,
   default below 0. One negative source is enough. The Alliance and its own
   Corporations never count.
+- Network hostile-only (2026-10-09): shared partner and player trading
+  count only with a hostile partner (itself, its Corporation or Alliance).
 - Network (2026-10-09): payments are donations, player trading and
   contract payments; one payment per character is enough, it is the overlap
   of two own characters that counts; player trading shows on its own. A

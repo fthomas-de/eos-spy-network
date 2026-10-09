@@ -62,7 +62,16 @@
                                             <div class="mb-1">
                                                 <span class="badge text-bg-danger text-wrap" title="{{ marker.description }}">{{ marker.label }}{% if marker.count > 1 %} ({{ marker.count }}){% endif %}</span>
                                                 {# mails, ISK and contracts are evidence: their counterparts only with view_evidence #}
-                                                {% if not marker.is_evidence or perms.eos_spy_network.view_evidence %}
+                                                {% if marker.joins %}
+                                                    {# the Corporations joined, one per line in the tooltip #}
+                                                    <span class="small text-break">
+                                                        {% for row in marker.rows %}<abbr title="{% for start, name in row.corporations %}{{ start }} {{ name }}{% if not forloop.last %}&#10;{% endif %}{% endfor %}">{{ row.character }}: {{ row.count }}</abbr>{% if not forloop.last %}, {% endif %}{% endfor %}
+                                                    </span>
+                                                {% elif marker.dealings %}
+                                                    {% if perms.eos_spy_network.view_evidence %}
+                                                        {% include "eos_spy_network/partials/dealings.html" %}
+                                                    {% endif %}
+                                                {% elif not marker.is_evidence or perms.eos_spy_network.view_evidence %}
                                                     <span class="small text-break">{{ marker.sorted_details|join:", " }}</span>
                                                 {% endif %}
                                             </div>

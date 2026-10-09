@@ -2,11 +2,12 @@
  * The mains of a network page and the connection graph of the one clicked.
  *
  * Each account's card is followed in its body by the json_script of its graph:
- * {nodes: [{id, label, group, level, standing?, sources?}],
- *  edges: [{from, to, kind, payments?, trades?}]}.
+ * {nodes: [{id, label, group, level, standing?, sources?, affiliation?}],
+ *  edges: [{from, to, kind, payments?, trades?, first?, last?}]}.
  * Levels are the columns left to right: main, alts, partners, their
  * Corporations, their Alliances - so a hostile Corporation shows as the
- * reason at the end of the chain. A graph is drawn on first show only: vis
+ * reason at the end of the chain; a group behind the reason is left out and
+ * named in the partner's tooltip. A graph is drawn on first show only: vis
  * cannot lay out inside a hidden container.
  */
 document.addEventListener("DOMContentLoaded", () => {
@@ -25,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return icon ? getComputedStyle(icon).color : "#888888";
     };
     const textColour = getComputedStyle(document.body).color;
+    const NODE_SPACING = 110;
     const SHAPES = {
         main: ["dot", 20],
         alt: ["dot", 14],
@@ -52,20 +54,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const node = (raw) => {
         const shown = { ...raw };
+        const lines = [...(raw.affiliation || [])];
         if (raw.standing !== undefined) {
             // the reason in the label itself, the sources in the tooltip
             shown.label = `${raw.label}\n${text("standing", "Standing")} ${raw.standing}`;
-            shown.title = raw.sources.map(([source, standing]) => `${source}: ${standing}`).join("\n");
+            lines.push(...raw.sources.map(([source, standing]) => `${source}: ${standing}`));
+        }
+        if (lines.length) {
+            shown.title = lines.join("\n");
         }
         return shown;
     };
 
+    const period = (first, last) => (first === last ? first : `${first} – ${last}`);
+
     const edge = (raw) => {
         const shown = { from: raw.from, to: raw.to, color: { color: edgeColours[raw.kind] } };
         if (raw.kind === "payment" || raw.kind === "trading") {
-            shown.label = String(raw.payments);
+            // the count stays in the tooltip: labels on a bundle of lines cover each other
             shown.width = raw.trades ? 3 : 1 + Math.min(raw.payments, 5) / 2;
             shown.title = `${text("payments", "Payments")}: ${raw.payments} · ${text("trades", "Player trading")}: ${raw.trades}`;
+            if (raw.first) {
+                shown.title += `\n${text("period", "Period")}: ${period(raw.first, raw.last)}`;
+            }
         } else {
             // account and membership lines carry no ISK: thin and dashed
             shown.dashes = true;
@@ -84,15 +95,21 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         const graph = JSON.parse(script.textContent);
-        new vis.Network(
+        // the fullest column decides the height: a fixed one squeezes many partners on top of each other
+        const perLevel = {};
+        graph.nodes.forEach((raw) => {
+            perLevel[raw.level] = (perLevel[raw.level] || 0) + 1;
+        });
+        const fullest = Math.max(1, ...Object.values(perLevel));
+        container.style.height = `${Math.min(1600, Math.max(420, fullest * NODE_SPACING + 120))}px`;
+        // created empty: with the data in the constructor the stabilization ends before a listener exists
+        const network = new vis.Network(
             container,
-            {
-                nodes: new vis.DataSet(graph.nodes.map(node)),
-                edges: new vis.DataSet(graph.edges.map(edge)),
-            },
+            {},
             {
                 groups: groups,
-                nodes: { font: { color: textColour } },
+                // long names wrap instead of reaching into the next column
+                nodes: { font: { color: textColour }, widthConstraint: { maximum: 220 } },
                 edges: {
                     font: { color: textColour, strokeWidth: 0, align: "middle" },
                     smooth: { type: "cubicBezier", forceDirection: "horizontal", roundness: 0.4 },
@@ -100,16 +117,33 @@ document.addEventListener("DOMContentLoaded", () => {
                 layout: {
                     hierarchical: {
                         direction: "LR",
-                        levelSeparation: 200,
-                        nodeSpacing: 70,
+                        levelSeparation: 320,
+                        nodeSpacing: NODE_SPACING,
+                        treeSpacing: NODE_SPACING * 1.5,
+                        blockShifting: true,
+                        edgeMinimization: true,
+                        parentCentralization: true,
                         sortMethod: "directed",
                         shakeTowards: "roots",
                     },
                 },
-                physics: false,
+                // the layout alone stacks two-line labels into each other; a short repulsion
+                // run pushes them apart within their column, then the graph stands still
+                physics: {
+                    hierarchicalRepulsion: { nodeDistance: NODE_SPACING, avoidOverlap: 1 },
+                    stabilization: { iterations: 300, fit: true },
+                },
                 interaction: { hover: true },
             },
         );
+        network.once("stabilizationIterationsDone", () => {
+            network.setOptions({ physics: false });
+            network.fit();
+        });
+        network.setData({
+            nodes: new vis.DataSet(graph.nodes.map(node)),
+            edges: new vis.DataSet(graph.edges.map(edge)),
+        });
         card.dataset.drawn = "1";
     };
 

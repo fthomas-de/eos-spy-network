@@ -193,6 +193,9 @@ TRANSLATIONS = {
     "Payments": ("Zahlungen", "Платежи", "付款"),
     "Alt": ("Alt", "Alt", "Alt"),
     "Counterpart": ("Gegenüber", "Контрагент", "对方"),
+    "Count": ("Anzahl", "Количество", "数量"),
+    "Period": ("Zeitraum", "Период", "时间段"),
+    "Kind": ("Art", "Вид", "类别"),
     # recalculation and its footer
     "Last calculation %(seconds)s s, %(queries)s queries (%(query_seconds)s s)": (
         "Letzte Berechnung %(seconds)s s, %(queries)s Abfragen (%(query_seconds)s s)",

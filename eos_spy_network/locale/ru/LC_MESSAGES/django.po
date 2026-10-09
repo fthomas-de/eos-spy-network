@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 15:52+0000\n"
-"PO-Revision-Date: 2026-10-09 15:52+0000\n"
+"POT-Creation-Date: 2026-10-09 16:50+0000\n"
+"PO-Revision-Date: 2026-10-09 16:50+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: ru\n"
 "Language: ru\n"
@@ -21,20 +21,21 @@ msgstr ""
 msgid "Spy Network"
 msgstr "Spy Network"
 
-#: contacts.py:25 templates/eos_spy_network/network_corporation.html:96
+#: contacts.py:25 templates/eos_spy_network/network_corporation.html:97
+#: templates/eos_spy_network/partials/dealings.html:7
 msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
 #: contacts.py:26 models.py:89
-#: templates/eos_spy_network/network_corporation.html:98
+#: templates/eos_spy_network/network_corporation.html:99
 #: templates/eos_spy_network/partials/network-legend.html:8
 msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
 #: contacts.py:27 forms.py:11 models.py:35 models.py:88
-#: templates/eos_spy_network/network_corporation.html:99
+#: templates/eos_spy_network/network_corporation.html:100
 #: templates/eos_spy_network/partials/network-legend.html:10
 #: templates/eos_spy_network/settings.html:11
 msgctxt "EVE jargon"
@@ -46,39 +47,39 @@ msgctxt "EVE jargon"
 msgid "Faction"
 msgstr "Faction"
 
-#: markers.py:40
+#: markers.py:41
 msgid "Hostile membership"
 msgstr "Членство у врагов"
 
-#: markers.py:41
+#: markers.py:42
 msgid "Frequent Corporation changes"
 msgstr "Частая смена Corporation"
 
-#: markers.py:42
+#: markers.py:43
 msgid "Friendly to hostiles"
 msgstr "Дружелюбен к врагам"
 
-#: markers.py:43
+#: markers.py:44
 msgid "Mails with hostiles"
 msgstr "Почта с врагами"
 
-#: markers.py:44
+#: markers.py:45
 msgid "ISK with hostiles"
 msgstr "ISK с врагами"
 
-#: markers.py:45
+#: markers.py:46
 msgid "Contracts with hostiles"
 msgstr "Контракты с врагами"
 
-#: markers.py:49
+#: markers.py:50
 msgid "A character is or was in a hostile Corporation or Alliance."
 msgstr "Character состоит или состоял во враждебной Corporation или Alliance."
 
-#: markers.py:50
+#: markers.py:51
 msgid "A character joined many Corporations within the last 365 days."
 msgstr "Character вступил во многие Corporation за последние 365 дней."
 
-#: markers.py:51
+#: markers.py:52
 msgid ""
 "A character's own contacts hold a hostile with a positive standing or on the"
 " watch list."
@@ -86,15 +87,15 @@ msgstr ""
 "В собственных контактах Character есть враг с положительным стендингом или в"
 " списке наблюдения."
 
-#: markers.py:52
+#: markers.py:53
 msgid "Mails from or to hostiles."
 msgstr "Письма от врагов или к ним."
 
-#: markers.py:53
+#: markers.py:54
 msgid "Wallet journal entries with hostiles."
 msgstr "Записи журнала кошелька с врагами."
 
-#: markers.py:54
+#: markers.py:55
 msgid "Contracts with hostiles."
 msgstr "Контракты с врагами."
 
@@ -226,7 +227,7 @@ msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
 
-#: templates/eos_spy_network/corporation.html:77
+#: templates/eos_spy_network/corporation.html:86
 #: templates/eos_spy_network/corporations.html:45
 msgid "No markers."
 msgstr "Нет маркеров."
@@ -260,7 +261,7 @@ msgstr "Партнёр, его Corporation или его Alliance — вражд
 
 #: templates/eos_spy_network/network.html:37
 #: templates/eos_spy_network/network_corporation.html:41
-#: templates/eos_spy_network/network_corporation.html:78
+#: templates/eos_spy_network/network_corporation.html:79
 #: templates/eos_spy_network/partials/network-legend.html:7
 msgid "Hostile partner"
 msgstr "Враждебный партнёр"
@@ -275,7 +276,7 @@ msgstr ""
 
 #: templates/eos_spy_network/network.html:43
 #: templates/eos_spy_network/network_corporation.html:44
-#: templates/eos_spy_network/network_corporation.html:81
+#: templates/eos_spy_network/network_corporation.html:82
 msgid "Shared payment partner"
 msgstr "Общий платёжный партнёр"
 
@@ -286,14 +287,14 @@ msgstr "Player trading с Character вне Alliance."
 #: templates/eos_spy_network/network.html:49
 #: templates/eos_spy_network/network_corporation.html:47
 #: templates/eos_spy_network/network_corporation.html:64
-#: templates/eos_spy_network/network_corporation.html:84
-#: templates/eos_spy_network/network_corporation.html:101
+#: templates/eos_spy_network/network_corporation.html:85
+#: templates/eos_spy_network/network_corporation.html:102
 #: templates/eos_spy_network/partials/network-legend.html:13
 msgid "Player trading"
 msgstr "Player trading"
 
 #: templates/eos_spy_network/network.html:57
-#: templates/eos_spy_network/network_corporation.html:126
+#: templates/eos_spy_network/network_corporation.html:129
 msgid "No connections outside the Alliance."
 msgstr "Нет связей вне Alliance."
 
@@ -302,7 +303,7 @@ msgid "Click a main to see its connections."
 msgstr "Нажмите на Main, чтобы увидеть его связи."
 
 #: templates/eos_spy_network/network_corporation.html:63
-#: templates/eos_spy_network/network_corporation.html:100
+#: templates/eos_spy_network/network_corporation.html:101
 #: templates/eos_spy_network/partials/network-legend.html:12
 msgid "Payments"
 msgstr "Платежи"
@@ -313,9 +314,24 @@ msgctxt "eos-spy-network"
 msgid "Standing"
 msgstr "Standing"
 
-#: templates/eos_spy_network/network_corporation.html:97
+#: templates/eos_spy_network/network_corporation.html:66
+#: templates/eos_spy_network/network_corporation.html:104
+#: templates/eos_spy_network/partials/dealings.html:11
+msgid "Period"
+msgstr "Период"
+
+#: templates/eos_spy_network/network_corporation.html:98
+#: templates/eos_spy_network/partials/dealings.html:8
 msgid "Counterpart"
 msgstr "Контрагент"
+
+#: templates/eos_spy_network/partials/dealings.html:9
+msgid "Count"
+msgstr "Количество"
+
+#: templates/eos_spy_network/partials/dealings.html:12
+msgid "Kind"
+msgstr "Вид"
 
 #: templates/eos_spy_network/partials/group-cell.html:13
 msgid "unknown"

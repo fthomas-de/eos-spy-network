@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Corporation page: *ISK with hostiles* and *Contracts with hostiles* list a
+  row per own character and hostile - count, ISK moved (wallet), period from
+  the first to the last one, kinds - where only the hostiles' names were
+  shown, which said nothing about how much or how long
+- Corporation page: *Frequent Corporation changes* names the Corporations
+  joined, with the day, in a tooltip per character instead of only a count
+- Network: period of the payments per connection in the table and in the
+  line's tooltip
+
+### Changed
+
+- Network: a shared payment partner or a trade counts only with a hostile
+  partner (itself, its Corporation or its Alliance below the standing
+  threshold). Sharing a trader or hauler outside the Alliance is everyday
+  business and filled the page with harmless accounts
+- Network graph: a Corporation or Alliance gets a node only when it is the
+  reason the partner is hostile, or sits between the partner and a hostile
+  Alliance; the others are named in the partner's tooltip. Neutral groups
+  doubled the nodes without saying anything
+- Network graph layout: wider columns so names wrap less, more space between
+  nodes, the height follows the fullest column, and a short repulsion run
+  pushes labels apart before the graph freezes; the payment count moved
+  from the lines into their tooltip, where the labels covered each other
+
 ## [0.0.4] - 2026-10-09
 
 ### Added

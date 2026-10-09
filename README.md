@@ -24,7 +24,11 @@ every one with a standing below a configurable value.
   marker, the most marked first, with the number of characters on the
   account and per marker what was found. The counterparts of mails, ISK and
   contracts are evidence and only shown with `view_evidence`; without it
-  the marker and its count are
+  the marker and its count are. ISK and contracts show a row per own
+  character and hostile: how many entries or contracts, the ISK moved (for
+  the wallet), the period from the first to the last one and their kinds.
+  The Corporation changes name the Corporations joined, with the day, in a
+  tooltip per character
 - **Markers** per account, over the main and all its alts:
   - *Hostile membership*: a character is in a hostile Corporation or
     Alliance, or was in a hostile Corporation (`CorporationHistory`)
@@ -42,15 +46,20 @@ every one with a standing below a configurable value.
   Mails, ISK and contracts between characters of the same account never
   count.
 - **Network**: a tile per Corporation with the mains that have ISK
-  connections outside the Alliance (a switch hides the Corporations without
-  any), and per Corporation the list of such mains; a click on a main shows
-  the graph of its characters, their counterparts and the counterparts'
-  Corporations and Alliances, and a table of the connections. In the graph
-  the own characters are green (main darker, alts lighter), hostiles red,
-  everything else outside the Alliance neutral; a hostile Corporation or
-  Alliance carries its standing, the sources in its tooltip. A counterpart
-  is a *hostile partner* when it, its Corporation or its Alliance is a
-  hostile contact. A main shows up when
+  connections with hostile partners outside the Alliance (a switch hides the
+  Corporations without any), and per Corporation the list of such mains; a
+  click on a main shows the graph of its characters and their hostile
+  partners, and a table of the connections with the period from the first
+  to the last payment. A counterpart is a *hostile partner* when it, its
+  Corporation or its Alliance is a hostile contact. The graph follows a
+  partner only as far as the reason: a partner hostile itself has no
+  Corporation node, one hostile through its Alliance keeps its Corporation
+  between them; the partner's tooltip names its Corporation and Alliance.
+  The own characters are green (main darker, alts lighter), hostiles red,
+  the rest neutral; a hostile carries its standing, the sources in its
+  tooltip; a line's tooltip gives the payments and their period. A main
+  shows up when one of these is with a hostile partner - with anyone else
+  they are everyday trading and hauling:
   - *Shared payment partner*: at least two characters of the account - main
     and alt, or two alts - exchanged ISK with the same character outside the
     Alliance; one payment each is enough. Payments are the wallet journal's

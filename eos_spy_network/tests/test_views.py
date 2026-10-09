@@ -229,7 +229,7 @@ class TestCorporationPage(SuspectPageTestCase):
 
 class TestEvidence(SuspectPageTestCase):
     # the wallet entry's counterpart alone; the membership marker names "Char 5001: Bad Corp"
-    COUNTERPART = ">Bad Corp</span>"
+    COUNTERPART = ">Bad Corp</td>"
 
     def setUp(self):
         super().setUp()
@@ -263,6 +263,35 @@ class TestEvidence(SuspectPageTestCase):
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
         self.assertContains(response, self.COUNTERPART)
+        self.assertContains(response, "player donation")
+        self.assertContains(response, timezone.now().date().isoformat())
+
+
+class TestCorporationChangesTooltip(SuspectPageTestCase):
+    def test_should_name_the_corporations_joined_in_the_tooltip(self):
+        from corptools.models import CharacterAudit, CorporationHistory, EveName
+
+        configure(corp_changes_per_year=2)
+        audit = CharacterAudit.objects.create(character=EveCharacter.objects.get(pk=self.suspect_main.pk))
+        for record_id, name in enumerate(("First Corp", "Second Corp"), 1):
+            CorporationHistory.objects.create(
+                character=audit,
+                corporation_id=1000000 + record_id,
+                corporation_name=EveName.objects.create(eve_id=1000000 + record_id, name=name, category="corporation"),
+                record_id=record_id,
+                start_date=timezone.now(),
+            )
+        snapshot.update()
+        self.client.force_login(make_user("viewer", VIEW_SUSPECTS))
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        today = timezone.now().date().isoformat()
+        self.assertContains(
+            response,
+            f'<abbr title="{today} First Corp&#10;{today} Second Corp">{self.suspect_main.character_name}: 2</abbr>',
+            html=False,
+        )
 
 
 class TestRebuild(SuspectPageTestCase):
@@ -310,6 +339,8 @@ class TestNetworkPages(SuspectPageTestCase):
             amount=-1000,
             balance=0,
         )
+        # only a hostile partner makes the account show up
+        add_contact(ContactSource.ALLIANCE, ALLIANCE_ID, self.OUTSIDER, -10, contact_type="character")
         snapshot.update()
         self.client.force_login(make_user("lead", VIEW_SUSPECTS, VIEW_EVIDENCE))
 
@@ -340,6 +371,7 @@ class TestNetworkPages(SuspectPageTestCase):
         self.assertContains(response, "Stranger")
         self.assertContains(response, "data-eos-spy-network-graph")
         self.assertContains(response, "vis-network.min.js")
+        self.assertContains(response, f'<td data-order="{timezone.now().date().isoformat()}" class="text-nowrap">')
 
     def test_should_refuse_a_corporation_outside_the_alliance(self):
         response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2999]))

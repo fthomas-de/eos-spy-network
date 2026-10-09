@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from corptools.models import CharacterAudit, CharacterWalletJournalEntry, EveName
 
 from django.utils import timezone
@@ -57,6 +59,16 @@ class NetworkTestCase(SpyTestCase):
 
     def account(self):
         return connections({self.user.pk: self.main}, ALLIANCE_ID).get(self.user.pk)
+
+    def make_hostile(self, eve_id, contact_type="character", standing=-10):
+        if not ContactSource.objects.exists():
+            ContactSource.objects.create(kind=ContactSource.ALLIANCE, entity_id=ALLIANCE_ID, name="Us")
+            add_token(ContactSource.ALLIANCE, ALLIANCE_ID)
+        add_contact(ContactSource.ALLIANCE, ALLIANCE_ID, eve_id, standing, contact_type=contact_type)
+
+    def stored_accounts(self):
+        tile = snapshot.Report(snapshot.update()).network_tile(2001)
+        return tile.accounts
 
 
 class TestSharedCounterpart(NetworkTestCase):
@@ -131,20 +143,60 @@ class TestNames(NetworkTestCase):
         self.assertEqual(self.account().counterparts, {OUTSIDER: str(OUTSIDER)})
 
 
+class TestPeriod(NetworkTestCase):
+    def test_should_keep_the_first_and_the_last_payment(self):
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+        first = CharacterWalletJournalEntry.objects.get(entry_id=1)
+        first.date = timezone.now() - timedelta(days=40)
+        first.save()
+
+        link = next(link for link in self.account().links if link.character_id == self.main.character_id)
+
+        self.assertEqual(link.first, first.date.date().isoformat())
+        self.assertEqual(link.last, timezone.now().date().isoformat())
+
+
+class TestHostileOnly(NetworkTestCase):
+    def test_should_drop_a_shared_partner_that_is_not_hostile(self):
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+    def test_should_drop_a_trade_with_a_partner_that_is_not_hostile(self):
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+
+        self.assertEqual(self.stored_accounts(), [])
+
+    def test_should_keep_only_the_hostile_partners_of_an_account(self):
+        self.make_hostile(OUTSIDER)
+        for character in (self.main, self.alt):
+            self.pay(character, OUTSIDER)
+            self.pay(character, OTHER_OUTSIDER)
+
+        (account,) = self.stored_accounts()
+
+        self.assertEqual(set(account.counterparts), {OUTSIDER})
+        self.assertEqual({link.counterpart_id for link in account.links}, {OUTSIDER})
+
+
 class TestSnapshot(NetworkTestCase):
     def test_should_restore_the_connections_from_the_stored_json(self):
+        self.make_hostile(OUTSIDER)
         self.pay(self.main, OUTSIDER)
         self.pay(self.alt, OUTSIDER, ref_type="player_trading")
 
-        report = snapshot.Report(snapshot.update())
+        (account,) = self.stored_accounts()
 
-        (account,) = report.network_tile(2001).accounts
         self.assertEqual(account.shared, {OUTSIDER})
         self.assertEqual(account.trading, {OUTSIDER})
+        self.assertEqual({link.last for link in account.links}, {timezone.now().date().isoformat()})
         graph = account.graph()
         self.assertEqual(
             {node["id"]: (node["group"], node["level"]) for node in graph["nodes"]},
-            {self.main.character_id: ("main", 0), 5001: ("alt", 1), OUTSIDER: ("partner", 2)},
+            {self.main.character_id: ("main", 0), 5001: ("alt", 1), OUTSIDER: ("hostile_partner", 2)},
         )
         self.assertEqual(
             sorted(edge["kind"] for edge in graph["edges"]), ["account", "payment", "trading"]
@@ -196,12 +248,32 @@ class TestHostileChain(NetworkTestCase):
         self.assertEqual(nodes[HOSTILE_CORP]["group"], "hostile_corporation")
         self.assertEqual(nodes[HOSTILE_CORP]["standing"], "-10.0")
         self.assertEqual(nodes[HOSTILE_CORP]["sources"], [["Us", "-10.0"]])
-        self.assertEqual(nodes[OTHER_ALLIANCE_ID]["group"], "alliance")
-        self.assertEqual(
-            [nodes[OUTSIDER]["level"], nodes[HOSTILE_CORP]["level"], nodes[OTHER_ALLIANCE_ID]["level"]], [2, 3, 4]
-        )
+        self.assertEqual([nodes[OUTSIDER]["level"], nodes[HOSTILE_CORP]["level"]], [2, 3])
+        # the neutral Alliance behind the reason gets no node, only a line in the partner's tooltip
+        self.assertNotIn(OTHER_ALLIANCE_ID, nodes)
+        self.assertEqual(nodes[OUTSIDER]["affiliation"], [f"Corp {HOSTILE_CORP}", f"Alliance {OTHER_ALLIANCE_ID}"])
         members = {(edge["from"], edge["to"]) for edge in graph["edges"] if edge["kind"] == "member"}
-        self.assertEqual(members, {(OUTSIDER, HOSTILE_CORP), (HOSTILE_CORP, OTHER_ALLIANCE_ID)})
+        self.assertEqual(members, {(OUTSIDER, HOSTILE_CORP)})
+
+    def test_should_keep_the_corporation_between_partner_and_hostile_alliance(self):
+        self.esi_affiliations.return_value = {OUTSIDER: (4001, OTHER_ALLIANCE_ID)}
+        self.make_hostile(OTHER_ALLIANCE_ID, contact_type="alliance")
+
+        graph = self.account().graph()
+
+        nodes = {node["id"]: node for node in graph["nodes"]}
+        self.assertEqual(nodes[4001]["group"], "corporation")
+        self.assertEqual(nodes[OTHER_ALLIANCE_ID]["group"], "hostile_alliance")
+        members = {(edge["from"], edge["to"]) for edge in graph["edges"] if edge["kind"] == "member"}
+        self.assertEqual(members, {(OUTSIDER, 4001), (4001, OTHER_ALLIANCE_ID)})
+
+    def test_should_draw_no_group_of_a_partner_hostile_itself(self):
+        self.esi_affiliations.return_value = {OUTSIDER: (4001, OTHER_ALLIANCE_ID)}
+        self.make_hostile(OUTSIDER)
+
+        nodes = {node["id"] for node in self.account().graph()["nodes"]}
+
+        self.assertEqual(nodes, {self.main.character_id, 5001, OUTSIDER})
 
     def test_should_name_corporation_and_alliance_in_the_table(self):
         (row,) = self.account().rows
@@ -216,10 +288,7 @@ class TestHostileChain(NetworkTestCase):
 
         self.assertEqual(tile.hostile_count, 1)
 
-    def test_should_keep_a_partner_in_a_neutral_corporation_neutral(self):
+    def test_should_drop_a_partner_in_a_neutral_corporation(self):
         self.esi_affiliations.return_value = {OUTSIDER: (4001, None)}
 
-        account = self.account()
-
-        self.assertEqual(account.hostile, set())
-        self.assertEqual({node["id"]: node["group"] for node in account.graph()["nodes"]}[4001], "corporation")
+        self.assertEqual(self.stored_accounts(), [])

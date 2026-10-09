@@ -62,7 +62,8 @@
                      data-eos-spy-network-graph-labels
                      data-payments="{% translate 'Payments' %}"
                      data-trades="{% translate 'Player trading' %}"
-                     data-standing="{% translate 'Standing' context 'eos-spy-network' %}"></div>
+                     data-standing="{% translate 'Standing' context 'eos-spy-network' %}"
+                     data-period="{% translate 'Period' %}"></div>
 
                 {% for account in tile.accounts %}
                     <div class="card d-none" data-eos-spy-network-account="{{ account.main_id }}">
@@ -100,6 +101,7 @@
                                             <th>{% translate "Payments" %}</th>
                                             <th>{% translate "Player trading" %}</th>
                                             <th>ISK</th>
+                                            <th>{% translate "Period" %}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -112,6 +114,7 @@
                                                 <td>{{ row.payments }}</td>
                                                 <td>{{ row.trades }}</td>
                                                 <td data-order="{{ row.isk }}" class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>
+                                                <td data-order="{{ row.last }}" class="text-nowrap">{% include "eos_spy_network/partials/period.html" with first=row.first last=row.last %}</td>
                                             </tr>
                                         {% endfor %}
                                     </tbody>

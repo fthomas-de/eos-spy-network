@@ -170,6 +170,18 @@ class TestCorporationChanges(MarkerTestCase):
 
         self.assertEqual(marker.count, 3)
 
+    def test_should_name_the_corporations_joined_oldest_first(self):
+        configure(corp_changes_per_year=2)
+        self.add_history(100, 10)
+
+        (row,) = self.suspect().markers[markers.CORP_CHANGES].rows
+
+        self.assertEqual((row["character"], row["count"]), (self.main.character_name, 2))
+        self.assertEqual([name for _start, name in row["corporations"]], ["Name 1000001", "Name 1000002"])
+        self.assertEqual(
+            row["corporations"][0][0], (timezone.now() - timedelta(days=100)).date().isoformat()
+        )
+
     def test_should_not_count_joins_older_than_a_year(self):
         configure(corp_changes_per_year=3)
         self.add_history(10, 100, 400)
@@ -243,11 +255,31 @@ class TestMails(MarkerTestCase):
 
 
 class TestWallet(MarkerTestCase):
-    def add_entry(self, entry_id, first_party_id, second_party_id):
+    def add_entry(self, entry_id, first_party_id, second_party_id, amount=1, days_ago=0, ref_type="player_donation"):
         CharacterWalletJournalEntry.objects.create(
-            character=self.audit, entry_id=entry_id, date=timezone.now(), description="", ref_type="player_donation",
-            first_party_id=first_party_id, second_party_id=second_party_id, amount=1, balance=1,
+            character=self.audit, entry_id=entry_id, date=timezone.now() - timedelta(days=days_ago), description="",
+            ref_type=ref_type, first_party_id=first_party_id, second_party_id=second_party_id, amount=amount,
+            balance=1,
         )
+
+    def test_should_sum_up_the_entries_per_hostile(self):
+        self.add_entry(1, HOSTILE_CORP, self.main.character_id, amount=500, days_ago=30)
+        self.add_entry(2, self.main.character_id, HOSTILE_CORP, amount=-200, ref_type="player_trading")
+
+        (row,) = self.suspect().markers[markers.WALLET].rows
+
+        self.assertEqual(
+            {key: row[key] for key in ("character", "counterpart", "count", "isk", "types")},
+            {
+                "character": self.main.character_name,
+                "counterpart": "Bad Corp",
+                "count": 2,
+                "isk": "700.00",
+                "types": ["player donation", "player trading"],
+            },
+        )
+        self.assertEqual(row["first"], (timezone.now() - timedelta(days=30)).date().isoformat())
+        self.assertEqual(row["last"], timezone.now().date().isoformat())
 
     def test_should_mark_isk_from_a_known_member_of_a_hostile_corporation(self):
         self.add_entry(1, HOSTILE_MEMBER, self.main.character_id)
@@ -266,8 +298,8 @@ class TestWallet(MarkerTestCase):
 
 
 class TestContracts(MarkerTestCase):
-    def add_contract(self, contract_id, issuer_id, issuer_corporation_id, assignee_id, acceptor_id=0):
-        now = timezone.now()
+    def add_contract(self, contract_id, issuer_id, issuer_corporation_id, assignee_id, acceptor_id=0, days_ago=0):
+        now = timezone.now() - timedelta(days=days_ago)
         Contract.objects.create(
             id=f"{self.audit.pk}-{contract_id}", contract_id=contract_id, character=self.audit,
             issuer_id=issuer_id, issuer_name=eve_name(issuer_id),
@@ -282,6 +314,18 @@ class TestContracts(MarkerTestCase):
         self.add_contract(1, self.main.character_id, 2001, HOSTILE_MEMBER)
 
         self.assertEqual(self.kinds(), {markers.CONTRACTS})
+
+    def test_should_give_the_period_of_the_contracts_per_hostile(self):
+        self.add_contract(1, self.main.character_id, 2001, HOSTILE_CORP, days_ago=60)
+        self.add_contract(2, self.main.character_id, 2001, HOSTILE_CORP)
+
+        (row,) = self.suspect().markers[markers.CONTRACTS].rows
+
+        self.assertEqual((row["count"], row["types"]), (2, ["item exchange"]))
+        self.assertEqual(
+            (row["first"], row["last"]),
+            ((timezone.now() - timedelta(days=60)).date().isoformat(), timezone.now().date().isoformat()),
+        )
 
     def test_should_mark_a_contract_by_a_stranger_of_a_hostile_corporation(self):
         self.add_contract(1, 5555, HOSTILE_CORP, self.main.character_id)

@@ -18,6 +18,8 @@ The data is corptools' wallet journal; without corptools there is none.
 Each counterpart is then followed to its Corporation and Alliance
 (``affiliations``); a hostile standing on any of the three makes it a hostile
 partner, and the graph shows the chain up to the entity that carries it.
+Only hostile partners stay (``hostile_only``): sharing a trader or a hauler
+outside the Alliance is everyday business in EVE, sharing a hostile is not.
 """
 
 from collections import defaultdict
@@ -53,6 +55,17 @@ class Link:
     payments: int = 0
     trades: int = 0
     isk: Decimal = Decimal(0)
+    # the first and the last payment, as ISO dates: the snapshot stores JSON
+    first: str | None = None
+    last: str | None = None
+
+    def add(self, day: str, trade: bool, isk) -> None:
+        self.payments += 1
+        if trade:
+            self.trades += 1
+        self.isk += abs(isk or 0)
+        self.first = min(self.first or day, day)
+        self.last = max(self.last or day, day)
 
 
 # the columns of the graph, left to right: own side, partners, their groups
@@ -143,6 +156,8 @@ class Connections:
                     "payments": link.payments,
                     "trades": link.trades,
                     "isk": link.isk,
+                    "first": link.first,
+                    "last": link.last,
                 }
             )
         return rows
@@ -181,6 +196,9 @@ class Connections:
             if reason is not None and node["group"] == "partner":
                 # hostile through its Corporation or Alliance: red as well, the reason sits further right
                 node["group"] = "hostile_partner"
+            # the groups behind the reason only crowd the graph; the tooltip still names them
+            node["affiliation"] = [self._name(group_id) for group_id in chain[1:]]
+            chain = chain[: chain.index(reason) + 1] if reason is not None else chain[:1]
             nodes.setdefault(counterpart_id, node)
             for child, parent in zip(chain, chain[1:]):
                 entity = self.entities.get(parent)
@@ -197,6 +215,8 @@ class Connections:
                 "kind": "trading" if link.trades else "payment",
                 "payments": link.payments,
                 "trades": link.trades,
+                "first": link.first,
+                "last": link.last,
             }
             for link in self.links
         ]
@@ -220,6 +240,25 @@ def affiliate(accounts, hostiles: dict) -> dict:
         account.entities = entities
         account.hostiles = hostiles
     return entities
+
+
+def hostile_only(accounts: dict) -> dict:
+    """The accounts cut down to their hostile partners, by user ID; an account without one goes.
+
+    Needs the affiliations (``affiliate``) first: a partner is often hostile
+    only through its Corporation or Alliance.
+    """
+    result = {}
+    for user_id, account in accounts.items():
+        hostile = account.hostile
+        if not hostile:
+            continue
+        account.links = [link for link in account.links if link.counterpart_id in hostile]
+        account.counterparts = {
+            counterpart_id: name for counterpart_id, name in account.counterparts.items() if counterpart_id in hostile
+        }
+        result[user_id] = account
+    return result
 
 
 def alliance_ids(alliance_id: int) -> set[int]:
@@ -264,12 +303,13 @@ def connections(mains: dict, alliance_id: int, stats: dict | None = None) -> dic
         "character__character__character_id",
         "ref_type",
         "amount",
+        "date",
         "first_party_id",
         "first_party_name__name",
         "second_party_id",
         "second_party_name__name",
     )
-    for character_id, ref_type, amount, first_id, first_name, second_id, second_name in entries.iterator():
+    for character_id, ref_type, amount, date, first_id, first_name, second_id, second_name in entries.iterator():
         if stats is not None:
             stats["journal_entries"] += 1
         user_id = owner[character_id]
@@ -280,10 +320,7 @@ def connections(mains: dict, alliance_id: int, stats: dict | None = None) -> dic
             link = links.get((user_id, character_id, party_id))
             if link is None:
                 link = links[(user_id, character_id, party_id)] = Link(character_id, party_id)
-            link.payments += 1
-            if ref_type == TRADING:
-                link.trades += 1
-            link.isk += abs(amount or 0)
+            link.add(date.date().isoformat(), ref_type == TRADING, amount)
             if party_name:
                 counterpart_names[party_id] = party_name
 

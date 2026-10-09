@@ -23,7 +23,7 @@ from .affiliations import Entity
 from .hostiles import hostile_entities
 from .markers import CorporationTile, Marker, Suspect, corporation_tiles
 from .models import Snapshot, SpyConfiguration
-from .network import Connections, Link, Standing, affiliate, connections
+from .network import Connections, Link, Standing, affiliate, connections, hostile_only
 
 logger = get_extension_logger(__name__)
 
@@ -118,6 +118,7 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
             hostile.id: Standing(hostile.standing, hostile.sources) for hostile in hostile_entities(config)
         }
         entities = affiliate(found.values(), hostiles)
+        found = hostile_only(found)
 
     by_corporation = {}
     for account in found.values():
@@ -176,7 +177,7 @@ def _suspect_data(suspect: Suspect) -> dict:
         "corporation_id": suspect.main.corporation_id,
         "character_count": suspect.character_count,
         "markers": [
-            {"kind": marker.kind, "count": marker.count, "details": marker.sorted_details}
+            {"kind": marker.kind, "count": marker.count, "details": marker.sorted_details, "rows": marker.rows}
             for marker in suspect.marker_list
         ],
     }
@@ -191,7 +192,7 @@ def _connections_data(account: Connections) -> dict:
         "characters": [[character_id, name] for character_id, name in account.characters.items()],
         "counterparts": [[counterpart_id, name] for counterpart_id, name in account.counterparts.items()],
         "links": [
-            [link.character_id, link.counterpart_id, link.payments, link.trades, str(link.isk)]
+            [link.character_id, link.counterpart_id, link.payments, link.trades, str(link.isk), link.first, link.last]
             for link in account.links
         ],
     }
@@ -245,7 +246,10 @@ class Report:
                 stored["character_count"],
             )
             for marker in stored["markers"]:
-                suspect.markers[marker["kind"]] = Marker(marker["kind"], marker["count"], set(marker["details"]))
+                suspect.markers[marker["kind"]] = Marker(
+                    # a snapshot of 0.0.4 or older has no rows until the next run
+                    marker["kind"], marker["count"], set(marker["details"]), marker.get("rows", [])
+                )
             tile.suspects.append(suspect)
         return tile
 
@@ -255,9 +259,10 @@ class Report:
             account = Connections(stored["user_id"], stored["main_id"], stored["main_name"], stored["corporation_id"])
             account.characters = dict(stored["characters"])
             account.counterparts = dict(stored["counterparts"])
+            # a snapshot of 0.0.4 or older stores no period
             account.links = [
-                Link(character_id, counterpart_id, payments, trades, Decimal(isk))
-                for character_id, counterpart_id, payments, trades, isk in stored["links"]
+                Link(character_id, counterpart_id, payments, trades, Decimal(isk), *period)
+                for character_id, counterpart_id, payments, trades, isk, *period in stored["links"]
             ]
             account.entities = self.entities
             account.hostiles = self.hostiles

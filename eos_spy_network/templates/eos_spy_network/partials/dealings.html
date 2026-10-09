@@ -1,0 +1,28 @@
+{% load i18n %}
+{# ISK or contracts of a marker: per own character and hostile, how often, how much and when #}
+<div class="table-responsive mt-1">
+    <table class="table table-sm table-borderless small mb-0 w-auto">
+        <thead>
+            <tr>
+                <th>{% translate "Character" context "EVE jargon" %}</th>
+                <th>{% translate "Counterpart" %}</th>
+                <th>{% translate "Count" %}</th>
+                {% if marker.kind == "wallet" %}<th>ISK</th>{% endif %}
+                <th>{% translate "Period" %}</th>
+                <th>{% translate "Kind" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in marker.rows %}
+                <tr>
+                    <td class="text-break">{{ row.character }}</td>
+                    <td class="text-break text-danger">{{ row.counterpart }}</td>
+                    <td>{{ row.count }}</td>
+                    {% if marker.kind == "wallet" %}<td class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>{% endif %}
+                    <td class="text-nowrap">{% include "eos_spy_network/partials/period.html" with first=row.first last=row.last %}</td>
+                    <td>{{ row.types|join:", " }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

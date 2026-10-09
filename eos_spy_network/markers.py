@@ -13,7 +13,8 @@ with unknown characters of a hostile Corporation stay unseen.
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
+from decimal import Decimal
 
 from django.apps import apps
 from django.db.models import Q
@@ -66,6 +67,9 @@ class Marker:
     # what was found: journal entries, mails, contracts, contacts, Corporations joined
     count: int = 0
     details: set = field(default_factory=set)
+    # the details as a table, JSON-ready: per own character and hostile for ISK and contracts,
+    # per character with the Corporations joined for the Corporation changes
+    rows: list = field(default_factory=list)
 
     @property
     def label(self):
@@ -82,6 +86,45 @@ class Marker:
     @property
     def sorted_details(self) -> list[str]:
         return sorted(self.details, key=str.lower)
+
+    @property
+    def dealings(self) -> bool:
+        """ISK and contracts show their rows as a table."""
+        return self.kind in (WALLET, CONTRACTS) and bool(self.rows)
+
+    @property
+    def joins(self) -> bool:
+        """Corporation changes name the Corporations in a tooltip per character."""
+        return self.kind == CORP_CHANGES and bool(self.rows)
+
+
+@dataclass
+class Dealings:
+    """What one own character did with one hostile: how often, how much, when, in which way."""
+
+    count: int = 0
+    isk: Decimal = Decimal(0)
+    first: datetime | None = None
+    last: datetime | None = None
+    types: set = field(default_factory=set)
+
+    def add(self, when: datetime, kind: str, isk=None) -> None:
+        self.count += 1
+        self.isk += abs(isk or 0)
+        self.first = when if self.first is None else min(self.first, when)
+        self.last = when if self.last is None else max(self.last, when)
+        self.types.add(kind.replace("_", " "))
+
+    def row(self, character: str, counterpart: str) -> dict:
+        return {
+            "character": character,
+            "counterpart": counterpart,
+            "count": self.count,
+            "isk": str(self.isk),
+            "first": self.first.date().isoformat(),
+            "last": self.last.date().isoformat(),
+            "types": sorted(self.types),
+        }
 
 
 @dataclass
@@ -208,26 +251,35 @@ def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, step=_
     step("mails")
     _check_mails(accounts, index, owner, characters, hostile_ids, counterparts)
     step("wallet")
-    _check_wallet(accounts, index, owner, characters, hostile_ids, counterparts)
+    _check_wallet(accounts, index, owner, names, characters, hostile_ids, counterparts)
     step("contracts")
-    _check_contracts(accounts, index, owner, characters, hostile_ids, counterparts)
+    _check_contracts(accounts, index, owner, names, characters, hostile_ids, counterparts)
 
 
 def _check_history(accounts, index, config, owner, names, characters):
     from corptools.models import CorporationHistory
 
     since = timezone.now() - timedelta(days=365)
-    joined = defaultdict(int)
-    for character_id, corporation_id, start_date in CorporationHistory.objects.filter(
+    joined = defaultdict(list)  # character -> [(start date, Corporation name)]
+    for character_id, corporation_id, corporation_name, start_date in CorporationHistory.objects.filter(
         character__character__character_id__in=characters
-    ).values_list("character__character__character_id", "corporation_id", "start_date"):
+    ).values_list("character__character__character_id", "corporation_id", "corporation_name__name", "start_date"):
         if corporation_id in index:
             accounts[owner[character_id]].mark(MEMBERSHIP, f"{names[character_id]}: {index.describe(corporation_id)}")
         if start_date >= since:
-            joined[character_id] += 1
-    for character_id, count in joined.items():
+            joined[character_id].append((start_date, corporation_name or str(corporation_id)))
+    for character_id, corporations in joined.items():
+        count = len(corporations)
         if count >= config.corp_changes_per_year:
-            accounts[owner[character_id]].mark(CORP_CHANGES, f"{names[character_id]}: {count}", count)
+            suspect = accounts[owner[character_id]]
+            suspect.mark(CORP_CHANGES, f"{names[character_id]}: {count}", count)
+            suspect.markers[CORP_CHANGES].rows.append(
+                {
+                    "character": names[character_id],
+                    "count": count,
+                    "corporations": [[start.date().isoformat(), name] for start, name in sorted(corporations)],
+                }
+            )
 
 
 def _check_contacts(accounts, index, owner, names, characters, hostile_ids):
@@ -264,46 +316,69 @@ def _check_mails(accounts, index, owner, characters, hostile_ids, counterparts):
     _mark_found(accounts, index, found, MAILS)
 
 
-def _check_wallet(accounts, index, owner, characters, hostile_ids, counterparts):
+def _check_wallet(accounts, index, owner, names, characters, hostile_ids, counterparts):
     from corptools.models import CharacterWalletJournalEntry
 
     found = defaultdict(set)
-    for pk, character_id, first_party_id, second_party_id in CharacterWalletJournalEntry.objects.filter(
-        Q(first_party_id__in=hostile_ids) | Q(second_party_id__in=hostile_ids),
-        character__character__character_id__in=characters,
-    ).values_list("pk", "character__character__character_id", "first_party_id", "second_party_id"):
+    dealings = defaultdict(Dealings)  # (account, own character, hostile) -> Dealings
+    for pk, character_id, first_party_id, second_party_id, date, ref_type, amount in (
+        CharacterWalletJournalEntry.objects.filter(
+            Q(first_party_id__in=hostile_ids) | Q(second_party_id__in=hostile_ids),
+            character__character__character_id__in=characters,
+        ).values_list(
+            "pk", "character__character__character_id", "first_party_id", "second_party_id", "date", "ref_type", "amount"
+        )
+    ):
         user_id = owner[character_id]
-        found[(user_id, pk)] |= counterparts(user_id, first_party_id, second_party_id)
+        parties = counterparts(user_id, first_party_id, second_party_id)
+        found[(user_id, pk)] |= parties
+        for party_id in parties:
+            dealings[(user_id, character_id, party_id)].add(date, ref_type, amount)
     _mark_found(accounts, index, found, WALLET)
+    _add_rows(accounts, index, names, dealings, WALLET)
 
 
-def _check_contracts(accounts, index, owner, characters, hostile_ids, counterparts):
+def _check_contracts(accounts, index, owner, names, characters, hostile_ids, counterparts):
     from corptools.models import Contract
 
     found = defaultdict(set)
-    for character_id, contract_id, issuer_id, issuer_corporation_id, assignee_id, acceptor_id in (
-        Contract.objects.filter(
-            Q(issuer_id__in=hostile_ids)
-            | Q(issuer_corporation_id__in=hostile_ids)
-            | Q(assignee_id__in=hostile_ids)
-            | Q(acceptor_id__in=hostile_ids),
-            character__character__character_id__in=characters,
-        ).values_list(
-            "character__character__character_id",
-            "contract_id",
-            "issuer_id",
-            "issuer_corporation_id",
-            "assignee_id",
-            "acceptor_id",
-        )
+    dealings = defaultdict(Dealings)
+    for (
+        character_id,
+        contract_id,
+        issuer_id,
+        issuer_corporation_id,
+        assignee_id,
+        acceptor_id,
+        date_issued,
+        contract_type,
+    ) in Contract.objects.filter(
+        Q(issuer_id__in=hostile_ids)
+        | Q(issuer_corporation_id__in=hostile_ids)
+        | Q(assignee_id__in=hostile_ids)
+        | Q(acceptor_id__in=hostile_ids),
+        character__character__character_id__in=characters,
+    ).values_list(
+        "character__character__character_id",
+        "contract_id",
+        "issuer_id",
+        "issuer_corporation_id",
+        "assignee_id",
+        "acceptor_id",
+        "date_issued",
+        "contract_type",
     ):
         user_id = owner[character_id]
         parties = [issuer_id, assignee_id, acceptor_id]
         # the issuer's Corporation speaks for a stranger only: an own alt's Corporation is the membership marker
         if owner.get(issuer_id) != user_id:
             parties.append(issuer_corporation_id)
-        found[(user_id, contract_id)] |= counterparts(user_id, *parties)
+        parties = counterparts(user_id, *parties)
+        found[(user_id, contract_id)] |= parties
+        for party_id in parties:
+            dealings[(user_id, character_id, party_id)].add(date_issued, contract_type)
     _mark_found(accounts, index, found, CONTRACTS)
+    _add_rows(accounts, index, names, dealings, CONTRACTS)
 
 
 def _mark_found(accounts, index, found, kind):
@@ -313,3 +388,11 @@ def _mark_found(accounts, index, found, kind):
         marker = accounts[user_id].markers.setdefault(kind, Marker(kind))
         marker.count += 1
         marker.details.update(index.describe(party_id) for party_id in party_ids)
+
+
+def _add_rows(accounts, index, names, dealings, kind):
+    """One row per own character and hostile, the latest first."""
+    for (user_id, character_id, party_id), dealing in sorted(
+        dealings.items(), key=lambda item: item[1].last, reverse=True
+    ):
+        accounts[user_id].markers[kind].rows.append(dealing.row(names[character_id], index.describe(party_id)))
