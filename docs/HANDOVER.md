@@ -8,35 +8,29 @@ Last updated 2026-10-09.
 
 ## State
 
-- Version: `0.0.4`, 2026-10-09 (see `CHANGELOG.md`): the network graph
-  follows each counterpart to its Corporation and Alliance
-  (`affiliations.py`: Auth, corptools, then public ESI in the task) and
-  shows a hostile one as a red node with its standing; mains listed first,
-  graph and table on click (`#main-<id>`); columns main | alts | partners |
-  Corporations | Alliances, own side green, hostiles red; switch hiding
-  Corporations without connections; progress bar while the task runs
-  (`progress.py`, cache key, polled at `rebuild/progress/`).
-- Unreleased (2026-10-09, committed, not released): network keeps only hostile
-  partners (`network.hostile_only`, after `affiliate` in `snapshot.build`);
-  graph draws Corporation/Alliance only up to the reason (Corporation stays
-  between partner and a hostile Alliance), neutral groups in the partner's
-  tooltip; periods (first/last payment) per link; ISK and contract markers
-  carry `rows` per own character and hostile (count, ISK, period, kinds),
-  Corporation changes the Corporations joined (tooltip); graph layout wider
-  columns, repulsion run, height by fullest column, no edge labels. Checked
-  in the browser with a synthetic 14-partner graph only; `aa_dev` has no
-  hostile network partner and no ISK/contract marker to show. Count, Period
-  and Kind are in the glossary and catalogues.
-- Before (0.0.3): Network tab (`network.py`) - shared ISK partners outside
-  the Alliance and player trading; markers and connections stored by the
-  task `update_snapshot` in the `Snapshot` row; Markers tab with its switch.
+- Version: `0.0.5`, 2026-10-09 (see `CHANGELOG.md`): network keeps only
+  hostile partners (`network.hostile_only`, after `affiliate` in
+  `snapshot.build`); the graph draws Corporation/Alliance only up to the
+  reason (the Corporation stays between partner and a hostile Alliance),
+  the rest in the partner's tooltip (`affiliation`); periods (first/last
+  payment, ISO dates) per link in table and line tooltip; ISK and contract
+  markers carry `rows` per own character and hostile (count, ISK, period,
+  kinds, `partials/dealings.html`), Corporation changes the Corporations
+  joined (`<abbr>` tooltip); graph layout: wider columns, repulsion run then
+  frozen, height by the fullest column, payment count only in the tooltip.
+- Before (0.0.4): counterparts followed to Corporation and Alliance
+  (`affiliations.py`: Auth, corptools, then public ESI in the task); mains
+  listed first, graph and table on click (`#main-<id>`); progress bar
+  (`progress.py`, polled at `rebuild/progress/`).
+- A snapshot of 0.0.4 or older has no periods and marker rows; `Report`
+  reads it anyway, the next recalculation fills them.
 - What the app does today: a settings page (Alliance, standing threshold,
   Corporation changes per year, contact sources); Markers: the Corporations
   as tiles, per Corporation the mains with markers (hostile membership now
   and in the history, frequent Corporation changes, friendly/watched hostile
   contacts, mails, ISK, contracts - over main and alts); Network: the ISK
-  connections outside the Alliance. Pages read only the stored snapshot.
-- Tests: 116 without translation tests plus 3 translation tests, all green
+  connections with hostile partners. Pages read only the stored snapshot.
+- Tests: 126 without translation tests plus 3 translation tests, all green
   in the dev instance; every new test checked against sabotaged code.
   `tests.base.SpyTestCase` patches `views.update_snapshot` and the three
   ESI calls of `affiliations.py` (`self.esi_names`, `self.esi_affiliations`,
@@ -48,19 +42,22 @@ Last updated 2026-10-09.
 |---|---|---|
 | Markers | `view_suspects` | a tile per Corporation: mains, mains with markers, count per marker; switch to hide clean ones |
 | Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found |
-| Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections outside the Alliance |
-| Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner -> Corporation -> Alliance) and a table of the connections |
+| Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
+| Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
 | Settings | `manage_settings` | Alliance, threshold, Corporation changes per year, contact sources with aa-contacts' token state |
 
 ## Open
 
-- Not tried in the browser yet (EVE SSO login): the tiles, the switches, the
-  click-to-show graph, whether its column layout stays readable with many
-  partners (`levelSeparation`/`nodeSpacing` in `network.js`), and the
-  progress bar. Rendered server-side
-  against `aa_dev` without errors: on Network E 'o and BigBlackout C both
-  paying fenriscw1, who ESI puts into Royal Amarr Institute (NPC starter
-  Corporation, no Alliance, not hostile).
+- Not tried in the real app in the browser yet (EVE SSO login): tiles,
+  switches, click-to-show graph, progress bar, the new dealings tables and
+  the Corporation-change tooltips. The graph layout was checked only with a
+  synthetic 14-partner graph served as a static page (labels no longer
+  overlap; lines still cross labels in a dense graph). `aa_dev` has no
+  hostile network partner and no ISK/contract marker, so the network pages
+  there are empty since 0.0.5 (fenriscw1 is not hostile); rendered
+  server-side without errors.
+- Ask the user: should the payment count come back on the graph lines (moved
+  to the tooltip for less overlap)?
 - Ask the user (asked at the end of the session, no answer yet): does a
   shared payment partner need the main among the characters, or are two
   alts enough (implemented: any two)?

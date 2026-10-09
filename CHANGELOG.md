@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.5] - 2026-10-09
+
 ### Added
 
 - Corporation page: *ISK with hostiles* and *Contracts with hostiles* list a
