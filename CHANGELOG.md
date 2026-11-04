@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.10] - 2026-11-04
+
 ### Added
 
 - Every marker now records the own characters behind it (`character_ids`
