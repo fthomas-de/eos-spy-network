@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.11] - 2026-11-04
+
 ### Fixed
 
 - *Friendly to hostiles* no longer marks a hostile on the watch list with a

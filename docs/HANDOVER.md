@@ -8,7 +8,9 @@ Last updated 2026-11-04.
 
 ## State
 
-- Version: `0.0.10`, 2026-11-04 (see `CHANGELOG.md`): every marker
+- Version: `0.0.11`, 2026-11-04 (see `CHANGELOG.md`): the contacts marker
+  counts only a standing above 0, watched or not (`markers._check_contacts`,
+  `standing__gt=0`). Before (0.0.10): every marker
   stores `character_ids` (EVE IDs of the own characters behind it;
   `Marker` field, `Suspect.mark(kind, detail, character_id, count=1)`,
   mails/ISK/contracts through `markers.Found`, JSON key `"character_ids"`
@@ -28,7 +30,8 @@ Last updated 2026-11-04.
   `Report(snapshot, disabled)` drops them when reading; (0.0.8) corptools' tables read by CharacterAudit ID
   (`markers.character_audits()`), roster and hostile list read once per
   run, `test_network.TestQueries` pins the SQL; (0.0.7) watched hostiles
-  with a negative standing are no contacts marker; (0.0.6) time frame
+  with a negative standing were no contacts marker (0.0.11: standing 0 is
+  none either); (0.0.6) time frame
   `lookback_days` and `ignored_ref_types`, Corporation/Alliance of ISK and
   contract counterparts; (0.0.5) network only with hostile partners;
   (0.0.4) affiliations via `affiliations.py`, progress bar.
@@ -38,12 +41,12 @@ Last updated 2026-11-04.
   Corporation changes per year, time frame, ignored wallet entry types;
   contact sources; marker switches); Markers: the Corporations as tiles,
   per Corporation the mains with markers (hostile membership now and in
-  the history, frequent Corporation changes, friendly hostile contacts or
-  watched ones not held negative, mails, ISK, contracts - over main and
+  the history, frequent Corporation changes, friendly hostile contacts
+  (standing above 0), mails, ISK, contracts - over main and
   alts); Network: the ISK connections with hostile partners. Pages read
   only the stored snapshot.
 - Tests: 178 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.10 added 11 in `test_markers.TestCharacterIds`
+  in the dev instance (0.0.11 turned one test around; 0.0.10 added 11 in `test_markers.TestCharacterIds`
   and 10 in `test_api`); every new test checked against sabotaged code.
   `tests.base.SpyTestCase` patches `views.update_snapshot` and the three
   ESI calls of `affiliations.py` (`self.esi_names`, `self.esi_affiliations`,
@@ -78,9 +81,7 @@ Last updated 2026-11-04.
   more (the 0.0.7 contacts change dropped the old ones), so
   `api.character_markers()` gives `{}` there; the character IDs were only
   seen in tests.
-- Open with the user: should a watched hostile at standing 0 still count
-  (implemented: yes - only negative ones were declared irrelevant)? `aa_dev` has no
-  hostile network partner and no ISK/contract marker, so the network pages
+- `aa_dev` has no hostile network partner and no ISK/contract marker, so the network pages
   there are empty since 0.0.5 (fenriscw1 is not hostile); rendered
   server-side without errors.
 - Markers weighted, a score; account page with evidence
@@ -126,9 +127,9 @@ Last updated 2026-11-04.
   without the main are enough; the graph always draws the main with them.
   The payment count stands on the lines again (user: overlap does not
   matter).
-- Contacts (user, 2026-10-09): a watched hostile with a negative standing
-  is no marker - PvP pilots watch their enemies; positive, or watched at 0
-  or above, still counts.
+- Contacts (user, 2026-11-04): only a standing above 0 counts, watched or
+  not; the 2026-10-09 rule (watched at 0 or above counts) is gone, a
+  neutral contact is no friendship.
 - Recalculation: stored in the database by a Celery task (not a cache, not
   live), started by the button, by saving the settings, or by a
   `CELERYBEAT_SCHEDULE` entry the admin adds (README).
@@ -173,7 +174,7 @@ Last updated 2026-11-04.
 - Installed editable (`pip install --no-deps -e`), listed in
   `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0005
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
-  hand with 0.0.10 (`snapshot.update()` in the shell; time frame 365,
+  hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
   `local.py`.
 - aa-contacts holds tokens for Invidia Gloriae Comes (99003995) and Ether
@@ -235,3 +236,7 @@ Last updated 2026-11-04.
   --summary`); `chmod 644` afterwards, or write the text back instead.
 - Inheriting a test class to borrow a helper runs all its tests twice;
   assign the helper instead (`add_entry = TestWallet.add_entry`).
+- Another app's suite running at the same time (eos-auth-monitor) shares
+  `test_aa_dev` and breaks the run with "table already exists": set
+  `EOS_TEST_DB=test_spy_net` for your own test database. `aa-test` ends
+  with "xport: command not found" noise (its lines 52-53); results are fine.
