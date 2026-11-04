@@ -62,6 +62,15 @@ EVIDENCE = {MAILS, WALLET, CONTRACTS}
 
 CORPTOOLS = "corptools"
 
+# wallet entries that pay for a contract: corptools' journal names the contract in context_id
+CONTRACT_REF_TYPES = (
+    "contract_price",
+    "contract_price_payment_corp",
+    "contract_reward",
+    "contract_collateral",
+    "contract_collateral_payout",
+)
+
 
 @dataclass
 class Marker:
@@ -117,17 +126,22 @@ class Dealings:
     first: datetime | None = None
     last: datetime | None = None
     types: set = field(default_factory=set)
+    # one of the entries pays for a contract: the row gets the popup button
+    contract_payments: bool = False
 
     def add(self, when: datetime, kind: str, isk=None) -> None:
         self.count += 1
+        self.contract_payments = self.contract_payments or kind in CONTRACT_REF_TYPES
         self.isk += abs(isk or 0)
         self.first = when if self.first is None else min(self.first, when)
         self.last = when if self.last is None else max(self.last, when)
         self.types.add(kind.replace("_", " "))
 
-    def row(self, character: str, counterpart_id: int, counterpart: str) -> dict:
+    def row(self, character: str, character_id: int, counterpart_id: int, counterpart: str) -> dict:
         return {
             "character": character,
+            # the popup of a contract payment looks the contracts up by this ID and the counterpart's
+            "character_id": character_id,
             # the snapshot adds the counterpart's Corporation and Alliance by this ID
             "counterpart_id": counterpart_id,
             "counterpart": counterpart,
@@ -136,6 +150,7 @@ class Dealings:
             "first": self.first.date().isoformat(),
             "last": self.last.date().isoformat(),
             "types": sorted(self.types),
+            "contract_payments": self.contract_payments,
         }
 
 
@@ -511,4 +526,4 @@ def _add_rows(accounts, index, names, dealings, kind):
     ):
         # the plain name: Corporation and Alliance get columns of their own
         name = index.names.get(party_id) or str(party_id)
-        accounts[user_id].markers[kind].rows.append(dealing.row(names[character_id], party_id, name))
+        accounts[user_id].markers[kind].rows.append(dealing.row(names[character_id], character_id, party_id, name))

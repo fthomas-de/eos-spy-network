@@ -1,0 +1,83 @@
+{% load i18n %}
+{# The contracts behind the contract payments of one own character and one counterpart; the body of the popup #}
+{% for entry in contracts %}
+    {% with contract=entry.contract %}
+        <div class="card mb-3">
+            <div class="card-header">
+                {% translate "Contract" %} {{ entry.contract_id }}
+                {% if contract %}
+                    <span class="text-body-secondary small">
+                        · {{ contract.contract_type|cut:"_" }} · {{ contract.status }}
+                    </span>
+                {% endif %}
+            </div>
+            <div class="card-body small">
+                {% if contract %}
+                    <dl class="row mb-2">
+                        {% if contract.title %}
+                            <dt class="col-sm-3">{% translate "Title" context "eos-spy-network" %}</dt>
+                            <dd class="col-sm-9 text-break">{{ contract.title }}</dd>
+                        {% endif %}
+                        <dt class="col-sm-3">{% translate "Issuer" %}</dt>
+                        <dd class="col-sm-9 text-break">{{ contract.issuer_name.name }} ({{ contract.issuer_corporation_name.name }})</dd>
+                        <dt class="col-sm-3">{% translate "Assignee" %}</dt>
+                        <dd class="col-sm-9 text-break">{{ contract.assignee_name.name|default:"-" }}</dd>
+                        <dt class="col-sm-3">{% translate "Acceptor" %}</dt>
+                        <dd class="col-sm-9 text-break">{{ contract.acceptor_name.name|default:"-" }}</dd>
+                        <dt class="col-sm-3">{% translate "Issued" %}</dt>
+                        <dd class="col-sm-9">{{ contract.date_issued|date:"Y-m-d H:i" }}</dd>
+                        {% if contract.date_completed %}
+                            <dt class="col-sm-3">{% translate "Completed" context "eos-spy-network" %}</dt>
+                            <dd class="col-sm-9">{{ contract.date_completed|date:"Y-m-d H:i" }}</dd>
+                        {% endif %}
+                        <dt class="col-sm-3">{% translate "Price" %}</dt>
+                        <dd class="col-sm-9">{{ contract.price|default:0|floatformat:"0g" }} ISK</dd>
+                        <dt class="col-sm-3">{% translate "Reward" %}</dt>
+                        <dd class="col-sm-9">{{ contract.reward|default:0|floatformat:"0g" }} ISK</dd>
+                        <dt class="col-sm-3">{% translate "Collateral" %}</dt>
+                        <dd class="col-sm-9">{{ contract.collateral|default:0|floatformat:"0g" }} ISK</dd>
+                        {% if contract.start_location_name %}
+                            <dt class="col-sm-3">{% translate "From" context "eos-spy-network" %}</dt>
+                            <dd class="col-sm-9 text-break">{{ contract.start_location_name.location_name }}</dd>
+                        {% endif %}
+                        {% if contract.end_location_name %}
+                            <dt class="col-sm-3">{% translate "To" context "eos-spy-network" %}</dt>
+                            <dd class="col-sm-9 text-break">{{ contract.end_location_name.location_name }}</dd>
+                        {% endif %}
+                    </dl>
+                    {% with items=contract.contractitem_set.all %}
+                        {% if items %}
+                            <table class="table table-sm table-borderless mb-2 w-auto">
+                                <thead>
+                                    <tr>
+                                        <th>{% translate "Item" context "eos-spy-network" %}</th>
+                                        <th class="text-end">{% translate "Quantity" %}</th>
+                                        <th>{% translate "Direction" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                        <tr>
+                                            <td class="text-break">{{ item.type_name.name }}</td>
+                                            <td class="text-end">{{ item.quantity|floatformat:"0g" }}</td>
+                                            <td>{% if item.is_included %}{% translate "offered" %}{% else %}{% translate "requested" %}{% endif %}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    {% endwith %}
+                {% else %}
+                    <p class="text-body-secondary mb-2">{% translate "corptools has not stored this contract." %}</p>
+                {% endif %}
+                <div class="text-body-secondary">
+                    {% for payment in entry.payments %}
+                        <div>{{ payment.date|date:"Y-m-d H:i" }} · {{ payment.ref_type }} · {{ payment.amount|floatformat:"0g" }} ISK</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endwith %}
+{% empty %}
+    <p class="mb-0 text-body-secondary">{% translate "No contracts found for these payments." %}</p>
+{% endfor %}

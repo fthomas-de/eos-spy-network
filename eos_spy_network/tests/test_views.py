@@ -573,3 +573,100 @@ class TestSettingsPage(SpyTestCase):
 
         self.assertContains(response, "aa-contacts is not installed")
         self.assertNotContains(response, "Open aa-contacts")
+
+
+class TestContractDetails(SuspectPageTestCase):
+    """The popup behind a contract payment of the ISK marker."""
+
+    def setUp(self):
+        super().setUp()
+        from corptools.models import CharacterAudit
+
+        from .test_markers import eve_name
+
+        self.eve_name = eve_name
+        self.main = EveCharacter.objects.get(pk=self.suspect_main.pk)
+        self.audit = CharacterAudit.objects.create(character=self.main)
+        self.url = reverse("eos_spy_network:contracts", args=[self.main.character_id, HOSTILE_CORP])
+
+    def pay(self, entry_id, ref_type, context_id=None, party_id=HOSTILE_CORP):
+        from corptools.models import CharacterWalletJournalEntry
+
+        CharacterWalletJournalEntry.objects.create(
+            character=self.audit, entry_id=entry_id, date=timezone.now(), description="", ref_type=ref_type,
+            first_party_id=party_id, second_party_id=self.main.character_id, amount=1000, balance=1,
+            context_id=context_id, context_id_type="contract_id" if context_id else None,
+        )
+
+    def add_contract(self, contract_id, title):
+        from corptools.models import Contract
+
+        now = timezone.now()
+        Contract.objects.create(
+            id=f"{self.audit.pk}-{contract_id}", contract_id=contract_id, character=self.audit,
+            issuer_id=HOSTILE_CORP, issuer_name=self.eve_name(HOSTILE_CORP, "corporation"),
+            issuer_corporation_id=HOSTILE_CORP, issuer_corporation_name=self.eve_name(HOSTILE_CORP, "corporation"),
+            assignee_id=self.main.character_id, assignee_name=self.eve_name(self.main.character_id),
+            acceptor_id=0, acceptor_name=self.eve_name(0),
+            for_corporation=False, date_expired=now, date_issued=now, status="finished",
+            contract_type="item_exchange", availability="personal", title=title, price=Decimal(1000),
+        )
+
+    def login(self, *perms):
+        self.client.force_login(make_user("lead", *perms))
+
+    def test_should_show_the_contract_of_the_payment(self):
+        self.add_contract(77, "Spy gear")
+        self.pay(1, "contract_price", context_id=77)
+        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+
+        response = self.client.get(self.url)
+
+        self.assertContains(response, "Contract 77")
+        self.assertContains(response, "Spy gear")
+        self.assertContains(response, "contract price")
+
+    def test_should_say_when_corptools_never_stored_the_contract(self):
+        self.pay(1, "contract_price", context_id=78)
+        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+
+        response = self.client.get(self.url)
+
+        self.assertContains(response, "Contract 78")
+        self.assertContains(response, "has not stored this contract")
+
+    def test_should_leave_out_other_payments_and_counterparts(self):
+        self.add_contract(79, "Not ours")
+        self.pay(1, "player_donation", context_id=79)
+        self.pay(2, "contract_price", context_id=79, party_id=5001)
+        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+
+        response = self.client.get(self.url)
+
+        self.assertNotContains(response, "Not ours")
+        self.assertContains(response, "No contracts found")
+
+    def test_should_need_view_evidence(self):
+        self.login(VIEW_SUSPECTS)
+
+        response = self.client.get(self.url)
+
+        self.assertRedirects(response, f"{LOGIN}?next={self.url}", fetch_redirect_response=False)
+
+    def test_should_offer_the_button_for_a_contract_payment_only(self):
+        self.pay(1, "contract_price", context_id=80)
+        snapshot.update()
+        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, f'data-eos-spy-network-contracts="{self.url}"')
+
+    def test_should_not_offer_the_button_for_a_donation(self):
+        self.pay(1, "player_donation")
+        snapshot.update()
+        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertNotContains(response, 'data-eos-spy-network-contracts="')

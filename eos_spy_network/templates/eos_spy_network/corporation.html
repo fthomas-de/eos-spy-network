@@ -1,6 +1,12 @@
 {% extends "eos_spy_network/base.html" %}
 {% load i18n %}
 {% load evelinks %}
+{% load sri %}
+
+{% block extra_javascript %}
+    {{ block.super }}
+    {% sri_static "eos_spy_network/js/contracts.js" %}
+{% endblock %}
 
 {% block details %}
     {% include "eos_spy_network/partials/notices.html" %}
@@ -87,4 +93,19 @@
             {% endif %}
         </div>
     </div>
+
+    {% if perms.eos_spy_network.view_evidence %}
+        {# one popup for every contract payment; contracts.js fills it #}
+        <div class="modal fade" tabindex="-1" aria-hidden="true" data-eos-spy-network-contracts-modal>
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{% translate "Contracts" context "eos-spy-network" %}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
+                    </div>
+                    <div class="modal-body" data-eos-spy-network-contracts-body data-loading="{% translate 'Loading ...' %}" data-failed="{% translate 'The contracts could not be loaded.' %}"></div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}

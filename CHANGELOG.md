@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- A row of the ISK marker with contract payments (`contract price`, reward,
+  collateral ...) has a *View details* button: a popup lists the contracts
+  behind those payments of the character and the counterpart - issuer,
+  assignee, acceptor, dates, price, reward, collateral, locations, items.
+  corptools' React pages cannot be embedded, so the popup is its own small
+  view (`contracts/<character>/<counterpart>/`, needs `view_suspects` and
+  `view_evidence`) reading corptools' wallet journal (`context_id`) and
+  contracts live, within the time frame and without the ignored entry types.
+  Rows carry the character's EVE ID for this; a result stored by 0.0.11 or
+  older shows no button until the next recalculation
+
 ## [0.0.11] - 2026-11-04
 
 ### Fixed

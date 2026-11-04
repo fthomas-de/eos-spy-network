@@ -10,7 +10,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import __version__, contacts, progress
+from . import __version__, contacts, contract_details, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
@@ -171,6 +171,23 @@ def network_corporation(request, corporation_id):
         {**_notices(config), "report": report, "tile": tile},
         NAV_NETWORK,
         started,
+    )
+
+
+@all_permissions_required(VIEW_SUSPECTS, VIEW_EVIDENCE)
+def contracts(request, character_id, counterpart_id):
+    """The popup of a contract payment: the contracts of one own character with one counterpart, as HTML."""
+    if not corptools_installed():
+        raise Http404
+    config = SpyConfiguration.get_solo()
+    return render(
+        request,
+        "eos_spy_network/partials/contract-details.html",
+        {
+            "contracts": contract_details.details(
+                character_id, counterpart_id, config.since(), config.ignored_ref_types or ()
+            )
+        },
     )
 
 

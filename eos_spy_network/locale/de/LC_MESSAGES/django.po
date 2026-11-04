@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-04 20:18+0000\n"
-"PO-Revision-Date: 2026-11-04 20:18+0000\n"
+"POT-Creation-Date: 2026-11-04 21:37+0000\n"
+"PO-Revision-Date: 2026-11-04 21:37+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: de\n"
 "Language: de\n"
@@ -50,7 +50,7 @@ msgid "Faction"
 msgstr "Faction"
 
 #: forms.py:40 snapshot.py:32 templates/eos_spy_network/base.html:12
-#: templates/eos_spy_network/corporation.html:42
+#: templates/eos_spy_network/corporation.html:48
 #: templates/eos_spy_network/settings.html:32 views.py:31
 msgid "Markers"
 msgstr "Marker"
@@ -233,7 +233,7 @@ msgstr "Zugehörigkeiten"
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: templates/eos_spy_network/corporation.html:19
+#: templates/eos_spy_network/corporation.html:25
 #: templates/eos_spy_network/corporations.html:29
 #: templates/eos_spy_network/corporations.html:38
 #: templates/eos_spy_network/network.html:29
@@ -245,32 +245,49 @@ msgctxt "eos-spy-network"
 msgid "Mains"
 msgstr "Mains"
 
-#: templates/eos_spy_network/corporation.html:20
-#: templates/eos_spy_network/corporation.html:32
+#: templates/eos_spy_network/corporation.html:26
+#: templates/eos_spy_network/corporation.html:38
 #: templates/eos_spy_network/corporations.html:30
 msgid "Mains with markers"
 msgstr "Mains mit Markern"
 
-#: templates/eos_spy_network/corporation.html:24
+#: templates/eos_spy_network/corporation.html:30
 #: templates/eos_spy_network/network_corporation.html:25
 msgid "Back"
 msgstr "Zurück"
 
-#: templates/eos_spy_network/corporation.html:40
+#: templates/eos_spy_network/corporation.html:46
 #: templates/eos_spy_network/partials/network-legend.html:4
 msgctxt "EVE jargon"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_spy_network/corporation.html:41
+#: templates/eos_spy_network/corporation.html:47
 msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
 
-#: templates/eos_spy_network/corporation.html:86
+#: templates/eos_spy_network/corporation.html:92
 #: templates/eos_spy_network/corporations.html:45
 msgid "No markers."
 msgstr "Keine Marker."
+
+#: templates/eos_spy_network/corporation.html:103
+msgctxt "eos-spy-network"
+msgid "Contracts"
+msgstr "Contracts"
+
+#: templates/eos_spy_network/corporation.html:104
+msgid "Close"
+msgstr "Schließen"
+
+#: templates/eos_spy_network/corporation.html:106
+msgid "Loading ..."
+msgstr "Lade ..."
+
+#: templates/eos_spy_network/corporation.html:106
+msgid "The contracts could not be loaded."
+msgstr "Die Contracts konnten nicht geladen werden."
 
 #: templates/eos_spy_network/corporations.html:14
 msgid "Hide Corporations without markers"
@@ -278,6 +295,7 @@ msgstr "Corporations ohne Marker ausblenden"
 
 #: templates/eos_spy_network/corporations.html:51
 #: templates/eos_spy_network/network.html:63
+#: templates/eos_spy_network/partials/dealings.html:46
 msgid "View details"
 msgstr "Details anzeigen"
 
@@ -366,6 +384,87 @@ msgstr "Zeitraum"
 #: templates/eos_spy_network/partials/dealings.html:8
 msgid "Counterpart"
 msgstr "Gegenüber"
+
+#: templates/eos_spy_network/partials/contract-details.html:7
+msgid "Contract"
+msgstr "Contract"
+
+#: templates/eos_spy_network/partials/contract-details.html:18
+msgctxt "eos-spy-network"
+msgid "Title"
+msgstr "Titel"
+
+#: templates/eos_spy_network/partials/contract-details.html:21
+msgid "Issuer"
+msgstr "Aussteller"
+
+#: templates/eos_spy_network/partials/contract-details.html:23
+msgid "Assignee"
+msgstr "Empfänger"
+
+#: templates/eos_spy_network/partials/contract-details.html:25
+msgid "Acceptor"
+msgstr "Annehmer"
+
+#: templates/eos_spy_network/partials/contract-details.html:27
+msgid "Issued"
+msgstr "Erstellt"
+
+#: templates/eos_spy_network/partials/contract-details.html:30
+msgctxt "eos-spy-network"
+msgid "Completed"
+msgstr "Abgeschlossen"
+
+#: templates/eos_spy_network/partials/contract-details.html:33
+msgid "Price"
+msgstr "Preis"
+
+#: templates/eos_spy_network/partials/contract-details.html:35
+msgid "Reward"
+msgstr "Belohnung"
+
+#: templates/eos_spy_network/partials/contract-details.html:37
+msgid "Collateral"
+msgstr "Sicherheit"
+
+#: templates/eos_spy_network/partials/contract-details.html:40
+msgctxt "eos-spy-network"
+msgid "From"
+msgstr "Von"
+
+#: templates/eos_spy_network/partials/contract-details.html:44
+msgctxt "eos-spy-network"
+msgid "To"
+msgstr "Nach"
+
+#: templates/eos_spy_network/partials/contract-details.html:53
+msgctxt "eos-spy-network"
+msgid "Item"
+msgstr "Gegenstand"
+
+#: templates/eos_spy_network/partials/contract-details.html:54
+msgid "Quantity"
+msgstr "Menge"
+
+#: templates/eos_spy_network/partials/contract-details.html:55
+msgid "Direction"
+msgstr "Richtung"
+
+#: templates/eos_spy_network/partials/contract-details.html:63
+msgid "offered"
+msgstr "angeboten"
+
+#: templates/eos_spy_network/partials/contract-details.html:63
+msgid "requested"
+msgstr "gefordert"
+
+#: templates/eos_spy_network/partials/contract-details.html:71
+msgid "corptools has not stored this contract."
+msgstr "corptools hat diesen Contract nicht gespeichert."
+
+#: templates/eos_spy_network/partials/contract-details.html:82
+msgid "No contracts found for these payments."
+msgstr "Keine Contracts zu diesen Zahlungen gefunden."
 
 #: templates/eos_spy_network/partials/dealings.html:13
 msgid "Count"
@@ -586,23 +685,23 @@ msgstr ""
 msgid "Suspects"
 msgstr "Verdächtige"
 
-#: views.py:193
+#: views.py:210
 msgid "The markers and connections are being recalculated."
 msgstr "Marker und Verbindungen werden neu berechnet."
 
-#: views.py:195
+#: views.py:212
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr ""
 "Die Neuberechnung konnte nicht gestartet werden: Die Task-Queue ist nicht "
 "erreichbar."
 
-#: views.py:222
+#: views.py:239
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr ""
 "Einstellungen gespeichert. Marker und Verbindungen werden neu berechnet."
 
-#: views.py:226
+#: views.py:243
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

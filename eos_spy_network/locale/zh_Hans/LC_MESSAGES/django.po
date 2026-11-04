@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-04 20:18+0000\n"
-"PO-Revision-Date: 2026-11-04 20:18+0000\n"
+"POT-Creation-Date: 2026-11-04 21:37+0000\n"
+"PO-Revision-Date: 2026-11-04 21:37+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: zh_Hans\n"
 "Language: zh_Hans\n"
@@ -50,7 +50,7 @@ msgid "Faction"
 msgstr "Faction"
 
 #: forms.py:40 snapshot.py:32 templates/eos_spy_network/base.html:12
-#: templates/eos_spy_network/corporation.html:42
+#: templates/eos_spy_network/corporation.html:48
 #: templates/eos_spy_network/settings.html:32 views.py:31
 msgid "Markers"
 msgstr "标记"
@@ -220,7 +220,7 @@ msgstr "所属关系"
 msgid "Settings"
 msgstr "设置"
 
-#: templates/eos_spy_network/corporation.html:19
+#: templates/eos_spy_network/corporation.html:25
 #: templates/eos_spy_network/corporations.html:29
 #: templates/eos_spy_network/corporations.html:38
 #: templates/eos_spy_network/network.html:29
@@ -232,32 +232,49 @@ msgctxt "eos-spy-network"
 msgid "Mains"
 msgstr "Mains"
 
-#: templates/eos_spy_network/corporation.html:20
-#: templates/eos_spy_network/corporation.html:32
+#: templates/eos_spy_network/corporation.html:26
+#: templates/eos_spy_network/corporation.html:38
 #: templates/eos_spy_network/corporations.html:30
 msgid "Mains with markers"
 msgstr "有标记的 Mains"
 
-#: templates/eos_spy_network/corporation.html:24
+#: templates/eos_spy_network/corporation.html:30
 #: templates/eos_spy_network/network_corporation.html:25
 msgid "Back"
 msgstr "返回"
 
-#: templates/eos_spy_network/corporation.html:40
+#: templates/eos_spy_network/corporation.html:46
 #: templates/eos_spy_network/partials/network-legend.html:4
 msgctxt "EVE jargon"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_spy_network/corporation.html:41
+#: templates/eos_spy_network/corporation.html:47
 msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
 
-#: templates/eos_spy_network/corporation.html:86
+#: templates/eos_spy_network/corporation.html:92
 #: templates/eos_spy_network/corporations.html:45
 msgid "No markers."
 msgstr "没有标记。"
+
+#: templates/eos_spy_network/corporation.html:103
+msgctxt "eos-spy-network"
+msgid "Contracts"
+msgstr "合同"
+
+#: templates/eos_spy_network/corporation.html:104
+msgid "Close"
+msgstr "关闭"
+
+#: templates/eos_spy_network/corporation.html:106
+msgid "Loading ..."
+msgstr "加载中 ..."
+
+#: templates/eos_spy_network/corporation.html:106
+msgid "The contracts could not be loaded."
+msgstr "无法加载合同。"
 
 #: templates/eos_spy_network/corporations.html:14
 msgid "Hide Corporations without markers"
@@ -265,6 +282,7 @@ msgstr "隐藏无标记的 Corporations"
 
 #: templates/eos_spy_network/corporations.html:51
 #: templates/eos_spy_network/network.html:63
+#: templates/eos_spy_network/partials/dealings.html:46
 msgid "View details"
 msgstr "查看详情"
 
@@ -349,6 +367,87 @@ msgstr "时间段"
 #: templates/eos_spy_network/partials/dealings.html:8
 msgid "Counterpart"
 msgstr "对方"
+
+#: templates/eos_spy_network/partials/contract-details.html:7
+msgid "Contract"
+msgstr "合同"
+
+#: templates/eos_spy_network/partials/contract-details.html:18
+msgctxt "eos-spy-network"
+msgid "Title"
+msgstr "标题"
+
+#: templates/eos_spy_network/partials/contract-details.html:21
+msgid "Issuer"
+msgstr "发布者"
+
+#: templates/eos_spy_network/partials/contract-details.html:23
+msgid "Assignee"
+msgstr "受让人"
+
+#: templates/eos_spy_network/partials/contract-details.html:25
+msgid "Acceptor"
+msgstr "接受者"
+
+#: templates/eos_spy_network/partials/contract-details.html:27
+msgid "Issued"
+msgstr "发布时间"
+
+#: templates/eos_spy_network/partials/contract-details.html:30
+msgctxt "eos-spy-network"
+msgid "Completed"
+msgstr "完成时间"
+
+#: templates/eos_spy_network/partials/contract-details.html:33
+msgid "Price"
+msgstr "价格"
+
+#: templates/eos_spy_network/partials/contract-details.html:35
+msgid "Reward"
+msgstr "报酬"
+
+#: templates/eos_spy_network/partials/contract-details.html:37
+msgid "Collateral"
+msgstr "抵押"
+
+#: templates/eos_spy_network/partials/contract-details.html:40
+msgctxt "eos-spy-network"
+msgid "From"
+msgstr "起点"
+
+#: templates/eos_spy_network/partials/contract-details.html:44
+msgctxt "eos-spy-network"
+msgid "To"
+msgstr "终点"
+
+#: templates/eos_spy_network/partials/contract-details.html:53
+msgctxt "eos-spy-network"
+msgid "Item"
+msgstr "物品"
+
+#: templates/eos_spy_network/partials/contract-details.html:54
+msgid "Quantity"
+msgstr "数量"
+
+#: templates/eos_spy_network/partials/contract-details.html:55
+msgid "Direction"
+msgstr "方向"
+
+#: templates/eos_spy_network/partials/contract-details.html:63
+msgid "offered"
+msgstr "提供"
+
+#: templates/eos_spy_network/partials/contract-details.html:63
+msgid "requested"
+msgstr "索取"
+
+#: templates/eos_spy_network/partials/contract-details.html:71
+msgid "corptools has not stored this contract."
+msgstr "corptools 未保存此合同。"
+
+#: templates/eos_spy_network/partials/contract-details.html:82
+msgid "No contracts found for these payments."
+msgstr "未找到这些付款对应的合同。"
 
 #: templates/eos_spy_network/partials/dealings.html:13
 msgid "Count"
@@ -552,20 +651,20 @@ msgstr "关闭的标记仍会计算，但标记页面不会显示它：没有其
 msgid "Suspects"
 msgstr "嫌疑人"
 
-#: views.py:193
+#: views.py:210
 msgid "The markers and connections are being recalculated."
 msgstr "正在重新计算标记和关联。"
 
-#: views.py:195
+#: views.py:212
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr "无法开始重新计算：任务队列不可达。"
 
-#: views.py:222
+#: views.py:239
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr "设置已保存。正在重新计算标记和关联。"
 
-#: views.py:226
+#: views.py:243
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

@@ -38,7 +38,15 @@
                     <td>{{ row.count }}</td>
                     {% if marker.kind == "wallet" %}<td class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>{% endif %}
                     <td class="text-nowrap">{% include "eos_spy_network/partials/period.html" with first=row.first last=row.last %}</td>
-                    <td>{{ row.types|join:", " }}</td>
+                    <td>
+                        {{ row.types|join:", " }}
+                        {# a snapshot of 0.0.11 or older has no character_id: no button until the next recalculation #}
+                        {% if marker.kind == "wallet" and row.contract_payments and row.character_id %}
+                            <button type="button" class="btn btn-sm btn-secondary ms-1" data-eos-spy-network-contracts="{% url 'eos_spy_network:contracts' row.character_id row.counterpart_id %}">
+                                {% translate "View details" %}
+                            </button>
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
