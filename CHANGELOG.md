@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.12] - 2026-11-04
+
 ### Added
 
 - A row of the ISK marker with contract payments (`contract price`, reward,

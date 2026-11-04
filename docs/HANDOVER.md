@@ -8,7 +8,17 @@ Last updated 2026-11-04.
 
 ## State
 
-- Version: `0.0.11`, 2026-11-04 (see `CHANGELOG.md`): the contacts marker
+- Version: `0.0.12`, 2026-11-04 (see `CHANGELOG.md`): ISK marker rows with
+  contract payments get a *View details* button; popup = HTML fragment from
+  `views.contracts` (`contracts/<character_id>/<counterpart_id>/`,
+  `view_suspects` + `view_evidence`), data live from corptools
+  (`contract_details.details`: wallet journal `context_id` -> `Contract`,
+  within time frame, minus ignored types), loaded by `contracts.js` into a
+  modal on the Corporation page. Rows carry `character_id` and
+  `contract_payments` (`markers.Dealings.row`); an older snapshot shows no
+  button until recalculated. Only the ISK rows have it, not yet the
+  *Contracts with hostiles* rows (easy to add, same view).
+  Before (0.0.11): the contacts marker
   counts only a standing above 0, watched or not (`markers._check_contacts`,
   `standing__gt=0`). Before (0.0.10): every marker
   stores `character_ids` (EVE IDs of the own characters behind it;
@@ -45,8 +55,9 @@ Last updated 2026-11-04.
   (standing above 0), mails, ISK, contracts - over main and
   alts); Network: the ISK connections with hostile partners. Pages read
   only the stored snapshot.
-- Tests: 178 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.11 turned one test around; 0.0.10 added 11 in `test_markers.TestCharacterIds`
+- Tests: 184 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.12 added 6 in `test_views.TestContractDetails`;
+  0.0.10 added 11 in `test_markers.TestCharacterIds`
   and 10 in `test_api`); every new test checked against sabotaged code.
   `tests.base.SpyTestCase` patches `views.update_snapshot` and the three
   ESI calls of `affiliations.py` (`self.esi_names`, `self.esi_affiliations`,
@@ -63,6 +74,12 @@ Last updated 2026-11-04.
 | Settings | `manage_settings` | tabs: Alliance (threshold, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker) |
 
 ## Open
+
+- The contract popup was not seen in a browser: `aa_dev` holds no ISK
+  marker (snapshot rebuilt 2026-11-04 with 0.0.12: 0 suspects), so only the
+  tests rendered it. Seeding a `contract_price` journal entry plus a
+  `Contract` in aa_dev needs the user's yes (foreign tables). The new
+  texts (popup) are machine-translated, not reviewed.
 
 - Not tried in the real app in the browser yet (EVE SSO login): the
   settings tabs (column widths of the source table in its initially
