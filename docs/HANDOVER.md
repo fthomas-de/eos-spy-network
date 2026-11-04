@@ -8,66 +8,40 @@ Last updated 2026-11-04.
 
 ## State
 
-- Since 0.0.8 (2026-11-04, `[Unreleased]`, committed, not pushed): settings in the tabs Alliance /
-  Contact sources / Markers (one form, as in eos-tax; each Save button
-  carries `name="tab"`, the view redirects to `?tab=`; an error opens its
-  tab). Tab Markers: a switch per marker, stored as
-  `SpyConfiguration.disabled_markers` (migration 0005, applied to
-  `aa_dev`) - the switched-off ones, so a new marker kind starts on.
-  User's decision: hide only, not skip the calculation - `Report(snapshot,
-  disabled)` drops them when reading, a main left without markers is
-  clean, `markers.by_markers` re-sorts; network pages unaffected. Notice
-  above the marker pages names the switched-off ones. 8 new tests in
-  `test_views` (43 there; 157 in all), checked against sabotaged code.
-  The four new messages are in the glossary, machine-translated, not
-  reviewed by the user. Not seen in the browser yet: the source table's
-  column widths in its initially hidden tab.
-- Version: `0.0.8`, 2026-10-09 (see `CHANGELOG.md`): query performance,
-  no behaviour change. corptools' tables are filtered by CharacterAudit ID
-  (`markers.character_audits()`, one lookup per run) instead of joining
-  CharacterAudit and EveCharacter per row; the network journal no longer
-  joins the parties' names (`network._fill_names` names the partners that
-  stay); `markers.roster()` / `Roster` (Corporations, mains, characters)
-  and `hostile_entities` are read once in `snapshot.build` and handed to
-  `corporation_tiles(hostiles=, members=)`, `hostile_index(config,
-  hostiles)` and `connections(..., characters)` - all optional, the old
-  calls still work. `test_network.TestQueries` pins this on the SQL.
-- Before (0.0.7): the contacts marker skips a watched hostile with a
-  negative standing; the graph lines carry the payment count again.
-- Before (0.0.6): settings
-  `lookback_days` (time frame, `SpyConfiguration.since()`, default 365,
-  0 = everything) and `ignored_ref_types` (JSON list, default
-  `market_transaction`, choices from the distinct `ref_type`s of
-  corptools' journal, Tom Select multi; migration 0004). The time frame
-  filters wallet, contracts, mails (undated mails stay), network payments
-  and the Corporation history (a membership counts when it ended after
-  `since`; its end is the next record's start); contacts have no date in
-  corptools and stay unfiltered. The ignored types apply to the ISK marker
-  and the network. ISK/contract marker rows carry `counterpart_id`;
-  `snapshot.build` resolves them together with the network partners
-  (`affiliate(..., more_ids)`), `_affiliate_rows` adds `category`,
-  `corporation`, `alliance` (name + standing) for
-  `partials/dealings.html` (`Marker.affiliated`).
-- Before (0.0.5): network only with hostile partners, graph up to the
-  reason, periods per link, ISK/contract `rows`; (0.0.4) affiliations via
-  `affiliations.py`, progress bar.
+- Version: `0.0.9`, 2026-11-04 (see `CHANGELOG.md`): the settings page
+  in the tabs Alliance / Contact sources / Markers - one form, as in
+  eos-tax; each Save button carries `name="tab"`, the view redirects to
+  `?tab=`, an error opens its tab. Tab Markers: a switch per marker,
+  stored as `SpyConfiguration.disabled_markers` (migration 0005) - the
+  switched-off kinds, so a marker added later starts on. Hide only, the
+  calculation still runs every check: `Report(snapshot, disabled)` drops
+  them when reading, a main left without markers is clean,
+  `markers.by_markers` re-sorts. The network pages are unaffected. A
+  notice above the marker pages names the switched-off ones.
+- Before (0.0.8): corptools' tables read by CharacterAudit ID
+  (`markers.character_audits()`), roster and hostile list read once per
+  run, `test_network.TestQueries` pins the SQL; (0.0.7) watched hostiles
+  with a negative standing are no contacts marker; (0.0.6) time frame
+  `lookback_days` and `ignored_ref_types`, Corporation/Alliance of ISK and
+  contract counterparts; (0.0.5) network only with hostile partners;
+  (0.0.4) affiliations via `affiliations.py`, progress bar.
 - A snapshot of 0.0.5 or older has no Corporation/Alliance in the marker
-  rows (0.0.4: no periods and rows either); `Report` reads it anyway, the
-  next recalculation fills them.
-- What the app does today: a settings page (Alliance, standing threshold,
-  Corporation changes per year, time frame, ignored wallet entry types,
-  contact sources); Markers: the Corporations
-  as tiles, per Corporation the mains with markers (hostile membership now
-  and in the history, frequent Corporation changes, friendly hostile
-  contacts or watched ones not held negative, mails, ISK, contracts - over main and alts); Network: the ISK
-  connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 149 without translation tests plus 3 translation tests, all green
+  rows; `Report` reads it anyway, the next recalculation fills them.
+- What the app does today: settings (Alliance, standing threshold,
+  Corporation changes per year, time frame, ignored wallet entry types;
+  contact sources; marker switches); Markers: the Corporations as tiles,
+  per Corporation the mains with markers (hostile membership now and in
+  the history, frequent Corporation changes, friendly hostile contacts or
+  watched ones not held negative, mails, ISK, contracts - over main and
+  alts); Network: the ISK connections with hostile partners. Pages read
+  only the stored snapshot.
+- Tests: 157 without translation tests plus 3 translation tests, all green
   in the dev instance; every new test checked against sabotaged code.
   `tests.base.SpyTestCase` patches `views.update_snapshot` and the three
   ESI calls of `affiliations.py` (`self.esi_names`, `self.esi_affiliations`,
   `self.esi_corporation_alliance`; set `return_value` for an answer).
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
-  not reviewed by the user yet.
+  not reviewed by the user yet (0.0.9 added the four marker-switch texts).
 
 | Page | Permission | What |
 |---|---|---|
@@ -79,7 +53,9 @@ Last updated 2026-11-04.
 
 ## Open
 
-- Not tried in the real app in the browser yet (EVE SSO login): tiles,
+- Not tried in the real app in the browser yet (EVE SSO login): the
+  settings tabs (column widths of the source table in its initially
+  hidden tab), the marker switches, tiles,
   switches, click-to-show graph, progress bar, the dealings tables with
   their Corporation/Alliance columns, the multi-select of ignored wallet
   types and the Corporation-change tooltips. `aa_dev` has no ISK or
@@ -169,6 +145,10 @@ Last updated 2026-11-04.
 - Corporation/Alliance of ISK and contract counterparts (2026-10-09): from
   the same lookup as the network (Auth, corptools, then public ESI in the
   task); whether a counterpart is hostile is still decided without ESI.
+- Marker switches (user, 2026-11-04): a switched-off marker is hidden,
+  not skipped - it takes effect at once and back on without a
+  recalculation; the tab is called *Markers*; the settings stay one page
+  with one form in tabs.
 - Mails: headers and subject, never the body.
 - Review with status, note and history.
 - Scope: one Alliance, as in eos-auth-monitor.
@@ -178,7 +158,7 @@ Last updated 2026-11-04.
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0004
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0005
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
   hand with 0.0.6 (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
@@ -192,7 +172,7 @@ Last updated 2026-11-04.
 - The Celery worker last started 2026-10-09 17:55 with the 0.0.6 code in a
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
-  0.0.7 or 0.0.8 code - check `pgrep -af celery` and start it again before
+  code since 0.0.7 - check `pgrep -af celery` and start it again before
   testing the button. `collectstatic` ran with the 0.0.7 `network.js`.
 
 ## Traps
@@ -237,5 +217,8 @@ Last updated 2026-11-04.
   `profile.main_character`.
 - `wsl.exe ... bash -lc '... | grep ...'` from the PowerShell tool breaks
   the pipes; run such lines through the Bash tool.
+- Restoring a file with `shutil.copy2` from a backup on `/mnt/c` carries
+  the Windows mode along (100644 -> 100755, shows in `git diff
+  --summary`); `chmod 644` afterwards, or write the text back instead.
 - Inheriting a test class to borrow a helper runs all its tests twice;
   assign the helper instead (`add_entry = TestWallet.add_entry`).

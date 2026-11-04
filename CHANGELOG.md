@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.9] - 2026-11-04
+
 ### Added
 
 - Settings, tab *Markers*: a switch per marker. A marker switched off is
