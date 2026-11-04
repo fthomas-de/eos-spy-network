@@ -72,6 +72,13 @@ class SpyConfiguration(SingletonModel):
         verbose_name=_("Ignored wallet entry types"),
         help_text=_("Wallet journal entries of these types count neither as ISK with hostiles nor as a payment."),
     )
+    # the switched-off ones, not the switched-on: a marker added in a later version starts on
+    disabled_markers = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name=_("Markers switched off"),
+        help_text=_("Still calculated, but left out of the Markers pages until switched on again."),
+    )
 
     class Meta:
         default_permissions = ()

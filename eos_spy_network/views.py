@@ -5,6 +5,7 @@ from kombu.exceptions import OperationalError
 from django.contrib import messages
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
@@ -13,7 +14,7 @@ from . import __version__, contacts, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
-from .markers import corptools_installed
+from .markers import KINDS, LABELS, corptools_installed
 from .models import ContactSource, SpyConfiguration
 from .permissions import (
     APP_PERMISSIONS,
@@ -37,6 +38,12 @@ LOCATIONS = {
 NAV_MARKERS = "markers"
 NAV_NETWORK = "network"
 NAV_SETTINGS = "settings"
+
+# the sub-tabs of the settings page; the first opens unless another is asked for
+TAB_ALLIANCE = "alliance"
+TAB_SOURCES = "sources"
+TAB_MARKERS = "markers"
+SETTINGS_TABS = (TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS)
 
 
 def _render(request, template, context=None, nav=None, started=None):
@@ -89,7 +96,13 @@ def _report(config) -> snapshots.Report | None:
     # after a change of the Alliance the stored result is of the old one until recalculated
     if current is None or not config.alliance or current.data.get("alliance_id") != config.alliance.alliance_id:
         return None
-    return snapshots.Report(current)
+    return snapshots.Report(current, config.disabled_markers or ())
+
+
+def _switched_off(config) -> list:
+    """The labels of the markers the pages leave out, for the notice above them."""
+    disabled = config.disabled_markers or ()
+    return [LABELS[kind] for kind in KINDS if kind in disabled]
 
 
 @any_permission_required(VIEW_SUSPECTS)
@@ -100,7 +113,12 @@ def corporations(request):
     return _render(
         request,
         "eos_spy_network/corporations.html",
-        {**_notices(config), "report": report, "tiles": report.tiles if report else []},
+        {
+            **_notices(config),
+            "report": report,
+            "tiles": report.tiles if report else [],
+            "switched_off": _switched_off(config),
+        },
         NAV_MARKERS,
         started,
     )
@@ -118,7 +136,7 @@ def corporation(request, corporation_id):
     return _render(
         request,
         "eos_spy_network/corporation.html",
-        {**_notices(config), "report": report, "tile": tile},
+        {**_notices(config), "report": report, "tile": tile, "switched_off": _switched_off(config)},
         NAV_MARKERS,
         started,
     )
@@ -194,6 +212,7 @@ def settings(request):
     config = SpyConfiguration.get_solo()
     form = SpyConfigurationForm(request.POST or None, instance=config)
     rows = source_rows(config)
+    tab = request.GET.get("tab")
 
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -206,6 +225,17 @@ def settings(request):
                 request,
                 _("Settings saved, but the task queue is not reachable: recalculate once it is back."),
             )
-        return redirect("eos_spy_network:settings")
+        # back to the tab whose Save button was pressed
+        tab = request.POST.get("tab")
+        target = reverse("eos_spy_network:settings")
+        return redirect(f"{target}?tab={tab}" if tab in SETTINGS_TABS[1:] else target)
 
-    return _render(request, "eos_spy_network/settings.html", {"form": form, "rows": rows}, NAV_SETTINGS)
+    if form.errors:
+        # the tab with the error, or it hides behind another
+        tab = TAB_MARKERS if set(form.errors) == {"markers"} else TAB_ALLIANCE
+    return _render(
+        request,
+        "eos_spy_network/settings.html",
+        {"form": form, "rows": rows, "tab": tab if tab in SETTINGS_TABS else TAB_ALLIANCE},
+        NAV_SETTINGS,
+    )

@@ -172,6 +172,11 @@ class CorporationTile:
         return [(LABELS[kind], DESCRIPTIONS[kind], found[kind]) for kind in KINDS if kind in found]
 
 
+def by_markers(suspect: Suspect) -> tuple:
+    """The most marked first, then by name."""
+    return (-len(suspect.markers), suspect.main.character_name.lower())
+
+
 def corptools_installed() -> bool:
     return apps.is_installed(CORPTOOLS)
 
@@ -267,7 +272,7 @@ def corporation_tiles(
         if suspect.markers:
             tiles[suspect.main.corporation_id].suspects.append(suspect)
     for tile in tiles.values():
-        tile.suspects.sort(key=lambda suspect: (-len(suspect.markers), suspect.main.character_name.lower()))
+        tile.suspects.sort(key=by_markers)
     return list(tiles.values())
 
 

@@ -4,10 +4,24 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-10-09.
+Last updated 2026-11-04.
 
 ## State
 
+- Since 0.0.8 (2026-11-04, `[Unreleased]`, committed, not pushed): settings in the tabs Alliance /
+  Contact sources / Markers (one form, as in eos-tax; each Save button
+  carries `name="tab"`, the view redirects to `?tab=`; an error opens its
+  tab). Tab Markers: a switch per marker, stored as
+  `SpyConfiguration.disabled_markers` (migration 0005, applied to
+  `aa_dev`) - the switched-off ones, so a new marker kind starts on.
+  User's decision: hide only, not skip the calculation - `Report(snapshot,
+  disabled)` drops them when reading, a main left without markers is
+  clean, `markers.by_markers` re-sorts; network pages unaffected. Notice
+  above the marker pages names the switched-off ones. 8 new tests in
+  `test_views` (43 there; 157 in all), checked against sabotaged code.
+  The four new messages are in the glossary, machine-translated, not
+  reviewed by the user. Not seen in the browser yet: the source table's
+  column widths in its initially hidden tab.
 - Version: `0.0.8`, 2026-10-09 (see `CHANGELOG.md`): query performance,
   no behaviour change. corptools' tables are filtered by CharacterAudit ID
   (`markers.character_audits()`, one lookup per run) instead of joining
@@ -61,7 +75,7 @@ Last updated 2026-10-09.
 | Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found |
 | Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
-| Settings | `manage_settings` | Alliance, threshold, Corporation changes per year, contact sources with aa-contacts' token state |
+| Settings | `manage_settings` | tabs: Alliance (threshold, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker) |
 
 ## Open
 
@@ -84,7 +98,7 @@ Last updated 2026-10-09.
   hostile network partner and no ISK/contract marker, so the network pages
   there are empty since 0.0.5 (fenriscw1 is not hostile); rendered
   server-side without errors.
-- Markers switchable and weighted, a score; account page with evidence
+- Markers weighted, a score; account page with evidence
   (`view_evidence`: mail headers and subjects, wallet entries, contracts);
   review per suspect: status (new, seen, harmless, watch, confirmed), note,
   history; a harmless one comes back only with new signals.

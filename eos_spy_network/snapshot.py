@@ -20,7 +20,7 @@ from allianceauth.services.hooks import get_extension_logger
 
 from .affiliations import ALLIANCE, CORPORATION, Entity
 from .hostiles import hostile_entities
-from .markers import CONTRACTS, WALLET, CorporationTile, Marker, Suspect, corporation_tiles, roster
+from .markers import CONTRACTS, WALLET, CorporationTile, Marker, Suspect, by_markers, corporation_tiles, roster
 from .models import Snapshot, SpyConfiguration
 from .network import Connections, Link, Standing, affiliate, connections, hostile_only
 
@@ -256,9 +256,14 @@ def current() -> Snapshot | None:
 
 
 class Report:
-    """The stored snapshot as the pages need it; no further query."""
+    """The stored snapshot as the pages need it; no further query.
 
-    def __init__(self, snapshot: Snapshot):
+    ``disabled`` are the markers switched off in the settings: the snapshot
+    keeps them, the tiles leave them out, so switching one on again needs no
+    recalculation.
+    """
+
+    def __init__(self, snapshot: Snapshot, disabled=()):
         self.built_at = snapshot.built_at
         data = snapshot.data
         self.alliance_id = data["alliance_id"]
@@ -271,12 +276,12 @@ class Report:
             eve_id: Standing(Decimal(standing), [(name, Decimal(value)) for name, value in sources])
             for eve_id, standing, sources in data.get("hostiles", [])
         }
-        self.tiles = [self._tile(row) for row in rows]
+        self.tiles = [self._tile(row, set(disabled)) for row in rows]
         self.network_tiles = [self._network_tile(row) for row in rows]
         self.metrics = self._metrics(data.get("metrics"))
 
     @staticmethod
-    def _tile(row) -> CorporationTile:
+    def _tile(row, disabled=frozenset()) -> CorporationTile:
         tile = CorporationTile(row["id"], row["name"], row["ticker"], row["mains"])
         for stored in row["suspects"]:
             suspect = Suspect(
@@ -285,11 +290,18 @@ class Report:
                 stored["character_count"],
             )
             for marker in stored["markers"]:
+                if marker["kind"] in disabled:
+                    continue
                 suspect.markers[marker["kind"]] = Marker(
                     # a snapshot of 0.0.4 or older has no rows until the next run
                     marker["kind"], marker["count"], set(marker["details"]), marker.get("rows", [])
                 )
-            tile.suspects.append(suspect)
+            # a main marked only by switched-off markers is clean
+            if suspect.markers:
+                tile.suspects.append(suspect)
+        if disabled:
+            # the stored order counted the switched-off markers too
+            tile.suspects.sort(key=by_markers)
         return tile
 
     def _network_tile(self, row) -> NetworkTile:

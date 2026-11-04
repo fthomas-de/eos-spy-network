@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Settings, tab *Markers*: a switch per marker. A marker switched off is
+  still calculated, but the Markers pages leave it out, and a main marked
+  by nothing else counts as clean. Some markers fire for routine play in
+  one Alliance and not another; until now they could only be read past.
+  The pages filter the stored result, so switching a marker back on shows
+  it at once, without a recalculation. A notice above the Markers pages
+  names the switched-off ones
+
+### Changed
+
+- Settings: the page is split into the tabs *Alliance*, *Contact sources*
+  and *Markers*. The source table of a large Alliance pushed the Save
+  button far down. It is still one form: each tab's Save button saves all
+  three and comes back to its own tab, and after an error the tab holding
+  it opens
+
 ## [0.0.8] - 2026-10-09
 
 ### Changed

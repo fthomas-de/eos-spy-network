@@ -3,92 +3,139 @@
 {% load i18n %}
 
 {% block details %}
+    {# one form: every tab's Save button sends all three, and names its tab to come back to #}
     <form method="post" action="{% url 'eos_spy_network:settings' %}">
         {% csrf_token %}
 
-        <div class="card mb-3">
-            <div class="card-header">
-                <div class="card-title mb-0">{% translate "Alliance" context "EVE jargon" %}</div>
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link{% if tab == 'alliance' %} active{% endif %}" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-alliance"
+                        aria-controls="eos-spy-network-settings-alliance"
+                        aria-selected="{% if tab == 'alliance' %}true{% else %}false{% endif %}">
+                    {% translate "Alliance" context "EVE jargon" %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link{% if tab == 'sources' %} active{% endif %}" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-sources"
+                        aria-controls="eos-spy-network-settings-sources"
+                        aria-selected="{% if tab == 'sources' %}true{% else %}false{% endif %}">
+                    {% translate "Contact sources" %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link{% if tab == 'markers' %} active{% endif %}" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-markers"
+                        aria-controls="eos-spy-network-settings-markers"
+                        aria-selected="{% if tab == 'markers' %}true{% else %}false{% endif %}">
+                    {% translate "Markers" %}
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade{% if tab == 'alliance' %} show active{% endif %}" id="eos-spy-network-settings-alliance" role="tabpanel">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        {% bootstrap_field form.alliance %}
+                        {% bootstrap_field form.hostile_below %}
+                        {% bootstrap_field form.corp_changes_per_year %}
+                        {% bootstrap_field form.lookback_days %}
+                        {% bootstrap_field form.ignored_ref_types %}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" name="tab" value="alliance">{% translate "Save" context "eos-spy-network" %}</button>
             </div>
-            <div class="card-body">
-                {% bootstrap_field form.alliance %}
-                {% bootstrap_field form.hostile_below %}
-                {% bootstrap_field form.corp_changes_per_year %}
-                {% bootstrap_field form.lookback_days %}
-                {% bootstrap_field form.ignored_ref_types %}
+            <div class="tab-pane fade{% if tab == 'sources' %} show active{% endif %}" id="eos-spy-network-settings-sources" role="tabpanel">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        {% if aa_contacts_installed %}
+                            <p class="small text-body-secondary">
+                                {% translate "Tick whose contacts make up the hostile list. The contacts come from aa-contacts: a source needs a token there, and aa-contacts' own task keeps them up to date." %}
+                                <a href="{% url 'aa_contacts:index' %}">{% translate "Open aa-contacts" %}</a>
+                            </p>
+                        {% else %}
+                            <div class="alert alert-danger">
+                                {% translate "aa-contacts is not installed: the hostile list is made from its contacts." %}
+                            </div>
+                        {% endif %}
+                        {% if rows %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped table-hover w-100 eos-spy-network-sortable eos-spy-network-form-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="eos-spy-network-no-sort"><span class="visually-hidden">{% translate "Ticked" %}</span></th>
+                                            <th>{% translate "Name" context "eos-spy-network" %}</th>
+                                            <th>{% translate "Type" context "eos-spy-network" %}</th>
+                                            <th>{% translate "Token in aa-contacts" %}</th>
+                                            <th>{% translate "Contacts as of" %}</th>
+                                            <th>{% translate "Contacts" %}</th>
+                                            <th>{% translate "Hostile" context "eos-spy-network" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in rows %}
+                                            <tr>
+                                                <td data-order="{% if row.source %}0{% else %}1{% endif %}">
+                                                    <input class="form-check-input" type="checkbox" name="source" value="{{ row.key }}" id="source-{{ row.key }}"{% if row.source %} checked{% endif %}>
+                                                </td>
+                                                <td>
+                                                    <label for="source-{{ row.key }}">{{ row.name|default:row.entity_id }}{% if row.ticker %} [{{ row.ticker }}]{% endif %}</label>
+                                                    {% if not row.in_alliance %}
+                                                        <span class="badge text-bg-secondary">{% translate "Not in the Alliance" %}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ row.kind_label }}</td>
+                                                <td data-order="{% if row.has_token %}1{% else %}0{% endif %}">
+                                                    {% if row.has_token %}
+                                                        <span class="badge text-bg-success">{% translate "Yes" context "eos-spy-network" %}</span>
+                                                    {% else %}
+                                                        <span class="badge text-bg-danger">{% translate "No" context "eos-spy-network" %}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td data-order="{{ row.contacts_modified|date:'U' }}">
+                                                    {% if row.contacts_modified %}
+                                                        {{ row.contacts_modified|date:"Y-m-d H:i" }}
+                                                    {% elif row.has_token %}
+                                                        <span class="text-body-secondary">{% translate "Not read yet" %}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{% if row.has_token %}{{ row.contact_count }}{% endif %}</td>
+                                                <td>{% if row.has_token %}{{ row.hostile_count }}{% endif %}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="mb-0 text-body-secondary">{% translate "Choose an Alliance first: its Corporations are listed here once it is saved." %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" name="tab" value="sources">{% translate "Save" context "eos-spy-network" %}</button>
+            </div>
+            <div class="tab-pane fade{% if tab == 'markers' %} show active{% endif %}" id="eos-spy-network-settings-markers" role="tabpanel">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="small text-body-secondary">
+                            {% translate "A marker switched off is still calculated, but the Markers pages leave it out: a main marked by nothing else counts as clean. Switched on again, it shows at once, without a recalculation." %}
+                        </p>
+                        {% for option, description in form.marker_switches %}
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" role="switch" name="{{ option.data.name }}" value="{{ option.data.value }}" id="{{ option.id_for_label }}"{% if option.data.selected %} checked{% endif %}>
+                                <label class="form-check-label" for="{{ option.id_for_label }}">{{ option.choice_label }}</label>
+                                <div class="form-text mt-0">{{ description }}</div>
+                            </div>
+                        {% endfor %}
+                        {% for error in form.markers.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" name="tab" value="markers">{% translate "Save" context "eos-spy-network" %}</button>
             </div>
         </div>
-
-        <div class="card mb-3">
-            <div class="card-header">
-                <div class="card-title mb-0">{% translate "Contact sources" %}</div>
-            </div>
-            <div class="card-body">
-                {% if aa_contacts_installed %}
-                    <p class="small text-body-secondary">
-                        {% translate "Tick whose contacts make up the hostile list. The contacts come from aa-contacts: a source needs a token there, and aa-contacts' own task keeps them up to date." %}
-                        <a href="{% url 'aa_contacts:index' %}">{% translate "Open aa-contacts" %}</a>
-                    </p>
-                {% else %}
-                    <div class="alert alert-danger">
-                        {% translate "aa-contacts is not installed: the hostile list is made from its contacts." %}
-                    </div>
-                {% endif %}
-                {% if rows %}
-                    <div class="table-responsive">
-                        <table class="table table-sm table-striped table-hover w-100 eos-spy-network-sortable eos-spy-network-form-table">
-                            <thead>
-                                <tr>
-                                    <th class="eos-spy-network-no-sort"><span class="visually-hidden">{% translate "Ticked" %}</span></th>
-                                    <th>{% translate "Name" context "eos-spy-network" %}</th>
-                                    <th>{% translate "Type" context "eos-spy-network" %}</th>
-                                    <th>{% translate "Token in aa-contacts" %}</th>
-                                    <th>{% translate "Contacts as of" %}</th>
-                                    <th>{% translate "Contacts" %}</th>
-                                    <th>{% translate "Hostile" context "eos-spy-network" %}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in rows %}
-                                    <tr>
-                                        <td data-order="{% if row.source %}0{% else %}1{% endif %}">
-                                            <input class="form-check-input" type="checkbox" name="source" value="{{ row.key }}" id="source-{{ row.key }}"{% if row.source %} checked{% endif %}>
-                                        </td>
-                                        <td>
-                                            <label for="source-{{ row.key }}">{{ row.name|default:row.entity_id }}{% if row.ticker %} [{{ row.ticker }}]{% endif %}</label>
-                                            {% if not row.in_alliance %}
-                                                <span class="badge text-bg-secondary">{% translate "Not in the Alliance" %}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ row.kind_label }}</td>
-                                        <td data-order="{% if row.has_token %}1{% else %}0{% endif %}">
-                                            {% if row.has_token %}
-                                                <span class="badge text-bg-success">{% translate "Yes" context "eos-spy-network" %}</span>
-                                            {% else %}
-                                                <span class="badge text-bg-danger">{% translate "No" context "eos-spy-network" %}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td data-order="{{ row.contacts_modified|date:'U' }}">
-                                            {% if row.contacts_modified %}
-                                                {{ row.contacts_modified|date:"Y-m-d H:i" }}
-                                            {% elif row.has_token %}
-                                                <span class="text-body-secondary">{% translate "Not read yet" %}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{% if row.has_token %}{{ row.contact_count }}{% endif %}</td>
-                                        <td>{% if row.has_token %}{{ row.hostile_count }}{% endif %}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="mb-0 text-body-secondary">{% translate "Choose an Alliance first: its Corporations are listed here once it is saved." %}</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary">{% translate "Save" context "eos-spy-network" %}</button>
     </form>
 {% endblock %}
 

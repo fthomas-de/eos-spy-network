@@ -1,9 +1,11 @@
 from django import forms
 from django.apps import apps
+from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
 
 from allianceauth.eveonline.models import EveAllianceInfo
 
+from .markers import DESCRIPTIONS, KINDS, LABELS
 from .models import SpyConfiguration
 from .network import PAYMENT_REF_TYPES
 
@@ -33,6 +35,13 @@ class SpyConfigurationForm(forms.ModelForm):
         help_text=SpyConfiguration._meta.get_field("ignored_ref_types").help_text,
         widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
     )
+    # the switched-on markers; stored the other way round, as disabled_markers
+    markers = forms.MultipleChoiceField(
+        label=_("Markers"),
+        required=False,
+        choices=[(kind, LABELS[kind]) for kind in KINDS],
+        widget=forms.CheckboxSelectMultiple,
+    )
 
     class Meta:
         model = SpyConfiguration
@@ -46,3 +55,13 @@ class SpyConfigurationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["ignored_ref_types"].choices = ref_type_choices(self.instance.ignored_ref_types)
+        disabled = self.instance.disabled_markers or ()
+        self.fields["markers"].initial = [kind for kind in KINDS if kind not in disabled]
+
+    def marker_switches(self) -> list[tuple]:
+        """Each marker's checkbox with its description, for the switches of the Markers tab."""
+        return [(option, DESCRIPTIONS[option.data["value"]]) for option in self["markers"]]
+
+    def save(self, commit=True):
+        self.instance.disabled_markers = [kind for kind in KINDS if kind not in self.cleaned_data["markers"]]
+        return super().save(commit)

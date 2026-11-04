@@ -203,6 +203,48 @@ class TestCorporationsPage(SuspectPageTestCase):
         self.assertContains(response, "corptools is not installed")
 
 
+class TestSwitchedOffMarkers(SuspectPageTestCase):
+    """The suspect is marked by Hostile membership only."""
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(make_user("viewer", VIEW_SUSPECTS))
+
+    def test_should_leave_a_switched_off_marker_out_of_the_tiles(self):
+        configure(disabled_markers=["membership"])
+
+        response = self.client.get(reverse("eos_spy_network:corporations"))
+
+        self.assertEqual(response.context["tiles"][0].suspects, [])
+        self.assertContains(response, "data-eos-spy-network-clean", count=1)
+        self.assertContains(response, "Switched off in the settings")
+
+    def test_should_leave_a_switched_off_marker_out_of_the_corporation_page(self):
+        configure(disabled_markers=["membership"])
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertEqual(response.context["tile"].suspects, [])
+
+    def test_should_keep_the_other_markers(self):
+        configure(disabled_markers=["mails", "wallet"])
+
+        response = self.client.get(reverse("eos_spy_network:corporations"))
+
+        self.assertEqual(len(response.context["tiles"][0].suspects), 1)
+        self.assertContains(response, "Mails with hostiles, ISK with hostiles")
+
+    def test_should_show_a_marker_switched_on_again_without_recalculation(self):
+        configure(disabled_markers=["membership"])
+        configure(disabled_markers=[])
+
+        response = self.client.get(reverse("eos_spy_network:corporations"))
+
+        self.assertEqual(len(response.context["tiles"][0].suspects), 1)
+        self.assertNotContains(response, "Switched off in the settings")
+        self.update_snapshot.delay.assert_not_called()
+
+
 class TestCorporationPage(SuspectPageTestCase):
     def setUp(self):
         super().setUp()
@@ -421,6 +463,58 @@ class TestSettingsPage(SpyTestCase):
         self.assertEqual(config.corp_changes_per_year, 6)
         self.assertEqual(config.lookback_days, 90)
         self.assertEqual(config.ignored_ref_types, ["market_transaction", "player_trading"])
+
+    def test_should_open_the_alliance_tab_first(self):
+        configure()
+
+        response = self.client.get(reverse("eos_spy_network:settings"))
+
+        self.assertContains(response, 'class="tab-pane fade show active" id="eos-spy-network-settings-alliance"')
+        self.assertContains(response, 'id="eos-spy-network-settings-sources"')
+        self.assertContains(response, 'id="eos-spy-network-settings-markers"')
+
+    def test_should_show_the_marker_switches(self):
+        configure(disabled_markers=["mails"])
+
+        response = self.client.get(reverse("eos_spy_network:settings") + "?tab=markers")
+
+        self.assertContains(response, 'class="tab-pane fade show active" id="eos-spy-network-settings-markers"')
+        self.assertContains(response, 'name="markers" value="membership" id="id_markers_0" checked>')
+        self.assertContains(response, 'name="markers" value="mails" id="id_markers_3">')
+
+    def test_should_switch_markers_off_and_return_to_the_tab(self):
+        configure()
+
+        response = self.client.post(
+            reverse("eos_spy_network:settings"),
+            {
+                "alliance": make_alliance().pk,
+                "hostile_below": "0",
+                "corp_changes_per_year": "4",
+                "lookback_days": "365",
+                "markers": ["membership", "corp_changes", "mails", "wallet", "contracts"],
+                "tab": "markers",
+            },
+        )
+
+        self.assertRedirects(response, reverse("eos_spy_network:settings") + "?tab=markers")
+        self.assertEqual(SpyConfiguration.get_solo().disabled_markers, ["contacts"])
+
+    def test_should_open_the_tab_with_the_error(self):
+        configure()
+
+        response = self.client.post(
+            reverse("eos_spy_network:settings"),
+            {
+                "alliance": make_alliance().pk,
+                "hostile_below": "0",
+                "corp_changes_per_year": "4",
+                "lookback_days": "365",
+                "markers": ["no_such_marker"],
+            },
+        )
+
+        self.assertContains(response, 'class="tab-pane fade show active" id="eos-spy-network-settings-markers"')
 
     def test_should_offer_the_types_of_the_wallet_journal(self):
         from corptools.models import CharacterAudit, CharacterWalletJournalEntry

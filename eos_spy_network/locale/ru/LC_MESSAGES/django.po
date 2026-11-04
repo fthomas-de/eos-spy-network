@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 18:36+0000\n"
-"PO-Revision-Date: 2026-10-09 18:36+0000\n"
+"POT-Creation-Date: 2026-11-04 19:05+0000\n"
+"PO-Revision-Date: 2026-11-04 19:05+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: ru\n"
 "Language: ru\n"
@@ -27,7 +27,7 @@ msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:118
+#: contacts.py:26 models.py:125
 #: templates/eos_spy_network/network_corporation.html:99
 #: templates/eos_spy_network/partials/dealings.html:10
 #: templates/eos_spy_network/partials/network-legend.html:8
@@ -35,11 +35,11 @@ msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:24 models.py:42 models.py:117
+#: contacts.py:27 forms.py:26 models.py:42 models.py:124
 #: templates/eos_spy_network/network_corporation.html:100
 #: templates/eos_spy_network/partials/dealings.html:11
 #: templates/eos_spy_network/partials/network-legend.html:10
-#: templates/eos_spy_network/settings.html:11
+#: templates/eos_spy_network/settings.html:16
 msgctxt "EVE jargon"
 msgid "Alliance"
 msgstr "Alliance"
@@ -48,6 +48,12 @@ msgstr "Alliance"
 msgctxt "EVE jargon"
 msgid "Faction"
 msgstr "Faction"
+
+#: forms.py:40 snapshot.py:32 templates/eos_spy_network/base.html:12
+#: templates/eos_spy_network/corporation.html:42
+#: templates/eos_spy_network/settings.html:32 views.py:31
+msgid "Markers"
+msgstr "Маркеры"
 
 #: markers.py:41
 msgid "Hostile membership"
@@ -154,7 +160,18 @@ msgid ""
 msgstr ""
 "Записи кошелька этих типов не считаются ни ISK с врагами, ни платежом."
 
-#: models.py:78 models.py:81
+#: models.py:79
+msgid "Markers switched off"
+msgstr "Отключённые маркеры"
+
+#: models.py:80
+msgid ""
+"Still calculated, but left out of the Markers pages until switched on again."
+msgstr ""
+"По-прежнему рассчитывается, но не показывается на страницах маркеров, пока "
+"не будет снова включён."
+
+#: models.py:85 models.py:88
 msgid "Configuration"
 msgstr "Конфигурация"
 
@@ -202,21 +219,16 @@ msgstr "Определение Corporation и Alliance"
 msgid "Saving the result"
 msgstr "Сохранение результата"
 
-#: snapshot.py:33 templates/eos_spy_network/base.html:12
-#: templates/eos_spy_network/corporation.html:42 views.py:30
-msgid "Markers"
-msgstr "Маркеры"
-
-#: snapshot.py:33 templates/eos_spy_network/base.html:19 views.py:32
-#: views.py:33
+#: snapshot.py:32 templates/eos_spy_network/base.html:19 views.py:33
+#: views.py:34
 msgid "Network"
 msgstr "Сеть"
 
-#: snapshot.py:33
+#: snapshot.py:32
 msgid "Affiliations"
 msgstr "Принадлежность"
 
-#: templates/eos_spy_network/base.html:25 views.py:34
+#: templates/eos_spy_network/base.html:25 views.py:35
 msgid "Settings"
 msgstr "Настройки"
 
@@ -423,6 +435,7 @@ msgstr "Alliance ещё не настроен."
 
 #: templates/eos_spy_network/partials/notices.html:11
 #: templates/eos_spy_network/partials/notices.html:18
+#: templates/eos_spy_network/partials/notices.html:36
 msgid "Open the settings"
 msgstr "Открыть настройки"
 
@@ -437,7 +450,11 @@ msgid "No contacts in aa-contacts yet, so these sources add no hostiles:"
 msgstr ""
 "В aa-contacts ещё нет контактов, поэтому эти источники не дают врагов:"
 
-#: templates/eos_spy_network/partials/notices.html:32
+#: templates/eos_spy_network/partials/notices.html:33
+msgid "Switched off in the settings, so left out here:"
+msgstr "Отключены в настройках, поэтому здесь не показаны:"
+
+#: templates/eos_spy_network/partials/notices.html:43
 msgid ""
 "corptools is not installed: only the current Corporation and Alliance of the"
 " characters are checked."
@@ -467,7 +484,14 @@ msgstr "Пересчитать"
 msgid "Contact sources"
 msgstr "Источники контактов"
 
-#: templates/eos_spy_network/settings.html:29
+#: templates/eos_spy_network/settings.html:48
+#: templates/eos_spy_network/settings.html:116
+#: templates/eos_spy_network/settings.html:136
+msgctxt "eos-spy-network"
+msgid "Save"
+msgstr "Сохранить"
+
+#: templates/eos_spy_network/settings.html:55
 msgid ""
 "Tick whose contacts make up the hostile list. The contacts come from aa-"
 "contacts: a source needs a token there, and aa-contacts' own task keeps them"
@@ -477,93 +501,98 @@ msgstr ""
 "contacts: источнику нужен там токен, а собственная задача aa-contacts "
 "поддерживает их в актуальном состоянии."
 
-#: templates/eos_spy_network/settings.html:30
+#: templates/eos_spy_network/settings.html:56
 msgid "Open aa-contacts"
 msgstr "Открыть aa-contacts"
 
-#: templates/eos_spy_network/settings.html:34
+#: templates/eos_spy_network/settings.html:60
 msgid ""
 "aa-contacts is not installed: the hostile list is made from its contacts."
 msgstr "aa-contacts не установлен: список врагов строится из его контактов."
 
-#: templates/eos_spy_network/settings.html:42
+#: templates/eos_spy_network/settings.html:68
 msgid "Ticked"
 msgstr "Отмечено"
 
-#: templates/eos_spy_network/settings.html:43
+#: templates/eos_spy_network/settings.html:69
 msgctxt "eos-spy-network"
 msgid "Name"
 msgstr "Название"
 
-#: templates/eos_spy_network/settings.html:44
+#: templates/eos_spy_network/settings.html:70
 msgctxt "eos-spy-network"
 msgid "Type"
 msgstr "Тип"
 
-#: templates/eos_spy_network/settings.html:45
+#: templates/eos_spy_network/settings.html:71
 msgid "Token in aa-contacts"
 msgstr "Токен в aa-contacts"
 
-#: templates/eos_spy_network/settings.html:46
+#: templates/eos_spy_network/settings.html:72
 msgid "Contacts as of"
 msgstr "Контакты на"
 
-#: templates/eos_spy_network/settings.html:47
+#: templates/eos_spy_network/settings.html:73
 msgid "Contacts"
 msgstr "Контакты"
 
-#: templates/eos_spy_network/settings.html:48
+#: templates/eos_spy_network/settings.html:74
 msgctxt "eos-spy-network"
 msgid "Hostile"
 msgstr "Враждебные"
 
-#: templates/eos_spy_network/settings.html:60
+#: templates/eos_spy_network/settings.html:86
 msgid "Not in the Alliance"
 msgstr "Не в Alliance"
 
-#: templates/eos_spy_network/settings.html:66
+#: templates/eos_spy_network/settings.html:92
 msgctxt "eos-spy-network"
 msgid "Yes"
 msgstr "Да"
 
-#: templates/eos_spy_network/settings.html:68
+#: templates/eos_spy_network/settings.html:94
 msgctxt "eos-spy-network"
 msgid "No"
 msgstr "Нет"
 
-#: templates/eos_spy_network/settings.html:75
+#: templates/eos_spy_network/settings.html:101
 msgid "Not read yet"
 msgstr "Ещё не прочитано"
 
-#: templates/eos_spy_network/settings.html:86
+#: templates/eos_spy_network/settings.html:112
 msgid ""
 "Choose an Alliance first: its Corporations are listed here once it is saved."
 msgstr ""
 "Сначала выберите Alliance: её Corporation появятся здесь после сохранения."
 
-#: templates/eos_spy_network/settings.html:91
-msgctxt "eos-spy-network"
-msgid "Save"
-msgstr "Сохранить"
+#: templates/eos_spy_network/settings.html:122
+msgid ""
+"A marker switched off is still calculated, but the Markers pages leave it "
+"out: a main marked by nothing else counts as clean. Switched on again, it "
+"shows at once, without a recalculation."
+msgstr ""
+"Отключённый маркер по-прежнему рассчитывается, но страницы маркеров его не "
+"показывают: Main без других маркеров считается чистым. После повторного "
+"включения он сразу появляется, без пересчёта."
 
-#: views.py:31
+#: views.py:32
 msgid "Suspects"
 msgstr "Подозреваемые"
 
-#: views.py:175
+#: views.py:193
 msgid "The markers and connections are being recalculated."
 msgstr "Маркеры и связи пересчитываются."
 
-#: views.py:177
+#: views.py:195
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr "Не удалось запустить пересчёт: очередь задач недоступна."
 
-#: views.py:203
+#: views.py:222
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr "Настройки сохранены. Маркеры и связи пересчитываются."
 
-#: views.py:207
+#: views.py:226
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

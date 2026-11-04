@@ -94,21 +94,25 @@ every one with a standing below a configurable value.
   entity one of its Corporations is at war with. The Alliance itself and its
   Corporations never count as hostile. A hostile Corporation or Alliance
   also makes its members hostile - as far as Auth knows them (see below)
-- **Settings page**: the Alliance, chosen from a searchable dropdown; the
+- **Settings page**, in three tabs saved together. *Alliance*: the Alliance, chosen from a searchable dropdown; the
   standing below which a contact is hostile (default: below 0); the number
   of Corporation changes per year that sets a marker; the time frame in days
   (default 365, 0 takes everything): the hostile list is today's, and the
   further back a payment, mail, contract or former Corporation, the likelier
   the standing was different then; the ignored wallet entry types, chosen
   from those in corptools' wallet journals (default `market_transaction`:
-  nobody picks the other side of a market order); a searchable table of
-  the Alliance and its Corporations to tick the contact sources, each with
-  whether aa-contacts has a token for it, the time of the contacts
-  aa-contacts holds, the number of contacts and of hostiles. A ticked
-  Corporation that left the Alliance stays in the table, marked, until it is
-  unticked
+  nobody picks the other side of a market order). *Contact sources*: a
+  searchable table of the Alliance and its Corporations to tick the
+  contact sources, each with whether aa-contacts has a token for it, the
+  time of the contacts aa-contacts holds, the number of contacts and of
+  hostiles. A ticked Corporation that left the Alliance stays in the
+  table, marked, until it is unticked. *Markers*: a switch per marker; a
+  switched-off marker is still calculated but left out of the Markers
+  pages (a main marked by nothing else counts as clean), and switched on
+  again it shows at once, without a recalculation
 - **Notices** above the marker and network pages for every ticked source aa-contacts has
-  no contacts of yet, and when aa-contacts or corptools is not installed
+  no contacts of yet, and when aa-contacts or corptools is not installed;
+  above the marker pages for the markers switched off
 
 ## What the markers can see
 
@@ -195,7 +199,7 @@ The menu entry shows for anyone holding one of them.
 
 ## Planned
 
-The markers switchable and weighted, and more of them, read from corptools:
+The markers weighted, and more of them, read from corptools:
 
 - clones and assets in configured staging systems
 - a character that changed owner (`OwnershipRecord`)

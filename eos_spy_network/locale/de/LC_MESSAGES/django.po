@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-09 18:36+0000\n"
-"PO-Revision-Date: 2026-10-09 18:36+0000\n"
+"POT-Creation-Date: 2026-11-04 19:05+0000\n"
+"PO-Revision-Date: 2026-11-04 19:05+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: de\n"
 "Language: de\n"
@@ -27,7 +27,7 @@ msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:118
+#: contacts.py:26 models.py:125
 #: templates/eos_spy_network/network_corporation.html:99
 #: templates/eos_spy_network/partials/dealings.html:10
 #: templates/eos_spy_network/partials/network-legend.html:8
@@ -35,11 +35,11 @@ msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:24 models.py:42 models.py:117
+#: contacts.py:27 forms.py:26 models.py:42 models.py:124
 #: templates/eos_spy_network/network_corporation.html:100
 #: templates/eos_spy_network/partials/dealings.html:11
 #: templates/eos_spy_network/partials/network-legend.html:10
-#: templates/eos_spy_network/settings.html:11
+#: templates/eos_spy_network/settings.html:16
 msgctxt "EVE jargon"
 msgid "Alliance"
 msgstr "Alliance"
@@ -48,6 +48,12 @@ msgstr "Alliance"
 msgctxt "EVE jargon"
 msgid "Faction"
 msgstr "Faction"
+
+#: forms.py:40 snapshot.py:32 templates/eos_spy_network/base.html:12
+#: templates/eos_spy_network/corporation.html:42
+#: templates/eos_spy_network/settings.html:32 views.py:31
+msgid "Markers"
+msgstr "Marker"
 
 #: markers.py:41
 msgid "Hostile membership"
@@ -157,7 +163,18 @@ msgstr ""
 "Wallet-Journal-Einträge dieser Arten zählen weder als ISK mit Feinden noch "
 "als Zahlung."
 
-#: models.py:78 models.py:81
+#: models.py:79
+msgid "Markers switched off"
+msgstr "Ausgeschaltete Marker"
+
+#: models.py:80
+msgid ""
+"Still calculated, but left out of the Markers pages until switched on again."
+msgstr ""
+"Wird weiter berechnet, aber auf den Marker-Seiten ausgelassen, bis er wieder"
+" eingeschaltet wird."
+
+#: models.py:85 models.py:88
 msgid "Configuration"
 msgstr "Konfiguration"
 
@@ -205,21 +222,16 @@ msgstr "Ermittle Corporations und Alliances"
 msgid "Saving the result"
 msgstr "Speichere das Ergebnis"
 
-#: snapshot.py:33 templates/eos_spy_network/base.html:12
-#: templates/eos_spy_network/corporation.html:42 views.py:30
-msgid "Markers"
-msgstr "Marker"
-
-#: snapshot.py:33 templates/eos_spy_network/base.html:19 views.py:32
-#: views.py:33
+#: snapshot.py:32 templates/eos_spy_network/base.html:19 views.py:33
+#: views.py:34
 msgid "Network"
 msgstr "Network"
 
-#: snapshot.py:33
+#: snapshot.py:32
 msgid "Affiliations"
 msgstr "Zugehörigkeiten"
 
-#: templates/eos_spy_network/base.html:25 views.py:34
+#: templates/eos_spy_network/base.html:25 views.py:35
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -430,6 +442,7 @@ msgstr "Es ist noch keine Alliance eingestellt."
 
 #: templates/eos_spy_network/partials/notices.html:11
 #: templates/eos_spy_network/partials/notices.html:18
+#: templates/eos_spy_network/partials/notices.html:36
 msgid "Open the settings"
 msgstr "Einstellungen öffnen"
 
@@ -443,7 +456,11 @@ msgstr ""
 "Noch keine Kontakte in aa-contacts, daher liefern diese Quellen keine "
 "Feinde:"
 
-#: templates/eos_spy_network/partials/notices.html:32
+#: templates/eos_spy_network/partials/notices.html:33
+msgid "Switched off in the settings, so left out here:"
+msgstr "In den Einstellungen ausgeschaltet und daher hier ausgelassen:"
+
+#: templates/eos_spy_network/partials/notices.html:43
 msgid ""
 "corptools is not installed: only the current Corporation and Alliance of the"
 " characters are checked."
@@ -473,7 +490,14 @@ msgstr "Neu berechnen"
 msgid "Contact sources"
 msgstr "Kontaktquellen"
 
-#: templates/eos_spy_network/settings.html:29
+#: templates/eos_spy_network/settings.html:48
+#: templates/eos_spy_network/settings.html:116
+#: templates/eos_spy_network/settings.html:136
+msgctxt "eos-spy-network"
+msgid "Save"
+msgstr "Speichern"
+
+#: templates/eos_spy_network/settings.html:55
 msgid ""
 "Tick whose contacts make up the hostile list. The contacts come from aa-"
 "contacts: a source needs a token there, and aa-contacts' own task keeps them"
@@ -483,99 +507,104 @@ msgstr ""
 "contacts: Eine Quelle braucht dort einen Token, und der eigene Task von aa-"
 "contacts hält sie aktuell."
 
-#: templates/eos_spy_network/settings.html:30
+#: templates/eos_spy_network/settings.html:56
 msgid "Open aa-contacts"
 msgstr "aa-contacts öffnen"
 
-#: templates/eos_spy_network/settings.html:34
+#: templates/eos_spy_network/settings.html:60
 msgid ""
 "aa-contacts is not installed: the hostile list is made from its contacts."
 msgstr ""
 "aa-contacts ist nicht installiert: Die Feindliste entsteht aus dessen "
 "Kontakten."
 
-#: templates/eos_spy_network/settings.html:42
+#: templates/eos_spy_network/settings.html:68
 msgid "Ticked"
 msgstr "Angehakt"
 
-#: templates/eos_spy_network/settings.html:43
+#: templates/eos_spy_network/settings.html:69
 msgctxt "eos-spy-network"
 msgid "Name"
 msgstr "Name"
 
-#: templates/eos_spy_network/settings.html:44
+#: templates/eos_spy_network/settings.html:70
 msgctxt "eos-spy-network"
 msgid "Type"
 msgstr "Typ"
 
-#: templates/eos_spy_network/settings.html:45
+#: templates/eos_spy_network/settings.html:71
 msgid "Token in aa-contacts"
 msgstr "Token in aa-contacts"
 
-#: templates/eos_spy_network/settings.html:46
+#: templates/eos_spy_network/settings.html:72
 msgid "Contacts as of"
 msgstr "Kontakte vom"
 
-#: templates/eos_spy_network/settings.html:47
+#: templates/eos_spy_network/settings.html:73
 msgid "Contacts"
 msgstr "Kontakte"
 
-#: templates/eos_spy_network/settings.html:48
+#: templates/eos_spy_network/settings.html:74
 msgctxt "eos-spy-network"
 msgid "Hostile"
 msgstr "Feindlich"
 
-#: templates/eos_spy_network/settings.html:60
+#: templates/eos_spy_network/settings.html:86
 msgid "Not in the Alliance"
 msgstr "Nicht in der Alliance"
 
-#: templates/eos_spy_network/settings.html:66
+#: templates/eos_spy_network/settings.html:92
 msgctxt "eos-spy-network"
 msgid "Yes"
 msgstr "Ja"
 
-#: templates/eos_spy_network/settings.html:68
+#: templates/eos_spy_network/settings.html:94
 msgctxt "eos-spy-network"
 msgid "No"
 msgstr "Nein"
 
-#: templates/eos_spy_network/settings.html:75
+#: templates/eos_spy_network/settings.html:101
 msgid "Not read yet"
 msgstr "Noch nicht gelesen"
 
-#: templates/eos_spy_network/settings.html:86
+#: templates/eos_spy_network/settings.html:112
 msgid ""
 "Choose an Alliance first: its Corporations are listed here once it is saved."
 msgstr ""
 "Wähle zuerst eine Alliance: Ihre Corporations erscheinen hier, sobald sie "
 "gespeichert ist."
 
-#: templates/eos_spy_network/settings.html:91
-msgctxt "eos-spy-network"
-msgid "Save"
-msgstr "Speichern"
+#: templates/eos_spy_network/settings.html:122
+msgid ""
+"A marker switched off is still calculated, but the Markers pages leave it "
+"out: a main marked by nothing else counts as clean. Switched on again, it "
+"shows at once, without a recalculation."
+msgstr ""
+"Ein ausgeschalteter Marker wird weiter berechnet, aber die Marker-Seiten "
+"lassen ihn aus: Ein Main ohne weiteren Marker gilt als unauffällig. Wieder "
+"eingeschaltet, erscheint er sofort, ohne Neuberechnung."
 
-#: views.py:31
+#: views.py:32
 msgid "Suspects"
 msgstr "Verdächtige"
 
-#: views.py:175
+#: views.py:193
 msgid "The markers and connections are being recalculated."
 msgstr "Marker und Verbindungen werden neu berechnet."
 
-#: views.py:177
+#: views.py:195
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr ""
 "Die Neuberechnung konnte nicht gestartet werden: Die Task-Queue ist nicht "
 "erreichbar."
 
-#: views.py:203
+#: views.py:222
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr ""
 "Einstellungen gespeichert. Marker und Verbindungen werden neu berechnet."
 
-#: views.py:207
+#: views.py:226
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

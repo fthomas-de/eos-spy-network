@@ -185,6 +185,25 @@ TRANSLATIONS = {
         "corptools не установлен: проверяются только текущие Corporation и Alliance каждого Character.",
         "未安装 corptools：只检查各 Character 当前的 Corporation 和 Alliance。",
     ),
+    # markers switched off in the settings
+    "Markers switched off": ("Ausgeschaltete Marker", "Отключённые маркеры", "已关闭的标记"),
+    "Still calculated, but left out of the Markers pages until switched on again.": (
+        "Wird weiter berechnet, aber auf den Marker-Seiten ausgelassen, bis er wieder eingeschaltet wird.",
+        "По-прежнему рассчитывается, но не показывается на страницах маркеров, пока не будет снова включён.",
+        "仍会计算，但在重新开启之前不会显示在标记页面上。",
+    ),
+    "Switched off in the settings, so left out here:": (
+        "In den Einstellungen ausgeschaltet und daher hier ausgelassen:",
+        "Отключены в настройках, поэтому здесь не показаны:",
+        "已在设置中关闭，因此此处不显示：",
+    ),
+    "A marker switched off is still calculated, but the Markers pages leave it out: a main marked by nothing else counts as clean. Switched on again, it shows at once, without a recalculation.": (
+        "Ein ausgeschalteter Marker wird weiter berechnet, aber die Marker-Seiten lassen ihn aus: Ein Main ohne "
+        "weiteren Marker gilt als unauffällig. Wieder eingeschaltet, erscheint er sofort, ohne Neuberechnung.",
+        "Отключённый маркер по-прежнему рассчитывается, но страницы маркеров его не показывают: Main без других "
+        "маркеров считается чистым. После повторного включения он сразу появляется, без пересчёта.",
+        "关闭的标记仍会计算，但标记页面不会显示它：没有其他标记的 Main 视为正常。重新开启后会立即显示，无需重新计算。",
+    ),
     # network pages
     "Network": ("Network", "Сеть", "关系网"),
     "Hide Corporations without markers": (
