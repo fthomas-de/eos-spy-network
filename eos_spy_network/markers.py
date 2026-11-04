@@ -50,8 +50,7 @@ DESCRIPTIONS = {
     MEMBERSHIP: _("A character is or was in a hostile Corporation or Alliance."),
     CORP_CHANGES: _("A character joined many Corporations within the last 365 days."),
     CONTACTS: _(
-        "A character's own contacts hold a hostile with a positive standing, or on the watch list without a "
-        "negative one."
+        "A character's own contacts hold a hostile with a positive standing."
     ),
     MAILS: _("Mails from or to hostiles."),
     WALLET: _("Wallet journal entries with hostiles."),
@@ -363,8 +362,7 @@ def _check_contacts(accounts, index, owner, names, audits, hostile_ids):
     from corptools.models import CharacterContact
 
     for audit_id, contact_id, standing in CharacterContact.objects.filter(
-        # PvP pilots watch their enemies: a watched hostile held negative is no friendship
-        Q(standing__gt=0) | Q(watched=True, standing__gte=0),
+        standing__gt=0,
         character_id__in=list(audits),
         contact_id__in=hostile_ids,
     ).values_list("character_id", "contact_id", "standing"):

@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-04 19:05+0000\n"
-"PO-Revision-Date: 2026-11-04 19:05+0000\n"
+"POT-Creation-Date: 2026-11-04 20:18+0000\n"
+"PO-Revision-Date: 2026-11-04 20:18+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: ru\n"
 "Language: ru\n"
@@ -88,22 +88,19 @@ msgid "A character joined many Corporations within the last 365 days."
 msgstr "Character вступил во многие Corporation за последние 365 дней."
 
 #: markers.py:53
-msgid ""
-"A character's own contacts hold a hostile with a positive standing, or on "
-"the watch list without a negative one."
+msgid "A character's own contacts hold a hostile with a positive standing."
 msgstr ""
-"В собственных контактах Character есть враг с положительным стендингом или в"
-" списке наблюдения без отрицательного стендинга."
+"В собственных контактах Character есть враг с положительным стендингом."
 
-#: markers.py:56
+#: markers.py:55
 msgid "Mails from or to hostiles."
 msgstr "Письма от врагов или к ним."
 
-#: markers.py:57
+#: markers.py:56
 msgid "Wallet journal entries with hostiles."
 msgstr "Записи журнала кошелька с врагами."
 
-#: markers.py:58
+#: markers.py:57
 msgid "Contracts with hostiles."
 msgstr "Контракты с врагами."
 

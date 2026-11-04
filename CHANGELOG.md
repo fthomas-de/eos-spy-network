@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- *Friendly to hostiles* no longer marks a hostile on the watch list with a
+  standing of 0: only a standing above 0 counts, watched or not
+
 ## [0.0.10] - 2026-11-04
 
 ### Added
