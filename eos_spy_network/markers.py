@@ -73,6 +73,9 @@ class Marker:
     # the details as a table, JSON-ready: per own character and hostile for ISK and contracts,
     # per character with the Corporations joined for the Corporation changes
     rows: list = field(default_factory=list)
+    # EVE IDs of the account's own characters behind the finding: other apps (api.py) show a marker
+    # at the character, in its own Corporation, not only at the main
+    character_ids: set = field(default_factory=set)
 
     @property
     def label(self):
@@ -144,10 +147,11 @@ class Suspect:
     character_count: int
     markers: dict = field(default_factory=dict)
 
-    def mark(self, kind: str, detail: str, count: int = 1) -> None:
+    def mark(self, kind: str, detail: str, character_id: int, count: int = 1) -> None:
         marker = self.markers.setdefault(kind, Marker(kind))
         marker.count += count
         marker.details.add(detail)
+        marker.character_ids.add(character_id)
 
     @property
     def marker_list(self) -> list[Marker]:
@@ -287,7 +291,7 @@ def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, charac
         accounts[user_id].character_count += 1
         for group_id in (corporation_id, alliance_id):
             if group_id in index:
-                accounts[user_id].mark(MEMBERSHIP, f"{name}: {index.describe(group_id)}")
+                accounts[user_id].mark(MEMBERSHIP, f"{name}: {index.describe(group_id)}", character_id)
                 break
 
     if not corptools_installed():
@@ -337,7 +341,7 @@ def _check_history(accounts, index, config, owner, names, audits, since=None):
         for (start_date, corporation_id, corporation_name), end_date in zip(history, ends):
             if corporation_id in index and (since is None or end_date is None or end_date >= since):
                 accounts[owner[character_id]].mark(
-                    MEMBERSHIP, f"{names[character_id]}: {index.describe(corporation_id)}"
+                    MEMBERSHIP, f"{names[character_id]}: {index.describe(corporation_id)}", character_id
                 )
             if start_date >= year_ago:
                 joined[character_id].append((start_date, corporation_name))
@@ -345,7 +349,7 @@ def _check_history(accounts, index, config, owner, names, audits, since=None):
         count = len(corporations)
         if count >= config.corp_changes_per_year:
             suspect = accounts[owner[character_id]]
-            suspect.mark(CORP_CHANGES, f"{names[character_id]}: {count}", count)
+            suspect.mark(CORP_CHANGES, f"{names[character_id]}: {count}", character_id, count)
             suspect.markers[CORP_CHANGES].rows.append(
                 {
                     "character": names[character_id],
@@ -369,6 +373,7 @@ def _check_contacts(accounts, index, owner, names, audits, hostile_ids):
             # normalize: 5, not the column's 5.00
             CONTACTS,
             f"{names[character_id]}: {index.describe(contact_id)} ({standing.normalize():f})",
+            character_id,
         )
 
 
@@ -386,17 +391,19 @@ def _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, sinc
             Q(mailmessage__timestamp__gte=since) | Q(mailmessage__timestamp__isnull=True)
         )
 
-    found = defaultdict(set)  # (account, mail ID) -> hostile counterparts
+    found = Found()  # (account, mail ID) -> hostile counterparts, own mailboxes
     for audit_id, mail_id, from_id in mails.filter(from_id__in=hostile_ids).values_list(
         "character_id", "mail_id", "from_id"
     ):
-        user_id = owner[audits[audit_id]]
-        found[(user_id, mail_id)] |= counterparts(user_id, from_id)
+        character_id = audits[audit_id]
+        user_id = owner[character_id]
+        found.add((user_id, mail_id), counterparts(user_id, from_id), character_id)
     for audit_id, mail_id, recipient_id in recipients.values_list(
         "mailmessage__character_id", "mailmessage__mail_id", "mailrecipient_id"
     ):
-        user_id = owner[audits[audit_id]]
-        found[(user_id, mail_id)] |= counterparts(user_id, recipient_id)
+        character_id = audits[audit_id]
+        user_id = owner[character_id]
+        found.add((user_id, mail_id), counterparts(user_id, recipient_id), character_id)
     # a mail in the boxes of two own characters counts once
     _mark_found(accounts, index, found, MAILS)
 
@@ -411,7 +418,7 @@ def _check_wallet(accounts, index, owner, names, audits, hostile_ids, counterpar
     if since is not None:
         entries = entries.filter(date__gte=since)
 
-    found = defaultdict(set)
+    found = Found()
     dealings = defaultdict(Dealings)  # (account, own character, hostile) -> Dealings
     for pk, audit_id, first_party_id, second_party_id, date, ref_type, amount in entries.values_list(
         "pk", "character_id", "first_party_id", "second_party_id", "date", "ref_type", "amount"
@@ -419,7 +426,7 @@ def _check_wallet(accounts, index, owner, names, audits, hostile_ids, counterpar
         character_id = audits[audit_id]
         user_id = owner[character_id]
         parties = counterparts(user_id, first_party_id, second_party_id)
-        found[(user_id, pk)] |= parties
+        found.add((user_id, pk), parties, character_id)
         for party_id in parties:
             dealings[(user_id, character_id, party_id)].add(date, ref_type, amount)
     _mark_found(accounts, index, found, WALLET)
@@ -433,7 +440,7 @@ def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counter
     if since is not None:
         contracts = contracts.filter(date_issued__gte=since)
 
-    found = defaultdict(set)
+    found = Found()
     dealings = defaultdict(Dealings)
     for (
         audit_id,
@@ -466,20 +473,37 @@ def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counter
         if owner.get(issuer_id) != user_id:
             parties.append(issuer_corporation_id)
         parties = counterparts(user_id, *parties)
-        found[(user_id, contract_id)] |= parties
+        found.add((user_id, contract_id), parties, character_id)
         for party_id in parties:
             dealings[(user_id, character_id, party_id)].add(date_issued, contract_type)
     _mark_found(accounts, index, found, CONTRACTS)
     _add_rows(accounts, index, names, dealings, CONTRACTS)
 
 
-def _mark_found(accounts, index, found, kind):
-    for (user_id, _item), party_ids in found.items():
-        if not party_ids:
-            continue
+class Found:
+    """Per (account, item) the hostile counterparts and the own characters whose records show them.
+
+    One item (a mail, an entry, a contract) counts once however many own
+    characters hold it; each of them stands behind the marker.
+    """
+
+    def __init__(self):
+        self.parties = defaultdict(set)
+        self.characters = defaultdict(set)
+
+    def add(self, key: tuple, party_ids: set, character_id: int) -> None:
+        # a record with no hostile left after dropping own characters puts nobody behind the marker
+        if party_ids:
+            self.parties[key] |= party_ids
+            self.characters[key].add(character_id)
+
+
+def _mark_found(accounts, index, found: Found, kind):
+    for (user_id, item), party_ids in found.parties.items():
         marker = accounts[user_id].markers.setdefault(kind, Marker(kind))
         marker.count += 1
         marker.details.update(index.describe(party_id) for party_id in party_ids)
+        marker.character_ids |= found.characters[(user_id, item)]
 
 
 def _add_rows(accounts, index, names, dealings, kind):

@@ -216,7 +216,13 @@ def _suspect_data(suspect: Suspect) -> dict:
         "corporation_id": suspect.main.corporation_id,
         "character_count": suspect.character_count,
         "markers": [
-            {"kind": marker.kind, "count": marker.count, "details": marker.sorted_details, "rows": marker.rows}
+            {
+                "kind": marker.kind,
+                "count": marker.count,
+                "details": marker.sorted_details,
+                "rows": marker.rows,
+                "character_ids": sorted(marker.character_ids),
+            }
             for marker in suspect.marker_list
         ],
     }
@@ -293,8 +299,13 @@ class Report:
                 if marker["kind"] in disabled:
                     continue
                 suspect.markers[marker["kind"]] = Marker(
-                    # a snapshot of 0.0.4 or older has no rows until the next run
-                    marker["kind"], marker["count"], set(marker["details"]), marker.get("rows", [])
+                    marker["kind"],
+                    marker["count"],
+                    set(marker["details"]),
+                    # a snapshot of 0.0.4 or older has no rows, one of 0.0.9 or older no characters,
+                    # until the next run
+                    marker.get("rows", []),
+                    set(marker.get("character_ids", [])),
                 )
             # a main marked only by switched-off markers is clean
             if suspect.markers:

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Every marker now records the own characters behind it (`character_ids`
+  per marker in the stored result): for membership and Corporation changes
+  the character concerned, for contacts the one holding the contact, for
+  mails the one whose mailbox holds the mail, for ISK and contracts the one
+  whose journal or contract it is. Until now a marker knew only the
+  account, so another app could not show it at the character in its own
+  Corporation. A result stored by 0.0.9 or older names no characters until
+  the next recalculation
+- `eos_spy_network.api`, a small read API for other apps (eos-auth-monitor):
+  `character_markers()` maps each EVE character ID to its marker kinds,
+  from the stored result only, empty when that is missing or of another
+  Alliance, and without the markers switched off in the settings, as on
+  the pages; `label(kind)` and `description(kind)` give the texts the pages
+  show, `KINDS` the kinds in page order. Permissions stay with the calling app
+
 ## [0.0.9] - 2026-11-04
 
 ### Added

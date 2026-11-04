@@ -426,6 +426,114 @@ class TestContracts(MarkerTestCase):
         self.assertEqual(self.kinds(), {markers.MEMBERSHIP})
 
 
+class TestCharacterIds(MarkerTestCase):
+    """Every marker names the own characters behind it, so other apps can show it at the character."""
+
+    add_mail = TestMails.add_mail
+    add_entry = TestWallet.add_entry
+    add_contract = TestContracts.add_contract
+
+    def setUp(self):
+        super().setUp()
+        # a clean alt on the account: a marker of the main must not name it, and the other way round
+        self.alt = self.add_alt(5001)
+        self.alt_audit = CharacterAudit.objects.create(character=self.alt)
+
+    def character_ids(self, kind):
+        return self.suspect().markers[kind].character_ids
+
+    def test_should_name_the_alt_in_a_hostile_corporation(self):
+        self.add_alt(5002, corporation_id=HOSTILE_CORP, alliance_id=None)
+
+        self.assertEqual(self.character_ids(markers.MEMBERSHIP), {5002})
+
+    def test_should_name_the_character_with_a_hostile_corporation_in_its_history(self):
+        CorporationHistory.objects.create(
+            character=self.alt_audit, corporation_id=HOSTILE_CORP,
+            corporation_name=eve_name(HOSTILE_CORP, "corporation"), record_id=1,
+            start_date=timezone.now() - timedelta(days=900),
+        )
+
+        self.assertEqual(self.character_ids(markers.MEMBERSHIP), {self.alt.character_id})
+
+    def test_should_name_the_character_that_changed_corporations(self):
+        configure(corp_changes_per_year=2)
+        for record_id, days in enumerate((10, 100), 1):
+            CorporationHistory.objects.create(
+                character=self.alt_audit, corporation_id=1000000 + record_id,
+                corporation_name=eve_name(1000000 + record_id, "corporation"), record_id=record_id,
+                start_date=timezone.now() - timedelta(days=days),
+            )
+
+        self.assertEqual(self.character_ids(markers.CORP_CHANGES), {self.alt.character_id})
+
+    def test_should_name_the_character_holding_the_contact(self):
+        CharacterContact.objects.create(
+            id=1, character=self.alt_audit, contact_id=HOSTILE_CORP, contact_type="corporation",
+            contact_name=eve_name(HOSTILE_CORP, "corporation"), standing=5,
+        )
+
+        self.assertEqual(self.character_ids(markers.CONTACTS), {self.alt.character_id})
+
+    def test_should_name_the_mailbox_of_a_mail_from_a_hostile(self):
+        self.add_mail(1, 1, HOSTILE_MEMBER, audit=self.alt_audit)
+
+        self.assertEqual(self.character_ids(markers.MAILS), {self.alt.character_id})
+
+    def test_should_name_the_mailbox_of_a_mail_to_a_hostile(self):
+        self.add_mail(1, 1, self.alt.character_id, audit=self.alt_audit, recipients=[HOSTILE_CORP])
+
+        self.assertEqual(self.character_ids(markers.MAILS), {self.alt.character_id})
+
+    def test_should_name_both_mailboxes_of_a_mail_counted_once(self):
+        self.add_mail(1, 7, HOSTILE_MEMBER)
+        self.add_mail(2, 7, HOSTILE_MEMBER, audit=self.alt_audit)
+
+        marker = self.suspect().markers[markers.MAILS]
+
+        self.assertEqual((marker.count, marker.character_ids), (1, {self.main.character_id, self.alt.character_id}))
+
+    def test_should_name_the_character_of_the_journal(self):
+        self.audit = self.alt_audit
+        self.add_entry(1, HOSTILE_CORP, self.alt.character_id)
+
+        self.assertEqual(self.character_ids(markers.WALLET), {self.alt.character_id})
+
+    def test_should_name_the_character_of_the_contract(self):
+        self.audit = self.alt_audit
+        self.add_contract(1, self.alt.character_id, 2001, HOSTILE_MEMBER)
+
+        self.assertEqual(self.character_ids(markers.CONTRACTS), {self.alt.character_id})
+
+    def test_should_store_the_characters_in_the_snapshot(self):
+        self.add_alt(5002, corporation_id=HOSTILE_CORP, alliance_id=None)
+        self.add_mail(1, 1, HOSTILE_MEMBER, audit=self.alt_audit)
+        self.add_mail(2, 2, HOSTILE_MEMBER)
+
+        stored = snapshot.update()
+        (suspect,) = stored.data["corporations"][0]["suspects"]
+
+        self.assertEqual(
+            {marker["kind"]: marker["character_ids"] for marker in suspect["markers"]},
+            {
+                markers.MEMBERSHIP: [5002],
+                markers.MAILS: sorted([self.main.character_id, self.alt.character_id]),
+            },
+        )
+        (tile,) = snapshot.Report(stored).tiles
+        self.assertEqual(tile.suspects[0].markers[markers.MAILS].character_ids, {self.main.character_id, 5001})
+
+    def test_should_read_an_older_snapshot_without_characters(self):
+        self.add_alt(5002, corporation_id=HOSTILE_CORP, alliance_id=None)
+        stored = snapshot.update()
+        for marker in stored.data["corporations"][0]["suspects"][0]["markers"]:
+            del marker["character_ids"]
+
+        (tile,) = snapshot.Report(stored).tiles
+
+        self.assertEqual(tile.suspects[0].markers[markers.MEMBERSHIP].character_ids, set())
+
+
 class TestDealingAffiliation(MarkerTestCase):
     """The snapshot names the Corporation and Alliance of each ISK counterpart."""
 

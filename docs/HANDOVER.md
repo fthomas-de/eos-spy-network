@@ -8,6 +8,19 @@ Last updated 2026-11-04.
 
 ## State
 
+- Unreleased (2026-11-04, not committed): every marker stores
+  `character_ids` (EVE IDs of the own characters behind it; `Marker`
+  field, `Suspect.mark(kind, detail, character_id, count=1)`, mails/ISK/
+  contracts through `markers.Found`, JSON key `"character_ids"` sorted per
+  marker, `Report` reads a snapshot without it as an empty set). New
+  `api.py` for eos-auth-monitor: `character_markers() -> dict[int,
+  list[str]]` (KINDS order; `{}` without snapshot or for another
+  Alliance; switched-off markers left out - user, 2026-11-04; exactly two
+  queries, config with the Alliance joined plus the snapshot row,
+  `test_api` pins it), `label(kind)`, `description(kind)`, `KINDS`. A
+  stable contract: eos-auth-monitor imports it behind
+  `apps.is_installed` and checks `view_suspects` + `view_evidence`
+  itself; change it only together with that app.
 - Version: `0.0.9`, 2026-11-04 (see `CHANGELOG.md`): the settings page
   in the tabs Alliance / Contact sources / Markers - one form, as in
   eos-tax; each Save button carries `name="tab"`, the view redirects to
@@ -35,8 +48,10 @@ Last updated 2026-11-04.
   watched ones not held negative, mails, ISK, contracts - over main and
   alts); Network: the ISK connections with hostile partners. Pages read
   only the stored snapshot.
-- Tests: 157 without translation tests plus 3 translation tests, all green
-  in the dev instance; every new test checked against sabotaged code.
+- Tests: 177 without translation tests plus 3 translation tests (the
+  unreleased work added 11 in `test_markers.TestCharacterIds` and 9 in
+  `test_api`; only the affected modules were run, the full suite not yet);
+  every new test checked against sabotaged code.
   `tests.base.SpyTestCase` patches `views.update_snapshot` and the three
   ESI calls of `affiliations.py` (`self.esi_names`, `self.esi_affiliations`,
   `self.esi_corporation_alliance`; set `return_value` for an answer).
@@ -65,10 +80,11 @@ Last updated 2026-11-04.
   reviewed by the user. The graph layout was checked only with a
   synthetic 14-partner graph served as a static page, before the payment
   counts came back on the lines (the user accepts the overlap).
-- The stored snapshot in `aa_dev` is still from 0.0.6: recalculate
-  (button or `snapshot.update()`) to see the contacts change. A dry
-  `snapshot.build()` with 0.0.8 ran without errors (29 queries, 0.58 s,
-  mostly ESI in the affiliations phase).
+- The stored snapshot in `aa_dev` was rebuilt 2026-11-04 with the
+  unreleased `character_ids` code (1.44 s): no main has a marker any
+  more (the 0.0.7 contacts change dropped the old ones), so
+  `api.character_markers()` gives `{}` there; the character IDs were only
+  seen in tests.
 - Open with the user: should a watched hostile at standing 0 still count
   (implemented: yes - only negative ones were declared irrelevant)? `aa_dev` has no
   hostile network partner and no ISK/contract marker, so the network pages
