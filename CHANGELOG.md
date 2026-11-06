@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- A note and a tick *Cleared* per blue kill row (own character and
+  killmail), in a popup on the Corporation page and in the new settings tab
+  *Blue kills*, editable with `view_suspects`; as the GM transaction notes
+  of eos-tax, up to 160 characters, with who changed them last. A cleared
+  kill stays in the table, greyed, but no longer counts for the marker - a
+  main whose kills are all cleared and who has nothing else is clean, and
+  `api.character_markers()` leaves the character out, so eos-auth-monitor
+  shows no problem for it. The review is applied when the stored result is
+  read, not stored in it, so it takes effect at once without a
+  recalculation; it lives on the `BlueKill` copy, which a later calculation
+  updates by name only and so leaves alone. Clearing needs a note: the
+  next reader must see why a kill was let go (the popup enables the tick
+  only with a note, the server refuses it without). Migration 0007.
+- Settings tab *Blue kills*: every blue kill stored for the Alliance, also
+  those outside the time frame, sortable, paged and searchable (the note
+  included). Before, a kill outside the time frame could not be seen at all.
+
+### Changed
+
+- `api.character_markers()` reads the reviewed blue kills in a third query
+  when the snapshot holds blue kills; without them it stays at two.
+
 ## [0.0.13] - 2026-11-06
 
 ### Added

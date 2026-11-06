@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from solo.models import SingletonModel
 
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -123,6 +124,10 @@ class Snapshot(models.Model):
         return f"Snapshot {self.built_at:%Y-%m-%d %H:%M}"
 
 
+# a short remark, not a case file - as the GM transaction notes of eos-tax
+KILL_NOTE_LENGTH = 160
+
+
 class BlueKill(models.Model):
     """A blue kill as found in killtracker, kept after killtracker deletes the killmail.
 
@@ -152,6 +157,13 @@ class BlueKill(models.Model):
     reason = models.CharField(max_length=8)
     # the blue's standing at the time it was copied; none for an awox
     standing = models.DecimalField(max_digits=3, decimal_places=1, null=True)
+    # the review lives here: a later copy updates the names only and leaves it alone
+    cleared = models.BooleanField(default=False)
+    note = models.CharField(max_length=KILL_NOTE_LENGTH, blank=True)
+    reviewed_at = models.DateTimeField(null=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
 
     class Meta:
         default_permissions = ()

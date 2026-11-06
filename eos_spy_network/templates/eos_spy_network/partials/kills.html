@@ -1,5 +1,5 @@
 {% load i18n %}
-{# Blue kills of a marker: one row per own character and killmail, the latest first #}
+{# Blue kills of a marker: one row per own character and killmail, the latest first; a cleared one greyed, it no longer counts #}
 <div class="table-responsive mt-1">
     <table class="table table-sm table-borderless small mb-0 w-auto">
         <thead>
@@ -11,11 +11,12 @@
                 <th>{% translate "Alliance" context "EVE jargon" %}</th>
                 <th>{% translate "Ship" %}</th>
                 <th>{% translate "Reason" %}</th>
+                <th>{% translate "Note" %}</th>
             </tr>
         </thead>
         <tbody>
             {% for row in marker.rows %}
-                <tr>
+                <tr{% if row.cleared %} class="opacity-50"{% endif %}>
                     <td class="text-nowrap">
                         <a href="https://zkillboard.com/kill/{{ row.killmail_id }}/" target="_blank" rel="noopener noreferrer">{{ row.date }}</a>
                     </td>
@@ -30,6 +31,9 @@
                         {% else %}
                             {% translate "Blue" %} ({{ row.standing }})
                         {% endif %}
+                    </td>
+                    <td>
+                        {% include "eos_spy_network/partials/kill-note-button.html" with character_id=row.character_id killmail_id=row.killmail_id character=row.character note=row.note cleared=row.cleared reviewed=row.note %}
                     </td>
                 </tr>
             {% endfor %}

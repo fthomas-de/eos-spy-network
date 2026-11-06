@@ -6,6 +6,7 @@
 {% block extra_javascript %}
     {{ block.super }}
     {% sri_static "eos_spy_network/js/contracts.js" %}
+    {% sri_static "eos_spy_network/js/kills.js" %}
 {% endblock %}
 
 {% block details %}
@@ -111,4 +112,6 @@
             </div>
         </div>
     {% endif %}
+
+    {% include "eos_spy_network/partials/kill-note-modal.html" with reload=True %}
 {% endblock %}

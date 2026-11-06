@@ -33,7 +33,13 @@ every one with a standing below a configurable value.
   tooltip per character. Blue kills show a row per own character and
   killmail: the day (linked to zKillboard), the victim, its Corporation and
   Alliance, the ship and the reason - *Awox* or *Blue* with the standing.
-  Killmails are public, so they need no `view_evidence`
+  Killmails are public, so they need no `view_evidence`. Each row has a
+  note (up to 160 characters) and a tick *Cleared*, editable with
+  `view_suspects` here and in the settings tab *Blue kills*; clearing needs
+  a note. A cleared kill
+  stays in the table, greyed, but no longer counts - at once, without a
+  recalculation, on these pages and for eos-auth-monitor; a main whose kills
+  are all cleared and who has no other marker counts as clean
 - **Markers** per account, over the main and all its alts:
   - *Hostile membership*: a character is in a hostile Corporation or
     Alliance, or was in a hostile Corporation within the time frame
@@ -103,7 +109,7 @@ every one with a standing below a configurable value.
   entity one of its Corporations is at war with. The Alliance itself and its
   Corporations never count as hostile. A hostile Corporation or Alliance
   also makes its members hostile - as far as Auth knows them (see below)
-- **Settings page**, in three tabs saved together. *Alliance*: the Alliance, chosen from a searchable dropdown; the
+- **Settings page**, in four tabs; the first three saved together. *Alliance*: the Alliance, chosen from a searchable dropdown; the
   standing below which a contact is hostile (default: below 0); the
   standing from which a contact of the Alliance is blue for the blue kills
   (default 5); the number
@@ -120,7 +126,10 @@ every one with a standing below a configurable value.
   table, marked, until it is unticked. *Markers*: a switch per marker; a
   switched-off marker is still calculated but left out of the Markers
   pages (a main marked by nothing else counts as clean), and switched on
-  again it shows at once, without a recalculation
+  again it shows at once, without a recalculation. *Blue kills*: every blue
+  kill stored for the Alliance, also those outside the time frame, as a
+  table to sort, page and search, with the note and the tick of each row
+  and who changed them last
 - **Notices** above the marker and network pages for every ticked source aa-contacts has
   no contacts of yet, and when aa-contacts or corptools is not installed;
   above the marker pages for the markers switched off, and - while the

@@ -1,0 +1,20 @@
+{% load i18n %}
+{# The note button of one blue kill row, and the note and the cleared tick beside it; kills.js opens the popup from it. #}
+{# Takes character_id, killmail_id, character, note, cleared, reviewed (a tooltip line, may be empty). #}
+{% if perms.eos_spy_network.view_suspects %}
+    <button type="button"
+            class="btn btn-sm {% if note or cleared %}btn-secondary{% else %}btn-outline-secondary{% endif %}"
+            data-bs-toggle="modal" data-bs-target="#eos-spy-network-kill-note"
+            data-eos-spy-network-kill-character="{{ character_id }}"
+            data-eos-spy-network-kill-killmail="{{ killmail_id }}"
+            data-eos-spy-network-kill-name="{{ character }}"
+            data-eos-spy-network-kill-note="{{ note }}"
+            data-eos-spy-network-kill-cleared="{% if cleared %}1{% else %}0{% endif %}"
+            title="{% if reviewed %}{{ reviewed }}{% else %}{% translate 'Add a note' %}{% endif %}">
+        <i class="fas fa-note-sticky" aria-hidden="true"></i>
+        <span class="visually-hidden">{% translate "Note" %}</span>
+    </button>
+{% endif %}
+<span class="badge text-bg-success{% if not cleared %} d-none{% endif %}" data-eos-spy-network-kill-cleared-badge>{% translate "Cleared" context "eos-spy-network" %}</span>
+{# the note is someone's free text: the template escapes it, kills.js writes it as text #}
+<span class="small text-break" data-eos-spy-network-kill-note-text>{{ note }}</span>

@@ -8,6 +8,17 @@ Last updated 2026-11-06.
 
 ## State
 
+- Not committed yet (`[Unreleased]`): note and *Cleared* tick per blue
+  kill row (`BlueKill.note/cleared/reviewed_at/reviewed_by`, migration
+  0007, applied to `aa_dev`; endpoint `views.kill_note`,
+  `kills/note/`, `view_suspects`; popup `partials/kill-note-modal.html`,
+  `kills.js`). Applied at read time (`snapshot.kill_reviews` +
+  `reviewed_kills`, in `views._report` and `api.character_markers`, which
+  now takes a third query when the snapshot holds blue kills). New
+  settings tab *Blue kills* (`views._kill_rows`, every `BlueKill` of the
+  Alliance, no time frame). Tests `test_kill_reviews.py` (25, each checked
+  against sabotage). New texts not in `tools/glossary.py` yet - at
+  `/commit`. Not seen in a browser: `aa_dev` holds no blue kill.
 - Version: `0.0.13`, 2026-11-06 (see `CHANGELOG.md`): new marker *Blue
   kills* (`markers.BLUE_KILLS`, last in `KINDS`, so also in `api.KINDS` -
   eos-auth-monitor shows it like the others; not tried there). A character
@@ -182,6 +193,14 @@ Last updated 2026-11-06.
   Alliance's own contacts only (not the ticked Corporation sources), from a
   standing of 5 by default, adjustable; killmails from killtracker's
   storage, copied into `BlueKill` so a kill survives killtracker's purge.
+- Blue kill review (user, 2026-11-06): the `BlueKill` row is the snapshot
+  of the time found - reason and standing stay when the victim is no longer
+  blue. Note and *Cleared* per row (character + killmail), not per
+  killmail; editable with `view_suspects` on the Corporation page and in
+  the settings tab; clearing needs a note (user); a cleared kill no longer counts (pages and API) but
+  stays greyed in the table; at once, no recalculation. The settings tab
+  lists every kill of the Alliance regardless of the time frame, client-side
+  DataTables.
 - Mails: headers and subject, never the body.
 - Review with status, note and history.
 - Scope: one Alliance, as in eos-auth-monitor.

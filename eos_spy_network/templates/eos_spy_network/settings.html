@@ -1,6 +1,7 @@
 {% extends "eos_spy_network/base.html" %}
 {% load django_bootstrap5 %}
 {% load i18n %}
+{% load sri %}
 
 {% block details %}
     {# one form: every tab's Save button sends all three, and names its tab to come back to #}
@@ -30,6 +31,14 @@
                         aria-controls="eos-spy-network-settings-markers"
                         aria-selected="{% if tab == 'markers' %}true{% else %}false{% endif %}">
                     {% translate "Markers" %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link{% if tab == 'kills' %} active{% endif %}" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-kills"
+                        aria-controls="eos-spy-network-settings-kills"
+                        aria-selected="{% if tab == 'kills' %}true{% else %}false{% endif %}">
+                    {% translate "Blue kills" %}
                 </button>
             </li>
         </ul>
@@ -136,8 +145,71 @@
                 </div>
                 <button type="submit" class="btn btn-primary" name="tab" value="markers">{% translate "Save" context "eos-spy-network" %}</button>
             </div>
+            {# no Save button: each row's note is saved on its own by kills.js; the table holds no form field #}
+            <div class="tab-pane fade{% if tab == 'kills' %} show active{% endif %}" id="eos-spy-network-settings-kills" role="tabpanel">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="small text-body-secondary">
+                            {% translate "Every blue kill stored for the Alliance, also those outside the time frame. Reason and standing are those of the time the kill was found; a cleared kill no longer counts for the marker." %}
+                        </p>
+                        {% if kills %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped table-hover w-100 eos-spy-network-sortable">
+                                    <thead>
+                                        <tr>
+                                            <th>{% translate "Date" %}</th>
+                                            <th>{% translate "Character" context "EVE jargon" %}</th>
+                                            <th>{% translate "Victim" %}</th>
+                                            <th>{% translate "Corporation" context "EVE jargon" %}</th>
+                                            <th>{% translate "Alliance" context "EVE jargon" %}</th>
+                                            <th>{% translate "Ship" %}</th>
+                                            <th>{% translate "Reason" %}</th>
+                                            <th>{% translate "Note" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for kill in kills %}
+                                            <tr{% if kill.cleared %} class="opacity-50"{% endif %}>
+                                                <td class="text-nowrap" data-order="{{ kill.time|date:'U' }}">
+                                                    <a href="https://zkillboard.com/kill/{{ kill.killmail_id }}/" target="_blank" rel="noopener noreferrer">{{ kill.time|date:"Y-m-d H:i" }}</a>
+                                                </td>
+                                                <td class="text-break">{{ kill.character }}</td>
+                                                <td class="text-break">{{ kill.victim }}</td>
+                                                <td class="text-break">{{ kill.victim_corporation }}</td>
+                                                <td class="text-break">{{ kill.victim_alliance }}</td>
+                                                <td class="text-break">{{ kill.ship }}</td>
+                                                <td class="text-nowrap">
+                                                    {% if kill.reason == "awox" %}
+                                                        {% translate "Awox" %}
+                                                    {% else %}
+                                                        {% translate "Blue" %} ({{ kill.standing|floatformat:"-1" }})
+                                                    {% endif %}
+                                                </td>
+                                                {# sorts the cleared ones together; the search finds the note's text #}
+                                                <td data-order="{% if kill.cleared %}1{% else %}0{% endif %}" data-eos-spy-network-kill-cleared-cell>
+                                                    {% if kill.reviewed_at %}
+                                                        {% blocktranslate asvar reviewed with name=kill.reviewed_by.profile.main_character.character_name|default:kill.reviewed_by.username|default:"?" at=kill.reviewed_at|date:"Y-m-d H:i" %}Last changed by {{ name }}, {{ at }}{% endblocktranslate %}
+                                                    {% else %}
+                                                        {% translate "Add a note" as reviewed %}
+                                                    {% endif %}
+                                                    {% include "eos_spy_network/partials/kill-note-button.html" with character_id=kill.character_id killmail_id=kill.killmail_id character=kill.character note=kill.note cleared=kill.cleared reviewed=reviewed %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="mb-0 text-body-secondary">{% translate "No blue kill stored." %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
     </form>
+
+    {# outside the form: its fields must not go with the settings' Save #}
+    {% include "eos_spy_network/partials/kill-note-modal.html" %}
 {% endblock %}
 
 {% block extra_css %}
@@ -148,4 +220,5 @@
 {% block extra_javascript %}
     {{ block.super }}
     {% include "eos_spy_network/bundles/tom-select-js.html" %}
+    {% sri_static "eos_spy_network/js/kills.js" %}
 {% endblock %}

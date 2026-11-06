@@ -11,6 +11,7 @@ urlpatterns = [
     path("network/", views.network, name="network"),
     path("network/<int:corporation_id>/", views.network_corporation, name="network_corporation"),
     path("contracts/<int:character_id>/<int:counterpart_id>/", views.contracts, name="contracts"),
+    path("kills/note/", views.kill_note, name="kill_note"),
     path("rebuild/", views.rebuild, name="rebuild"),
     path("rebuild/progress/", views.rebuild_progress, name="rebuild_progress"),
     path("settings/", views.settings, name="settings"),

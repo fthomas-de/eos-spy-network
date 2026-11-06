@@ -6,7 +6,8 @@ permissions ``eos_spy_network.view_suspects`` and
 ``eos_spy_network.view_evidence`` itself; nothing here checks a permission.
 
 Everything comes from the stored snapshot, as on this app's own pages: no
-calculation, no query beyond the configuration and the one snapshot row.
+calculation, no query beyond the configuration, the one snapshot row and,
+when the snapshot holds blue kills, the reviewed ones.
 
 - ``character_markers() -> dict[int, list[str]]``
 - ``label(kind) -> str`` and ``description(kind) -> str``: the texts this app
@@ -14,9 +15,9 @@ calculation, no query beyond the configuration and the one snapshot row.
 - ``KINDS``: every marker kind, in the order the pages show them
 """
 
-from .markers import DESCRIPTIONS, KINDS, LABELS
+from .markers import BLUE_KILLS, DESCRIPTIONS, KINDS, LABELS
 from .models import SpyConfiguration
-from .snapshot import current
+from .snapshot import current, kill_reviews, reviewed_kills
 
 __all__ = ["KINDS", "character_markers", "description", "label"]
 
@@ -26,7 +27,7 @@ def character_markers() -> dict[int, list[str]]:
 
     Only the account's own characters behind a finding appear, each under its
     own ID (not its main's). Markers switched off in the settings are left
-    out, as on this app's pages. Empty without a snapshot, and when the
+    out, as on this app's pages, and so are the blue kills marked cleared. Empty without a snapshot, and when the
     stored snapshot is of another Alliance than the configured one: after a
     change of the Alliance it is stale until recalculated. A snapshot built
     before 0.0.10 names no characters and gives nothing until the next run.
@@ -46,11 +47,19 @@ def character_markers() -> dict[int, list[str]]:
         return {}
 
     found = {}
+    reviews = None  # read once, and only when there is a blue kill to apply them to
     for corporation in snapshot.data["corporations"]:
         for suspect in corporation["suspects"]:
             for marker in suspect["markers"]:
                 if marker["kind"] in disabled:
                     continue
+                if marker["kind"] == BLUE_KILLS:
+                    if reviews is None:
+                        reviews = kill_reviews(alliance_id)
+                    # a cleared kill is no longer a problem in eos-auth-monitor either
+                    marker = reviewed_kills(marker, reviews)
+                    if marker is None:
+                        continue
                 for character_id in marker.get("character_ids", []):
                     found.setdefault(character_id, set()).add(marker["kind"])
     return {character_id: [kind for kind in KINDS if kind in kinds] for character_id, kinds in found.items()}

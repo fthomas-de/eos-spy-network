@@ -401,6 +401,36 @@ TRANSLATIONS = {
         "killtracker не сохраняет свои киллмейлы (KILLTRACKER_STORING_KILLMAILS_ENABLED), поэтому blue-киллов нет.",
         "killtracker 不保存其击杀邮件（KILLTRACKER_STORING_KILLMAILS_ENABLED），因此没有 blue 击杀。",
     ),
+    # the review of a blue kill: a note and the tick
+    "Add a note": ("Notiz hinzufügen", "Добавить заметку", "添加备注"),
+    "Note": ("Notiz", "Заметка", "备注"),
+    "Cleared": ("Geklärt", "Улажено", "已澄清"),
+    "Cancel": ("Abbrechen", "Отмена", "取消"),
+    "Could not save the note.": (
+        "Die Notiz konnte nicht gespeichert werden.",
+        "Не удалось сохранить заметку.",
+        "无法保存备注。",
+    ),
+    "Needs a note saying why. A cleared kill no longer counts for the marker; it takes effect at once.": (
+        "Braucht eine Notiz mit der Begründung. Ein geklärter Kill zählt nicht mehr für den Marker; das wirkt "
+        "sofort.",
+        "Нужна заметка с объяснением причины. Улаженный килл больше не учитывается в маркере; это действует "
+        "сразу.",
+        "需要一条说明原因的备注。已澄清的击杀不再计入该标记；立即生效。",
+    ),
+    "Every blue kill stored for the Alliance, also those outside the time frame. Reason and standing are those of the time the kill was found; a cleared kill no longer counts for the marker.": (
+        "Jeder für die Alliance gespeicherte Blue-Kill, auch außerhalb des Zeitraums. Grund und Standing sind die "
+        "vom Zeitpunkt des Funds; ein geklärter Kill zählt nicht mehr für den Marker.",
+        "Все сохранённые для Alliance blue-киллы, в том числе вне временного окна. Причина и standing — на момент "
+        "обнаружения килла; улаженный килл больше не учитывается в маркере.",
+        "为本 Alliance 保存的所有 blue 击杀，包括时间范围之外的。原因和 standing 为发现该击杀时的值；已澄清的击杀不再计入该标记。",
+    ),
+    "Last changed by %(name)s, %(at)s": (
+        "Zuletzt geändert von %(name)s, %(at)s",
+        "Последнее изменение: %(name)s, %(at)s",
+        "最后修改：%(name)s，%(at)s",
+    ),
+    "No blue kill stored.": ("Kein Blue-Kill gespeichert.", "Нет сохранённых blue-киллов.", "没有已保存的 blue 击杀。"),
 }
 
 PLURALS = {}

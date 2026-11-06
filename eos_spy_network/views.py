@@ -3,19 +3,22 @@ import time
 from kombu.exceptions import OperationalError
 
 from django.contrib import messages
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
+
+from allianceauth.eveonline.models import EveCharacter
 
 from . import __version__, contacts, contract_details, killmails, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
 from .markers import BLUE_KILLS, KINDS, LABELS, corptools_installed
-from .models import ContactSource, SpyConfiguration
+from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, SpyConfiguration
 from .permissions import (
     APP_PERMISSIONS,
     MANAGE_SETTINGS,
@@ -43,7 +46,8 @@ NAV_SETTINGS = "settings"
 TAB_ALLIANCE = "alliance"
 TAB_SOURCES = "sources"
 TAB_MARKERS = "markers"
-SETTINGS_TABS = (TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS)
+TAB_KILLS = "kills"
+SETTINGS_TABS = (TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS, TAB_KILLS)
 
 
 def _render(request, template, context=None, nav=None, started=None):
@@ -96,7 +100,61 @@ def _report(config) -> snapshots.Report | None:
     # after a change of the Alliance the stored result is of the old one until recalculated
     if current is None or not config.alliance or current.data.get("alliance_id") != config.alliance.alliance_id:
         return None
-    return snapshots.Report(current, config.disabled_markers or ())
+    disabled = config.disabled_markers or ()
+    reviews = {} if BLUE_KILLS in disabled else snapshots.kill_reviews(config.alliance.alliance_id)
+    return snapshots.Report(current, disabled, reviews)
+
+
+def _kill_rows(config) -> list:
+    """Every stored blue kill of the configured Alliance, the latest first, for the settings tab."""
+    if not config.alliance:
+        return []
+    kills = list(
+        BlueKill.objects.filter(alliance_id=config.alliance.alliance_id)
+        .select_related("reviewed_by__profile__main_character")
+        .order_by("-time", "killmail_id", "character_id")
+    )
+    names = dict(
+        EveCharacter.objects.filter(character_id__in={kill.character_id for kill in kills}).values_list(
+            "character_id", "character_name"
+        )
+    )
+    for kill in kills:
+        kill.character = names.get(kill.character_id) or str(kill.character_id)
+    return kills
+
+
+@any_permission_required(VIEW_SUSPECTS)
+@require_POST
+def kill_note(request):
+    """Stores the note and the cleared tick of one blue kill row; answers both as stored."""
+    config = SpyConfiguration.get_solo()
+    try:
+        character_id = int(request.POST.get("character_id", ""))
+        killmail_id = int(request.POST.get("killmail_id", ""))
+    except ValueError:
+        return HttpResponseBadRequest("character_id and killmail_id must be numbers")
+    text = " ".join(request.POST.get("note", "").split())
+    if len(text) > KILL_NOTE_LENGTH:
+        return HttpResponseBadRequest("note too long")
+    cleared = request.POST.get("cleared") == "1"
+    # the user's rule: whoever clears a kill says why, or the next reader cannot tell what was checked
+    if cleared and not text:
+        return HttpResponseBadRequest("a cleared kill needs a note")
+    # only a kill of the configured Alliance: the pages show no other
+    kill = BlueKill.objects.filter(
+        alliance_id=config.alliance.alliance_id if config.alliance else None,
+        character_id=character_id,
+        killmail_id=killmail_id,
+    ).first()
+    if kill is None:
+        raise Http404
+    kill.note = text
+    kill.cleared = cleared
+    kill.reviewed_at = timezone.now()
+    kill.reviewed_by = request.user
+    kill.save(update_fields=["note", "cleared", "reviewed_at", "reviewed_by"])
+    return JsonResponse({"note": kill.note, "cleared": kill.cleared})
 
 
 def _killmails_missing(config) -> str:
@@ -152,6 +210,7 @@ def corporation(request, corporation_id):
             **_notices(config),
             "report": report,
             "tile": tile,
+            "note_length": KILL_NOTE_LENGTH,
             "switched_off": _switched_off(config),
             "killmails_missing": _killmails_missing(config),
         },
@@ -271,6 +330,12 @@ def settings(request):
     return _render(
         request,
         "eos_spy_network/settings.html",
-        {"form": form, "rows": rows, "tab": tab if tab in SETTINGS_TABS else TAB_ALLIANCE},
+        {
+            "form": form,
+            "rows": rows,
+            "kills": _kill_rows(config),
+            "note_length": KILL_NOTE_LENGTH,
+            "tab": tab if tab in SETTINGS_TABS else TAB_ALLIANCE,
+        },
         NAV_SETTINGS,
     )
