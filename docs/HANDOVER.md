@@ -8,109 +8,75 @@ Last updated 2026-11-06.
 
 ## State
 
-- Unreleased (after 0.0.12, not committed): new marker *Blue kills*
-  (`markers.BLUE_KILLS`, last in `KINDS`, so also in `api.KINDS` for
-  eos-auth-monitor). Killmails from killtracker's `EveKillmail` /
-  `EveKillmailAttacker` (`killmails.py`, optional behind
-  `apps.is_installed("killtracker")`); corptools has none, killtracker's
-  trackers store nothing. Victim in the Alliance = *Awox*, else blue = the
-  victim, its Corporation or Alliance among the **Alliance's own**
-  aa-contacts contacts with standing >= `SpyConfiguration.blue_from`
-  (new, default 5, migration 0006; `hostiles.blue_entities`,
-  `contacts.contacts(at_least=...)`). One marker, rows per own character and
-  killmail (zKB link, victim, Corporation, Alliance, ship, reason), count per
-  killmail per account, every attacker counts (user, 2026-11-06). Runs even
-  without hostiles (`corporation_tiles`, step `kills`). Not evidence.
-  Notice on the marker pages when killtracker is missing or does not store
-  (`views._killmails_missing`). `testauth` got `eveuniverse` + `killtracker`.
-  Kills are copied into the own table `BlueKill` (migration 0006 together
-  with `blue_from`, regenerated 2026-11-06 - aa_dev has the new one) on each
-  calculation (`markers._copy_kills`, upsert: names follow killtracker,
-  reason/standing frozen at the first copy; user, 2026-11-06), the marker
-  reads `BlueKill` filtered by Alliance, own characters and time frame.
-  MySQL's upsert refuses `unique_fields`, sqlite needs them
-  (`supports_update_conflicts_with_target`).
-  Tests: 206 without translation tests (22 new in `test_kills.py`, each
-  checked against sabotaged code); `test_network.TestQueries` now expects
-  two `aa_contacts_alliancecontact` reads (hostiles + blues). New texts not
-  in the glossary yet (comes with `/commit`).
-- Version: `0.0.12`, 2026-11-04 (see `CHANGELOG.md`): ISK marker rows with
-  contract payments get a *View details* button; popup = HTML fragment from
-  `views.contracts` (`contracts/<character_id>/<counterpart_id>/`,
-  `view_suspects` + `view_evidence`), data live from corptools
-  (`contract_details.details`: wallet journal `context_id` -> `Contract`,
-  within time frame, minus ignored types), loaded by `contracts.js` into a
-  modal on the Corporation page. Rows carry `character_id` and
-  `contract_payments` (`markers.Dealings.row`); an older snapshot shows no
-  button until recalculated. Only the ISK rows have it, not yet the
-  *Contracts with hostiles* rows (easy to add, same view).
-  Before (0.0.11): the contacts marker
-  counts only a standing above 0, watched or not (`markers._check_contacts`,
-  `standing__gt=0`). Before (0.0.10): every marker
-  stores `character_ids` (EVE IDs of the own characters behind it;
-  `Marker` field, `Suspect.mark(kind, detail, character_id, count=1)`,
-  mails/ISK/contracts through `markers.Found`, JSON key `"character_ids"`
-  sorted per marker, `Report` reads a snapshot without it as an empty
-  set). New `api.py` for eos-auth-monitor: `character_markers() ->
-  dict[int, list[str]]` (KINDS order; `{}` without snapshot or for
-  another Alliance; switched-off markers left out - user, 2026-11-04;
-  exactly two queries, config with the Alliance joined plus the snapshot
-  row, `test_api` pins it), `label(kind)`, `description(kind)`, `KINDS`.
-  A stable contract: eos-auth-monitor imports it behind
-  `apps.is_installed` and checks `view_suspects` + `view_evidence`
-  itself; change it only together with that app (its integration was
-  built in a parallel session in the eos-auth-monitor repo).
-- Before (0.0.9): settings in the tabs Alliance / Contact sources /
-  Markers, one form; a switch per marker
-  (`SpyConfiguration.disabled_markers`, migration 0005), hide only -
-  `Report(snapshot, disabled)` drops them when reading; (0.0.8) corptools' tables read by CharacterAudit ID
-  (`markers.character_audits()`), roster and hostile list read once per
-  run, `test_network.TestQueries` pins the SQL; (0.0.7) watched hostiles
-  with a negative standing were no contacts marker (0.0.11: standing 0 is
-  none either); (0.0.6) time frame
-  `lookback_days` and `ignored_ref_types`, Corporation/Alliance of ISK and
-  contract counterparts; (0.0.5) network only with hostile partners;
-  (0.0.4) affiliations via `affiliations.py`, progress bar.
-- A snapshot of 0.0.5 or older has no Corporation/Alliance in the marker
-  rows; `Report` reads it anyway, the next recalculation fills them.
-- What the app does today: settings (Alliance, standing threshold,
-  Corporation changes per year, time frame, ignored wallet entry types;
-  contact sources; marker switches); Markers: the Corporations as tiles,
-  per Corporation the mains with markers (hostile membership now and in
-  the history, frequent Corporation changes, friendly hostile contacts
-  (standing above 0), mails, ISK, contracts - over main and
-  alts); Network: the ISK connections with hostile partners. Pages read
-  only the stored snapshot.
-- Tests: 184 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.12 added 6 in `test_views.TestContractDetails`;
-  0.0.10 added 11 in `test_markers.TestCharacterIds`
-  and 10 in `test_api`); every new test checked against sabotaged code.
-  `tests.base.SpyTestCase` patches `views.update_snapshot` and the three
-  ESI calls of `affiliations.py` (`self.esi_names`, `self.esi_affiliations`,
-  `self.esi_corporation_alliance`; set `return_value` for an answer).
+- Version: `0.0.13`, 2026-11-06 (see `CHANGELOG.md`): new marker *Blue
+  kills* (`markers.BLUE_KILLS`, last in `KINDS`, so also in `api.KINDS` -
+  eos-auth-monitor shows it like the others; not tried there). A character
+  among the attackers of a killmail whose victim is in the Alliance
+  (*Awox*) or blue: the victim, its Corporation or Alliance among the
+  **Alliance's own** aa-contacts contacts with standing >=
+  `SpyConfiguration.blue_from` (default 5; `hostiles.blue_entities`,
+  `contacts.contacts(at_least=...)`). Killmails from killtracker's
+  `EveKillmail`/`EveKillmailAttacker` (`killmails.py`, optional behind
+  `apps.is_installed("killtracker")`). Each calculation copies them into the
+  own table `BlueKill` (`markers._copy_kills`, upsert: names follow
+  killtracker, reason and standing frozen at the first copy), the marker
+  reads `BlueKill` by Alliance, own characters and time frame - killtracker
+  purges after 30 days by default. One marker, a row per own character and
+  killmail (zKB link, victim, Corporation, Alliance, ship, reason), counted
+  once per killmail per account; runs even without hostiles (step
+  `kills`); not evidence. Notice on the marker pages when killtracker is
+  missing or does not store (`views._killmails_missing`). Migration 0006
+  (`blue_from` + `BlueKill`).
+- Before (0.0.12): ISK marker rows with contract payments have a *View
+  details* popup (`views.contracts`, `contract_details.details`, live from
+  corptools, `contracts.js`); only the ISK rows, not yet the *Contracts
+  with hostiles* rows (same view). (0.0.11) the contacts marker counts only
+  a standing above 0. (0.0.10) every marker stores `character_ids`; `api.py`
+  for eos-auth-monitor: `character_markers() -> dict[int, list[str]]`
+  (KINDS order, `{}` without snapshot or for another Alliance, switched-off
+  markers left out, exactly two queries), `label`, `description`, `KINDS` -
+  a stable contract, change it only together with eos-auth-monitor.
+  (0.0.9) settings tabs and marker switches (`disabled_markers`, hide only);
+  (0.0.8) corptools read by CharacterAudit ID, `test_network.TestQueries`
+  pins the SQL; (0.0.6) time frame and ignored wallet types; (0.0.5)
+  network only with hostile partners; (0.0.4) affiliations, progress bar.
+- What the app does today: settings (Alliance, hostile threshold, blue
+  threshold, Corporation changes per year, time frame, ignored wallet entry
+  types; contact sources; marker switches); Markers: the Corporations as
+  tiles, per Corporation the mains with markers (hostile membership now and
+  in the history, frequent Corporation changes, friendly hostile contacts,
+  mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
+  connections with hostile partners. Pages read only the stored snapshot.
+- Tests: 206 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.13 added 22 in `test_kills.py`); every new test
+  checked against sabotaged code. `tests.base.SpyTestCase` patches
+  `views.update_snapshot` and the three ESI calls of `affiliations.py`.
+  `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
-  not reviewed by the user yet (0.0.9 added the four marker-switch texts).
+  not reviewed by the user (0.0.13 added the blue kill texts; Awox and
+  Blue stay English).
 
 | Page | Permission | What |
 |---|---|---|
 | Markers | `view_suspects` | a tile per Corporation: mains, mains with markers, count per marker; switch to hide clean ones |
-| Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found |
+| Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links |
 | Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
-| Settings | `manage_settings` | tabs: Alliance (threshold, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker) |
+| Settings | `manage_settings` | tabs: Alliance (hostile and blue threshold, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker) |
 
 ## Open
 
 - Blue kills not seen in the browser: `aa_dev` stores killmails
   (`KILLTRACKER_STORING_KILLMAILS_ENABLED = True` in `local.py`, purge 30
-  days) but holds 0 - killtracker's periodic task needs `celery beat`, which
-  does not run in dev. Prod: check that it stores.
-
+  days) but holds 0 - killtracker's own periodic task needs `celery beat`,
+  which does not run in dev. Prod: check that it stores, and that the
+  snapshot task runs well within the purge (README: every 4 hours).
+- Not decided, left as built: a `BlueKill` copy is never deleted (few
+  rows; the time frame hides old ones); after a change of the Alliance the
+  old Alliance's copies stay unused.
 - The contract popup was not seen in a browser: `aa_dev` holds no ISK
-  marker (snapshot rebuilt 2026-11-04 with 0.0.12: 0 suspects), so only the
-  tests rendered it. Seeding a `contract_price` journal entry plus a
-  `Contract` in aa_dev needs the user's yes (foreign tables). The new
-  texts (popup) are machine-translated, not reviewed.
+  marker, so only the tests rendered it. Seeding a `contract_price` journal
+  entry plus a `Contract` in aa_dev needs the user's yes (foreign tables).
 
 - Not tried in the real app in the browser yet (EVE SSO login): the
   settings tabs (column widths of the source table in its initially
@@ -211,6 +177,11 @@ Last updated 2026-11-06.
   characters, eos-auth-monitor shows them (display only, no problem
   counts) through `api.py`, which leaves switched-off markers out like
   the pages; its own tests live in `tests/test_api.py`.
+- Blue kills (user, 2026-11-06): one marker for awox and blue; every own
+  attacker counts, not only the final blow; blue = the configured
+  Alliance's own contacts only (not the ticked Corporation sources), from a
+  standing of 5 by default, adjustable; killmails from killtracker's
+  storage, copied into `BlueKill` so a kill survives killtracker's purge.
 - Mails: headers and subject, never the body.
 - Review with status, note and history.
 - Scope: one Alliance, as in eos-auth-monitor.
@@ -220,7 +191,7 @@ Last updated 2026-11-06.
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0005
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0006
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
@@ -249,6 +220,11 @@ Last updated 2026-11-06.
   cuts them to five characters.
 - A leftover `.git/CLAUDE_COMMIT_MSG` makes the Write tool refuse until the
   file is read - and `git commit -F` then takes the old message.
+- `bulk_create(update_conflicts=True)`: MySQL refuses `unique_fields`,
+  sqlite requires them - `markers._copy_kills` asks
+  `connection.features.supports_update_conflicts_with_target`.
+- After regenerating an unreleased migration, the kept test database still
+  has the old one: run `aa-test ... --fresh` once.
 - corptools' `CorporationContact` model is never filled by corptools - do
   not read it as if it were; aa-contacts has the contacts.
 - aa-contacts keeps a contact that left ESI but has notes, with standing 0.

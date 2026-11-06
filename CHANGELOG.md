@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.13] - 2026-11-06
+
 ### Added
 
 - New marker *Blue kills*: a character was among the attackers of a
