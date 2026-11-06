@@ -8,16 +8,18 @@ Last updated 2026-11-06.
 
 ## State
 
-- Unreleased (after 0.0.14): blue kills grouped per main and killmail
-  (user, 2026-11-06): one row, one note, one tick; `snapshot.reviewed_kills`
-  merges the rows of one killmail inside the main's marker,
-  `views._kill_rows` groups by killmail and owner (`CharacterOwnership`),
-  `views.kill_note` updates every `BlueKill` row of the killmail whose
-  character belongs to the posted character's main. The tick is a checkbox
-  column (`kill-note-button.html` now renders the two cells *Cleared* and
-  *Note*; `kills.js`). Seen as rendered HTML for the four seeded kills in
-  `aa_dev` (Ether Element: 3 rows), not clicked in a browser.
-- Version: `0.0.14`, 2026-11-06 (see `CHANGELOG.md`): note and *Cleared*
+- Version: `0.0.15`, 2026-11-06 (see `CHANGELOG.md`): blue kills
+  reviewed per main and killmail (user): one row, one note, one tick;
+  `snapshot.reviewed_kills` merges the rows of one killmail inside the
+  main's marker, `views._kill_rows` groups by killmail and owner
+  (`CharacterOwnership`), `views.kill_note` updates every `BlueKill` row of
+  the killmail whose character belongs to the posted character's main (no
+  migration). The tick is a checkbox column (`kill-note-button.html`
+  renders the two cells *Cleared* and *Note*; `kills.js`: ticking without
+  a note opens the popup with the tick set). Seen as rendered HTML for the
+  seeded kills in `aa_dev` (Ether Element: 3 rows), not clicked in a
+  browser.
+- Before (0.0.14): note and *Cleared*
   tick per blue kill row (`BlueKill.note/cleared/reviewed_at/reviewed_by`,
   migration 0007, applied to `aa_dev`; endpoint `views.kill_note`,
   `kills/note/`, `view_suspects`; Cleared only with a note, popup
@@ -27,8 +29,7 @@ Last updated 2026-11-06.
   `reviewed_kills`, in `views._report` and `api.character_markers`, which
   now takes a third query when the snapshot holds blue kills). New
   settings tab *Blue kills* (`views._kill_rows`, every `BlueKill` of the
-  Alliance, no time frame, DataTables via `tables.js`). Not seen in a
-  browser: `aa_dev` holds no blue kill.
+  Alliance, no time frame, DataTables via `tables.js`).
 - Before (0.0.13): new marker *Blue
   kills* (`markers.BLUE_KILLS`, last in `KINDS`, so also in `api.KINDS` -
   eos-auth-monitor shows it like the others; not tried there). A character
@@ -69,8 +70,9 @@ Last updated 2026-11-06.
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 231 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.14 added 25 in `test_kill_reviews.py`); every new test
+- Tests: 237 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.15 added 6 in `test_kill_reviews.py`,
+  `TestPerMainAndKillmail`); every new test
   checked against sabotaged code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
@@ -91,12 +93,29 @@ Last updated 2026-11-06.
 
 - eos-auth-monitor: check that a character whose blue kills are all
   cleared loses its problem there (only tested on this side, `test_api`).
-- Blue kills, their note popup and the settings tab not seen in the
-  browser: `aa_dev` stores killmails
-  (`KILLTRACKER_STORING_KILLMAILS_ENABLED = True` in `local.py`, purge 30
-  days) but holds 0 - killtracker's own periodic task needs `celery beat`,
-  which does not run in dev. Prod: check that it stores, and that the
-  snapshot task runs well within the purge (README: every 4 hours).
+- Next, asked by the user and designed but not built: note and *Cleared*
+  for every finding of every marker on the Corporation (*Suspects*) page,
+  not only blue kills. Decided (user, 2026-11-06): per finding, never per
+  marker or main; one tick clears exactly one finding. A finding is:
+  Membership char + hostile Corporation/Alliance, Contacts char + contact,
+  Corporation changes char, Mails/ISK/Contracts char + hostile (mails need
+  rows for that). Rights: `view_suspects`; for mails, ISK and contracts
+  also `view_evidence` (no rows without it). A cleared finding stays
+  greyed and no longer counts (pages and `api.py`). **Open question:** a
+  new payment/mail/join after the clearing either (a) becomes a separate
+  open row next to the greyed one (the calculation splits the rows at the
+  review time) or (b) reopens the row by comparing its last date with the
+  review time at read time - much smaller; ponytail recommended (b), the
+  user has not answered. Plan: own model `FindingReview` (migration 0008),
+  endpoint and popup generalised from the blue kill note; one
+  recalculation needed.
+- Blue kills not clicked in the browser yet (checkbox, popup, settings
+  tab). `aa_dev` holds 4 `BlueKill` rows with fake killmail IDs
+  99000000101-103 (Ether Element, test seed of unknown origin, not in
+  killtracker; a recalculation keeps them, `BlueKill` is never pruned);
+  killtracker itself stores 0 there - its periodic task needs `celery
+  beat`, which does not run in dev. Prod: check that it stores, and that
+  the snapshot task runs well within the purge (README: every 4 hours).
 - Not decided, left as built: a `BlueKill` copy is never deleted (few
   rows; the time frame hides old ones); after a change of the Alliance the
   old Alliance's copies stay unused.
@@ -125,9 +144,7 @@ Last updated 2026-11-06.
   there are empty since 0.0.5 (fenriscw1 is not hostile); rendered
   server-side without errors.
 - Markers weighted, a score; account page with evidence
-  (`view_evidence`: mail headers and subjects, wallet entries, contracts);
-  review per suspect: status (new, seen, harmless, watch, confirmed), note,
-  history; a harmless one comes back only with new signals.
+  (`view_evidence`: mail headers and subjects, wallet entries, contracts).
 - More markers: clones/assets in staging systems (needs a setting for the
   systems), owner changes, audit gaps as data gap.
 - Measure the calculation on prod-sized wallet journals (footer shows it).
@@ -219,7 +236,6 @@ Last updated 2026-11-06.
   lists every kill of the Alliance regardless of the time frame, client-side
   DataTables.
 - Mails: headers and subject, never the body.
-- Review with status, note and history.
 - Scope: one Alliance, as in eos-auth-monitor.
 - Permissions `view_suspects`, `view_evidence`, `manage_settings`; no
   `basic_access`, it would have opened nothing.

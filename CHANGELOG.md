@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.15] - 2026-11-06
+
 ### Changed
 
 - Blue kills: one row, one note and one tick *Cleared* per main and
