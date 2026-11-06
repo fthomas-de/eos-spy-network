@@ -31,6 +31,8 @@ INSTALLED_APPS += [
     "aa_contacts",
     "eve_sde",  # corptools' migrations depend on it
     "corptools",
+    "eveuniverse",  # killtracker keeps its names there
+    "killtracker",
     "eos_spy_network",
 ]
 

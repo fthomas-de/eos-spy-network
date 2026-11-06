@@ -30,7 +30,10 @@ every one with a standing below a configurable value.
   ISK moved (for the wallet), the period from the first to the last one and
   their kinds.
   The Corporation changes name the Corporations joined, with the day, in a
-  tooltip per character
+  tooltip per character. Blue kills show a row per own character and
+  killmail: the day (linked to zKillboard), the victim, its Corporation and
+  Alliance, the ship and the reason - *Awox* or *Blue* with the standing.
+  Killmails are public, so they need no `view_evidence`
 - **Markers** per account, over the main and all its alts:
   - *Hostile membership*: a character is in a hostile Corporation or
     Alliance, or was in a hostile Corporation within the time frame
@@ -45,6 +48,13 @@ every one with a standing below a configurable value.
     except the ignored entry types (`CharacterWalletJournalEntry`)
   - *Contracts with hostiles*: a hostile issued, was assigned or accepted the
     contract, or its issuer is in a hostile Corporation (`Contract`)
+  - *Blue kills*: a character was among the attackers of a killmail whose
+    victim is in the Alliance (awox), or whose victim, its Corporation or
+    Alliance has at least the blue standing with the Alliance (default 5).
+    Only the Alliance's own contacts in aa-contacts make a blue, not those
+    of the ticked Corporations. A killmail counts once per account however
+    many of its characters were on it. Read from killtracker (see
+    [Killmails](#killmails)); needs no hostile
 
   Mails, ISK and contracts between characters of the same account never
   count. Mails, ISK and contracts count only within the time frame (a mail
@@ -94,7 +104,9 @@ every one with a standing below a configurable value.
   Corporations never count as hostile. A hostile Corporation or Alliance
   also makes its members hostile - as far as Auth knows them (see below)
 - **Settings page**, in three tabs saved together. *Alliance*: the Alliance, chosen from a searchable dropdown; the
-  standing below which a contact is hostile (default: below 0); the number
+  standing below which a contact is hostile (default: below 0); the
+  standing from which a contact of the Alliance is blue for the blue kills
+  (default 5); the number
   of Corporation changes per year that sets a marker; the time frame in days
   (default 365, 0 takes everything): the hostile list is today's, and the
   further back a payment, mail, contract or former Corporation, the likelier
@@ -111,7 +123,9 @@ every one with a standing below a configurable value.
   again it shows at once, without a recalculation
 - **Notices** above the marker and network pages for every ticked source aa-contacts has
   no contacts of yet, and when aa-contacts or corptools is not installed;
-  above the marker pages for the markers switched off
+  above the marker pages for the markers switched off, and - while the
+  blue kills are switched on - when killtracker is not installed or does
+  not store its killmails
 
 ## What the markers can see
 
@@ -138,6 +152,30 @@ failed request leaves that counterpart without Corporation; the
 calculation goes on. The rows of *ISK with hostiles* and *Contracts with
 hostiles* get their counterpart's Corporation and Alliance from the same
 lookup; whether a counterpart is hostile is still decided without it.
+
+## Killmails
+
+The blue kills read the killmails
+[aa-killtracker](https://github.com/AllianceAuth-Apps/aa-killtracker) keeps in its
+own tables, and only those: its trackers post to Discord and store nothing.
+killtracker keeps them only with this in `local.py`:
+
+```python
+KILLTRACKER_STORING_KILLMAILS_ENABLED = True
+```
+
+It then stores every killmail it receives from zKillboard, not only those
+of the Alliance, and deletes them after `KILLTRACKER_PURGE_KILLMAILS_AFTER_DAYS`
+(its default: 30). Each calculation copies the blue kills it finds into a
+table of this app, and the marker reads that copy: a kill stays after
+killtracker deleted it, as long as one calculation ran before - the periodic
+task (see [Installation](#installation)) has to run more often than the
+purge. Awox or blue is decided once, when copied: a standing changed later
+does not undo the kill; a name killtracker resolves later is taken over
+while it still holds the killmail. The time frame applies to the copies as
+well. The blue kills start with the day the storing was switched on.
+killtracker is read when installed and is not a dependency; without it, or
+without storing, the marker pages say so and there are no new blue kills.
 
 ## Where the contacts come from
 

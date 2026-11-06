@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-04 21:37+0000\n"
-"PO-Revision-Date: 2026-11-04 21:37+0000\n"
+"POT-Creation-Date: 2026-11-06 11:09+0000\n"
+"PO-Revision-Date: 2026-11-06 11:09+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: de\n"
 "Language: de\n"
@@ -23,21 +23,24 @@ msgstr "Spy Network"
 
 #: contacts.py:25 templates/eos_spy_network/network_corporation.html:97
 #: templates/eos_spy_network/partials/dealings.html:7
+#: templates/eos_spy_network/partials/kills.html:8
 msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:125
+#: contacts.py:26 models.py:179
 #: templates/eos_spy_network/network_corporation.html:99
 #: templates/eos_spy_network/partials/dealings.html:10
+#: templates/eos_spy_network/partials/kills.html:10
 #: templates/eos_spy_network/partials/network-legend.html:8
 msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:26 models.py:42 models.py:124
+#: contacts.py:27 forms.py:26 models.py:42 models.py:178
 #: templates/eos_spy_network/network_corporation.html:100
 #: templates/eos_spy_network/partials/dealings.html:11
+#: templates/eos_spy_network/partials/kills.html:11
 #: templates/eos_spy_network/partials/network-legend.html:10
 #: templates/eos_spy_network/settings.html:16
 msgctxt "EVE jargon"
@@ -55,57 +58,69 @@ msgstr "Faction"
 msgid "Markers"
 msgstr "Marker"
 
-#: markers.py:41
+#: markers.py:44
 msgid "Hostile membership"
 msgstr "Feindliche Mitgliedschaft"
 
-#: markers.py:42
+#: markers.py:45
 msgid "Frequent Corporation changes"
 msgstr "Häufige Corporation-Wechsel"
 
-#: markers.py:43
+#: markers.py:46
 msgid "Friendly to hostiles"
 msgstr "Freundlich zu Feinden"
 
-#: markers.py:44
+#: markers.py:47
 msgid "Mails with hostiles"
 msgstr "Mails mit Feinden"
 
-#: markers.py:45
+#: markers.py:48
 msgid "ISK with hostiles"
 msgstr "ISK mit Feinden"
 
-#: markers.py:46
+#: markers.py:49
 msgid "Contracts with hostiles"
 msgstr "Contracts mit Feinden"
 
 #: markers.py:50
+msgid "Blue kills"
+msgstr "Blue-Kills"
+
+#: markers.py:54
 msgid "A character is or was in a hostile Corporation or Alliance."
 msgstr ""
 "Ein Character ist oder war in einer feindlichen Corporation oder Alliance."
 
-#: markers.py:51
+#: markers.py:55
 msgid "A character joined many Corporations within the last 365 days."
 msgstr ""
 "Ein Character ist in den letzten 365 Tagen vielen Corporations beigetreten."
 
-#: markers.py:53
+#: markers.py:57
 msgid "A character's own contacts hold a hostile with a positive standing."
 msgstr ""
 "Die eigenen Kontakte eines Characters führen einen Feind mit positivem "
 "Standing."
 
-#: markers.py:55
+#: markers.py:59
 msgid "Mails from or to hostiles."
 msgstr "Mails von oder an Feinde."
 
-#: markers.py:56
+#: markers.py:60
 msgid "Wallet journal entries with hostiles."
 msgstr "Wallet-Journal-Einträge mit Feinden."
 
-#: markers.py:57
+#: markers.py:61
 msgid "Contracts with hostiles."
 msgstr "Contracts mit Feinden."
+
+#: markers.py:62
+msgid ""
+"A character was on a killmail whose victim is in the Alliance (awox) or blue"
+" to it."
+msgstr ""
+"Ein Charakter war auf einer Killmail, deren Opfer in der Alliance ist (Awox)"
+" oder für sie blue ist."
 
 #: models.py:43
 msgid "The Alliance whose members are checked."
@@ -123,11 +138,27 @@ msgstr ""
 "Ein Kontakt einer angehakten Quelle gilt als feindlich, wenn sein Standing "
 "unter diesem Wert liegt."
 
-#: models.py:56
+#: models.py:58
+msgid "Blue from standing"
+msgstr "Blue ab Standing"
+
+#: models.py:60
+msgid ""
+"A kill counts as a blue kill when the victim is in the Alliance, or when the"
+" victim, its Corporation or Alliance has at least this standing with the "
+"Alliance. Only the Alliance's own contacts count, not those of its "
+"Corporations."
+msgstr ""
+"Ein Kill zählt als Blue-Kill, wenn das Opfer in der Alliance ist oder wenn "
+"das Opfer, seine Corporation oder Alliance mindestens dieses Standing bei "
+"der Alliance hat. Nur die eigenen Kontakte der Alliance zählen, nicht die "
+"ihrer Corporations."
+
+#: models.py:68
 msgid "Corporation changes per year"
 msgstr "Corporation-Wechsel pro Jahr"
 
-#: models.py:57
+#: models.py:69
 msgid ""
 "A character that joined this many Corporations within the last 365 days gets"
 " a marker."
@@ -135,11 +166,11 @@ msgstr ""
 "Ein Character, der in den letzten 365 Tagen so vielen Corporations "
 "beigetreten ist, bekommt einen Marker."
 
-#: models.py:63
+#: models.py:75
 msgid "Time frame in days"
 msgstr "Zeitrahmen in Tagen"
 
-#: models.py:65
+#: models.py:77
 msgid ""
 "Only the last this many days count: wallet, contracts, mails, the network's "
 "payments and former Corporations. Standings change - a hostile today may "
@@ -149,11 +180,11 @@ msgstr ""
 "Zahlungen im Network und frühere Corporations. Standings ändern sich - ein "
 "heutiger Feind kann damals ein Freund gewesen sein. 0 nimmt alles."
 
-#: models.py:72
+#: models.py:84
 msgid "Ignored wallet entry types"
 msgstr "Ignorierte Wallet-Eintragsarten"
 
-#: models.py:73
+#: models.py:85
 msgid ""
 "Wallet journal entries of these types count neither as ISK with hostiles nor"
 " as a payment."
@@ -161,18 +192,18 @@ msgstr ""
 "Wallet-Journal-Einträge dieser Arten zählen weder als ISK mit Feinden noch "
 "als Zahlung."
 
-#: models.py:79
+#: models.py:91
 msgid "Markers switched off"
 msgstr "Ausgeschaltete Marker"
 
-#: models.py:80
+#: models.py:92
 msgid ""
 "Still calculated, but left out of the Markers pages until switched on again."
 msgstr ""
 "Wird weiter berechnet, aber auf den Marker-Seiten ausgelassen, bis er wieder"
 " eingeschaltet wird."
 
-#: models.py:85 models.py:88
+#: models.py:97 models.py:100
 msgid "Configuration"
 msgstr "Konfiguration"
 
@@ -209,14 +240,18 @@ msgid "Checking contracts"
 msgstr "Prüfe Verträge"
 
 #: progress.py:26
+msgid "Checking killmails"
+msgstr "Prüfe Killmails"
+
+#: progress.py:27
 msgid "Finding connections outside the Alliance"
 msgstr "Suche Verbindungen außerhalb der Alliance"
 
-#: progress.py:27
+#: progress.py:28
 msgid "Looking up Corporations and Alliances"
 msgstr "Ermittle Corporations und Alliances"
 
-#: progress.py:28
+#: progress.py:29
 msgid "Saving the result"
 msgstr "Speichere das Ergebnis"
 
@@ -267,25 +302,25 @@ msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
 
-#: templates/eos_spy_network/corporation.html:92
+#: templates/eos_spy_network/corporation.html:95
 #: templates/eos_spy_network/corporations.html:45
 msgid "No markers."
 msgstr "Keine Marker."
 
-#: templates/eos_spy_network/corporation.html:103
+#: templates/eos_spy_network/corporation.html:106
 msgctxt "eos-spy-network"
 msgid "Contracts"
 msgstr "Contracts"
 
-#: templates/eos_spy_network/corporation.html:104
+#: templates/eos_spy_network/corporation.html:107
 msgid "Close"
 msgstr "Schließen"
 
-#: templates/eos_spy_network/corporation.html:106
+#: templates/eos_spy_network/corporation.html:109
 msgid "Loading ..."
 msgstr "Lade ..."
 
-#: templates/eos_spy_network/corporation.html:106
+#: templates/eos_spy_network/corporation.html:109
 msgid "The contracts could not be loaded."
 msgstr "Die Contracts konnten nicht geladen werden."
 
@@ -479,6 +514,30 @@ msgstr "Art"
 msgid "unknown"
 msgstr "unbekannt"
 
+#: templates/eos_spy_network/partials/kills.html:7
+msgid "Date"
+msgstr "Datum"
+
+#: templates/eos_spy_network/partials/kills.html:9
+msgid "Victim"
+msgstr "Opfer"
+
+#: templates/eos_spy_network/partials/kills.html:12
+msgid "Ship"
+msgstr "Schiff"
+
+#: templates/eos_spy_network/partials/kills.html:13
+msgid "Reason"
+msgstr "Grund"
+
+#: templates/eos_spy_network/partials/kills.html:29
+msgid "Awox"
+msgstr "Awox"
+
+#: templates/eos_spy_network/partials/kills.html:31
+msgid "Blue"
+msgstr "Blue"
+
 #: templates/eos_spy_network/partials/metrics.html:7
 #, python-format
 msgid ""
@@ -557,7 +616,22 @@ msgstr ""
 msgid "Switched off in the settings, so left out here:"
 msgstr "In den Einstellungen ausgeschaltet und daher hier ausgelassen:"
 
-#: templates/eos_spy_network/partials/notices.html:43
+#: templates/eos_spy_network/partials/notices.html:44
+msgid ""
+"killtracker is not installed: there are no killmails, so no blue kills."
+msgstr ""
+"killtracker ist nicht installiert: Es gibt keine Killmails, also keine Blue-"
+"Kills."
+
+#: templates/eos_spy_network/partials/notices.html:48
+msgid ""
+"killtracker does not store its killmails "
+"(KILLTRACKER_STORING_KILLMAILS_ENABLED), so there are no blue kills."
+msgstr ""
+"killtracker speichert seine Killmails nicht "
+"(KILLTRACKER_STORING_KILLMAILS_ENABLED), also gibt es keine Blue-Kills."
+
+#: templates/eos_spy_network/partials/notices.html:54
 msgid ""
 "corptools is not installed: only the current Corporation and Alliance of the"
 " characters are checked."
@@ -587,14 +661,14 @@ msgstr "Neu berechnen"
 msgid "Contact sources"
 msgstr "Kontaktquellen"
 
-#: templates/eos_spy_network/settings.html:48
-#: templates/eos_spy_network/settings.html:116
-#: templates/eos_spy_network/settings.html:136
+#: templates/eos_spy_network/settings.html:49
+#: templates/eos_spy_network/settings.html:117
+#: templates/eos_spy_network/settings.html:137
 msgctxt "eos-spy-network"
 msgid "Save"
 msgstr "Speichern"
 
-#: templates/eos_spy_network/settings.html:55
+#: templates/eos_spy_network/settings.html:56
 msgid ""
 "Tick whose contacts make up the hostile list. The contacts come from aa-"
 "contacts: a source needs a token there, and aa-contacts' own task keeps them"
@@ -604,74 +678,74 @@ msgstr ""
 "contacts: Eine Quelle braucht dort einen Token, und der eigene Task von aa-"
 "contacts hält sie aktuell."
 
-#: templates/eos_spy_network/settings.html:56
+#: templates/eos_spy_network/settings.html:57
 msgid "Open aa-contacts"
 msgstr "aa-contacts öffnen"
 
-#: templates/eos_spy_network/settings.html:60
+#: templates/eos_spy_network/settings.html:61
 msgid ""
 "aa-contacts is not installed: the hostile list is made from its contacts."
 msgstr ""
 "aa-contacts ist nicht installiert: Die Feindliste entsteht aus dessen "
 "Kontakten."
 
-#: templates/eos_spy_network/settings.html:68
+#: templates/eos_spy_network/settings.html:69
 msgid "Ticked"
 msgstr "Angehakt"
 
-#: templates/eos_spy_network/settings.html:69
+#: templates/eos_spy_network/settings.html:70
 msgctxt "eos-spy-network"
 msgid "Name"
 msgstr "Name"
 
-#: templates/eos_spy_network/settings.html:70
+#: templates/eos_spy_network/settings.html:71
 msgctxt "eos-spy-network"
 msgid "Type"
 msgstr "Typ"
 
-#: templates/eos_spy_network/settings.html:71
+#: templates/eos_spy_network/settings.html:72
 msgid "Token in aa-contacts"
 msgstr "Token in aa-contacts"
 
-#: templates/eos_spy_network/settings.html:72
+#: templates/eos_spy_network/settings.html:73
 msgid "Contacts as of"
 msgstr "Kontakte vom"
 
-#: templates/eos_spy_network/settings.html:73
+#: templates/eos_spy_network/settings.html:74
 msgid "Contacts"
 msgstr "Kontakte"
 
-#: templates/eos_spy_network/settings.html:74
+#: templates/eos_spy_network/settings.html:75
 msgctxt "eos-spy-network"
 msgid "Hostile"
 msgstr "Feindlich"
 
-#: templates/eos_spy_network/settings.html:86
+#: templates/eos_spy_network/settings.html:87
 msgid "Not in the Alliance"
 msgstr "Nicht in der Alliance"
 
-#: templates/eos_spy_network/settings.html:92
+#: templates/eos_spy_network/settings.html:93
 msgctxt "eos-spy-network"
 msgid "Yes"
 msgstr "Ja"
 
-#: templates/eos_spy_network/settings.html:94
+#: templates/eos_spy_network/settings.html:95
 msgctxt "eos-spy-network"
 msgid "No"
 msgstr "Nein"
 
-#: templates/eos_spy_network/settings.html:101
+#: templates/eos_spy_network/settings.html:102
 msgid "Not read yet"
 msgstr "Noch nicht gelesen"
 
-#: templates/eos_spy_network/settings.html:112
+#: templates/eos_spy_network/settings.html:113
 msgid ""
 "Choose an Alliance first: its Corporations are listed here once it is saved."
 msgstr ""
 "Wähle zuerst eine Alliance: Ihre Corporations erscheinen hier, sobald sie "
 "gespeichert ist."
 
-#: templates/eos_spy_network/settings.html:122
+#: templates/eos_spy_network/settings.html:123
 msgid ""
 "A marker switched off is still calculated, but the Markers pages leave it "
 "out: a main marked by nothing else counts as clean. Switched on again, it "
@@ -685,23 +759,23 @@ msgstr ""
 msgid "Suspects"
 msgstr "Verdächtige"
 
-#: views.py:210
+#: views.py:228
 msgid "The markers and connections are being recalculated."
 msgstr "Marker und Verbindungen werden neu berechnet."
 
-#: views.py:212
+#: views.py:230
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr ""
 "Die Neuberechnung konnte nicht gestartet werden: Die Task-Queue ist nicht "
 "erreichbar."
 
-#: views.py:239
+#: views.py:257
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr ""
 "Einstellungen gespeichert. Marker und Verbindungen werden neu berechnet."
 
-#: views.py:243
+#: views.py:261
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

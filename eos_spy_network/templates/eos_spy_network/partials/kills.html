@@ -1,0 +1,38 @@
+{% load i18n %}
+{# Blue kills of a marker: one row per own character and killmail, the latest first #}
+<div class="table-responsive mt-1">
+    <table class="table table-sm table-borderless small mb-0 w-auto">
+        <thead>
+            <tr>
+                <th>{% translate "Date" %}</th>
+                <th>{% translate "Character" context "EVE jargon" %}</th>
+                <th>{% translate "Victim" %}</th>
+                <th>{% translate "Corporation" context "EVE jargon" %}</th>
+                <th>{% translate "Alliance" context "EVE jargon" %}</th>
+                <th>{% translate "Ship" %}</th>
+                <th>{% translate "Reason" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in marker.rows %}
+                <tr>
+                    <td class="text-nowrap">
+                        <a href="https://zkillboard.com/kill/{{ row.killmail_id }}/" target="_blank" rel="noopener noreferrer">{{ row.date }}</a>
+                    </td>
+                    <td class="text-break">{{ row.character }}</td>
+                    <td class="text-break">{{ row.victim }}</td>
+                    <td class="text-break">{{ row.corporation }}</td>
+                    <td class="text-break">{{ row.alliance }}</td>
+                    <td class="text-break">{{ row.ship }}</td>
+                    <td class="text-nowrap">
+                        {% if row.reason == "awox" %}
+                            {% translate "Awox" %}
+                        {% else %}
+                            {% translate "Blue" %} ({{ row.standing }})
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

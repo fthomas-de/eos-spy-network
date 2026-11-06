@@ -363,6 +363,44 @@ TRANSLATIONS = {
         "Настройки сохранены, но очередь задач недоступна: пересчитайте, когда она снова заработает.",
         "设置已保存，但任务队列不可达：恢复后请重新计算。",
     ),
+    # blue kills
+    "Blue kills": ("Blue-Kills", "Blue-киллы", "Blue 击杀"),
+    "A character was on a killmail whose victim is in the Alliance (awox) or blue to it.": (
+        "Ein Charakter war auf einer Killmail, deren Opfer in der Alliance ist (Awox) oder für sie blue ist.",
+        "Персонаж был на киллмейле, жертва которого состоит в Alliance (awox) или является для неё blue.",
+        "某角色出现在一封击杀邮件上，其受害者属于本 Alliance（awox）或对其为 blue。",
+    ),
+    "Blue from standing": ("Blue ab Standing", "Blue от Standing", "Blue 起始 Standing"),
+    "A kill counts as a blue kill when the victim is in the Alliance, or when the victim, its Corporation or "
+    "Alliance has at least this standing with the Alliance. Only the Alliance's own contacts count, not those "
+    "of its Corporations.": (
+        "Ein Kill zählt als Blue-Kill, wenn das Opfer in der Alliance ist oder wenn das Opfer, seine Corporation "
+        "oder Alliance mindestens dieses Standing bei der Alliance hat. Nur die eigenen Kontakte der Alliance "
+        "zählen, nicht die ihrer Corporations.",
+        "Килл считается blue-киллом, если жертва состоит в Alliance или если жертва, её Corporation или Alliance "
+        "имеет у Alliance как минимум этот Standing. Учитываются только контакты самой Alliance, а не её "
+        "Corporation.",
+        "当受害者属于本 Alliance，或受害者、其 Corporation 或 Alliance 在本 Alliance 处至少有此 Standing 时，"
+        "该击杀计为 blue 击杀。只计 Alliance 自身的联系人，不计其 Corporation 的联系人。",
+    ),
+    "Checking killmails": ("Prüfe Killmails", "Проверка киллмейлов", "检查击杀邮件"),
+    "Date": ("Datum", "Дата", "日期"),
+    "Victim": ("Opfer", "Жертва", "受害者"),
+    "Ship": ("Schiff", "Корабль", "舰船"),
+    "Reason": ("Grund", "Причина", "原因"),
+    "Awox": ("Awox", "Awox", "Awox"),
+    "Blue": ("Blue", "Blue", "Blue"),
+    "killtracker is not installed: there are no killmails, so no blue kills.": (
+        "killtracker ist nicht installiert: Es gibt keine Killmails, also keine Blue-Kills.",
+        "killtracker не установлен: киллмейлов нет, а значит, нет и blue-киллов.",
+        "未安装 killtracker：没有击杀邮件，因此没有 blue 击杀。",
+    ),
+    "killtracker does not store its killmails (KILLTRACKER_STORING_KILLMAILS_ENABLED), so there are no blue kills.": (
+        "killtracker speichert seine Killmails nicht (KILLTRACKER_STORING_KILLMAILS_ENABLED), also gibt es keine "
+        "Blue-Kills.",
+        "killtracker не сохраняет свои киллмейлы (KILLTRACKER_STORING_KILLMAILS_ENABLED), поэтому blue-киллов нет.",
+        "killtracker 不保存其击杀邮件（KILLTRACKER_STORING_KILLMAILS_ENABLED），因此没有 blue 击杀。",
+    ),
 }
 
 PLURALS = {}

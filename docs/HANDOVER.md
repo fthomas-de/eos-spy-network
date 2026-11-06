@@ -4,10 +4,36 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-04.
+Last updated 2026-11-06.
 
 ## State
 
+- Unreleased (after 0.0.12, not committed): new marker *Blue kills*
+  (`markers.BLUE_KILLS`, last in `KINDS`, so also in `api.KINDS` for
+  eos-auth-monitor). Killmails from killtracker's `EveKillmail` /
+  `EveKillmailAttacker` (`killmails.py`, optional behind
+  `apps.is_installed("killtracker")`); corptools has none, killtracker's
+  trackers store nothing. Victim in the Alliance = *Awox*, else blue = the
+  victim, its Corporation or Alliance among the **Alliance's own**
+  aa-contacts contacts with standing >= `SpyConfiguration.blue_from`
+  (new, default 5, migration 0006; `hostiles.blue_entities`,
+  `contacts.contacts(at_least=...)`). One marker, rows per own character and
+  killmail (zKB link, victim, Corporation, Alliance, ship, reason), count per
+  killmail per account, every attacker counts (user, 2026-11-06). Runs even
+  without hostiles (`corporation_tiles`, step `kills`). Not evidence.
+  Notice on the marker pages when killtracker is missing or does not store
+  (`views._killmails_missing`). `testauth` got `eveuniverse` + `killtracker`.
+  Kills are copied into the own table `BlueKill` (migration 0006 together
+  with `blue_from`, regenerated 2026-11-06 - aa_dev has the new one) on each
+  calculation (`markers._copy_kills`, upsert: names follow killtracker,
+  reason/standing frozen at the first copy; user, 2026-11-06), the marker
+  reads `BlueKill` filtered by Alliance, own characters and time frame.
+  MySQL's upsert refuses `unique_fields`, sqlite needs them
+  (`supports_update_conflicts_with_target`).
+  Tests: 206 without translation tests (22 new in `test_kills.py`, each
+  checked against sabotaged code); `test_network.TestQueries` now expects
+  two `aa_contacts_alliancecontact` reads (hostiles + blues). New texts not
+  in the glossary yet (comes with `/commit`).
 - Version: `0.0.12`, 2026-11-04 (see `CHANGELOG.md`): ISK marker rows with
   contract payments get a *View details* button; popup = HTML fragment from
   `views.contracts` (`contracts/<character_id>/<counterpart_id>/`,
@@ -74,6 +100,11 @@ Last updated 2026-11-04.
 | Settings | `manage_settings` | tabs: Alliance (threshold, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker) |
 
 ## Open
+
+- Blue kills not seen in the browser: `aa_dev` stores killmails
+  (`KILLTRACKER_STORING_KILLMAILS_ENABLED = True` in `local.py`, purge 30
+  days) but holds 0 - killtracker's periodic task needs `celery beat`, which
+  does not run in dev. Prod: check that it stores.
 
 - The contract popup was not seen in a browser: `aa_dev` holds no ISK
   marker (snapshot rebuilt 2026-11-04 with 0.0.12: 0 suspects), so only the

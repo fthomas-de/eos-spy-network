@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.apps import apps
+from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -24,8 +25,9 @@ from django.utils.translation import gettext_lazy as _
 from allianceauth.authentication.models import CharacterOwnership, UserProfile
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
-from .hostiles import HostileIndex, hostile_index
-from .models import SpyConfiguration
+from . import killmails
+from .hostiles import HostileIndex, blue_entities, hostile_index
+from .models import BlueKill, SpyConfiguration
 
 MEMBERSHIP = "membership"
 CORP_CHANGES = "corp_changes"
@@ -33,9 +35,10 @@ CONTACTS = "contacts"
 MAILS = "mails"
 WALLET = "wallet"
 CONTRACTS = "contracts"
+BLUE_KILLS = "blue_kills"
 
 # in this order on the pages
-KINDS = (MEMBERSHIP, CORP_CHANGES, CONTACTS, MAILS, WALLET, CONTRACTS)
+KINDS = (MEMBERSHIP, CORP_CHANGES, CONTACTS, MAILS, WALLET, CONTRACTS, BLUE_KILLS)
 
 LABELS = {
     MEMBERSHIP: _("Hostile membership"),
@@ -44,6 +47,7 @@ LABELS = {
     MAILS: _("Mails with hostiles"),
     WALLET: _("ISK with hostiles"),
     CONTRACTS: _("Contracts with hostiles"),
+    BLUE_KILLS: _("Blue kills"),
 }
 
 DESCRIPTIONS = {
@@ -55,6 +59,7 @@ DESCRIPTIONS = {
     MAILS: _("Mails from or to hostiles."),
     WALLET: _("Wallet journal entries with hostiles."),
     CONTRACTS: _("Contracts with hostiles."),
+    BLUE_KILLS: _("A character was on a killmail whose victim is in the Alliance (awox) or blue to it."),
 }
 
 # whose details are evidence: only shown with view_evidence
@@ -115,6 +120,11 @@ class Marker:
     def joins(self) -> bool:
         """Corporation changes name the Corporations in a tooltip per character."""
         return self.kind == CORP_CHANGES and bool(self.rows)
+
+    @property
+    def kills(self) -> bool:
+        """Blue kills show their killmails as a table."""
+        return self.kind == BLUE_KILLS and bool(self.rows)
 
 
 @dataclass
@@ -285,6 +295,10 @@ def corporation_tiles(
     index = hostile_index(config, hostiles)
     if accounts and index:
         _check(accounts, index, config, members.characters, step)
+    # blue kills need no hostile: the victim is a friend
+    if accounts:
+        step("kills")
+        _check_kills(accounts, config, members.characters)
 
     for suspect in accounts.values():
         if suspect.markers:
@@ -527,3 +541,101 @@ def _add_rows(accounts, index, names, dealings, kind):
         # the plain name: Corporation and Alliance get columns of their own
         name = index.names.get(party_id) or str(party_id)
         accounts[user_id].markers[kind].rows.append(dealing.row(names[character_id], character_id, party_id, name))
+
+
+AWOX = BlueKill.AWOX
+BLUE = BlueKill.BLUE
+# on a second copy only the names may have changed: killtracker resolves them after storing the killmail
+RESOLVED_NAMES = ["victim", "victim_corporation", "victim_alliance", "ship"]
+
+
+def _check_kills(accounts, config, characters):
+    """Killmails with an own character among the attackers and a victim in the Alliance or blue to it.
+
+    What killtracker holds is copied into ``BlueKill`` first, the marker is
+    read from there: killtracker deletes its killmails after a few days. One
+    killmail counts once per account however many of its characters were on
+    it; each of them gets a row.
+    """
+    owner = {character_id: user_id for user_id, character_id, *_rest in characters}
+    names = {character_id: name for _user_id, character_id, name, *_rest in characters}
+    alliance_id = config.alliance.alliance_id
+    since = config.since()
+    _copy_kills(alliance_id, list(owner), blue_entities(config), since)
+
+    kills = BlueKill.objects.filter(alliance_id=alliance_id, character_id__in=list(owner))
+    if since is not None:
+        kills = kills.filter(time__gte=since)
+    seen = defaultdict(set)  # account -> killmail IDs
+    for kill in kills.order_by("-time", "killmail_id", "character_id"):
+        user_id = owner[kill.character_id]
+        marker = accounts[user_id].markers.setdefault(BLUE_KILLS, Marker(BLUE_KILLS))
+        if kill.killmail_id not in seen[user_id]:
+            seen[user_id].add(kill.killmail_id)
+            marker.count += 1
+        # a structure has no character: its owner speaks for it
+        marker.details.add(kill.victim or kill.victim_corporation)
+        marker.character_ids.add(kill.character_id)
+        marker.rows.append(
+            {
+                "character": names[kill.character_id],
+                "character_id": kill.character_id,
+                "killmail_id": kill.killmail_id,
+                "date": kill.time.date().isoformat(),
+                "victim": kill.victim,
+                "corporation": kill.victim_corporation,
+                "alliance": kill.victim_alliance,
+                "ship": kill.ship,
+                "reason": kill.reason,
+                # normalize: 5, not the column's 5.0
+                "standing": None if kill.standing is None else f"{kill.standing.normalize():f}",
+            }
+        )
+
+
+def _copy_kills(alliance_id, character_ids, blues, since):
+    """Copy the blue kills killtracker holds into ``BlueKill``; one already copied keeps its reason."""
+
+    def name(found: str, eve_id: int | None) -> str:
+        # killtracker resolves the names after storing the killmail; the contact may know it already
+        if found or not eve_id:
+            return found
+        return (blues[eve_id].name if eve_id in blues else "") or str(eve_id)
+
+    copies = []
+    for kill in killmails.kills(character_ids, alliance_id, list(blues), since):
+        # the victim first, then its Corporation, then its Alliance: the closest reason names the standing
+        if kill.victim_alliance_id == alliance_id:
+            reason, standing = AWOX, None
+        else:
+            blue = next(
+                blues[entity_id]
+                for entity_id in (kill.victim_id, kill.victim_corporation_id, kill.victim_alliance_id)
+                if entity_id in blues
+            )
+            reason, standing = BLUE, blue.standing
+        copies.append(
+            BlueKill(
+                alliance_id=alliance_id,
+                killmail_id=kill.killmail_id,
+                character_id=kill.attacker_id,
+                time=kill.time,
+                victim_id=kill.victim_id,
+                victim=name(kill.victim_name, kill.victim_id),
+                victim_corporation_id=kill.victim_corporation_id,
+                victim_corporation=name(kill.victim_corporation, kill.victim_corporation_id),
+                victim_alliance_id=kill.victim_alliance_id,
+                victim_alliance=name(kill.victim_alliance, kill.victim_alliance_id),
+                ship=kill.ship,
+                reason=reason,
+                standing=standing,
+            )
+        )
+    if copies:
+        # MySQL takes the conflict from any unique key and refuses to be told which; sqlite needs it named
+        unique = (
+            ["alliance_id", "character_id", "killmail_id"]
+            if connection.features.supports_update_conflicts_with_target
+            else None
+        )
+        BlueKill.objects.bulk_create(copies, update_conflicts=True, unique_fields=unique, update_fields=RESOLVED_NAMES)

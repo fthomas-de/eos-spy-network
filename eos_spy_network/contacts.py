@@ -81,8 +81,9 @@ def token_states(keys) -> dict[tuple, TokenState]:
     return found
 
 
-def contacts(sources, below: Decimal | None = None) -> list[Contact]:
-    """The contacts the sources hold in aa-contacts; with ``below``, only those with a lower standing."""
+def contacts(sources, below: Decimal | None = None, at_least: Decimal | None = None) -> list[Contact]:
+    """The contacts the sources hold in aa-contacts; with ``below``, only those with a lower standing,
+    with ``at_least`` only those with this standing or a higher one."""
     if not is_installed():
         return []
     found = []
@@ -94,6 +95,8 @@ def contacts(sources, below: Decimal | None = None) -> list[Contact]:
         rows = contact_model.objects.with_contact_name().filter(**{f"{entity}__in": entity_ids})
         if below is not None:
             rows = rows.filter(standing__lt=below)
+        if at_least is not None:
+            rows = rows.filter(standing__gte=at_least)
         for entity_id, contact_id, contact_type, name, standing in rows.values_list(
             entity, "contact_id", "contact_type", "contact_name_annotation", "standing"
         ):

@@ -23,6 +23,7 @@ STEPS = {
     "mails": _("Checking mails"),
     "wallet": _("Checking wallet journals"),
     "contracts": _("Checking contracts"),
+    "kills": _("Checking killmails"),
     "connections": _("Finding connections outside the Alliance"),
     "affiliations": _("Looking up Corporations and Alliances"),
     "saving": _("Saving the result"),

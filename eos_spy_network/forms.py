@@ -45,9 +45,17 @@ class SpyConfigurationForm(forms.ModelForm):
 
     class Meta:
         model = SpyConfiguration
-        fields = ["alliance", "hostile_below", "corp_changes_per_year", "lookback_days", "ignored_ref_types"]
+        fields = [
+            "alliance",
+            "hostile_below",
+            "blue_from",
+            "corp_changes_per_year",
+            "lookback_days",
+            "ignored_ref_types",
+        ]
         widgets = {
             "hostile_below": forms.NumberInput(attrs={"step": "0.1", "min": "-10", "max": "10"}),
+            "blue_from": forms.NumberInput(attrs={"step": "0.1", "min": "-10", "max": "10"}),
             "corp_changes_per_year": forms.NumberInput(attrs={"min": "2", "max": "50"}),
             "lookback_days": forms.NumberInput(attrs={"min": "0", "max": "3650"}),
         }

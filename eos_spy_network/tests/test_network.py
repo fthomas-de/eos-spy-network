@@ -389,6 +389,7 @@ class TestQueries(NetworkTestCase):
         def count(table):
             return sum(1 for query in queries if _from(table).search(query["sql"]))
 
-        self.assertEqual(count("aa_contacts_alliancecontact"), 1)
+        # once for the hostiles, once for the blues of the blue kills
+        self.assertEqual(count("aa_contacts_alliancecontact"), 2)
         self.assertEqual(count("authentication_userprofile"), 1)
         self.assertEqual(count("authentication_characterownership"), 1)

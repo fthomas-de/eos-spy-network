@@ -91,7 +91,15 @@ class TestKinds(SpyTestCase):
     def test_should_give_the_kinds_in_page_order(self):
         self.assertEqual(
             api.KINDS,
-            (markers.MEMBERSHIP, markers.CORP_CHANGES, markers.CONTACTS, markers.MAILS, markers.WALLET, markers.CONTRACTS),
+            (
+                markers.MEMBERSHIP,
+                markers.CORP_CHANGES,
+                markers.CONTACTS,
+                markers.MAILS,
+                markers.WALLET,
+                markers.CONTRACTS,
+                markers.BLUE_KILLS,
+            ),
         )
 
 

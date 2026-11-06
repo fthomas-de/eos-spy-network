@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- New marker *Blue kills*: a character was among the attackers of a
+  killmail whose victim is in the Alliance (awox) or blue to it - the victim,
+  its Corporation or Alliance has at least the new setting *Blue from
+  standing* (default 5) with the Alliance. Only the Alliance's own contacts
+  in aa-contacts count, not the ticked Corporations': a Corporation's private
+  friendship makes nobody blue for the Alliance. The killmails come from
+  killtracker's own tables (`EveKillmail`), which it fills only with
+  `KILLTRACKER_STORING_KILLMAILS_ENABLED`; corptools keeps no killmails, and
+  killtracker's trackers store nothing. A killmail counts once per account,
+  with a row per own character, linked to zKillboard. The marker needs no
+  hostile, so it runs even without a ticked source. killtracker stays
+  optional: the marker pages say when it is missing or does not store.
+  killtracker deletes its killmails after a few days (default 30), so every
+  calculation copies the blue kills it finds into a table of its own
+  (`BlueKill`) and the marker reads that: a kill stays as long as one
+  calculation ran before the purge. Awox or blue and the standing are fixed
+  when copied, the names follow killtracker until it deletes the killmail
+
 ## [0.0.12] - 2026-11-04
 
 ### Added

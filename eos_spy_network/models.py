@@ -50,6 +50,18 @@ class SpyConfiguration(SingletonModel):
         verbose_name=_("Hostile below standing"),
         help_text=_("A contact of a ticked source counts as hostile when its standing is below this value."),
     )
+    blue_from = models.DecimalField(
+        max_digits=3,
+        decimal_places=1,
+        default=Decimal("5"),
+        validators=[MinValueValidator(Decimal("-10")), MaxValueValidator(Decimal("10"))],
+        verbose_name=_("Blue from standing"),
+        help_text=_(
+            "A kill counts as a blue kill when the victim is in the Alliance, or when the victim, its "
+            "Corporation or Alliance has at least this standing with the Alliance. Only the Alliance's own "
+            "contacts count, not those of its Corporations."
+        ),
+    )
     corp_changes_per_year = models.PositiveSmallIntegerField(
         default=4,
         validators=[MinValueValidator(2), MaxValueValidator(50)],
@@ -109,6 +121,48 @@ class Snapshot(models.Model):
 
     def __str__(self):
         return f"Snapshot {self.built_at:%Y-%m-%d %H:%M}"
+
+
+class BlueKill(models.Model):
+    """A blue kill as found in killtracker, kept after killtracker deletes the killmail.
+
+    killtracker purges its killmails after a few days; the marker would forget
+    a kill with them. Each calculation copies what it finds here, so a kill
+    stays as long as one calculation ran before the purge. Awox or blue is
+    judged once, when copied: a standing changed later does not undo a kill
+    of a friend.
+    """
+
+    AWOX = "awox"
+    BLUE = "blue"
+
+    # the configured Alliance the kill was judged for: another Alliance has other friends
+    alliance_id = models.PositiveBigIntegerField()
+    killmail_id = models.PositiveBigIntegerField()
+    # the own character among the attackers
+    character_id = models.PositiveBigIntegerField()
+    time = models.DateTimeField()
+    victim_id = models.PositiveBigIntegerField(null=True)
+    victim = models.CharField(max_length=254, blank=True)
+    victim_corporation_id = models.PositiveBigIntegerField(null=True)
+    victim_corporation = models.CharField(max_length=254, blank=True)
+    victim_alliance_id = models.PositiveBigIntegerField(null=True)
+    victim_alliance = models.CharField(max_length=254, blank=True)
+    ship = models.CharField(max_length=254, blank=True)
+    reason = models.CharField(max_length=8)
+    # the blue's standing at the time it was copied; none for an awox
+    standing = models.DecimalField(max_digits=3, decimal_places=1, null=True)
+
+    class Meta:
+        default_permissions = ()
+        constraints = [
+            models.UniqueConstraint(
+                fields=["alliance_id", "character_id", "killmail_id"], name="eos_spy_network_unique_blue_kill"
+            )
+        ]
+
+    def __str__(self):
+        return f"Killmail {self.killmail_id} by {self.character_id}"
 
 
 class ContactSource(models.Model):

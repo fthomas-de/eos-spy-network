@@ -35,7 +35,7 @@ dependencies = [
     # the settings page is a singleton; AA ships django-solo, but we import it
     "django-solo",
 ]
-# aa-contacts and corptools are read when installed and are deliberately not
+# aa-contacts, corptools and killtracker are read when installed and are deliberately not
 # dependencies: pip would install them - or upgrade the versions a site has pinned.
 
 [project.optional-dependencies]

@@ -38,6 +38,17 @@
     </div>
 {% endif %}
 
+{# the marker pages only, and only while the blue kills are switched on #}
+{% if killmails_missing == "not_installed" %}
+    <div class="alert alert-info">
+        {% translate "killtracker is not installed: there are no killmails, so no blue kills." %}
+    </div>
+{% elif killmails_missing == "not_storing" %}
+    <div class="alert alert-info">
+        {% translate "killtracker does not store its killmails (KILLTRACKER_STORING_KILLMAILS_ENABLED), so there are no blue kills." %}
+    </div>
+{% endif %}
+
 {% if not corptools_installed %}
     <div class="alert alert-info">
         {% translate "corptools is not installed: only the current Corporation and Alliance of the characters are checked." %}

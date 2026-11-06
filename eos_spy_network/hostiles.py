@@ -17,6 +17,7 @@ from django.db.models import Q
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from . import contacts
+from .contacts import Contact
 from .models import ContactSource, SpyConfiguration
 
 
@@ -59,6 +60,18 @@ def hostile_entities(config: SpyConfiguration | None = None) -> list[Hostile]:
         source = sources[row.source]
         hostile.sources.append((source.name or str(source.entity_id), row.standing))
     return sorted(found.values(), key=lambda hostile: (hostile.standing, hostile.name.lower(), hostile.id))
+
+
+def blue_entities(config: SpyConfiguration) -> dict[int, Contact]:
+    """The Alliance's own contacts with at least the blue standing, by EVE ID.
+
+    Only the Alliance's: a Corporation's private friendship makes nobody blue
+    for the Alliance, so the ticked sources do not count here.
+    """
+    if not config.alliance:
+        return {}
+    source = ContactSource(kind=ContactSource.ALLIANCE, entity_id=config.alliance.alliance_id)
+    return {row.contact_id: row for row in contacts.contacts([source], at_least=config.blue_from)}
 
 
 @dataclass

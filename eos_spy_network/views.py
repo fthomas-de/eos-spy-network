@@ -10,11 +10,11 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import __version__, contacts, contract_details, progress
+from . import __version__, contacts, contract_details, killmails, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
-from .markers import KINDS, LABELS, corptools_installed
+from .markers import BLUE_KILLS, KINDS, LABELS, corptools_installed
 from .models import ContactSource, SpyConfiguration
 from .permissions import (
     APP_PERMISSIONS,
@@ -99,6 +99,17 @@ def _report(config) -> snapshots.Report | None:
     return snapshots.Report(current, config.disabled_markers or ())
 
 
+def _killmails_missing(config) -> str:
+    """Why the blue kills cannot be found, for the notice above the marker pages; empty when they can."""
+    if BLUE_KILLS in (config.disabled_markers or ()):
+        return ""
+    if not killmails.is_installed():
+        return "not_installed"
+    if not killmails.is_storing():
+        return "not_storing"
+    return ""
+
+
 def _switched_off(config) -> list:
     """The labels of the markers the pages leave out, for the notice above them."""
     disabled = config.disabled_markers or ()
@@ -118,6 +129,7 @@ def corporations(request):
             "report": report,
             "tiles": report.tiles if report else [],
             "switched_off": _switched_off(config),
+            "killmails_missing": _killmails_missing(config),
         },
         NAV_MARKERS,
         started,
@@ -136,7 +148,13 @@ def corporation(request, corporation_id):
     return _render(
         request,
         "eos_spy_network/corporation.html",
-        {**_notices(config), "report": report, "tile": tile, "switched_off": _switched_off(config)},
+        {
+            **_notices(config),
+            "report": report,
+            "tile": tile,
+            "switched_off": _switched_off(config),
+            "killmails_missing": _killmails_missing(config),
+        },
         NAV_MARKERS,
         started,
     )
