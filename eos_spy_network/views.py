@@ -11,6 +11,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
+from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter
 
 from . import __version__, contacts, contract_details, killmails, progress
@@ -106,7 +107,7 @@ def _report(config) -> snapshots.Report | None:
 
 
 def _kill_rows(config) -> list:
-    """Every stored blue kill of the configured Alliance, the latest first, for the settings tab."""
+    """Every stored blue kill of the configured Alliance, one row per main and killmail, the latest first."""
     if not config.alliance:
         return []
     kills = list(
@@ -114,20 +115,38 @@ def _kill_rows(config) -> list:
         .select_related("reviewed_by__profile__main_character")
         .order_by("-time", "killmail_id", "character_id")
     )
+    character_ids = {kill.character_id for kill in kills}
     names = dict(
-        EveCharacter.objects.filter(character_id__in={kill.character_id for kill in kills}).values_list(
-            "character_id", "character_name"
+        EveCharacter.objects.filter(character_id__in=character_ids).values_list("character_id", "character_name")
+    )
+    owners = dict(
+        CharacterOwnership.objects.filter(character__character_id__in=character_ids).values_list(
+            "character__character_id", "user_id"
         )
     )
+    groups = {}
     for kill in kills:
-        kill.character = names.get(kill.character_id) or str(kill.character_id)
-    return kills
+        # a character nobody owns stands alone
+        owner = owners.get(kill.character_id, ("character", kill.character_id))
+        groups.setdefault((kill.killmail_id, owner), []).append(kill)
+    rows = []
+    for group in groups.values():
+        row = group[0]
+        row.character = ", ".join(names.get(kill.character_id) or str(kill.character_id) for kill in group)
+        # kill_note writes the group at once; a row reviewed alone before keeps the group open
+        row.cleared = all(kill.cleared for kill in group)
+        row.note = next((kill.note for kill in group if kill.note), "")
+        latest = max((kill for kill in group if kill.reviewed_at), key=lambda kill: kill.reviewed_at, default=None)
+        row.reviewed_at = latest.reviewed_at if latest else None
+        row.reviewed_by = latest.reviewed_by if latest else None
+        rows.append(row)
+    return rows
 
 
 @any_permission_required(VIEW_SUSPECTS)
 @require_POST
 def kill_note(request):
-    """Stores the note and the cleared tick of one blue kill row; answers both as stored."""
+    """Stores the note and the cleared tick of one killmail for every character of the posted one's main."""
     config = SpyConfiguration.get_solo()
     try:
         character_id = int(request.POST.get("character_id", ""))
@@ -141,20 +160,18 @@ def kill_note(request):
     # the user's rule: whoever clears a kill says why, or the next reader cannot tell what was checked
     if cleared and not text:
         return HttpResponseBadRequest("a cleared kill needs a note")
+    # the user's rule: one tick per main and killmail, however many of its characters were on it
+    owner = CharacterOwnership.objects.filter(character__character_id=character_id).values_list("user_id", flat=True)
+    characters = CharacterOwnership.objects.filter(user_id__in=owner).values_list("character__character_id", flat=True)
     # only a kill of the configured Alliance: the pages show no other
-    kill = BlueKill.objects.filter(
+    updated = BlueKill.objects.filter(
         alliance_id=config.alliance.alliance_id if config.alliance else None,
-        character_id=character_id,
         killmail_id=killmail_id,
-    ).first()
-    if kill is None:
+        character_id__in=[character_id, *characters],
+    ).update(note=text, cleared=cleared, reviewed_at=timezone.now(), reviewed_by=request.user)
+    if not updated:
         raise Http404
-    kill.note = text
-    kill.cleared = cleared
-    kill.reviewed_at = timezone.now()
-    kill.reviewed_by = request.user
-    kill.save(update_fields=["note", "cleared", "reviewed_at", "reviewed_by"])
-    return JsonResponse({"note": kill.note, "cleared": kill.cleared})
+    return JsonResponse({"note": text, "cleared": cleared})
 
 
 def _killmails_missing(config) -> str:

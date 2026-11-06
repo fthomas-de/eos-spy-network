@@ -238,3 +238,62 @@ class TestSettingsTab(ReviewTestCase):
         config.save()
 
         self.assertEqual(self.get().context["kills"], [])
+
+
+class TestPerMainAndKillmail(ReviewTestCase):
+    """Killmail 3: the main and its alt on it, and a second main of the same Corporation."""
+
+    def setUp(self):
+        super().setUp()
+        self.other = make_user("other")
+        self.other_main = self.other.profile.main_character.character_id
+        add_killmail(3, [self.main.character_id, ALT, self.other_main], victim_id=90000003, alliance_id=ALLIANCE_ID)
+        snapshot.update()
+        self.viewer = make_user("viewer", VIEW_SUSPECTS, MANAGE_SETTINGS)
+        self.client.force_login(self.viewer)
+
+    def post(self, character_id=ALT, **fields):
+        return self.client.post(
+            reverse("eos_spy_network:kill_note"), {"killmail_id": 3, "character_id": character_id, **fields}
+        )
+
+    def test_should_show_one_row_per_killmail_with_the_mains_characters(self):
+        rows = [row for row in self.report_marker().rows if row["killmail_id"] == 3]
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(set(rows[0]["character"].split(", ")), {self.main.character_name, f"Char {ALT}"})
+        self.assertEqual(self.report_marker().count, 3)
+
+    def test_should_clear_every_character_of_the_main_with_one_tick(self):
+        self.post(note="Fleet fight", cleared="1")
+
+        kills = BlueKill.objects.filter(killmail_id=3, character_id__in=[self.main.character_id, ALT])
+        self.assertEqual([kill.cleared for kill in kills], [True, True])
+        self.assertEqual(self.report_marker().count, 2)
+
+    def test_should_leave_the_other_main_open(self):
+        self.post(note="Fleet fight", cleared="1")
+
+        self.assertFalse(BlueKill.objects.get(killmail_id=3, character_id=self.other_main).cleared)
+
+    def test_should_keep_the_killmail_open_while_one_character_is_open(self):
+        # a review of one row alone, from before the rows were grouped
+        BlueKill.objects.filter(killmail_id=3, character_id=ALT).update(cleared=True, note="Old")
+
+        row = next(row for row in self.report_marker().rows if row["killmail_id"] == 3)
+
+        self.assertFalse(row["cleared"])
+        self.assertEqual(row["note"], "Old")
+
+    def test_should_list_one_row_per_main_and_killmail_in_the_settings_tab(self):
+        response = self.client.get(reverse("eos_spy_network:settings") + "?tab=kills")
+
+        self.assertEqual(len([kill for kill in response.context["kills"] if kill.killmail_id == 3]), 2)
+
+    def test_should_show_the_tick_as_a_checkbox(self):
+        self.post(note="Fleet fight", cleared="1")
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, "data-eos-spy-network-kill-tick", count=4)
+        self.assertContains(response, "checked", count=1)

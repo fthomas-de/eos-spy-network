@@ -289,20 +289,35 @@ def reviewed_kills(marker: dict, reviews: dict) -> dict | None:
     Read at every view, not stored: a tick takes effect at once, without a
     recalculation. A cleared kill stays in the rows, it only stops counting.
     """
-    rows = []
+    # the marker is one main's: one row per killmail, its characters together (the user's rule)
+    groups = {}
     for row in marker.get("rows", []):
         cleared, note = reviews.get((row["character_id"], row["killmail_id"]), (False, ""))
-        rows.append({**row, "cleared": cleared, "note": note})
+        group = groups.get(row["killmail_id"])
+        if group is None:
+            groups[row["killmail_id"]] = {
+                **row,
+                "names": [row["character"]],
+                "character_ids": [row["character_id"]],
+                "cleared": cleared,
+                "note": note,
+            }
+            continue
+        group["names"].append(row["character"])
+        group["character_ids"].append(row["character_id"])
+        # kill_note writes the group at once; a row reviewed alone before keeps the group open
+        group["cleared"] = group["cleared"] and cleared
+        group["note"] = group["note"] or note
+    rows = [{**group, "character": ", ".join(group.pop("names"))} for group in groups.values()]
     open_rows = [row for row in rows if not row["cleared"]]
     if not open_rows:
         return None
     return {
         **marker,
         "rows": rows,
-        # once per killmail, as the calculation counts
-        "count": len({row["killmail_id"] for row in open_rows}),
+        "count": len(open_rows),
         "details": [row["victim"] or row["corporation"] for row in open_rows],
-        "character_ids": sorted({row["character_id"] for row in open_rows}),
+        "character_ids": sorted({character_id for row in open_rows for character_id in row["character_ids"]}),
     }
 
 

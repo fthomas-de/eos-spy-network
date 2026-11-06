@@ -8,6 +8,15 @@ Last updated 2026-11-06.
 
 ## State
 
+- Unreleased (after 0.0.14): blue kills grouped per main and killmail
+  (user, 2026-11-06): one row, one note, one tick; `snapshot.reviewed_kills`
+  merges the rows of one killmail inside the main's marker,
+  `views._kill_rows` groups by killmail and owner (`CharacterOwnership`),
+  `views.kill_note` updates every `BlueKill` row of the killmail whose
+  character belongs to the posted character's main. The tick is a checkbox
+  column (`kill-note-button.html` now renders the two cells *Cleared* and
+  *Note*; `kills.js`). Seen as rendered HTML for the four seeded kills in
+  `aa_dev` (Ether Element: 3 rows), not clicked in a browser.
 - Version: `0.0.14`, 2026-11-06 (see `CHANGELOG.md`): note and *Cleared*
   tick per blue kill row (`BlueKill.note/cleared/reviewed_at/reviewed_by`,
   migration 0007, applied to `aa_dev`; endpoint `views.kill_note`,
@@ -204,7 +213,9 @@ Last updated 2026-11-06.
   blue. Note and *Cleared* per row (character + killmail), not per
   killmail; editable with `view_suspects` on the Corporation page and in
   the settings tab; clearing needs a note (user); a cleared kill no longer counts (pages and API) but
-  stays greyed in the table; at once, no recalculation. The settings tab
+  stays greyed in the table; at once, no recalculation. Changed
+  (user, 2026-11-06): one row, note and tick per main and killmail, the
+  main's characters together; two mains on one killmail, a row each. The settings tab
   lists every kill of the Alliance regardless of the time frame, client-side
   DataTables.
 - Mails: headers and subject, never the body.

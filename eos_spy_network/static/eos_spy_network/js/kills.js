@@ -1,6 +1,11 @@
 /*
- * The note and the cleared tick of a blue kill row, edited in one popup the
+ * The note and the cleared tick of a blue kill row (one main, one killmail):
+ * the tick is a checkbox in the row, the note is edited in one popup the
  * row buttons share (as eos-tax's GM transaction notes).
+ *
+ * Clearing needs a note: ticking a row without one opens the popup with the
+ * tick set, and Save stays off until there is a note. A row with a note is
+ * ticked and unticked at once.
  *
  * A note is someone's free text, so it only ever travels as text: read from
  * value and dataset, written to value, textContent and attributes - never as
@@ -23,24 +28,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const error = modal.querySelector("[data-eos-spy-network-kill-note-error]");
     const save = modal.querySelector("[data-eos-spy-network-kill-note-save]");
     let button = null;
+    // set by ticking a row without a note: the popup opens with the tick already set
+    let tickOnOpen = false;
 
-    // a kill is cleared only with a note saying why; the server refuses it otherwise
+    // the server refuses a cleared kill without a note
     const showCount = () => {
         count.textContent = String(textarea.value.length);
-        const hasNote = textarea.value.trim() !== "";
-        cleared.disabled = !hasNote;
-        if (!hasNote) {
-            cleared.checked = false;
-        }
+        save.disabled = cleared.checked && textarea.value.trim() === "";
     };
     textarea.addEventListener("input", showCount);
+    cleared.addEventListener("change", showCount);
 
     // Bootstrap names the button that opened the popup
     modal.addEventListener("show.bs.modal", (event) => {
         button = event.relatedTarget;
         modal.querySelector("[data-eos-spy-network-kill-note-name]").textContent = button.dataset.eosSpyNetworkKillName;
         textarea.value = button.dataset.eosSpyNetworkKillNote;
-        cleared.checked = button.dataset.eosSpyNetworkKillCleared === "1";
+        cleared.checked = tickOnOpen || button.dataset.eosSpyNetworkKillCleared === "1";
+        tickOnOpen = false;
         error.textContent = "";
         showCount();
     });
@@ -49,22 +54,17 @@ document.addEventListener("DOMContentLoaded", () => {
         textarea.focus();
     });
 
-    const updateRow = (data) => {
-        const cell = button.closest("td");
-        const row = cell.closest("tr");
-        button.dataset.eosSpyNetworkKillNote = data.note;
-        button.dataset.eosSpyNetworkKillCleared = data.cleared ? "1" : "0";
-        button.title = data.note || modal.dataset.eosSpyNetworkKillEmpty;
-        button.classList.toggle("btn-secondary", Boolean(data.note || data.cleared));
-        button.classList.toggle("btn-outline-secondary", !(data.note || data.cleared));
-        cell.querySelector("[data-eos-spy-network-kill-note-text]").textContent = data.note;
-        cell.querySelector("[data-eos-spy-network-kill-cleared-badge]").classList.toggle("d-none", !data.cleared);
+    const updateRow = (target, data) => {
+        const row = target.closest("tr");
+        const tick = row.querySelector("[data-eos-spy-network-kill-tick]");
+        target.dataset.eosSpyNetworkKillNote = data.note;
+        target.dataset.eosSpyNetworkKillCleared = data.cleared ? "1" : "0";
+        target.title = data.note || modal.dataset.eosSpyNetworkKillEmpty;
+        row.querySelector("[data-eos-spy-network-kill-note-text]").textContent = data.note;
+        tick.checked = data.cleared;
+        tick.closest("td").dataset.order = data.cleared ? "1" : "0";
         row.classList.toggle("opacity-50", data.cleared);
 
-        const clearedCell = row.querySelector("[data-eos-spy-network-kill-cleared-cell]");
-        if (clearedCell) {
-            clearedCell.dataset.order = data.cleared ? "1" : "0";
-        }
         const table = row.closest("table");
         if (table && DataTable.isDataTable(table)) {
             // retrieve: the instance tables.js made; no draw, so the row stays where the reader is looking
@@ -72,18 +72,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    save.addEventListener("click", () => {
+    const store = (target, note, isCleared) => {
         const body = new URLSearchParams();
-        body.set("character_id", button.dataset.eosSpyNetworkKillCharacter);
-        body.set("killmail_id", button.dataset.eosSpyNetworkKillKillmail);
-        body.set("note", textarea.value);
-        if (cleared.checked) {
+        body.set("character_id", target.dataset.eosSpyNetworkKillCharacter);
+        body.set("killmail_id", target.dataset.eosSpyNetworkKillKillmail);
+        body.set("note", note);
+        if (isCleared) {
             body.set("cleared", "1");
         }
-        save.disabled = true;
-        error.textContent = "";
-
-        fetch(modal.dataset.eosSpyNetworkKillUrl, {
+        return fetch(modal.dataset.eosSpyNetworkKillUrl, {
             method: "POST",
             credentials: "same-origin",
             headers: {
@@ -104,15 +101,46 @@ document.addEventListener("DOMContentLoaded", () => {
                     window.location.reload();
                     return;
                 }
-                updateRow(data);
+                updateRow(target, data);
+            });
+    };
+
+    save.addEventListener("click", () => {
+        save.disabled = true;
+        error.textContent = "";
+        store(button, textarea.value, cleared.checked)
+            .then(() => {
                 bootstrap.Modal.getInstance(modal).hide();
             })
             .catch((failure) => {
                 error.textContent = modal.dataset.eosSpyNetworkKillError;
                 console.error("eos_spy_network: saving the note failed", failure);
             })
+            .finally(showCount);
+    });
+
+    document.addEventListener("change", (event) => {
+        const tick = event.target.closest("[data-eos-spy-network-kill-tick]");
+        if (!tick) {
+            return;
+        }
+        const target = tick.closest("tr").querySelector("[data-eos-spy-network-kill-note]");
+        if (tick.checked && target.dataset.eosSpyNetworkKillNote === "") {
+            // no note yet: ask for it, the tick is set when it is saved
+            tick.checked = false;
+            tickOnOpen = true;
+            bootstrap.Modal.getOrCreateInstance(modal).show(target);
+            return;
+        }
+        tick.disabled = true;
+        store(target, target.dataset.eosSpyNetworkKillNote, tick.checked)
+            .catch((failure) => {
+                tick.checked = !tick.checked;
+                window.alert(modal.dataset.eosSpyNetworkKillError);
+                console.error("eos_spy_network: saving the tick failed", failure);
+            })
             .finally(() => {
-                save.disabled = false;
+                tick.disabled = false;
             });
     });
 });

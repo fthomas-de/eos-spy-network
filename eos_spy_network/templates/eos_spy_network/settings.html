@@ -164,7 +164,8 @@
                                             <th>{% translate "Alliance" context "EVE jargon" %}</th>
                                             <th>{% translate "Ship" %}</th>
                                             <th>{% translate "Reason" %}</th>
-                                            <th>{% translate "Note" %}</th>
+                                            <th>{% translate "Cleared" context "eos-spy-network" %}</th>
+                <th>{% translate "Note" %}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -185,15 +186,12 @@
                                                         {% translate "Blue" %} ({{ kill.standing|floatformat:"-1" }})
                                                     {% endif %}
                                                 </td>
-                                                {# sorts the cleared ones together; the search finds the note's text #}
-                                                <td data-order="{% if kill.cleared %}1{% else %}0{% endif %}" data-eos-spy-network-kill-cleared-cell>
-                                                    {% if kill.reviewed_at %}
-                                                        {% blocktranslate asvar reviewed with name=kill.reviewed_by.profile.main_character.character_name|default:kill.reviewed_by.username|default:"?" at=kill.reviewed_at|date:"Y-m-d H:i" %}Last changed by {{ name }}, {{ at }}{% endblocktranslate %}
-                                                    {% else %}
-                                                        {% translate "Add a note" as reviewed %}
-                                                    {% endif %}
-                                                    {% include "eos_spy_network/partials/kill-note-button.html" with character_id=kill.character_id killmail_id=kill.killmail_id character=kill.character note=kill.note cleared=kill.cleared reviewed=reviewed %}
-                                                </td>
+                                                {% if kill.reviewed_at %}
+                                                    {% blocktranslate asvar reviewed with name=kill.reviewed_by.profile.main_character.character_name|default:kill.reviewed_by.username|default:"?" at=kill.reviewed_at|date:"Y-m-d H:i" %}Last changed by {{ name }}, {{ at }}{% endblocktranslate %}
+                                                {% else %}
+                                                    {% translate "Add a note" as reviewed %}
+                                                {% endif %}
+                                                {% include "eos_spy_network/partials/kill-note-button.html" with character_id=kill.character_id killmail_id=kill.killmail_id character=kill.character note=kill.note cleared=kill.cleared reviewed=reviewed %}
                                             </tr>
                                         {% endfor %}
                                     </tbody>

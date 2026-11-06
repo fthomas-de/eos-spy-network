@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Blue kills: one row, one note and one tick *Cleared* per main and
+  killmail, on the Corporation page and in the settings tab. Before, a
+  killmail with two characters of one main showed two rows with a tick
+  each, while the marker counted it once - the page said *Blue kills (3)*
+  over four rows. The characters of the main now stand together in one
+  row; two mains on one killmail still get a row each. Saving writes the
+  note and the tick to every `BlueKill` row of that killmail whose
+  character belongs to the same main, so no migration is needed; a row
+  reviewed alone before keeps the killmail open until all are cleared.
+- The tick is a checkbox in its own column *Cleared*, no longer hidden in
+  the popup. Ticking a row without a note opens the popup with the tick
+  set (clearing still needs a note); a row with a note is ticked and
+  unticked at once.
+
 ## [0.0.14] - 2026-11-06
 
 ### Added
