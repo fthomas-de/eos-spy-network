@@ -8,18 +8,19 @@ Last updated 2026-11-06.
 
 ## State
 
-- Not committed yet (`[Unreleased]`): note and *Cleared* tick per blue
-  kill row (`BlueKill.note/cleared/reviewed_at/reviewed_by`, migration
-  0007, applied to `aa_dev`; endpoint `views.kill_note`,
-  `kills/note/`, `view_suspects`; popup `partials/kill-note-modal.html`,
-  `kills.js`). Applied at read time (`snapshot.kill_reviews` +
+- Version: `0.0.14`, 2026-11-06 (see `CHANGELOG.md`): note and *Cleared*
+  tick per blue kill row (`BlueKill.note/cleared/reviewed_at/reviewed_by`,
+  migration 0007, applied to `aa_dev`; endpoint `views.kill_note`,
+  `kills/note/`, `view_suspects`; Cleared only with a note, popup
+  `partials/kill-note-modal.html` + `kill-note-button.html`, `kills.js`:
+  reloads on the Corporation page, updates the row in place in the
+  settings tab). Applied at read time (`snapshot.kill_reviews` +
   `reviewed_kills`, in `views._report` and `api.character_markers`, which
   now takes a third query when the snapshot holds blue kills). New
   settings tab *Blue kills* (`views._kill_rows`, every `BlueKill` of the
-  Alliance, no time frame). Tests `test_kill_reviews.py` (25, each checked
-  against sabotage). New texts not in `tools/glossary.py` yet - at
-  `/commit`. Not seen in a browser: `aa_dev` holds no blue kill.
-- Version: `0.0.13`, 2026-11-06 (see `CHANGELOG.md`): new marker *Blue
+  Alliance, no time frame, DataTables via `tables.js`). Not seen in a
+  browser: `aa_dev` holds no blue kill.
+- Before (0.0.13): new marker *Blue
   kills* (`markers.BLUE_KILLS`, last in `KINDS`, so also in `api.KINDS` -
   eos-auth-monitor shows it like the others; not tried there). A character
   among the attackers of a killmail whose victim is in the Alliance
@@ -45,7 +46,7 @@ Last updated 2026-11-06.
   a standing above 0. (0.0.10) every marker stores `character_ids`; `api.py`
   for eos-auth-monitor: `character_markers() -> dict[int, list[str]]`
   (KINDS order, `{}` without snapshot or for another Alliance, switched-off
-  markers left out, exactly two queries), `label`, `description`, `KINDS` -
+  markers left out, two queries - three with blue kills since 0.0.14), `label`, `description`, `KINDS` -
   a stable contract, change it only together with eos-auth-monitor.
   (0.0.9) settings tabs and marker switches (`disabled_markers`, hide only);
   (0.0.8) corptools read by CharacterAudit ID, `test_network.TestQueries`
@@ -53,31 +54,36 @@ Last updated 2026-11-06.
   network only with hostile partners; (0.0.4) affiliations, progress bar.
 - What the app does today: settings (Alliance, hostile threshold, blue
   threshold, Corporation changes per year, time frame, ignored wallet entry
-  types; contact sources; marker switches); Markers: the Corporations as
+  types; contact sources; marker switches; every stored blue kill with
+  note and Cleared tick); Markers: the Corporations as
   tiles, per Corporation the mains with markers (hostile membership now and
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 206 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.13 added 22 in `test_kills.py`); every new test
+- Tests: 231 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.14 added 25 in `test_kill_reviews.py`); every new test
   checked against sabotaged code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
-  not reviewed by the user (0.0.13 added the blue kill texts; Awox and
-  Blue stay English).
+  not reviewed by the user (0.0.13 added the blue kill texts, 0.0.14 the
+  note texts; Awox and Blue stay English; "Cleared" carries the
+  `eos-spy-network` context - another app translates it differently in ru).
 
 | Page | Permission | What |
 |---|---|---|
 | Markers | `view_suspects` | a tile per Corporation: mains, mains with markers, count per marker; switch to hide clean ones |
-| Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links |
+| Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links, note and Cleared tick |
 | Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
-| Settings | `manage_settings` | tabs: Alliance (hostile and blue threshold, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker) |
+| Settings | `manage_settings` | tabs: Alliance (hostile and blue threshold, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored, note editable with `view_suspects`) |
 
 ## Open
 
-- Blue kills not seen in the browser: `aa_dev` stores killmails
+- eos-auth-monitor: check that a character whose blue kills are all
+  cleared loses its problem there (only tested on this side, `test_api`).
+- Blue kills, their note popup and the settings tab not seen in the
+  browser: `aa_dev` stores killmails
   (`KILLTRACKER_STORING_KILLMAILS_ENABLED = True` in `local.py`, purge 30
   days) but holds 0 - killtracker's own periodic task needs `celery beat`,
   which does not run in dev. Prod: check that it stores, and that the
@@ -210,7 +216,7 @@ Last updated 2026-11-06.
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0006
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0007
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.14] - 2026-11-06
+
 ### Added
 
 - A note and a tick *Cleared* per blue kill row (own character and
