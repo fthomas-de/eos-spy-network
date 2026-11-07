@@ -23,6 +23,7 @@ from .affiliations import ALLIANCE, CORPORATION, Entity
 from .hostiles import hostile_entities
 from .markers import (
     BLUE_KILLS,
+    CONTACTS,
     CONTRACTS,
     WALLET,
     CorporationTile,
@@ -32,7 +33,7 @@ from .markers import (
     corporation_tiles,
     roster,
 )
-from .models import BlueKill, Snapshot, SpyConfiguration
+from .models import BlueKill, FindingReview, Snapshot, SpyConfiguration
 from .network import Connections, Link, Standing, affiliate, connections, hostile_only
 
 logger = get_extension_logger(__name__)
@@ -321,16 +322,56 @@ def reviewed_kills(marker: dict, reviews: dict) -> dict | None:
     }
 
 
+def finding_reviews(alliance_id: int) -> dict:
+    """(kind, main ID, key) -> (cleared, note) of the findings someone reviewed; one query."""
+    reviewed = FindingReview.objects.filter(alliance_id=alliance_id).filter(Q(cleared=True) | ~Q(note=""))
+    return {
+        (kind, main_id, key): (cleared, note)
+        for kind, main_id, key, cleared, note in reviewed.values_list("kind", "main_id", "key", "cleared", "note")
+    }
+
+
+def contact_key(row: dict) -> str:
+    """A friendly hostile contact's finding: a review holds for this standing only, another one is new."""
+    return f"{row['contact_id']}:{row['standing']}"
+
+
+def reviewed_contacts(marker: dict, main_id: int, reviews: dict) -> dict | None:
+    """A stored contacts marker with the reviews applied; None once every contact is cleared.
+
+    As ``reviewed_kills``: read at every view, a cleared row stays, it only stops counting.
+    """
+    if not marker.get("rows"):
+        # a snapshot of 0.0.15 or older has no rows to review until the next run
+        return marker
+    rows = []
+    for row in marker["rows"]:
+        key = contact_key(row)
+        cleared, note = reviews.get((CONTACTS, main_id, key), (False, ""))
+        rows.append({**row, "key": key, "cleared": cleared, "note": note})
+    open_rows = [row for row in rows if not row["cleared"]]
+    if not open_rows:
+        return None
+    return {
+        **marker,
+        "rows": rows,
+        "count": len(open_rows),
+        "details": [f"{row['contact']} ({row['standing']})" for row in open_rows],
+        "character_ids": sorted({character_id for row in open_rows for character_id in row["character_ids"]}),
+    }
+
+
 class Report:
     """The stored snapshot as the pages need it; no further query.
 
     ``disabled`` are the markers switched off in the settings: the snapshot
     keeps them, the tiles leave them out, so switching one on again needs no
     recalculation. ``reviews`` are the blue kills reviewed since, from
-    ``kill_reviews()``: a cleared one no longer counts.
+    ``kill_reviews()``: a cleared one no longer counts. ``findings`` are the
+    other findings reviewed, from ``finding_reviews()``, alike.
     """
 
-    def __init__(self, snapshot: Snapshot, disabled=(), reviews=None):
+    def __init__(self, snapshot: Snapshot, disabled=(), reviews=None, findings=None):
         self.built_at = snapshot.built_at
         data = snapshot.data
         self.alliance_id = data["alliance_id"]
@@ -343,12 +384,12 @@ class Report:
             eve_id: Standing(Decimal(standing), [(name, Decimal(value)) for name, value in sources])
             for eve_id, standing, sources in data.get("hostiles", [])
         }
-        self.tiles = [self._tile(row, set(disabled), reviews or {}) for row in rows]
+        self.tiles = [self._tile(row, set(disabled), reviews or {}, findings or {}) for row in rows]
         self.network_tiles = [self._network_tile(row) for row in rows]
         self.metrics = self._metrics(data.get("metrics"))
 
     @staticmethod
-    def _tile(row, disabled=frozenset(), reviews=None) -> CorporationTile:
+    def _tile(row, disabled=frozenset(), reviews=None, findings=None) -> CorporationTile:
         tile = CorporationTile(row["id"], row["name"], row["ticker"], row["mains"])
         for stored in row["suspects"]:
             suspect = Suspect(
@@ -361,8 +402,10 @@ class Report:
                     continue
                 if marker["kind"] == BLUE_KILLS:
                     marker = reviewed_kills(marker, reviews or {})
-                    if marker is None:
-                        continue
+                elif marker["kind"] == CONTACTS:
+                    marker = reviewed_contacts(marker, stored["main_id"], findings or {})
+                if marker is None:
+                    continue
                 suspect.markers[marker["kind"]] = Marker(
                     marker["kind"],
                     marker["count"],
@@ -372,11 +415,11 @@ class Report:
                     marker.get("rows", []),
                     set(marker.get("character_ids", [])),
                 )
-            # a main marked only by switched-off markers or cleared kills is clean
+            # a main marked only by switched-off markers or cleared findings is clean
             if suspect.markers:
                 tile.suspects.append(suspect)
-        if disabled or reviews:
-            # the stored order counted the switched-off markers and the cleared kills too
+        if disabled or reviews or findings:
+            # the stored order counted the switched-off markers and the cleared findings too
             tile.suspects.sort(key=by_markers)
         return tile
 

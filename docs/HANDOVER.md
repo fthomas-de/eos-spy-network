@@ -93,22 +93,26 @@ Last updated 2026-11-06.
 
 - eos-auth-monitor: check that a character whose blue kills are all
   cleared loses its problem there (only tested on this side, `test_api`).
-- Next, asked by the user and designed but not built: note and *Cleared*
-  for every finding of every marker on the Corporation (*Suspects*) page,
-  not only blue kills. Decided (user, 2026-11-06): per finding, never per
-  marker or main; one tick clears exactly one finding. A finding is:
-  Membership char + hostile Corporation/Alliance, Contacts char + contact,
-  Corporation changes char, Mails/ISK/Contracts char + hostile (mails need
-  rows for that). Rights: `view_suspects`; for mails, ISK and contracts
-  also `view_evidence` (no rows without it). A cleared finding stays
-  greyed and no longer counts (pages and `api.py`). **Open question:** a
-  new payment/mail/join after the clearing either (a) becomes a separate
-  open row next to the greyed one (the calculation splits the rows at the
-  review time) or (b) reopens the row by comparing its last date with the
-  review time at read time - much smaller; ponytail recommended (b), the
-  user has not answered. Plan: own model `FindingReview` (migration 0008),
-  endpoint and popup generalised from the blue kill note; one
-  recalculation needed.
+- Note and *Cleared* per finding, marker by marker (user, 2026-11-06).
+  Built (unreleased, under `[Unreleased]`): *Friendly to hostiles* - model
+  `FindingReview` (alliance, kind, **main_id**, key; migration 0008,
+  applied to `aa_dev`), endpoint `views.finding_note` (`findings/note/`,
+  `REVIEWED_KINDS`), applied at read time by `snapshot.finding_reviews` +
+  `reviewed_contacts` (pages and `api.py`); key `<contact ID>:<standing>`;
+  popup and `kills.js` shared with the blue kills (a button with
+  `data-...-kill-key` posts to the finding URL). Tests:
+  `test_finding_reviews.py` (18, checked against sabotage). Snapshot in
+  `aa_dev` rebuilt 2026-11-06 with this code, but `aa_dev` has no contacts
+  marker: not seen in a browser; seeding a corptools `CharacterContact`
+  needs the user's yes.
+  Decided (user): a review belongs to the **main** + finding, so a later
+  alt with the same finding is cleared too; a different finding (other
+  standing, new payment/mail/join) is **always a separate row** (option
+  (a), not reopening) - for the dated markers the calculation has to split
+  the rows at the review time. Next markers: Membership, Corporation
+  changes, Mails/ISK/Contracts (mails need rows; with `view_evidence`).
+  Translations of the new texts ("Contact", the modal's "cleared finding"
+  sentence) come at `/commit`.
 - Blue kills not clicked in the browser yet (checkbox, popup, settings
   tab). `aa_dev` holds 4 `BlueKill` rows with fake killmail IDs
   99000000101-103 (Ether Element, test seed of unknown origin, not in

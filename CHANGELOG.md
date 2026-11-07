@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- *Friendly to hostiles*: note and tick *Cleared* per main, contact and
+  standing on the Corporation page, as for the blue kills. Before, a
+  contact checked and found harmless kept marking the main with no way to
+  say so. The marker now shows a table, one row per contact and standing
+  with the main's characters together; a cleared row stays greyed and no
+  longer counts, on the pages and in `api.character_markers()`, at once.
+  The review belongs to the main (user's rule): an alt that shows the same
+  contact at the same standing later is cleared with it; another standing
+  is a new, open finding. Stored in the new model `FindingReview`
+  (migration 0008, endpoint `findings/note/`), kept apart from the
+  snapshot so a recalculation does not lose it; the other markers can
+  join it later. Needs one recalculation: an older snapshot has no
+  contact rows and shows the plain list until then.
+
 ## [0.0.15] - 2026-11-06
 
 ### Changed

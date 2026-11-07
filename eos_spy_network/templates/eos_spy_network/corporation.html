@@ -77,6 +77,8 @@
                                                 {% elif marker.kills %}
                                                     {# killmails are public on zKillboard: no evidence #}
                                                     {% include "eos_spy_network/partials/kills.html" %}
+                                                {% elif marker.contacts %}
+                                                    {% include "eos_spy_network/partials/contacts.html" %}
                                                 {% elif marker.dealings %}
                                                     {% if perms.eos_spy_network.view_evidence %}
                                                         {% include "eos_spy_network/partials/dealings.html" %}

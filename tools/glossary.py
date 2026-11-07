@@ -80,6 +80,7 @@ TRANSLATIONS = {
     "Token in aa-contacts": ("Token in aa-contacts", "Токен в aa-contacts", "aa-contacts 中的令牌"),
     "Contacts as of": ("Kontakte vom", "Контакты на", "联系人截至"),
     "Contacts": ("Kontakte", "Контакты", "联系人"),
+    "Contact": ("Kontakt", "Контакт", "联系人"),
     "Hostile": ("Feindlich", "Враждебные", "敌对"),
     "Not in the Alliance": ("Nicht in der Alliance", "Не в Alliance", "不在 Alliance 中"),
     "Yes": ("Ja", "Да", "是"),
@@ -411,12 +412,12 @@ TRANSLATIONS = {
         "Не удалось сохранить заметку.",
         "无法保存备注。",
     ),
-    "Needs a note saying why. A cleared kill no longer counts for the marker; it takes effect at once.": (
-        "Braucht eine Notiz mit der Begründung. Ein geklärter Kill zählt nicht mehr für den Marker; das wirkt "
+    "Needs a note saying why. A cleared finding no longer counts for the marker; it takes effect at once.": (
+        "Braucht eine Notiz mit der Begründung. Ein geklärter Fund zählt nicht mehr für den Marker; das wirkt "
         "sofort.",
-        "Нужна заметка с объяснением причины. Улаженный килл больше не учитывается в маркере; это действует "
+        "Нужна заметка с объяснением причины. Улаженная находка больше не учитывается в маркере; это действует "
         "сразу.",
-        "需要一条说明原因的备注。已澄清的击杀不再计入该标记；立即生效。",
+        "需要一条说明原因的备注。已澄清的发现不再计入该标记；立即生效。",
     ),
     "Every blue kill stored for the Alliance, also those outside the time frame. Reason and standing are those of the time the kill was found; a cleared kill no longer counts for the marker.": (
         "Jeder für die Alliance gespeicherte Blue-Kill, auch außerhalb des Zeitraums. Grund und Standing sind die "

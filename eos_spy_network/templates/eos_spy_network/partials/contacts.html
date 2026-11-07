@@ -1,0 +1,25 @@
+{% load i18n %}
+{# Friendly hostile contacts of a marker: one row per contact and standing with the main's characters on it; a cleared one greyed, it no longer counts #}
+<div class="table-responsive mt-1">
+    <table class="table table-sm table-borderless small mb-0 w-auto">
+        <thead>
+            <tr>
+                <th>{% translate "Characters" context "eos-spy-network" %}</th>
+                <th>{% translate "Contact" context "eos-spy-network" %}</th>
+                <th>{% translate "Standing" context "eos-spy-network" %}</th>
+                <th>{% translate "Cleared" context "eos-spy-network" %}</th>
+                <th>{% translate "Note" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in marker.rows %}
+                <tr{% if row.cleared %} class="opacity-50"{% endif %}>
+                    <td class="text-break">{{ row.characters|join:", " }}</td>
+                    <td class="text-break">{{ row.contact }}</td>
+                    <td class="text-nowrap">{{ row.standing }}</td>
+                    {% include "eos_spy_network/partials/kill-note-button.html" with kind=marker.kind main_id=suspect.main.character_id key=row.key character=row.contact note=row.note cleared=row.cleared reviewed=row.note %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -18,8 +18,8 @@ from . import __version__, contacts, contract_details, killmails, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
-from .markers import BLUE_KILLS, KINDS, LABELS, corptools_installed
-from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, SpyConfiguration
+from .markers import BLUE_KILLS, CONTACTS, KINDS, LABELS, corptools_installed
+from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, SpyConfiguration
 from .permissions import (
     APP_PERMISSIONS,
     MANAGE_SETTINGS,
@@ -103,7 +103,8 @@ def _report(config) -> snapshots.Report | None:
         return None
     disabled = config.disabled_markers or ()
     reviews = {} if BLUE_KILLS in disabled else snapshots.kill_reviews(config.alliance.alliance_id)
-    return snapshots.Report(current, disabled, reviews)
+    findings = {} if CONTACTS in disabled else snapshots.finding_reviews(config.alliance.alliance_id)
+    return snapshots.Report(current, disabled, reviews, findings)
 
 
 def _kill_rows(config) -> list:
@@ -153,13 +154,9 @@ def kill_note(request):
         killmail_id = int(request.POST.get("killmail_id", ""))
     except ValueError:
         return HttpResponseBadRequest("character_id and killmail_id must be numbers")
-    text = " ".join(request.POST.get("note", "").split())
-    if len(text) > KILL_NOTE_LENGTH:
-        return HttpResponseBadRequest("note too long")
-    cleared = request.POST.get("cleared") == "1"
-    # the user's rule: whoever clears a kill says why, or the next reader cannot tell what was checked
-    if cleared and not text:
-        return HttpResponseBadRequest("a cleared kill needs a note")
+    text, cleared, refused = _posted_note(request)
+    if refused:
+        return refused
     # the user's rule: one tick per main and killmail, however many of its characters were on it
     owner = CharacterOwnership.objects.filter(character__character_id=character_id).values_list("user_id", flat=True)
     characters = CharacterOwnership.objects.filter(user_id__in=owner).values_list("character__character_id", flat=True)
@@ -171,6 +168,50 @@ def kill_note(request):
     ).update(note=text, cleared=cleared, reviewed_at=timezone.now(), reviewed_by=request.user)
     if not updated:
         raise Http404
+    return JsonResponse({"note": text, "cleared": cleared})
+
+
+def _posted_note(request) -> tuple:
+    """(note, cleared, None) as posted, or a refusal in the last place."""
+    text = " ".join(request.POST.get("note", "").split())
+    if len(text) > KILL_NOTE_LENGTH:
+        return "", False, HttpResponseBadRequest("note too long")
+    cleared = request.POST.get("cleared") == "1"
+    # the user's rule: whoever clears a finding says why, or the next reader cannot tell what was checked
+    if cleared and not text:
+        return "", False, HttpResponseBadRequest("a cleared finding needs a note")
+    return text, cleared, None
+
+
+# the markers whose findings take a note and a tick here; blue kills have kill_note
+REVIEWED_KINDS = (CONTACTS,)
+
+
+@any_permission_required(VIEW_SUSPECTS)
+@require_POST
+def finding_note(request):
+    """Stores the note and the cleared tick of one finding of a main."""
+    config = SpyConfiguration.get_solo()
+    if not config.alliance:
+        raise Http404
+    kind = request.POST.get("kind", "")
+    key = request.POST.get("key", "")
+    if kind not in REVIEWED_KINDS or not key or len(key) > FindingReview._meta.get_field("key").max_length:
+        return HttpResponseBadRequest("unknown finding")
+    try:
+        main_id = int(request.POST.get("main_id", ""))
+    except ValueError:
+        return HttpResponseBadRequest("main_id must be a number")
+    text, cleared, refused = _posted_note(request)
+    if refused:
+        return refused
+    FindingReview.objects.update_or_create(
+        alliance_id=config.alliance.alliance_id,
+        kind=kind,
+        main_id=main_id,
+        key=key,
+        defaults={"note": text, "cleared": cleared, "reviewed_at": timezone.now(), "reviewed_by": request.user},
+    )
     return JsonResponse({"note": text, "cleared": cleared})
 
 

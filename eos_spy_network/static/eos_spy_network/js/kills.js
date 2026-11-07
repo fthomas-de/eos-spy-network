@@ -74,13 +74,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const store = (target, note, isCleared) => {
         const body = new URLSearchParams();
-        body.set("character_id", target.dataset.eosSpyNetworkKillCharacter);
-        body.set("killmail_id", target.dataset.eosSpyNetworkKillKillmail);
+        // a finding of another marker names its main and key; a blue kill its character and killmail
+        const finding = "eosSpyNetworkKillKey" in target.dataset;
+        if (finding) {
+            body.set("kind", target.dataset.eosSpyNetworkKillKind);
+            body.set("main_id", target.dataset.eosSpyNetworkKillMain);
+            body.set("key", target.dataset.eosSpyNetworkKillKey);
+        } else {
+            body.set("character_id", target.dataset.eosSpyNetworkKillCharacter);
+            body.set("killmail_id", target.dataset.eosSpyNetworkKillKillmail);
+        }
         body.set("note", note);
         if (isCleared) {
             body.set("cleared", "1");
         }
-        return fetch(modal.dataset.eosSpyNetworkKillUrl, {
+        return fetch(finding ? modal.dataset.eosSpyNetworkFindingUrl : modal.dataset.eosSpyNetworkKillUrl, {
             method: "POST",
             credentials: "same-origin",
             headers: {

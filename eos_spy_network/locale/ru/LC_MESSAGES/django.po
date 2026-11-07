@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 12:02+0000\n"
-"PO-Revision-Date: 2026-11-06 12:02+0000\n"
+"POT-Creation-Date: 2026-11-07 16:09+0000\n"
+"PO-Revision-Date: 2026-11-07 16:09+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: ru\n"
 "Language: ru\n"
@@ -29,7 +29,7 @@ msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:191
+#: contacts.py:26 models.py:225
 #: templates/eos_spy_network/network_corporation.html:99
 #: templates/eos_spy_network/partials/dealings.html:10
 #: templates/eos_spy_network/partials/kills.html:10
@@ -39,7 +39,7 @@ msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:26 models.py:43 models.py:190
+#: contacts.py:27 forms.py:26 models.py:43 models.py:224
 #: templates/eos_spy_network/network_corporation.html:100
 #: templates/eos_spy_network/partials/dealings.html:11
 #: templates/eos_spy_network/partials/kills.html:11
@@ -55,9 +55,9 @@ msgctxt "EVE jargon"
 msgid "Faction"
 msgstr "Faction"
 
-#: forms.py:40 snapshot.py:43 templates/eos_spy_network/base.html:12
+#: forms.py:40 snapshot.py:44 templates/eos_spy_network/base.html:12
 #: templates/eos_spy_network/corporation.html:49
-#: templates/eos_spy_network/settings.html:33 views.py:34
+#: templates/eos_spy_network/settings.html:33 views.py:35
 msgid "Markers"
 msgstr "Маркеры"
 
@@ -253,16 +253,16 @@ msgstr "Определение Corporation и Alliance"
 msgid "Saving the result"
 msgstr "Сохранение результата"
 
-#: snapshot.py:43 templates/eos_spy_network/base.html:19 views.py:36
-#: views.py:37
+#: snapshot.py:44 templates/eos_spy_network/base.html:19 views.py:37
+#: views.py:38
 msgid "Network"
 msgstr "Сеть"
 
-#: snapshot.py:43
+#: snapshot.py:44
 msgid "Affiliations"
 msgstr "Принадлежность"
 
-#: templates/eos_spy_network/base.html:25 views.py:38
+#: templates/eos_spy_network/base.html:25 views.py:39
 msgid "Settings"
 msgstr "Настройки"
 
@@ -296,30 +296,31 @@ msgid "Main"
 msgstr "Main"
 
 #: templates/eos_spy_network/corporation.html:48
+#: templates/eos_spy_network/partials/contacts.html:7
 msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
 
-#: templates/eos_spy_network/corporation.html:96
+#: templates/eos_spy_network/corporation.html:98
 #: templates/eos_spy_network/corporations.html:45
 msgid "No markers."
 msgstr "Нет маркеров."
 
-#: templates/eos_spy_network/corporation.html:107
+#: templates/eos_spy_network/corporation.html:109
 msgctxt "eos-spy-network"
 msgid "Contracts"
 msgstr "Контракты"
 
-#: templates/eos_spy_network/corporation.html:108
-#: templates/eos_spy_network/partials/kill-note-modal.html:18
+#: templates/eos_spy_network/corporation.html:110
+#: templates/eos_spy_network/partials/kill-note-modal.html:19
 msgid "Close"
 msgstr "Закрыть"
 
-#: templates/eos_spy_network/corporation.html:110
+#: templates/eos_spy_network/corporation.html:112
 msgid "Loading ..."
 msgstr "Загрузка ..."
 
-#: templates/eos_spy_network/corporation.html:110
+#: templates/eos_spy_network/corporation.html:112
 msgid "The contracts could not be loaded."
 msgstr "Не удалось загрузить контракты."
 
@@ -401,6 +402,7 @@ msgid "Payments"
 msgstr "Платежи"
 
 #: templates/eos_spy_network/network_corporation.html:65
+#: templates/eos_spy_network/partials/contacts.html:9
 #: templates/eos_spy_network/partials/group-cell.html:7
 msgctxt "eos-spy-network"
 msgid "Standing"
@@ -416,6 +418,29 @@ msgstr "Период"
 #: templates/eos_spy_network/partials/dealings.html:8
 msgid "Counterpart"
 msgstr "Контрагент"
+
+#: templates/eos_spy_network/partials/contacts.html:8
+msgctxt "eos-spy-network"
+msgid "Contact"
+msgstr "Контакт"
+
+#: templates/eos_spy_network/partials/contacts.html:10
+#: templates/eos_spy_network/partials/kill-note-button.html:8
+#: templates/eos_spy_network/partials/kill-note-modal.html:29
+#: templates/eos_spy_network/partials/kills.html:14
+#: templates/eos_spy_network/settings.html:167
+msgctxt "eos-spy-network"
+msgid "Cleared"
+msgstr "Улажено"
+
+#: templates/eos_spy_network/partials/contacts.html:11
+#: templates/eos_spy_network/partials/kill-note-button.html:31
+#: templates/eos_spy_network/partials/kill-note-modal.html:17
+#: templates/eos_spy_network/partials/kill-note-modal.html:22
+#: templates/eos_spy_network/partials/kills.html:15
+#: templates/eos_spy_network/settings.html:168
+msgid "Note"
+msgstr "Заметка"
 
 #: templates/eos_spy_network/partials/contract-details.html:7
 msgid "Contract"
@@ -511,43 +536,29 @@ msgstr "Вид"
 msgid "unknown"
 msgstr "неизвестно"
 
-#: templates/eos_spy_network/partials/kill-note-button.html:13
-#: templates/eos_spy_network/partials/kill-note-modal.html:8
-#: templates/eos_spy_network/settings.html:193
+#: templates/eos_spy_network/partials/kill-note-button.html:29
+#: templates/eos_spy_network/partials/kill-note-modal.html:9
+#: templates/eos_spy_network/settings.html:192
 msgid "Add a note"
 msgstr "Добавить заметку"
 
-#: templates/eos_spy_network/partials/kill-note-button.html:15
-#: templates/eos_spy_network/partials/kill-note-modal.html:16
-#: templates/eos_spy_network/partials/kill-note-modal.html:21
-#: templates/eos_spy_network/partials/kills.html:14
-#: templates/eos_spy_network/settings.html:167
-msgid "Note"
-msgstr "Заметка"
-
-#: templates/eos_spy_network/partials/kill-note-button.html:18
-#: templates/eos_spy_network/partials/kill-note-modal.html:28
-msgctxt "eos-spy-network"
-msgid "Cleared"
-msgstr "Улажено"
-
-#: templates/eos_spy_network/partials/kill-note-modal.html:9
+#: templates/eos_spy_network/partials/kill-note-modal.html:10
 msgid "Could not save the note."
 msgstr "Не удалось сохранить заметку."
 
-#: templates/eos_spy_network/partials/kill-note-modal.html:29
+#: templates/eos_spy_network/partials/kill-note-modal.html:30
 msgid ""
-"Needs a note saying why. A cleared kill no longer counts for the marker; it "
-"takes effect at once."
+"Needs a note saying why. A cleared finding no longer counts for the marker; "
+"it takes effect at once."
 msgstr ""
-"Нужна заметка с объяснением причины. Улаженный килл больше не учитывается в "
-"маркере; это действует сразу."
+"Нужна заметка с объяснением причины. Улаженная находка больше не учитывается"
+" в маркере; это действует сразу."
 
-#: templates/eos_spy_network/partials/kill-note-modal.html:34
+#: templates/eos_spy_network/partials/kill-note-modal.html:35
 msgid "Cancel"
 msgstr "Отмена"
 
-#: templates/eos_spy_network/partials/kill-note-modal.html:35
+#: templates/eos_spy_network/partials/kill-note-modal.html:36
 #: templates/eos_spy_network/settings.html:58
 #: templates/eos_spy_network/settings.html:126
 #: templates/eos_spy_network/settings.html:146
@@ -575,13 +586,13 @@ msgstr "Корабль"
 msgid "Reason"
 msgstr "Причина"
 
-#: templates/eos_spy_network/partials/kills.html:30
-#: templates/eos_spy_network/settings.html:183
+#: templates/eos_spy_network/partials/kills.html:31
+#: templates/eos_spy_network/settings.html:184
 msgid "Awox"
 msgstr "Awox"
 
-#: templates/eos_spy_network/partials/kills.html:32
-#: templates/eos_spy_network/settings.html:185
+#: templates/eos_spy_network/partials/kills.html:33
+#: templates/eos_spy_network/settings.html:186
 msgid "Blue"
 msgstr "Blue"
 
@@ -800,33 +811,33 @@ msgstr ""
 "Причина и standing — на момент обнаружения килла; улаженный килл больше не "
 "учитывается в маркере."
 
-#: templates/eos_spy_network/settings.html:191
+#: templates/eos_spy_network/settings.html:190
 #, python-format
 msgid "Last changed by %(name)s, %(at)s"
 msgstr "Последнее изменение: %(name)s, %(at)s"
 
-#: templates/eos_spy_network/settings.html:203
+#: templates/eos_spy_network/settings.html:201
 msgid "No blue kill stored."
 msgstr "Нет сохранённых blue-киллов."
 
-#: views.py:35
+#: views.py:36
 msgid "Suspects"
 msgstr "Подозреваемые"
 
-#: views.py:287
+#: views.py:345
 msgid "The markers and connections are being recalculated."
 msgstr "Маркеры и связи пересчитываются."
 
-#: views.py:289
+#: views.py:347
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr "Не удалось запустить пересчёт: очередь задач недоступна."
 
-#: views.py:316
+#: views.py:374
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr "Настройки сохранены. Маркеры и связи пересчитываются."
 
-#: views.py:320
+#: views.py:378
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

@@ -126,6 +126,11 @@ class Marker:
         """Blue kills show their killmails as a table."""
         return self.kind == BLUE_KILLS and bool(self.rows)
 
+    @property
+    def contacts(self) -> bool:
+        """Friendly hostile contacts show one row per contact and standing, with note and tick."""
+        return self.kind == CONTACTS and bool(self.rows)
+
 
 @dataclass
 class Dealings:
@@ -396,12 +401,19 @@ def _check_contacts(accounts, index, owner, names, audits, hostile_ids):
         contact_id__in=hostile_ids,
     ).values_list("character_id", "contact_id", "standing"):
         character_id = audits[audit_id]
-        accounts[owner[character_id]].mark(
-            # normalize: 5, not the column's 5.00
-            CONTACTS,
-            f"{names[character_id]}: {index.describe(contact_id)} ({standing.normalize():f})",
-            character_id,
-        )
+        suspect = accounts[owner[character_id]]
+        # normalize: 5, not the column's 5.00
+        standing = f"{standing.normalize():f}"
+        suspect.mark(CONTACTS, f"{names[character_id]}: {index.describe(contact_id)} ({standing})", character_id)
+        # the user's rule: one finding per main, contact and standing, the main's characters together
+        rows = suspect.markers[CONTACTS].rows
+        row = next((row for row in rows if (row["contact_id"], row["standing"]) == (contact_id, standing)), None)
+        if row is None:
+            row = {"contact_id": contact_id, "contact": index.describe(contact_id), "standing": standing}
+            row.update(characters=[], character_ids=[])
+            rows.append(row)
+        row["characters"].append(names[character_id])
+        row["character_ids"].append(character_id)
 
 
 def _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, since=None):

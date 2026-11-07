@@ -177,6 +177,40 @@ class BlueKill(models.Model):
         return f"Killmail {self.killmail_id} by {self.character_id}"
 
 
+class FindingReview(models.Model):
+    """The note and the cleared tick of one finding of a marker.
+
+    Kept apart from the snapshot, which each run overwrites. Applied when a
+    page is read, so a tick takes effect at once. A finding belongs to the
+    main (the user's rule): an alt that shows the same finding later is
+    cleared with it.
+    """
+
+    # the configured Alliance it was reviewed for: another Alliance has other hostiles
+    alliance_id = models.PositiveBigIntegerField()
+    kind = models.CharField(max_length=32)
+    main_id = models.PositiveBigIntegerField()
+    # what tells the main's findings of one marker apart, e.g. "<contact ID>:<standing>" for the contacts
+    key = models.CharField(max_length=64)
+    cleared = models.BooleanField(default=False)
+    note = models.CharField(max_length=KILL_NOTE_LENGTH, blank=True)
+    reviewed_at = models.DateTimeField(null=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        default_permissions = ()
+        constraints = [
+            models.UniqueConstraint(
+                fields=["alliance_id", "kind", "main_id", "key"], name="eos_spy_network_unique_finding_review"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.kind} {self.key} of {self.main_id}"
+
+
 class ContactSource(models.Model):
     """The Alliance or one of its Corporations whose aa-contacts contacts make up the hostile list.
 
