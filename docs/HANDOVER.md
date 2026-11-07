@@ -4,11 +4,29 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-06.
+Last updated 2026-11-07.
 
 ## State
 
-- Version: `0.0.15`, 2026-11-06 (see `CHANGELOG.md`): blue kills
+- Version: `0.0.16`, 2026-11-07 (see `CHANGELOG.md`), three things:
+  - *Friendly to hostiles* reviewed like the blue kills: note and tick per
+    main, contact and standing. Model `FindingReview` (alliance, kind,
+    **main_id**, key; migration 0008, applied to `aa_dev`), endpoint
+    `views.finding_note` (`findings/note/`, `REVIEWED_KINDS`), applied at
+    read time by `snapshot.finding_reviews` + `reviewed_contacts` (pages
+    and `api.py`); key `<contact ID>:<standing>`; popup and `kills.js`
+    shared with the blue kills (a button with `data-...-kill-key` posts to
+    the finding URL). Tests `test_finding_reviews.py` (18).
+  - Menu badge: mains with open markers (`views.open_mains`, reuses
+    `_report`, so switched-off markers and cleared findings do not count);
+    `auth_hooks` sets `count` on every render - one hook object serves all
+    users - and `None` without `view_suspects`. Tests `test_menu.py`.
+  - Blue kills inside one account (attacker and victim owned by the same
+    user, `markers.own_kill`) are not copied into `BlueKill` and are
+    filtered at read time in `_check_kills` and `views._kill_rows`; old
+    rows stay in the table.
+  None of the three seen in a browser.
+- Before (0.0.15): blue kills
   reviewed per main and killmail (user): one row, one note, one tick;
   `snapshot.reviewed_kills` merges the rows of one killmail inside the
   main's marker, `views._kill_rows` groups by killmail and owner
@@ -70,9 +88,9 @@ Last updated 2026-11-06.
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 237 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.15 added 6 in `test_kill_reviews.py`,
-  `TestPerMainAndKillmail`); every new test
+- Tests: 263 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.16 added `test_finding_reviews.py`,
+  `test_menu.py`, `test_kills.TestOwnKills`); every new test
   checked against sabotaged code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
@@ -91,36 +109,22 @@ Last updated 2026-11-06.
 
 ## Open
 
-- Built 2026-11-07 (unreleased, under `[Unreleased]`, user's choices):
-  menu badge = mains with open markers (`views.open_mains`, reuses
-  `_report`; `auth_hooks` sets `count` per render, `None` without
-  `view_suspects`; tests `test_menu.py`). Blue kills inside one account
-  (`markers.own_kill`, by `CharacterOwnership` user) are not copied and are
-  filtered at read time in `_check_kills` and `views._kill_rows` (old rows
-  kept, nothing deleted). Tests checked against sabotage; not seen in a
-  browser.
+- Menu badge: the count costs a snapshot read and up to three small
+  queries on every Auth page for `view_suspects` users; not measured on
+  prod. A cache would be the fix if it shows.
 - eos-auth-monitor: check that a character whose blue kills are all
-  cleared loses its problem there (only tested on this side, `test_api`).
-- Note and *Cleared* per finding, marker by marker (user, 2026-11-06).
-  Built (unreleased, under `[Unreleased]`): *Friendly to hostiles* - model
-  `FindingReview` (alliance, kind, **main_id**, key; migration 0008,
-  applied to `aa_dev`), endpoint `views.finding_note` (`findings/note/`,
-  `REVIEWED_KINDS`), applied at read time by `snapshot.finding_reviews` +
-  `reviewed_contacts` (pages and `api.py`); key `<contact ID>:<standing>`;
-  popup and `kills.js` shared with the blue kills (a button with
-  `data-...-kill-key` posts to the finding URL). Tests:
-  `test_finding_reviews.py` (18, checked against sabotage). Snapshot in
-  `aa_dev` rebuilt 2026-11-06 with this code, but `aa_dev` has no contacts
-  marker: not seen in a browser; seeding a corptools `CharacterContact`
-  needs the user's yes.
+  cleared, or whose blue kills were all inside its own account, loses its
+  problem there (only tested on this side, `test_api`).
+- Note and *Cleared* per finding, marker by marker (user, 2026-11-06):
+  *Friendly to hostiles* is done (0.0.16). `aa_dev` has no contacts
+  marker, so it was not seen in a browser; seeding a corptools
+  `CharacterContact` needs the user's yes.
   Decided (user): a review belongs to the **main** + finding, so a later
   alt with the same finding is cleared too; a different finding (other
   standing, new payment/mail/join) is **always a separate row** (option
   (a), not reopening) - for the dated markers the calculation has to split
   the rows at the review time. Next markers: Membership, Corporation
   changes, Mails/ISK/Contracts (mails need rows; with `view_evidence`).
-  Translations of the new texts ("Contact", the modal's "cleared finding"
-  sentence) come at `/commit`.
 - Blue kills not clicked in the browser yet (checkbox, popup, settings
   tab). `aa_dev` holds 4 `BlueKill` rows with fake killmail IDs
   99000000101-103 (Ether Element, test seed of unknown origin, not in
@@ -247,6 +251,10 @@ Last updated 2026-11-06.
   main's characters together; two mains on one killmail, a row each. The settings tab
   lists every kill of the Alliance regardless of the time frame, client-side
   DataTables.
+- Menu badge (user, 2026-11-07): counts the mains with open markers (not
+  markers or findings), only for `view_suspects`.
+- Own kills (user, 2026-11-07): a blue kill whose victim belongs to the
+  attacker's account is never stored; old copies are hidden, not deleted.
 - Mails: headers and subject, never the body.
 - Scope: one Alliance, as in eos-auth-monitor.
 - Permissions `view_suspects`, `view_evidence`, `manage_settings`; no
@@ -255,7 +263,7 @@ Last updated 2026-11-06.
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0007
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0008
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
