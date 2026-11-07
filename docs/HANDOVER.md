@@ -8,7 +8,25 @@ Last updated 2026-11-07.
 
 ## State
 
-- Version: `0.0.16`, 2026-11-07 (see `CHANGELOG.md`), three things:
+- Version: `0.0.17`, 2026-11-07 (see `CHANGELOG.md`): *Friendly to
+  hostiles* shows the contact's Corporation and Alliance (two columns, red
+  with standing when hostile) and a small EveWho icon after the contact
+  (`/character|corporation|alliance/<id>`, none for a Faction or an
+  unknown category) and after each own character. The contact rows go
+  through the same affiliation step as ISK/contracts
+  (`snapshot._affiliate_rows(..., "contact_id")`, so public ESI in the
+  task for what Auth and corptools do not know); `Marker.affiliated` now
+  covers contacts; `reviewed_contacts` adds `named_characters` (ID, name)
+  at read time because the template cannot zip. New partials
+  `affiliation-cells.html` (shared with `dealings.html`) and
+  `evewho-link.html`. Columns and the contact's link need a
+  recalculation; the own characters' links show at once. Tests
+  `test_finding_reviews.py` (21). Not seen in a browser (`aa_dev` has no
+  contacts marker).
+  Decided (user, 2026-11-07): Corporation **and** Alliance as columns; the
+  link is an icon after the name, the name stays text; a Corporation or
+  Alliance contact links to its own EveWho page.
+- Before (0.0.16), three things:
   - *Friendly to hostiles* reviewed like the blue kills: note and tick per
     main, contact and standing. Model `FindingReview` (alliance, kind,
     **main_id**, key; migration 0008, applied to `aa_dev`), endpoint
@@ -16,7 +34,7 @@ Last updated 2026-11-07.
     read time by `snapshot.finding_reviews` + `reviewed_contacts` (pages
     and `api.py`); key `<contact ID>:<standing>`; popup and `kills.js`
     shared with the blue kills (a button with `data-...-kill-key` posts to
-    the finding URL). Tests `test_finding_reviews.py` (18).
+    the finding URL).
   - Menu badge: mains with open markers (`views.open_mains`, reuses
     `_report`, so switched-off markers and cleared findings do not count);
     `auth_hooks` sets `count` on every render - one hook object serves all
@@ -88,9 +106,9 @@ Last updated 2026-11-07.
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 263 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.16 added `test_finding_reviews.py`,
-  `test_menu.py`, `test_kills.TestOwnKills`); every new test
+- Tests: 266 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.17 added three to `test_finding_reviews.py`:
+  affiliation, ID pairs, EveWho links); every new test
   checked against sabotaged code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
@@ -116,8 +134,10 @@ Last updated 2026-11-07.
   cleared, or whose blue kills were all inside its own account, loses its
   problem there (only tested on this side, `test_api`).
 - Note and *Cleared* per finding, marker by marker (user, 2026-11-06):
-  *Friendly to hostiles* is done (0.0.16). `aa_dev` has no contacts
-  marker, so it was not seen in a browser; seeding a corptools
+  *Friendly to hostiles* is done (0.0.16, columns and EveWho links
+  0.0.17). `aa_dev` has no contacts marker, so neither was seen in a
+  browser; a contact hostile only through its Corporation still reads
+  "Name (Corp)" next to the new Corporation column (left as is); seeding a corptools
   `CharacterContact` needs the user's yes.
   Decided (user): a review belongs to the **main** + finding, so a later
   alt with the same finding is cleared too; a different finding (other
