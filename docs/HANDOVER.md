@@ -8,18 +8,22 @@ Last updated 2026-11-07.
 
 ## State
 
-- Not committed yet (`[Unreleased]`): *Blue kills* get the EveWho icons
-  (own characters, victim, its Corporation and Alliance) in the marker
-  (`partials/kills.html`) and the settings tab, plus an audit icon
-  (`corptools:reactmain`) to the **main** of a victim with an account in
-  Auth (user, 2026-11-07). The marker rows store `victim_id`,
-  `corporation_id`, `alliance_id` (`markers._check_kills`);
-  `reviewed_kills` adds `named_characters`; the victim's main is read at
-  every view by `views._victim_mains` (corporation page and `_kill_rows`),
-  not stored. `evewho-link.html` now renders nothing without an ID. Tests
-  `test_kill_reviews.TestKillLinks` (3), each checked against the broken
-  code. Not seen in a browser.
-- Version: `0.0.17`, 2026-11-07 (see `CHANGELOG.md`): *Friendly to
+- Version: `0.0.18`, 2026-11-07 (see `CHANGELOG.md`): *Blue kills* get the
+  EveWho icons (own characters, victim, its Corporation and Alliance) in
+  the marker (`partials/kills.html`) and the settings tab, plus an audit
+  icon (`corptools:reactmain`, inline in both templates, title "Audit"
+  untranslated like "EveWho") to the **main** of a victim with an account
+  in Auth. The marker rows store `victim_id`, `corporation_id`,
+  `alliance_id` (`markers._check_kills`); `reviewed_kills` adds
+  `named_characters`; the victim's main is read at every view by
+  `views._victim_mains` (corporation page and `_kill_rows`), not stored.
+  `evewho-link.html` renders nothing without an ID. The victim's icons on
+  the marker page need a recalculation; the rest shows at once. Tests
+  `test_kill_reviews.TestKillLinks` (3). Not seen in a browser.
+  Decided (user, 2026-11-07): audit link only for a victim with an
+  account, to its main; EveWho on victim, Corporation, Alliance and the
+  own characters; in the marker and the settings tab.
+- Before (0.0.17): *Friendly to
   hostiles* shows the contact's Corporation and Alliance (two columns, red
   with standing when hostile) and a small EveWho icon after the contact
   (`/character|corporation|alliance/<id>`, none for a Faction or an
@@ -117,9 +121,9 @@ Last updated 2026-11-07.
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 266 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.17 added three to `test_finding_reviews.py`:
-  affiliation, ID pairs, EveWho links); every new test
+- Tests: 269 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.18 added `test_kill_reviews.TestKillLinks`:
+  links on both pages, none without victim IDs); every new test
   checked against sabotaged code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
@@ -157,7 +161,8 @@ Last updated 2026-11-07.
   the rows at the review time. Next markers: Membership, Corporation
   changes, Mails/ISK/Contracts (mails need rows; with `view_evidence`).
 - Blue kills not clicked in the browser yet (checkbox, popup, settings
-  tab). `aa_dev` holds 4 `BlueKill` rows with fake killmail IDs
+  tab, the 0.0.18 EveWho and audit icons; the `aa_dev` snapshot has no
+  victim IDs until a recalculation). `aa_dev` holds 4 `BlueKill` rows with fake killmail IDs
   99000000101-103 (Ether Element, test seed of unknown origin, not in
   killtracker; a recalculation keeps them, `BlueKill` is never pruned);
   killtracker itself stores 0 there - its periodic task needs `celery
@@ -361,6 +366,9 @@ Last updated 2026-11-07.
 - Restoring a file with `shutil.copy2` from a backup on `/mnt/c` carries
   the Windows mode along (100644 -> 100755, shows in `git diff
   --summary`); `chmod 644` afterwards, or write the text back instead.
+- A missing key renders as an empty string in a template, not `None`: a
+  test for "no link without an ID" asserts on `.../character/"`, not
+  `.../character/None"`.
 - Inheriting a test class to borrow a helper runs all its tests twice;
   assign the helper instead (`add_entry = TestWallet.add_entry`).
 - Another app's suite running at the same time (eos-auth-monitor) shares
