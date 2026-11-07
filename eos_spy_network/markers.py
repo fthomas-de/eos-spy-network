@@ -573,13 +573,16 @@ def _check_kills(accounts, config, characters):
     names = {character_id: name for _user_id, character_id, name, *_rest in characters}
     alliance_id = config.alliance.alliance_id
     since = config.since()
-    _copy_kills(alliance_id, list(owner), blue_entities(config), since)
+    _copy_kills(alliance_id, owner, blue_entities(config), since)
 
     kills = BlueKill.objects.filter(alliance_id=alliance_id, character_id__in=list(owner))
     if since is not None:
         kills = kills.filter(time__gte=since)
     seen = defaultdict(set)  # account -> killmail IDs
     for kill in kills.order_by("-time", "killmail_id", "character_id"):
+        # a copy made before own kills were left out
+        if own_kill(owner, kill.character_id, kill.victim_id):
+            continue
         user_id = owner[kill.character_id]
         marker = accounts[user_id].markers.setdefault(BLUE_KILLS, Marker(BLUE_KILLS))
         if kill.killmail_id not in seen[user_id]:
@@ -605,8 +608,17 @@ def _check_kills(accounts, config, characters):
         )
 
 
-def _copy_kills(alliance_id, character_ids, blues, since):
-    """Copy the blue kills killtracker holds into ``BlueKill``; one already copied keeps its reason."""
+def own_kill(owner: dict, attacker_id: int, victim_id: int | None) -> bool:
+    """Attacker and victim are characters of one account: no awox, a player shot one of their own characters."""
+    return victim_id in owner and owner[victim_id] == owner.get(attacker_id)
+
+
+def _copy_kills(alliance_id, owner, blues, since):
+    """Copy the blue kills killtracker holds into ``BlueKill``; one already copied keeps its reason.
+
+    ``owner`` maps every character of the accounts to its user ID; a kill
+    inside one account is not copied.
+    """
 
     def name(found: str, eve_id: int | None) -> str:
         # killtracker resolves the names after storing the killmail; the contact may know it already
@@ -615,7 +627,9 @@ def _copy_kills(alliance_id, character_ids, blues, since):
         return (blues[eve_id].name if eve_id in blues else "") or str(eve_id)
 
     copies = []
-    for kill in killmails.kills(character_ids, alliance_id, list(blues), since):
+    for kill in killmails.kills(list(owner), alliance_id, list(blues), since):
+        if own_kill(owner, kill.attacker_id, kill.victim_id):
+            continue
         # the victim first, then its Corporation, then its Alliance: the closest reason names the standing
         if kill.victim_alliance_id == alliance_id:
             reason, standing = AWOX, None

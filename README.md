@@ -16,6 +16,9 @@ every one with a standing below a configurable value.
 
 ## Features
 
+- **Menu badge**: the menu item shows how many mains have open markers
+  (switched-off markers and cleared findings left out), for users with
+  `view_suspects`
 - **Markers**: a tile per Corporation of the Alliance with its number
   of mains, how many of them have markers, and per marker how many mains
   have it. A switch hides the Corporations without markers; the browser
@@ -59,7 +62,8 @@ every one with a standing below a configurable value.
     Alliance has at least the blue standing with the Alliance (default 5).
     Only the Alliance's own contacts in aa-contacts make a blue, not those
     of the ticked Corporations. A killmail counts once per account however
-    many of its characters were on it. Read from killtracker (see
+    many of its characters were on it; a kill of a character of the same
+    account does not count. Read from killtracker (see
     [Killmails](#killmails)); needs no hostile
 
   Mails, ISK and contracts between characters of the same account never

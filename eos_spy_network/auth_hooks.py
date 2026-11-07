@@ -4,7 +4,8 @@ from allianceauth import hooks
 from allianceauth.services.hooks import MenuItemHook, UrlHook
 
 from . import urls
-from .permissions import has_app_access
+from .permissions import VIEW_SUSPECTS, has_app_access
+from .views import open_mains
 
 
 class SpyNetworkMenuItem(MenuItemHook):
@@ -21,6 +22,8 @@ class SpyNetworkMenuItem(MenuItemHook):
         if not has_app_access(request.user):
             return ""
 
+        # one hook object serves every user: reset the count of the previous one
+        self.count = open_mains() if request.user.has_perm(VIEW_SUSPECTS) else None
         return MenuItemHook.render(self, request)
 
 

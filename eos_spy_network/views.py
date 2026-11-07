@@ -18,7 +18,7 @@ from . import __version__, contacts, contract_details, killmails, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
-from .markers import BLUE_KILLS, CONTACTS, KINDS, LABELS, corptools_installed
+from .markers import BLUE_KILLS, CONTACTS, KINDS, LABELS, corptools_installed, own_kill
 from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, SpyConfiguration
 from .permissions import (
     APP_PERMISSIONS,
@@ -107,6 +107,12 @@ def _report(config) -> snapshots.Report | None:
     return snapshots.Report(current, disabled, reviews, findings)
 
 
+def open_mains() -> int:
+    """Mains with a marker not switched off nor cleared, as the Corporation pages list them; the menu badge."""
+    report = _report(SpyConfiguration.get_solo())
+    return sum(len(tile.suspects) for tile in report.tiles) if report else 0
+
+
 def _kill_rows(config) -> list:
     """Every stored blue kill of the configured Alliance, one row per main and killmail, the latest first."""
     if not config.alliance:
@@ -120,13 +126,15 @@ def _kill_rows(config) -> list:
     names = dict(
         EveCharacter.objects.filter(character_id__in=character_ids).values_list("character_id", "character_name")
     )
+    victim_ids = {kill.victim_id for kill in kills if kill.victim_id}
     owners = dict(
-        CharacterOwnership.objects.filter(character__character_id__in=character_ids).values_list(
+        CharacterOwnership.objects.filter(character__character_id__in=character_ids | victim_ids).values_list(
             "character__character_id", "user_id"
         )
     )
     groups = {}
-    for kill in kills:
+    # a copy made before own kills were left out
+    for kill in (kill for kill in kills if not own_kill(owners, kill.character_id, kill.victim_id)):
         # a character nobody owns stands alone
         owner = owners.get(kill.character_id, ("character", kill.character_id))
         groups.setdefault((kill.killmail_id, owner), []).append(kill)

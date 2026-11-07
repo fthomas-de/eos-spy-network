@@ -163,6 +163,30 @@ class TestBlueKills(KillTestCase):
             self.assertIsNone(self.marker())
 
 
+class TestOwnKills(KillTestCase):
+    """A kill between two characters of one account is no awox."""
+
+    def test_should_not_copy_a_kill_of_an_own_character(self):
+        add_killmail(1, [ALT], victim_id=self.main.character_id, corporation_id=2001, alliance_id=ALLIANCE_ID)
+
+        self.assertIsNone(self.marker())
+        self.assertFalse(BlueKill.objects.exists())
+
+    def test_should_leave_out_an_own_kill_copied_before(self):
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=ALLIANCE_ID)
+        self.marker()
+        BlueKill.objects.update(victim_id=self.main.character_id)
+        EveKillmail.objects.all().delete()
+
+        self.assertIsNone(self.marker())
+
+    def test_should_keep_the_kill_of_another_account(self):
+        other = make_user("other").profile.main_character
+        add_killmail(1, [ALT], victim_id=other.character_id, corporation_id=2001, alliance_id=ALLIANCE_ID)
+
+        self.assertEqual(self.marker().count, 1)
+
+
 class TestCopiedKills(KillTestCase):
     """killtracker deletes its killmails after a few days; the copies in BlueKill keep the marker."""
 

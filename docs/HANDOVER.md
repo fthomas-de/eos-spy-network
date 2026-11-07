@@ -91,6 +91,14 @@ Last updated 2026-11-06.
 
 ## Open
 
+- Built 2026-11-07 (unreleased, under `[Unreleased]`, user's choices):
+  menu badge = mains with open markers (`views.open_mains`, reuses
+  `_report`; `auth_hooks` sets `count` per render, `None` without
+  `view_suspects`; tests `test_menu.py`). Blue kills inside one account
+  (`markers.own_kill`, by `CharacterOwnership` user) are not copied and are
+  filtered at read time in `_check_kills` and `views._kill_rows` (old rows
+  kept, nothing deleted). Tests checked against sabotage; not seen in a
+  browser.
 - eos-auth-monitor: check that a character whose blue kills are all
   cleared loses its problem there (only tested on this side, `test_api`).
 - Note and *Cleared* per finding, marker by marker (user, 2026-11-06).

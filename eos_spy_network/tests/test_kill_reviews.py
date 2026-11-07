@@ -212,6 +212,14 @@ class TestSettingsTab(ReviewTestCase):
         self.assertContains(response, f"Char {ALT}")
         self.assertContains(response, "Last changed by admin main")
 
+    def test_should_leave_out_an_own_kill_copied_before(self):
+        BlueKill.objects.filter(killmail_id=1).update(victim_id=self.main.character_id)
+
+        response = self.get()
+
+        self.assertNotContains(response, "https://zkillboard.com/kill/1/")
+        self.assertContains(response, "https://zkillboard.com/kill/2/")
+
     def test_should_open_the_tab_asked_for(self):
         response = self.get()
 

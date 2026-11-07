@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.16] - 2026-11-07
+
 ### Added
 
 - *Friendly to hostiles*: note and tick *Cleared* per main, contact and
@@ -22,6 +24,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   snapshot so a recalculation does not lose it; the other markers can
   join it later. Needs one recalculation: an older snapshot has no
   contact rows and shows the plain list until then.
+- Menu badge: the *Spy Network* menu item shows how many mains have open
+  markers, for users with `view_suspects`. Before, a new finding showed
+  only to someone who opened the app. The count is the one the
+  Corporation pages list: switched-off markers and cleared findings do
+  not count. Read from the stored snapshot on every page.
+
+### Fixed
+
+- Blue kills: a kill between two characters of one account (attacker and
+  victim belong to the same main) no longer counts as awox. It marked a
+  player who shot one of their own characters. Such a kill is no longer
+  copied into `BlueKill`; copies made before stay in the database but are
+  left out of the marker and `api.character_markers()` from the next
+  recalculation on, and out of the settings tab at once.
 
 ## [0.0.15] - 2026-11-06
 
