@@ -8,6 +8,17 @@ Last updated 2026-11-07.
 
 ## State
 
+- Not committed yet (`[Unreleased]`): *Blue kills* get the EveWho icons
+  (own characters, victim, its Corporation and Alliance) in the marker
+  (`partials/kills.html`) and the settings tab, plus an audit icon
+  (`corptools:reactmain`) to the **main** of a victim with an account in
+  Auth (user, 2026-11-07). The marker rows store `victim_id`,
+  `corporation_id`, `alliance_id` (`markers._check_kills`);
+  `reviewed_kills` adds `named_characters`; the victim's main is read at
+  every view by `views._victim_mains` (corporation page and `_kill_rows`),
+  not stored. `evewho-link.html` now renders nothing without an ID. Tests
+  `test_kill_reviews.TestKillLinks` (3), each checked against the broken
+  code. Not seen in a browser.
 - Version: `0.0.17`, 2026-11-07 (see `CHANGELOG.md`): *Friendly to
   hostiles* shows the contact's Corporation and Alliance (two columns, red
   with standing when hostile) and a small EveWho icon after the contact

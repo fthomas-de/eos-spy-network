@@ -317,7 +317,12 @@ def reviewed_kills(marker: dict, reviews: dict) -> dict | None:
         # kill_note writes the group at once; a row reviewed alone before keeps the group open
         group["cleared"] = group["cleared"] and cleared
         group["note"] = group["note"] or note
-    rows = [{**group, "character": ", ".join(group.pop("names"))} for group in groups.values()]
+    rows = []
+    for group in groups.values():
+        names = group.pop("names")
+        # the template cannot zip: each character with its ID for the EveWho link
+        named = list(zip(group["character_ids"], names))
+        rows.append({**group, "character": ", ".join(names), "named_characters": named})
     open_rows = [row for row in rows if not row["cleared"]]
     if not open_rows:
         return None

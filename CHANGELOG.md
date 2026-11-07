@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.18] - 2026-11-07
+
+### Added
+
+- *Blue kills* (marker and settings tab): EveWho icons after each own
+  character and after the victim, its Corporation and its Alliance, as in
+  *Friendly to hostiles*; checking a victim no longer means searching by
+  name. A victim with an account in Auth also gets an audit icon to its
+  main's corptools audit, looked up at every view, so an alt that changed
+  hands needs no recalculation. A victim without an account, a structure
+  without a victim character or an empty Alliance gets no icon.
+- Needs one recalculation for the victim's icons on the marker page (the
+  stored rows had no victim IDs); the own characters' icons and the
+  settings tab show at once.
+
 ## [0.0.17] - 2026-11-07
 
 ### Added

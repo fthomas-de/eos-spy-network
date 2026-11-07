@@ -598,8 +598,11 @@ def _check_kills(accounts, config, characters):
                 "killmail_id": kill.killmail_id,
                 "date": kill.time.date().isoformat(),
                 "victim": kill.victim,
+                "victim_id": kill.victim_id,
                 "corporation": kill.victim_corporation,
+                "corporation_id": kill.victim_corporation_id,
                 "alliance": kill.victim_alliance,
+                "alliance_id": kill.victim_alliance_id,
                 "ship": kill.ship,
                 "reason": kill.reason,
                 # normalize: 5, not the column's 5.0

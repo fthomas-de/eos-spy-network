@@ -174,10 +174,12 @@
                                                 <td class="text-nowrap" data-order="{{ kill.time|date:'U' }}">
                                                     <a href="https://zkillboard.com/kill/{{ kill.killmail_id }}/" target="_blank" rel="noopener noreferrer">{{ kill.time|date:"Y-m-d H:i" }}</a>
                                                 </td>
-                                                <td class="text-break">{{ kill.character }}</td>
-                                                <td class="text-break">{{ kill.victim }}</td>
-                                                <td class="text-break">{{ kill.victim_corporation }}</td>
-                                                <td class="text-break">{{ kill.victim_alliance }}</td>
+                                                <td class="text-break">
+                                                    {% for character_id, name in kill.named_characters %}{{ name }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=character_id %}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                                </td>
+                                                <td class="text-break">{{ kill.victim }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=kill.victim_id %}{% if kill.victim_main_id %}{% url 'corptools:reactmain' kill.victim_main_id as audit_url %}{% if audit_url %}<a href="{{ audit_url }}" class="ms-1 small" title="Audit" aria-label="Audit"><i class="fas fa-user-shield" aria-hidden="true"></i></a>{% endif %}{% endif %}</td>
+                                                <td class="text-break">{{ kill.victim_corporation }}{% include "eos_spy_network/partials/evewho-link.html" with category="corporation" eve_id=kill.victim_corporation_id %}</td>
+                                                <td class="text-break">{{ kill.victim_alliance }}{% include "eos_spy_network/partials/evewho-link.html" with category="alliance" eve_id=kill.victim_alliance_id %}</td>
                                                 <td class="text-break">{{ kill.ship }}</td>
                                                 <td class="text-nowrap">
                                                     {% if kill.reason == "awox" %}

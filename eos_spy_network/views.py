@@ -113,6 +113,18 @@ def open_mains() -> int:
     return sum(len(tile.suspects) for tile in report.tiles) if report else 0
 
 
+def _victim_mains(victim_ids) -> dict:
+    """Victim character ID -> the ID of its account's main, for the audit link; a victim without an account is left out.
+
+    Read at every view, not stored: an alt can change hands without a recalculation.
+    """
+    return dict(
+        CharacterOwnership.objects.filter(
+            character__character_id__in=victim_ids, user__profile__main_character__isnull=False
+        ).values_list("character__character_id", "user__profile__main_character__character_id")
+    )
+
+
 def _kill_rows(config) -> list:
     """Every stored blue kill of the configured Alliance, one row per main and killmail, the latest first."""
     if not config.alliance:
@@ -138,10 +150,15 @@ def _kill_rows(config) -> list:
         # a character nobody owns stands alone
         owner = owners.get(kill.character_id, ("character", kill.character_id))
         groups.setdefault((kill.killmail_id, owner), []).append(kill)
+    mains = _victim_mains(victim_ids)
     rows = []
     for group in groups.values():
         row = group[0]
-        row.character = ", ".join(names.get(kill.character_id) or str(kill.character_id) for kill in group)
+        row.named_characters = [
+            (kill.character_id, names.get(kill.character_id) or str(kill.character_id)) for kill in group
+        ]
+        row.character = ", ".join(name for _character_id, name in row.named_characters)
+        row.victim_main_id = mains.get(row.victim_id)
         # kill_note writes the group at once; a row reviewed alone before keeps the group open
         row.cleared = all(kill.cleared for kill in group)
         row.note = next((kill.note for kill in group if kill.note), "")
@@ -269,6 +286,13 @@ def corporation(request, corporation_id):
     tile = report.tile(corporation_id) if report else None
     if tile is None:
         raise Http404
+    kill_rows = [
+        row for suspect in tile.suspects if BLUE_KILLS in suspect.markers for row in suspect.markers[BLUE_KILLS].rows
+    ]
+    # a snapshot of 0.0.17 or older has no victim IDs until the next run
+    mains = _victim_mains({row["victim_id"] for row in kill_rows if row.get("victim_id")})
+    for row in kill_rows:
+        row["victim_main_id"] = mains.get(row.get("victim_id"))
     return _render(
         request,
         "eos_spy_network/corporation.html",

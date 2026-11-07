@@ -7,10 +7,12 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
+from allianceauth.authentication.models import CharacterOwnership
+
 from eos_spy_network import api, markers, snapshot
 from eos_spy_network.models import KILL_NOTE_LENGTH, BlueKill, SpyConfiguration
 
-from .base import ALLIANCE_ID, OTHER_ALLIANCE_ID, configure, make_user
+from .base import ALLIANCE_ID, OTHER_ALLIANCE_ID, configure, make_character, make_user
 from .test_kills import ALT, BLUE_ALLIANCE, VIEW_SUSPECTS, KillTestCase, add_killmail
 
 MANAGE_SETTINGS = "eos_spy_network.manage_settings"
@@ -305,3 +307,51 @@ class TestPerMainAndKillmail(ReviewTestCase):
 
         self.assertContains(response, "data-eos-spy-network-kill-tick", count=4)
         self.assertContains(response, "checked", count=1)
+
+
+class TestKillLinks(ReviewTestCase):
+    """Killmail 3: the alt shot an alt of another account; killmails 1 and 2 hit victims without an account."""
+
+    VICTIM_ALT = 5002
+
+    def setUp(self):
+        super().setUp()
+        victim = make_user("victim")
+        self.victim_main = victim.profile.main_character
+        alt = make_character(self.VICTIM_ALT)
+        CharacterOwnership.objects.create(user=victim, character=alt, owner_hash="hash-victim")
+        add_killmail(3, [ALT], victim_id=self.VICTIM_ALT, corporation_id=2002, alliance_id=ALLIANCE_ID)
+        snapshot.update()
+        self.client.force_login(make_user("viewer", VIEW_SUSPECTS, MANAGE_SETTINGS))
+
+    def assert_links(self, response):
+        self.assertContains(response, f'href="https://evewho.com/character/{ALT}"')
+        self.assertContains(response, f'href="https://evewho.com/character/{self.VICTIM_ALT}"')
+        self.assertContains(response, 'href="https://evewho.com/corporation/2002"')
+        self.assertContains(response, f'href="https://evewho.com/alliance/{BLUE_ALLIANCE}"')
+        # the victim's main, not the victim: the audit is per account
+        audit_url = reverse("corptools:reactmain", args=[self.victim_main.character_id])
+        self.assertContains(response, f'href="{audit_url}"')
+        # killmails 1 and 2: victims without an account get none
+        self.assertContains(response, 'title="Audit"', count=1)
+
+    def test_should_link_the_kill_on_the_corporation_page(self):
+        self.assert_links(self.client.get(reverse("eos_spy_network:corporation", args=[2001])))
+
+    def test_should_link_the_kill_in_the_settings_tab(self):
+        self.assert_links(self.client.get(reverse("eos_spy_network:settings") + "?tab=kills"))
+
+    def test_should_show_no_victim_link_for_a_snapshot_without_victim_ids(self):
+        current = snapshot.current()
+        for corporation in current.data["corporations"]:
+            for suspect in corporation["suspects"]:
+                for marker in suspect["markers"]:
+                    for row in marker.get("rows", []):
+                        row.pop("victim_id", None)
+        current.save()
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertNotContains(response, f'href="https://evewho.com/character/{self.VICTIM_ALT}"')
+        self.assertNotContains(response, 'title="Audit"')
+        self.assertNotContains(response, 'href="https://evewho.com/character/"')
