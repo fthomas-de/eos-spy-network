@@ -1,0 +1,14 @@
+{% load i18n %}
+{# The Corporation and Alliance cells of a row the snapshot affiliated (ISK, contracts, friendly hostile contacts) #}
+{% if row.category == "alliance" %}
+    {# an Alliance as counterpart has no Corporation above it #}
+    <td></td>
+{% else %}
+    {% include "eos_spy_network/partials/group-cell.html" with group=row.corporation %}
+{% endif %}
+{% if row.alliance %}
+    {% include "eos_spy_network/partials/group-cell.html" with group=row.alliance %}
+{% else %}
+    {# no Alliance is a fact, not a gap: the Corporation is known #}
+    <td class="text-body-secondary">{% if not row.corporation %}{% translate "unknown" %}{% endif %}</td>
+{% endif %}

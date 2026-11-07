@@ -57,6 +57,20 @@ class TestRows(FindingTestCase):
 
         self.assertEqual(sorted(row["standing"] for row in self.report_marker().rows), ["10", "5"])
 
+    def test_should_name_the_contacts_corporation(self):
+        (row,) = self.report_marker().rows
+
+        self.assertEqual(row["category"], "corporation")
+        self.assertEqual(row["corporation"], {"name": "Bad Corp", "standing": "-10.0"})
+        self.assertTrue(self.report_marker().affiliated)
+
+    def test_should_pair_each_character_with_its_id(self):
+        (row,) = self.report_marker().rows
+
+        self.assertEqual(
+            row["named_characters"], [(self.main.character_id, self.main.character_name), (ALT, f"Char {ALT}")]
+        )
+
 
 class TestReviewedReport(FindingTestCase):
     def test_should_drop_the_marker_once_the_contact_is_cleared(self):
@@ -163,6 +177,14 @@ class TestFindingNote(FindingTestCase):
         self.assertContains(response, f'data-eos-spy-network-kill-key="{HOSTILE_CORP}:5"')
         self.assertContains(response, f'data-eos-spy-network-kill-main="{self.main.character_id}"')
         self.assertContains(response, "data-eos-spy-network-finding-url")
+
+    def test_should_link_the_contact_and_each_character_to_evewho(self):
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, f'href="https://evewho.com/corporation/{HOSTILE_CORP}"')
+        self.assertContains(response, f'href="https://evewho.com/character/{self.main.character_id}"')
+        self.assertContains(response, f'href="https://evewho.com/character/{ALT}"')
+        self.assertContains(response, "<td class=\"text-break text-danger fw-semibold\" data-order=\"Bad Corp\">")
 
     def test_should_show_a_cleared_contact_greyed_while_another_stays_open(self):
         # with every contact cleared the marker is gone; the open one keeps the table on the page

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.17] - 2026-11-07
+
+### Added
+
+- *Friendly to hostiles*: the contact's Corporation and Alliance as two
+  columns, red with the standing when hostile themselves. Before, a
+  character contact showed only its name, and the hostility usually sits
+  on its Corporation or Alliance. They come from the same lookup as the
+  ISK and contract counterparts (Auth, corptools, then public ESI in the
+  task); the two cells are now one partial for both tables.
+- *Friendly to hostiles*: a small EveWho icon after the contact (its
+  character, Corporation or Alliance page; none for a Faction) and after
+  each own character, so checking one no longer means searching by name.
+- Needs one recalculation for the columns and the contact's link; the own
+  characters' links show at once.
+
 ## [0.0.16] - 2026-11-07
 
 ### Added

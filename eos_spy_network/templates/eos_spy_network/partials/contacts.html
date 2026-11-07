@@ -6,6 +6,10 @@
             <tr>
                 <th>{% translate "Characters" context "eos-spy-network" %}</th>
                 <th>{% translate "Contact" context "eos-spy-network" %}</th>
+                {% if marker.affiliated %}
+                    <th>{% translate "Corporation" context "EVE jargon" %}</th>
+                    <th>{% translate "Alliance" context "EVE jargon" %}</th>
+                {% endif %}
                 <th>{% translate "Standing" context "eos-spy-network" %}</th>
                 <th>{% translate "Cleared" context "eos-spy-network" %}</th>
                 <th>{% translate "Note" %}</th>
@@ -14,8 +18,11 @@
         <tbody>
             {% for row in marker.rows %}
                 <tr{% if row.cleared %} class="opacity-50"{% endif %}>
-                    <td class="text-break">{{ row.characters|join:", " }}</td>
-                    <td class="text-break">{{ row.contact }}</td>
+                    <td class="text-break">
+                        {% for character_id, name in row.named_characters %}{{ name }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=character_id %}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    </td>
+                    <td class="text-break">{{ row.contact }}{% include "eos_spy_network/partials/evewho-link.html" with category=row.category eve_id=row.contact_id %}</td>
+                    {% if marker.affiliated %}{% include "eos_spy_network/partials/affiliation-cells.html" %}{% endif %}
                     <td class="text-nowrap">{{ row.standing }}</td>
                     {% include "eos_spy_network/partials/kill-note-button.html" with kind=marker.kind main_id=suspect.main.character_id key=row.key character=row.contact note=row.note cleared=row.cleared reviewed=row.note %}
                 </tr>

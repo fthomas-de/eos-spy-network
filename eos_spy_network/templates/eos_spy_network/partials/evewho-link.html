@@ -1,0 +1,2 @@
+{# A small icon after a name, linking to its EveWho page; nothing for a category EveWho has no page for (Faction, unknown) #}
+{% if category == "character" or category == "corporation" or category == "alliance" %}<a href="https://evewho.com/{{ category }}/{{ eve_id }}" class="ms-1 small" target="_blank" rel="noopener noreferrer" title="EveWho" aria-label="EveWho"><i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>{% endif %}

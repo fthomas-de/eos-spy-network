@@ -113,8 +113,8 @@ class Marker:
 
     @property
     def affiliated(self) -> bool:
-        """The rows name the counterpart's Corporation and Alliance; a snapshot of 0.0.5 or older does not."""
-        return self.dealings and "alliance" in self.rows[0]
+        """The rows name the counterpart's Corporation and Alliance; a snapshot of 0.0.5 (contacts: 0.0.16) or older does not."""
+        return (self.dealings or self.contacts) and "alliance" in self.rows[0]
 
     @property
     def joins(self) -> bool:

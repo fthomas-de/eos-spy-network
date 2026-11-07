@@ -83,8 +83,8 @@ is no binary log and there are no dumps.
   contacts come from aa-contacts (`contacts.py`), corptools' data from
   corptools, the killmails of the blue kills from killtracker
   (`killmails.py`; stored only with `KILLTRACKER_STORING_KILLMAILS_ENABLED`). The one ESI use is `affiliations.py`, in the task only: the
-  Corporation and Alliance of network counterparts neither Auth nor corptools
-  knows, through public endpoints without a token. Tests never reach ESI:
+  Corporation and Alliance of network counterparts and friendly hostile
+  contacts neither Auth nor corptools knows, through public endpoints without a token. Tests never reach ESI:
   `SpyTestCase` patches its three calls. Never use aa-contacts' `contact_name`
   property - for an entity Auth does not know it creates rows from ESI;
   read names through `with_contact_name()`.

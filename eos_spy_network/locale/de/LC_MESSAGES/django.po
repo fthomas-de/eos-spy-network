@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 16:09+0000\n"
-"PO-Revision-Date: 2026-11-07 16:09+0000\n"
+"POT-Creation-Date: 2026-11-07 17:24+0000\n"
+"PO-Revision-Date: 2026-11-07 17:24+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: de\n"
 "Language: de\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: auth_hooks.py:14 templates/eos_spy_network/base.html:6
+#: auth_hooks.py:15 templates/eos_spy_network/base.html:6
 #: templates/eos_spy_network/base.html:35
 msgid "Spy Network"
 msgstr "Spy Network"
@@ -31,6 +31,7 @@ msgstr "Character"
 
 #: contacts.py:26 models.py:225
 #: templates/eos_spy_network/network_corporation.html:99
+#: templates/eos_spy_network/partials/contacts.html:10
 #: templates/eos_spy_network/partials/dealings.html:10
 #: templates/eos_spy_network/partials/kills.html:10
 #: templates/eos_spy_network/partials/network-legend.html:8
@@ -41,6 +42,7 @@ msgstr "Corporation"
 
 #: contacts.py:27 forms.py:26 models.py:43 models.py:224
 #: templates/eos_spy_network/network_corporation.html:100
+#: templates/eos_spy_network/partials/contacts.html:11
 #: templates/eos_spy_network/partials/dealings.html:11
 #: templates/eos_spy_network/partials/kills.html:11
 #: templates/eos_spy_network/partials/network-legend.html:10
@@ -335,7 +337,7 @@ msgstr "Corporations ohne Marker ausblenden"
 
 #: templates/eos_spy_network/corporations.html:51
 #: templates/eos_spy_network/network.html:63
-#: templates/eos_spy_network/partials/dealings.html:46
+#: templates/eos_spy_network/partials/dealings.html:33
 msgid "View details"
 msgstr "Details anzeigen"
 
@@ -409,7 +411,7 @@ msgid "Payments"
 msgstr "Zahlungen"
 
 #: templates/eos_spy_network/network_corporation.html:65
-#: templates/eos_spy_network/partials/contacts.html:9
+#: templates/eos_spy_network/partials/contacts.html:13
 #: templates/eos_spy_network/partials/group-cell.html:7
 msgctxt "eos-spy-network"
 msgid "Standing"
@@ -426,12 +428,17 @@ msgstr "Zeitraum"
 msgid "Counterpart"
 msgstr "Gegenüber"
 
+#: templates/eos_spy_network/partials/affiliation-cells.html:13
+#: templates/eos_spy_network/partials/group-cell.html:13
+msgid "unknown"
+msgstr "unbekannt"
+
 #: templates/eos_spy_network/partials/contacts.html:8
 msgctxt "eos-spy-network"
 msgid "Contact"
 msgstr "Kontakt"
 
-#: templates/eos_spy_network/partials/contacts.html:10
+#: templates/eos_spy_network/partials/contacts.html:14
 #: templates/eos_spy_network/partials/kill-note-button.html:8
 #: templates/eos_spy_network/partials/kill-note-modal.html:29
 #: templates/eos_spy_network/partials/kills.html:14
@@ -440,7 +447,7 @@ msgctxt "eos-spy-network"
 msgid "Cleared"
 msgstr "Geklärt"
 
-#: templates/eos_spy_network/partials/contacts.html:11
+#: templates/eos_spy_network/partials/contacts.html:15
 #: templates/eos_spy_network/partials/kill-note-button.html:31
 #: templates/eos_spy_network/partials/kill-note-modal.html:17
 #: templates/eos_spy_network/partials/kill-note-modal.html:22
@@ -537,11 +544,6 @@ msgstr "Anzahl"
 #: templates/eos_spy_network/partials/dealings.html:16
 msgid "Kind"
 msgstr "Art"
-
-#: templates/eos_spy_network/partials/dealings.html:35
-#: templates/eos_spy_network/partials/group-cell.html:13
-msgid "unknown"
-msgstr "unbekannt"
 
 #: templates/eos_spy_network/partials/kill-note-button.html:29
 #: templates/eos_spy_network/partials/kill-note-modal.html:9
@@ -836,23 +838,23 @@ msgstr "Kein Blue-Kill gespeichert."
 msgid "Suspects"
 msgstr "Verdächtige"
 
-#: views.py:345
+#: views.py:353
 msgid "The markers and connections are being recalculated."
 msgstr "Marker und Verbindungen werden neu berechnet."
 
-#: views.py:347
+#: views.py:355
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr ""
 "Die Neuberechnung konnte nicht gestartet werden: Die Task-Queue ist nicht "
 "erreichbar."
 
-#: views.py:374
+#: views.py:382
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr ""
 "Einstellungen gespeichert. Marker und Verbindungen werden neu berechnet."
 
-#: views.py:378
+#: views.py:386
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

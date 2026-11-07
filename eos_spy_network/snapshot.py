@@ -131,16 +131,24 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
     step("affiliations")
     with measurement.phase(AFFILIATIONS):
         hostiles = {hostile.id: Standing(hostile.standing, hostile.sources) for hostile in hostile_list}
-        dealing_rows = [
-            row
-            for tile in tiles
-            for suspect in tile.suspects
-            for kind in (WALLET, CONTRACTS)
-            if kind in suspect.markers
-            for row in suspect.markers[kind].rows
-        ]
-        entities = affiliate(found.values(), hostiles, {row["counterpart_id"] for row in dealing_rows})
+        def rows(*kinds):
+            return [
+                row
+                for tile in tiles
+                for suspect in tile.suspects
+                for kind in kinds
+                if kind in suspect.markers
+                for row in suspect.markers[kind].rows
+            ]
+
+        dealing_rows, contact_rows = rows(WALLET, CONTRACTS), rows(CONTACTS)
+        entities = affiliate(
+            found.values(),
+            hostiles,
+            {row["counterpart_id"] for row in dealing_rows} | {row["contact_id"] for row in contact_rows},
+        )
         _affiliate_rows(dealing_rows, entities, hostiles)
+        _affiliate_rows(contact_rows, entities, hostiles, "contact_id")
         found = hostile_only(found)
 
     by_corporation = {}
@@ -192,8 +200,8 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
     return data
 
 
-def _affiliate_rows(rows: list, entities: dict, hostiles: dict) -> None:
-    """Name the Corporation and Alliance of each ISK and contract counterpart, with the standing of a hostile one."""
+def _affiliate_rows(rows: list, entities: dict, hostiles: dict, id_key: str = "counterpart_id") -> None:
+    """Name the Corporation and Alliance of each counterpart or contact, with the standing of a hostile one."""
 
     def group(eve_id):
         if not eve_id:
@@ -206,12 +214,12 @@ def _affiliate_rows(rows: list, entities: dict, hostiles: dict) -> None:
         }
 
     for row in rows:
-        entity = entities.get(row["counterpart_id"])
+        entity = entities.get(row[id_key])
         category = entity.category if entity else ""
         if category == CORPORATION:
-            corporation_id, alliance_id = row["counterpart_id"], entity.alliance_id
+            corporation_id, alliance_id = row[id_key], entity.alliance_id
         elif category == ALLIANCE:
-            corporation_id, alliance_id = None, row["counterpart_id"]
+            corporation_id, alliance_id = None, row[id_key]
         else:
             corporation_id = entity.corporation_id if entity else None
             alliance_id = entity.alliance_id if entity else None
@@ -348,7 +356,9 @@ def reviewed_contacts(marker: dict, main_id: int, reviews: dict) -> dict | None:
     for row in marker["rows"]:
         key = contact_key(row)
         cleared, note = reviews.get((CONTACTS, main_id, key), (False, ""))
-        rows.append({**row, "key": key, "cleared": cleared, "note": note})
+        # the template cannot zip: each character with its ID for the EveWho link
+        named = list(zip(row["character_ids"], row["characters"]))
+        rows.append({**row, "key": key, "cleared": cleared, "note": note, "named_characters": named})
     open_rows = [row for row in rows if not row["cleared"]]
     if not open_rows:
         return None

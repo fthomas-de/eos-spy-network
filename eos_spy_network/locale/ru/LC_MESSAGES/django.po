@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-07 16:09+0000\n"
-"PO-Revision-Date: 2026-11-07 16:09+0000\n"
+"POT-Creation-Date: 2026-11-07 17:24+0000\n"
+"PO-Revision-Date: 2026-11-07 17:24+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: ru\n"
 "Language: ru\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: auth_hooks.py:14 templates/eos_spy_network/base.html:6
+#: auth_hooks.py:15 templates/eos_spy_network/base.html:6
 #: templates/eos_spy_network/base.html:35
 msgid "Spy Network"
 msgstr "Spy Network"
@@ -31,6 +31,7 @@ msgstr "Character"
 
 #: contacts.py:26 models.py:225
 #: templates/eos_spy_network/network_corporation.html:99
+#: templates/eos_spy_network/partials/contacts.html:10
 #: templates/eos_spy_network/partials/dealings.html:10
 #: templates/eos_spy_network/partials/kills.html:10
 #: templates/eos_spy_network/partials/network-legend.html:8
@@ -41,6 +42,7 @@ msgstr "Corporation"
 
 #: contacts.py:27 forms.py:26 models.py:43 models.py:224
 #: templates/eos_spy_network/network_corporation.html:100
+#: templates/eos_spy_network/partials/contacts.html:11
 #: templates/eos_spy_network/partials/dealings.html:11
 #: templates/eos_spy_network/partials/kills.html:11
 #: templates/eos_spy_network/partials/network-legend.html:10
@@ -330,7 +332,7 @@ msgstr "Скрыть Corporations без маркеров"
 
 #: templates/eos_spy_network/corporations.html:51
 #: templates/eos_spy_network/network.html:63
-#: templates/eos_spy_network/partials/dealings.html:46
+#: templates/eos_spy_network/partials/dealings.html:33
 msgid "View details"
 msgstr "Подробнее"
 
@@ -402,7 +404,7 @@ msgid "Payments"
 msgstr "Платежи"
 
 #: templates/eos_spy_network/network_corporation.html:65
-#: templates/eos_spy_network/partials/contacts.html:9
+#: templates/eos_spy_network/partials/contacts.html:13
 #: templates/eos_spy_network/partials/group-cell.html:7
 msgctxt "eos-spy-network"
 msgid "Standing"
@@ -419,12 +421,17 @@ msgstr "Период"
 msgid "Counterpart"
 msgstr "Контрагент"
 
+#: templates/eos_spy_network/partials/affiliation-cells.html:13
+#: templates/eos_spy_network/partials/group-cell.html:13
+msgid "unknown"
+msgstr "неизвестно"
+
 #: templates/eos_spy_network/partials/contacts.html:8
 msgctxt "eos-spy-network"
 msgid "Contact"
 msgstr "Контакт"
 
-#: templates/eos_spy_network/partials/contacts.html:10
+#: templates/eos_spy_network/partials/contacts.html:14
 #: templates/eos_spy_network/partials/kill-note-button.html:8
 #: templates/eos_spy_network/partials/kill-note-modal.html:29
 #: templates/eos_spy_network/partials/kills.html:14
@@ -433,7 +440,7 @@ msgctxt "eos-spy-network"
 msgid "Cleared"
 msgstr "Улажено"
 
-#: templates/eos_spy_network/partials/contacts.html:11
+#: templates/eos_spy_network/partials/contacts.html:15
 #: templates/eos_spy_network/partials/kill-note-button.html:31
 #: templates/eos_spy_network/partials/kill-note-modal.html:17
 #: templates/eos_spy_network/partials/kill-note-modal.html:22
@@ -530,11 +537,6 @@ msgstr "Количество"
 #: templates/eos_spy_network/partials/dealings.html:16
 msgid "Kind"
 msgstr "Вид"
-
-#: templates/eos_spy_network/partials/dealings.html:35
-#: templates/eos_spy_network/partials/group-cell.html:13
-msgid "unknown"
-msgstr "неизвестно"
 
 #: templates/eos_spy_network/partials/kill-note-button.html:29
 #: templates/eos_spy_network/partials/kill-note-modal.html:9
@@ -824,20 +826,20 @@ msgstr "Нет сохранённых blue-киллов."
 msgid "Suspects"
 msgstr "Подозреваемые"
 
-#: views.py:345
+#: views.py:353
 msgid "The markers and connections are being recalculated."
 msgstr "Маркеры и связи пересчитываются."
 
-#: views.py:347
+#: views.py:355
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr "Не удалось запустить пересчёт: очередь задач недоступна."
 
-#: views.py:374
+#: views.py:382
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr "Настройки сохранены. Маркеры и связи пересчитываются."
 
-#: views.py:378
+#: views.py:386
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

@@ -162,9 +162,10 @@ the task looks up its Corporation and Alliance - first in Auth's and
 corptools' tables, and only for what neither knows through ESI's public
 endpoints (names, character affiliation, Corporation), without a token. A
 failed request leaves that counterpart without Corporation; the
-calculation goes on. The rows of *ISK with hostiles* and *Contracts with
-hostiles* get their counterpart's Corporation and Alliance from the same
-lookup; whether a counterpart is hostile is still decided without it.
+calculation goes on. The rows of *ISK with hostiles*, *Contracts with
+hostiles* and *Friendly to hostiles* get their counterpart's or contact's
+Corporation and Alliance from the same lookup; whether one is hostile is
+still decided without it.
 
 ## Killmails
 
