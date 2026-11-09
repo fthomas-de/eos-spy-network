@@ -5,7 +5,8 @@
  *
  * Clearing needs a note: ticking a row without one opens the popup with the
  * tick set, and Save stays off until there is a note. A row with a note is
- * ticked and unticked at once.
+ * ticked and unticked at once. In the settings tabs (the popup marked admin)
+ * every row is ticked at once, a note or not.
  *
  * A note is someone's free text, so it only ever travels as text: read from
  * value and dataset, written to value, textContent and attributes - never as
@@ -30,11 +31,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let button = null;
     // set by ticking a row without a note: the popup opens with the tick already set
     let tickOnOpen = false;
+    // the server takes a cleared finding without a note from an admin only
+    const admin = "eosSpyNetworkKillAdmin" in modal.dataset;
 
-    // the server refuses a cleared kill without a note
     const showCount = () => {
         count.textContent = String(textarea.value.length);
-        save.disabled = cleared.checked && textarea.value.trim() === "";
+        save.disabled = !admin && cleared.checked && textarea.value.trim() === "";
     };
     textarea.addEventListener("input", showCount);
     cleared.addEventListener("change", showCount);
@@ -133,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         const target = tick.closest("tr").querySelector("[data-eos-spy-network-kill-note]");
-        if (tick.checked && target.dataset.eosSpyNetworkKillNote === "") {
+        if (tick.checked && target.dataset.eosSpyNetworkKillNote === "" && !admin) {
             // no note yet: ask for it, the tick is set when it is saved
             tick.checked = false;
             tickOnOpen = true;

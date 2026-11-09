@@ -63,6 +63,15 @@ class SpyConfiguration(SingletonModel):
             "contacts count, not those of its Corporations."
         ),
     )
+    # million ISK, as killtracker's own trackers take their minimum value
+    min_kill_value = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Minimum kill value in million ISK"),
+        help_text=_(
+            "A blue kill worth less, by zKillboard's value, does not count - a capsule or a shuttle is no "
+            "awox worth a look. A kill without a known value counts. 0 counts every kill."
+        ),
+    )
     corp_changes_per_year = models.PositiveSmallIntegerField(
         default=4,
         validators=[MinValueValidator(2), MaxValueValidator(50)],
@@ -154,6 +163,8 @@ class BlueKill(models.Model):
     victim_alliance_id = models.PositiveBigIntegerField(null=True)
     victim_alliance = models.CharField(max_length=254, blank=True)
     ship = models.CharField(max_length=254, blank=True)
+    # zKillboard's value in ISK, as killtracker keeps it; none when zKillboard sent none
+    value = models.FloatField(null=True)
     reason = models.CharField(max_length=8)
     # the blue's standing at the time it was copied; none for an awox
     standing = models.DecimalField(max_digits=3, decimal_places=1, null=True)

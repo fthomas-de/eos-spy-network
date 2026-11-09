@@ -45,6 +45,7 @@ class Kill:
     victim_alliance_id: int | None
     victim_alliance: str
     ship: str
+    value: float | None
 
 
 def kills(character_ids, victim_alliance_id: int | None, victim_ids, since: datetime | None = None) -> list[Kill]:
@@ -75,6 +76,7 @@ def kills(character_ids, victim_alliance_id: int | None, victim_ids, since: date
             alliance_id,
             alliance or "",
             ship or "",
+            value,
         )
         for (
             killmail_id,
@@ -87,6 +89,7 @@ def kills(character_ids, victim_alliance_id: int | None, victim_ids, since: date
             alliance_id,
             alliance,
             ship,
+            value,
         ) in attackers.values_list(
             "killmail_id",
             "killmail__time",
@@ -98,5 +101,6 @@ def kills(character_ids, victim_alliance_id: int | None, victim_ids, since: date
             "killmail__alliance_id",
             "killmail__alliance__name",
             "killmail__ship_type__name",
+            "killmail__total_value",
         )
     ]

@@ -139,6 +139,22 @@ class TestKillNote(ReviewTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertFalse(BlueKill.objects.get(killmail_id=1).cleared)
 
+    def test_should_clear_without_a_note_for_an_admin(self):
+        self.client.force_login(make_user("admin", MANAGE_SETTINGS, VIEW_SUSPECTS))
+
+        response = self.post(note="", cleared="1")
+
+        self.assertEqual(response.json(), {"note": "", "cleared": True})
+        self.assertTrue(BlueKill.objects.get(killmail_id=1).cleared)
+
+    def test_should_ask_an_admin_for_a_note_on_the_corporation_page(self):
+        self.client.force_login(make_user("admin", MANAGE_SETTINGS, VIEW_SUSPECTS))
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, 'id="eos-spy-network-kill-note"')
+        self.assertNotContains(response, "data-eos-spy-network-kill-admin")
+
     def test_should_take_a_note_without_the_tick(self):
         response = self.post(note="Asked him")
 
@@ -226,6 +242,19 @@ class TestSettingsTab(ReviewTestCase):
         response = self.get()
 
         self.assertEqual(response.context["tab"], "kills")
+
+    def test_should_let_the_admin_clear_without_a_note(self):
+        self.assertContains(self.get(), "data-eos-spy-network-kill-admin")
+
+    def test_should_leave_out_a_kill_below_the_minimum_value(self):
+        BlueKill.objects.filter(killmail_id=1).update(value=10_000)
+        configure(min_kill_value=1)
+
+        response = self.get()
+
+        self.assertNotContains(response, "https://zkillboard.com/kill/1/")
+        # killmail 2 has no known value: it counts
+        self.assertContains(response, "https://zkillboard.com/kill/2/")
 
     def test_should_show_the_note_without_a_button_to_a_viewer_without_view_suspects(self):
         self.review(1, cleared=False, note="Read only")

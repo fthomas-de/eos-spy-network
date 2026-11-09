@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.19] - 2026-11-09
+
+### Added
+
+- Settings, *Alliance*: a minimum value for blue kills in million ISK, as
+  killtracker's own trackers take it (default 0: every kill). A capsule or
+  a shuttle shot by a blue made a marker as loud as a lost battleship. A
+  kill below it counts neither for the marker and eos-auth-monitor nor in
+  the settings tab; one zKillboard sent no value for still counts. The
+  value comes from killtracker and is refreshed on every copy, so kills
+  copied before get theirs at the next recalculation as long as killtracker
+  still holds them (migration 0009).
+- Settings tab *Friendly to hostiles*: every friendly hostile contact of
+  the last calculation, the cleared ones too, with main, characters,
+  Corporation, Alliance, standing, tick and note - so an admin can work
+  through the findings without opening each Corporation.
+
+### Changed
+
+- In the settings tabs *Blue kills* and *Friendly to hostiles* a user with
+  `manage_settings` (and `view_suspects`, which the tick needs) clears a
+  row with the tick alone, without a note (user's decision). On the
+  Corporation page clearing still asks for a note, also of an admin; the
+  server takes a cleared finding without a note from `manage_settings`
+  users only.
+
 ## [0.0.18] - 2026-11-07
 
 ### Added

@@ -448,6 +448,7 @@ class TestSettingsPage(SpyTestCase):
                 "alliance": make_alliance().pk,
                 "hostile_below": "-5",
                 "blue_from": "7.5",
+                "min_kill_value": "3",
                 "corp_changes_per_year": "6",
                 "lookback_days": "90",
                 "ignored_ref_types": ["market_transaction", "player_trading"],
@@ -462,6 +463,7 @@ class TestSettingsPage(SpyTestCase):
         config = SpyConfiguration.get_solo()
         self.assertEqual(config.hostile_below, Decimal("-5"))
         self.assertEqual(config.blue_from, Decimal("7.5"))
+        self.assertEqual(config.min_kill_value, 3)
         self.assertEqual(config.corp_changes_per_year, 6)
         self.assertEqual(config.lookback_days, 90)
         self.assertEqual(config.ignored_ref_types, ["market_transaction", "player_trading"])
@@ -493,6 +495,7 @@ class TestSettingsPage(SpyTestCase):
                 "alliance": make_alliance().pk,
                 "hostile_below": "0",
                 "blue_from": "5",
+                "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
                 "markers": ["membership", "corp_changes", "mails", "wallet", "contracts", "blue_kills"],
@@ -512,6 +515,7 @@ class TestSettingsPage(SpyTestCase):
                 "alliance": make_alliance().pk,
                 "hostile_below": "0",
                 "blue_from": "5",
+                "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
                 "markers": ["no_such_marker"],
@@ -550,6 +554,7 @@ class TestSettingsPage(SpyTestCase):
                 "alliance": make_alliance().pk,
                 "hostile_below": "0",
                 "blue_from": "5",
+                "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
                 "ignored_ref_types": ["no_such_type"],

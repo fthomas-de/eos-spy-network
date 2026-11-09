@@ -29,7 +29,9 @@ def entity(eve_id, category, name=None):
     )[0]
 
 
-def add_killmail(killmail_id, attacker_ids, victim_id=None, corporation_id=NEUTRAL_CORP, alliance_id=None, days_ago=1):
+def add_killmail(
+    killmail_id, attacker_ids, victim_id=None, corporation_id=NEUTRAL_CORP, alliance_id=None, days_ago=1, value=None
+):
     """A killmail as killtracker stores it: the victim on the killmail, one row per attacker."""
     killmail = EveKillmail.objects.create(
         id=killmail_id,
@@ -38,6 +40,7 @@ def add_killmail(killmail_id, attacker_ids, victim_id=None, corporation_id=NEUTR
         corporation=entity(corporation_id, EveEntity.CATEGORY_CORPORATION),
         alliance=entity(alliance_id, EveEntity.CATEGORY_ALLIANCE) if alliance_id else None,
         ship_type=entity(587, EveEntity.CATEGORY_INVENTORY_TYPE, "Rifter"),
+        total_value=value,
     )
     for attacker_id in attacker_ids:
         EveKillmailAttacker.objects.create(
@@ -236,6 +239,49 @@ class TestCopiedKills(KillTestCase):
         EveKillmail.objects.all().delete()
 
         self.assertIsNone(self.marker())
+
+
+class TestMinimumValue(KillTestCase):
+    """A kill below the minimum value, in million ISK, does not count; one without a value does."""
+
+    def setUp(self):
+        super().setUp()
+        configure(min_kill_value=1)
+
+    def test_should_copy_the_value(self):
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=ALLIANCE_ID, value=2_500_000.5)
+        self.marker()
+
+        self.assertEqual(BlueKill.objects.get().value, 2_500_000.5)
+
+    def test_should_ignore_a_kill_below_the_minimum(self):
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=ALLIANCE_ID, value=10_000)
+
+        self.assertIsNone(self.marker())
+
+    def test_should_count_a_kill_at_the_minimum(self):
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=ALLIANCE_ID, value=1_000_000)
+
+        self.assertEqual(self.marker().count, 1)
+
+    def test_should_count_a_kill_without_a_value(self):
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=ALLIANCE_ID)
+
+        self.assertEqual(self.marker().count, 1)
+
+    def test_should_count_every_kill_at_zero(self):
+        configure(min_kill_value=0)
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=ALLIANCE_ID, value=10_000)
+
+        self.assertEqual(self.marker().count, 1)
+
+    def test_should_give_an_older_copy_its_value(self):
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=ALLIANCE_ID, value=10_000)
+        self.marker()
+        BlueKill.objects.update(value=None)
+
+        self.assertIsNone(self.marker())
+        self.assertEqual(BlueKill.objects.get().value, 10_000)
 
 
 class TestKillsPage(KillTestCase):

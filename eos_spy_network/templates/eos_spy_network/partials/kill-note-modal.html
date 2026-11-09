@@ -1,6 +1,7 @@
 {% load i18n %}
 {# One popup for every reviewed row (blue kills, friendly hostile contacts); kills.js fills it from the button that opened it. #}
 {# reload: the page counts the open kills, so it reloads after a save instead of updating the row. #}
+{# admin: the settings tabs, where a row is cleared without a note; the server allows it with manage_settings only. #}
 {% if perms.eos_spy_network.view_suspects %}
     <div class="modal fade" id="eos-spy-network-kill-note" tabindex="-1"
          aria-labelledby="eos-spy-network-kill-note-title" aria-hidden="true"
@@ -8,7 +9,8 @@
          data-eos-spy-network-finding-url="{% url 'eos_spy_network:finding_note' %}"
          data-eos-spy-network-kill-empty="{% translate 'Add a note' %}"
          data-eos-spy-network-kill-error="{% translate 'Could not save the note.' %}"
-         {% if reload %}data-eos-spy-network-kill-reload{% endif %}>
+         {% if reload %}data-eos-spy-network-kill-reload{% endif %}
+         {% if admin %}data-eos-spy-network-kill-admin{% endif %}>
         {% csrf_token %}
         <div class="modal-dialog">
             <div class="modal-content">
@@ -27,7 +29,11 @@
                     <div class="form-check mt-2">
                         <input class="form-check-input" type="checkbox" id="eos-spy-network-kill-note-cleared">
                         <label class="form-check-label" for="eos-spy-network-kill-note-cleared">{% translate "Cleared" context "eos-spy-network" %}</label>
-                        <div class="form-text mt-0">{% translate "Needs a note saying why. A cleared finding no longer counts for the marker; it takes effect at once." %}</div>
+                        {% if admin %}
+                            <div class="form-text mt-0">{% translate "A cleared finding no longer counts for the marker; it takes effect at once." %}</div>
+                        {% else %}
+                            <div class="form-text mt-0">{% translate "Needs a note saying why. A cleared finding no longer counts for the marker; it takes effect at once." %}</div>
+                        {% endif %}
                     </div>
                     <div class="text-danger small" role="alert" data-eos-spy-network-kill-note-error></div>
                 </div>

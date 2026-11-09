@@ -11,6 +11,7 @@ from .base import ALLIANCE_ID, OTHER_ALLIANCE_ID, configure, make_user
 from .test_markers import HOSTILE_CORP, MarkerTestCase, eve_name
 
 VIEW_SUSPECTS = "eos_spy_network.view_suspects"
+MANAGE_SETTINGS = "eos_spy_network.manage_settings"
 ALT = 5001
 
 
@@ -154,6 +155,12 @@ class TestFindingNote(FindingTestCase):
         self.assertEqual(self.post(note="  ", cleared="1").status_code, 400)
         self.assertFalse(FindingReview.objects.exists())
 
+    def test_should_clear_without_a_note_for_an_admin(self):
+        self.client.force_login(make_user("admin", MANAGE_SETTINGS, VIEW_SUSPECTS))
+
+        self.assertEqual(self.post(note="", cleared="1").json(), {"note": "", "cleared": True})
+        self.assertTrue(FindingReview.objects.get().cleared)
+
     def test_should_refuse_a_kind_without_reviews(self):
         self.assertEqual(self.post(kind=markers.MAILS, note="Agreed").status_code, 400)
 
@@ -196,3 +203,51 @@ class TestFindingNote(FindingTestCase):
 
         self.assertContains(response, 'class="opacity-50"', count=1)
         self.assertContains(response, "Fleet fight")
+
+
+class TestSettingsTab(FindingTestCase):
+    """Every friendly hostile contact of the snapshot, the cleared ones too, for the admin to tick off."""
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(make_user("admin", MANAGE_SETTINGS, VIEW_SUSPECTS))
+
+    def get(self):
+        return self.client.get(reverse("eos_spy_network:settings") + "?tab=contacts")
+
+    def test_should_list_the_contact_with_its_main_and_tick(self):
+        response = self.get()
+
+        self.assertEqual(response.context["tab"], "contacts")
+        self.assertContains(response, 'id="eos-spy-network-settings-contacts"')
+        self.assertContains(response, f'data-eos-spy-network-kill-key="{HOSTILE_CORP}:5"')
+        self.assertContains(response, f'data-eos-spy-network-kill-main="{self.main.character_id}"')
+        self.assertContains(response, self.main.character_name)
+        self.assertContains(response, "data-eos-spy-network-kill-admin")
+
+    def test_should_keep_a_cleared_contact_greyed_with_who_cleared_it(self):
+        self.client.post(
+            reverse("eos_spy_network:finding_note"),
+            {"kind": markers.CONTACTS, "main_id": self.main.character_id, "key": f"{HOSTILE_CORP}:5", "cleared": "1"},
+        )
+
+        response = self.get()
+
+        self.assertContains(response, 'class="opacity-50"', count=1)
+        self.assertContains(response, "Last changed by admin main")
+
+    def test_should_ignore_a_review_of_another_alliance(self):
+        FindingReview.objects.create(
+            alliance_id=OTHER_ALLIANCE_ID, kind=markers.CONTACTS, main_id=self.main.character_id,
+            key=f"{HOSTILE_CORP}:5", cleared=True, note="Elsewhere",
+        )
+
+        self.assertNotContains(self.get(), "Elsewhere")
+
+    def test_should_say_so_without_a_snapshot_of_the_alliance(self):
+        configure(alliance_id=OTHER_ALLIANCE_ID)
+
+        response = self.get()
+
+        self.assertEqual(response.context["contacts"], [])
+        self.assertContains(response, "No friendly hostile contact found.")

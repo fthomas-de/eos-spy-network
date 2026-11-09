@@ -557,8 +557,16 @@ def _add_rows(accounts, index, names, dealings, kind):
 
 AWOX = BlueKill.AWOX
 BLUE = BlueKill.BLUE
-# on a second copy only the names may have changed: killtracker resolves them after storing the killmail
-RESOLVED_NAMES = ["victim", "victim_corporation", "victim_alliance", "ship"]
+# on a second copy only these may have changed: killtracker resolves the names after storing the killmail,
+# and a copy made before the value was kept has none yet
+RESOLVED_NAMES = ["victim", "victim_corporation", "victim_alliance", "ship", "value"]
+
+
+def worth_counting(kills, config):
+    """The blue kills at or above the minimum value; one without a known value counts (user)."""
+    if not config.min_kill_value:
+        return kills
+    return kills.filter(Q(value__isnull=True) | Q(value__gte=config.min_kill_value * 1_000_000))
 
 
 def _check_kills(accounts, config, characters):
@@ -575,7 +583,7 @@ def _check_kills(accounts, config, characters):
     since = config.since()
     _copy_kills(alliance_id, owner, blue_entities(config), since)
 
-    kills = BlueKill.objects.filter(alliance_id=alliance_id, character_id__in=list(owner))
+    kills = worth_counting(BlueKill.objects.filter(alliance_id=alliance_id, character_id__in=list(owner)), config)
     if since is not None:
         kills = kills.filter(time__gte=since)
     seen = defaultdict(set)  # account -> killmail IDs
@@ -656,6 +664,7 @@ def _copy_kills(alliance_id, owner, blues, since):
                 victim_alliance_id=kill.victim_alliance_id,
                 victim_alliance=name(kill.victim_alliance, kill.victim_alliance_id),
                 ship=kill.ship,
+                value=kill.value,
                 reason=reason,
                 standing=standing,
             )

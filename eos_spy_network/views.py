@@ -18,7 +18,7 @@ from . import __version__, contacts, contract_details, killmails, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
-from .markers import BLUE_KILLS, CONTACTS, KINDS, LABELS, corptools_installed, own_kill
+from .markers import BLUE_KILLS, CONTACTS, KINDS, LABELS, corptools_installed, own_kill, worth_counting
 from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, SpyConfiguration
 from .permissions import (
     APP_PERMISSIONS,
@@ -48,7 +48,8 @@ TAB_ALLIANCE = "alliance"
 TAB_SOURCES = "sources"
 TAB_MARKERS = "markers"
 TAB_KILLS = "kills"
-SETTINGS_TABS = (TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS, TAB_KILLS)
+TAB_CONTACTS = "contacts"
+SETTINGS_TABS = (TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS, TAB_KILLS, TAB_CONTACTS)
 
 
 def _render(request, template, context=None, nav=None, started=None):
@@ -96,10 +97,18 @@ def _notices(config) -> dict:
     }
 
 
-def _report(config) -> snapshots.Report | None:
+def _snapshot(config):
+    """The stored result, or None while there is none for the configured Alliance."""
     current = snapshots.current()
     # after a change of the Alliance the stored result is of the old one until recalculated
     if current is None or not config.alliance or current.data.get("alliance_id") != config.alliance.alliance_id:
+        return None
+    return current
+
+
+def _report(config) -> snapshots.Report | None:
+    current = _snapshot(config)
+    if current is None:
         return None
     disabled = config.disabled_markers or ()
     reviews = {} if BLUE_KILLS in disabled else snapshots.kill_reviews(config.alliance.alliance_id)
@@ -130,7 +139,7 @@ def _kill_rows(config) -> list:
     if not config.alliance:
         return []
     kills = list(
-        BlueKill.objects.filter(alliance_id=config.alliance.alliance_id)
+        worth_counting(BlueKill.objects.filter(alliance_id=config.alliance.alliance_id), config)
         .select_related("reviewed_by__profile__main_character")
         .order_by("-time", "killmail_id", "character_id")
     )
@@ -169,6 +178,41 @@ def _kill_rows(config) -> list:
     return rows
 
 
+def _contact_rows(config) -> list:
+    """Every friendly hostile contact of the stored result, the cleared ones too: one row per main, contact and standing."""
+    current = _snapshot(config)
+    if current is None:
+        return []
+    reviews = {
+        (review.main_id, review.key): review
+        for review in FindingReview.objects.filter(
+            alliance_id=config.alliance.alliance_id, kind=CONTACTS
+        ).select_related("reviewed_by__profile__main_character")
+    }
+    rows = []
+    for corporation in current.data["corporations"]:
+        for suspect in corporation["suspects"]:
+            for marker in (marker for marker in suspect["markers"] if marker["kind"] == CONTACTS):
+                # a snapshot of 0.0.15 or older has no rows to review until the next run
+                for row in marker.get("rows", []):
+                    key = snapshots.contact_key(row)
+                    review = reviews.get((suspect["main_id"], key))
+                    rows.append(
+                        {
+                            **row,
+                            "main_id": suspect["main_id"],
+                            "main_name": suspect["main_name"],
+                            "key": key,
+                            "named_characters": list(zip(row["character_ids"], row["characters"])),
+                            "cleared": review.cleared if review else False,
+                            "note": review.note if review else "",
+                            "reviewed_at": review.reviewed_at if review else None,
+                            "reviewed_by": review.reviewed_by if review else None,
+                        }
+                    )
+    return rows
+
+
 @any_permission_required(VIEW_SUSPECTS)
 @require_POST
 def kill_note(request):
@@ -202,8 +246,10 @@ def _posted_note(request) -> tuple:
     if len(text) > KILL_NOTE_LENGTH:
         return "", False, HttpResponseBadRequest("note too long")
     cleared = request.POST.get("cleared") == "1"
-    # the user's rule: whoever clears a finding says why, or the next reader cannot tell what was checked
-    if cleared and not text:
+    # the user's rule: whoever clears a finding says why, or the next reader cannot tell what was checked -
+    # except an admin, who ticks findings off in the settings tabs (user, 2026-11-09); the Corporation page
+    # still asks every viewer for a note, but only in its popup
+    if cleared and not text and not request.user.has_perm(MANAGE_SETTINGS):
         return "", False, HttpResponseBadRequest("a cleared finding needs a note")
     return text, cleared, None
 
@@ -424,6 +470,7 @@ def settings(request):
             "form": form,
             "rows": rows,
             "kills": _kill_rows(config),
+            "contacts": _contact_rows(config),
             "note_length": KILL_NOTE_LENGTH,
             "tab": tab if tab in SETTINGS_TABS else TAB_ALLIANCE,
         },

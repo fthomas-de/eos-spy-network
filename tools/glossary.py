@@ -432,6 +432,38 @@ TRANSLATIONS = {
         "最后修改：%(name)s，%(at)s",
     ),
     "No blue kill stored.": ("Kein Blue-Kill gespeichert.", "Нет сохранённых blue-киллов.", "没有已保存的 blue 击杀。"),
+    "Minimum kill value in million ISK": (
+        "Mindestwert eines Kills in Mio. ISK",
+        "Минимальная стоимость килла в млн ISK",
+        "击杀最低价值（百万 ISK）",
+    ),
+    "A blue kill worth less, by zKillboard's value, does not count - a capsule or a shuttle is no awox worth a "
+    "look. A kill without a known value counts. 0 counts every kill.": (
+        "Ein Blue-Kill mit geringerem Wert laut zKillboard zählt nicht - eine Kapsel oder ein Shuttle ist kein "
+        "Awox, der einen Blick wert ist. Ein Kill ohne bekannten Wert zählt. 0 zählt jeden Kill.",
+        "Blue-килл дешевле этого (по оценке zKillboard) не учитывается - капсула или шаттл не стоят внимания "
+        "как Awox. Килл без известной стоимости учитывается. 0 учитывает каждый килл.",
+        "按 zKillboard 估值低于此值的 blue 击杀不计入——太空舱或穿梭机不值得当作 Awox 查看。价值未知的击杀照样计入。"
+        "0 表示计入所有击杀。",
+    ),
+    "A cleared finding no longer counts for the marker; it takes effect at once.": (
+        "Ein geklärter Fund zählt nicht mehr für den Marker; das wirkt sofort.",
+        "Улаженная находка больше не учитывается в маркере; это действует сразу.",
+        "已澄清的发现不再计入该标记；立即生效。",
+    ),
+    "Every friendly hostile contact of the last calculation, the cleared ones too. A cleared contact no longer "
+    "counts for the marker; at another standing it is a new finding.": (
+        "Jeder freundliche feindliche Kontakt der letzten Berechnung, auch die geklärten. Ein geklärter Kontakt "
+        "zählt nicht mehr für den Marker; mit anderem Standing ist er ein neuer Fund.",
+        "Каждый дружественный враждебный контакт из последнего расчёта, включая улаженные. Улаженный контакт "
+        "больше не учитывается в маркере; с другим Standing это новая находка.",
+        "上次计算中的每个友好敌对联系人，包括已澄清的。已澄清的联系人不再计入该标记；Standing 改变后即为新的发现。",
+    ),
+    "No friendly hostile contact found.": (
+        "Kein freundlicher feindlicher Kontakt gefunden.",
+        "Дружественных враждебных контактов не найдено.",
+        "未发现友好的敌对联系人。",
+    ),
 }
 
 PLURALS = {}
