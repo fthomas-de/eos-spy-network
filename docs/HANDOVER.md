@@ -4,25 +4,44 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-07.
+Last updated 2026-11-09.
 
 ## State
 
-- Version: `0.0.18`, 2026-11-07 (see `CHANGELOG.md`): *Blue kills* get the
-  EveWho icons (own characters, victim, its Corporation and Alliance) in
-  the marker (`partials/kills.html`) and the settings tab, plus an audit
-  icon (`corptools:reactmain`, inline in both templates, title "Audit"
-  untranslated like "EveWho") to the **main** of a victim with an account
-  in Auth. The marker rows store `victim_id`, `corporation_id`,
-  `alliance_id` (`markers._check_kills`); `reviewed_kills` adds
-  `named_characters`; the victim's main is read at every view by
-  `views._victim_mains` (corporation page and `_kill_rows`), not stored.
-  `evewho-link.html` renders nothing without an ID. The victim's icons on
-  the marker page need a recalculation; the rest shows at once. Tests
-  `test_kill_reviews.TestKillLinks` (3). Not seen in a browser.
-  Decided (user, 2026-11-07): audit link only for a victim with an
-  account, to its main; EveWho on victim, Corporation, Alliance and the
-  own characters; in the marker and the settings tab.
+- Version: `0.0.19`, 2026-11-09 (see `CHANGELOG.md`), three things:
+  - Minimum blue kill value: `SpyConfiguration.min_kill_value` (million
+    ISK, default 0 = off, Alliance tab) and `BlueKill.value` (float, from
+    killtracker's `EveKillmail.total_value`; migration 0009, applied to
+    `aa_dev`). `killmails.Kill.value`; `markers._copy_kills` writes it and
+    the upsert refreshes it (`RESOLVED_NAMES` now holds `value`), so older
+    copies get it while killtracker still holds the killmail.
+    `markers.worth_counting(queryset, config)` filters in `_check_kills`
+    (marker, API - after a recalculation, which saving the settings
+    starts) and `views._kill_rows` (settings tab, at once). A kill without
+    a value counts. Tests `test_kills.TestMinimumValue` (6), one in
+    `test_kill_reviews.TestSettingsTab`.
+  - New settings tab *Friendly to hostiles* (`TAB_CONTACTS = "contacts"`,
+    `views._contact_rows`): every contacts row of the stored snapshot,
+    cleared ones too, with main, characters, contact, Corporation,
+    Alliance, standing, tick, note, "Last changed by"; reviews read from
+    `FindingReview` of the configured Alliance. `views._snapshot(config)`
+    is the shared "snapshot of this Alliance or None" (also used by
+    `_report`). Tests `test_finding_reviews.TestSettingsTab` (4).
+  - Clearing without a note for admins: `views._posted_note` refuses an
+    empty note only without `manage_settings` (endpoints still need
+    `view_suspects`). The settings page includes the popup with
+    `admin=True` -> `data-eos-spy-network-kill-admin`; `kills.js` then
+    stores the row tick at once and lets Save go without a note. The
+    Corporation page keeps the note in its popup - for admins only a UI
+    rule, the server would take it. Tests in `TestKillNote` and
+    `TestFindingNote`.
+  None of it seen in a browser (`aa_dev` has neither a contacts marker nor
+  real blue kills with a value).
+- Before (0.0.18): *Blue kills* got EveWho icons (own characters, victim,
+  its Corporation and Alliance) in the marker and the settings tab, plus an
+  audit icon (`corptools:reactmain`) to the **main** of a victim with an
+  account in Auth (`views._victim_mains`, read at every view). The victim's
+  icons on the marker page need a recalculation. Not seen in a browser.
 - Before (0.0.17): *Friendly to
   hostiles* shows the contact's Corporation and Alliance (two columns, red
   with standing when hostile) and a small EveWho icon after the contact
@@ -114,23 +133,25 @@ Last updated 2026-11-07.
   pins the SQL; (0.0.6) time frame and ignored wallet types; (0.0.5)
   network only with hostile partners; (0.0.4) affiliations, progress bar.
 - What the app does today: settings (Alliance, hostile threshold, blue
-  threshold, Corporation changes per year, time frame, ignored wallet entry
-  types; contact sources; marker switches; every stored blue kill with
-  note and Cleared tick); Markers: the Corporations as
+  threshold, minimum kill value, Corporation changes per year, time frame,
+  ignored wallet entry types; contact sources; marker switches; every
+  stored blue kill and every friendly hostile contact with note and Cleared
+  tick, an admin clears without a note); Markers: the Corporations as
   tiles, per Corporation the mains with markers (hostile membership now and
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 269 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.18 added `test_kill_reviews.TestKillLinks`:
-  links on both pages, none without victim IDs); every new test
-  checked against sabotaged code. `tests.base.SpyTestCase` patches
+- Tests: 284 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.19 added 15: minimum value, contacts tab, admin
+  clearing); every new test checked against sabotaged code (9 faults, all
+  caught). `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
   not reviewed by the user (0.0.13 added the blue kill texts, 0.0.14 the
-  note texts; Awox and Blue stay English; "Cleared" carries the
-  `eos-spy-network` context - another app translates it differently in ru).
+  note texts, 0.0.19 the minimum value and contacts tab texts; Awox and
+  Blue stay English; "Cleared" carries the `eos-spy-network` context -
+  another app translates it differently in ru).
 
 | Page | Permission | What |
 |---|---|---|
@@ -138,7 +159,7 @@ Last updated 2026-11-07.
 | Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links, note and Cleared tick |
 | Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
-| Settings | `manage_settings` | tabs: Alliance (hostile and blue threshold, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored, note editable with `view_suspects`) |
+| Settings | `manage_settings` | tabs: Alliance (hostile and blue threshold, minimum kill value, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in the last two note and tick editable with `view_suspects`, clearing without a note |
 
 ## Open
 
@@ -160,6 +181,10 @@ Last updated 2026-11-07.
   (a), not reopening) - for the dated markers the calculation has to split
   the rows at the review time. Next markers: Membership, Corporation
   changes, Mails/ISK/Contracts (mails need rows; with `view_evidence`).
+- Not clicked in the browser yet: the 0.0.19 admin tick in both settings
+  tabs (row tick without popup, Save without note), the contacts tab, the
+  minimum value field. `kills.js` has no JS tests; the server side is
+  tested.
 - Blue kills not clicked in the browser yet (checkbox, popup, settings
   tab, the 0.0.18 EveWho and audit icons; the `aa_dev` snapshot has no
   victim IDs until a recalculation). `aa_dev` holds 4 `BlueKill` rows with fake killmail IDs
@@ -281,12 +306,20 @@ Last updated 2026-11-07.
   of the time found - reason and standing stay when the victim is no longer
   blue. Note and *Cleared* per row (character + killmail), not per
   killmail; editable with `view_suspects` on the Corporation page and in
-  the settings tab; clearing needs a note (user); a cleared kill no longer counts (pages and API) but
+  the settings tab; clearing needs a note (user; admins in the settings
+  tabs excepted since 0.0.19); a cleared kill no longer counts (pages and API) but
   stays greyed in the table; at once, no recalculation. Changed
   (user, 2026-11-06): one row, note and tick per main and killmail, the
   main's characters together; two mains on one killmail, a row each. The settings tab
   lists every kill of the Alliance regardless of the time frame, client-side
   DataTables.
+- Admin clearing (user, 2026-11-09): every reviewable finding gets a
+  settings tab where a user with `manage_settings` **and** `view_suspects`
+  clears with the tick alone; the Corporation page (the normal view) keeps
+  the note. A marker that gets reviews later gets its own settings tab.
+- Minimum kill value (user, 2026-11-09): million ISK, default 0 (off);
+  below it hidden everywhere (marker, API, settings tab), not left
+  uncopied; a kill without a known value counts.
 - Menu badge (user, 2026-11-07): counts the mains with open markers (not
   markers or findings), only for `view_suspects`.
 - Own kills (user, 2026-11-07): a blue kill whose victim belongs to the
@@ -299,7 +332,7 @@ Last updated 2026-11-07.
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0008
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0009
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
@@ -375,3 +408,8 @@ Last updated 2026-11-07.
   `test_aa_dev` and breaks the run with "table already exists": set
   `EOS_TEST_DB=test_spy_net` for your own test database. `aa-test` ends
   with "xport: command not found" noise (its lines 52-53); results are fine.
+- A new required `SpyConfiguration` form field breaks the settings POSTs in
+  `test_views.TestSettingsPage` (200 instead of 302): add the field to each
+  posted dict there.
+- A heredoc inside `wsl.exe ... bash -lc '...'` breaks on the first
+  apostrophe in the text: write files with the Write/Edit tools instead.
