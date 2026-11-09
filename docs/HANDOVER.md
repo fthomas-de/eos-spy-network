@@ -8,17 +8,19 @@ Last updated 2026-11-09.
 
 ## State
 
-- Unreleased (user, 2026-11-09): *Value* columns in million ISK
-  (`markers.million`, `floatformat:"1g"` + " M", "–" when unknown) for the
-  blue kills (marker row key `million`, `views._kill_rows` sets
-  `row.million`; settings tab sorts by the raw ISK in `data-order`) and the
-  *Contracts with hostiles* rows (`Dealings` sums price + reward, never the
-  collateral - user). Marker pages need a recalculation. New msgid
-  "Value" goes into the glossary at `/commit` (check for an AA clash).
-  Tests: one each in `test_kills.TestKillsPage`,
-  `test_kill_reviews.TestSettingsTab`, `test_markers.TestContracts`;
-  checked against 7 faults, all caught. Not seen in a browser.
-- Version: `0.0.19`, 2026-11-09 (see `CHANGELOG.md`), three things:
+- Version: `0.0.20`, 2026-11-09 (see `CHANGELOG.md`): *Value* columns in
+  million ISK (`markers.million`, `floatformat:"1g"` + " M", "–" when
+  unknown) for the blue kills (marker row key `million`,
+  `views._kill_rows` sets `row.million`; the settings tab sorts by the raw
+  ISK in `data-order`, `stringformat:'f'` keeps it unlocalized) and the
+  *Contracts with hostiles* rows (`Dealings` sums price + reward, the row
+  key `million` exists for ISK rows too but only contracts show it). The
+  marker pages need a recalculation, an older snapshot shows "–". Msgid
+  "Value" (de Wert, ru Стоимость, zh 价值; no AA clash). Tests: one each in
+  `test_kills.TestKillsPage`, `test_kill_reviews.TestSettingsTab`,
+  `test_markers.TestContracts`; checked against 7 faults, all caught. Not
+  seen in a browser.
+- Before (0.0.19), three things:
   - Minimum blue kill value: `SpyConfiguration.min_kill_value` (million
     ISK, default 0 = off, Alliance tab) and `BlueKill.value` (float, from
     killtracker's `EveKillmail.total_value`; migration 0009, applied to
@@ -151,9 +153,9 @@ Last updated 2026-11-09.
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 284 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.19 added 15: minimum value, contacts tab, admin
-  clearing); every new test checked against sabotaged code (9 faults, all
+- Tests: 287 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.20 added 3 for the value columns); every new
+  test checked against sabotaged code (0.0.20: 7 faults, all
   caught). `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
@@ -193,8 +195,9 @@ Last updated 2026-11-09.
   changes, Mails/ISK/Contracts (mails need rows; with `view_evidence`).
 - Not clicked in the browser yet: the 0.0.19 admin tick in both settings
   tabs (row tick without popup, Save without note), the contacts tab, the
-  minimum value field. `kills.js` has no JS tests; the server side is
-  tested.
+  minimum value field, the 0.0.20 *Value* columns (`aa_dev` has no
+  contracts marker; its 4 seeded `BlueKill` rows have no value, so they
+  show "–"). `kills.js` has no JS tests; the server side is tested.
 - Blue kills not clicked in the browser yet (checkbox, popup, settings
   tab, the 0.0.18 EveWho and audit icons; the `aa_dev` snapshot has no
   victim IDs until a recalculation). `aa_dev` holds 4 `BlueKill` rows with fake killmail IDs
@@ -330,6 +333,10 @@ Last updated 2026-11-09.
 - Minimum kill value (user, 2026-11-09): million ISK, default 0 (off);
   below it hidden everywhere (marker, API, settings tab), not left
   uncopied; a kill without a known value counts.
+- Value columns (user, 2026-11-09): kill value and contract value in
+  million ISK, in both blue kill tables (marker and settings tab); the
+  contract value is price + reward, the collateral stays out (a deposit);
+  the ISK marker's own column stays in full ISK.
 - Menu badge (user, 2026-11-07): counts the mains with open markers (not
   markers or findings), only for `view_suspects`.
 - Own kills (user, 2026-11-07): a blue kill whose victim belongs to the
