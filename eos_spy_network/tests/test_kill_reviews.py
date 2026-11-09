@@ -238,6 +238,14 @@ class TestSettingsTab(ReviewTestCase):
         self.assertNotContains(response, "https://zkillboard.com/kill/1/")
         self.assertContains(response, "https://zkillboard.com/kill/2/")
 
+    def test_should_show_the_value_in_million(self):
+        BlueKill.objects.filter(killmail_id=1).update(value=2_500_000.5)
+
+        response = self.get()
+
+        self.assertContains(response, "2.5 M")
+        self.assertContains(response, 'data-order="2500000.500000"')
+
     def test_should_open_the_tab_asked_for(self):
         response = self.get()
 

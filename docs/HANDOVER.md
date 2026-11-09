@@ -8,6 +8,16 @@ Last updated 2026-11-09.
 
 ## State
 
+- Unreleased (user, 2026-11-09): *Value* columns in million ISK
+  (`markers.million`, `floatformat:"1g"` + " M", "–" when unknown) for the
+  blue kills (marker row key `million`, `views._kill_rows` sets
+  `row.million`; settings tab sorts by the raw ISK in `data-order`) and the
+  *Contracts with hostiles* rows (`Dealings` sums price + reward, never the
+  collateral - user). Marker pages need a recalculation. New msgid
+  "Value" goes into the glossary at `/commit` (check for an AA clash).
+  Tests: one each in `test_kills.TestKillsPage`,
+  `test_kill_reviews.TestSettingsTab`, `test_markers.TestContracts`;
+  checked against 7 faults, all caught. Not seen in a browser.
 - Version: `0.0.19`, 2026-11-09 (see `CHANGELOG.md`), three things:
   - Minimum blue kill value: `SpyConfiguration.min_kill_value` (million
     ISK, default 0 = off, Alliance tab) and `BlueKill.value` (float, from

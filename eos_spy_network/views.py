@@ -18,7 +18,7 @@ from . import __version__, contacts, contract_details, killmails, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
-from .markers import BLUE_KILLS, CONTACTS, KINDS, LABELS, corptools_installed, own_kill, worth_counting
+from .markers import BLUE_KILLS, CONTACTS, KINDS, LABELS, corptools_installed, million, own_kill, worth_counting
 from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, SpyConfiguration
 from .permissions import (
     APP_PERMISSIONS,
@@ -168,6 +168,7 @@ def _kill_rows(config) -> list:
         ]
         row.character = ", ".join(name for _character_id, name in row.named_characters)
         row.victim_main_id = mains.get(row.victim_id)
+        row.million = million(row.value)
         # kill_note writes the group at once; a row reviewed alone before keeps the group open
         row.cleared = all(kill.cleared for kill in group)
         row.note = next((kill.note for kill in group if kill.note), "")

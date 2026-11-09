@@ -10,6 +10,7 @@
                 <th>{% translate "Corporation" context "EVE jargon" %}</th>
                 <th>{% translate "Alliance" context "EVE jargon" %}</th>
                 <th>{% translate "Ship" %}</th>
+                <th>{% translate "Value" %}</th>
                 <th>{% translate "Reason" %}</th>
                 <th>{% translate "Cleared" context "eos-spy-network" %}</th>
                 <th>{% translate "Note" %}</th>
@@ -28,6 +29,8 @@
                     <td class="text-break">{{ row.corporation }}{% include "eos_spy_network/partials/evewho-link.html" with category="corporation" eve_id=row.corporation_id %}</td>
                     <td class="text-break">{{ row.alliance }}{% include "eos_spy_network/partials/evewho-link.html" with category="alliance" eve_id=row.alliance_id %}</td>
                     <td class="text-break">{{ row.ship }}</td>
+                    {# a snapshot older than 0.0.20 has no value: a dash until the next recalculation #}
+                    <td class="text-nowrap">{% if row.million is not None %}{{ row.million|floatformat:"1g" }} M{% else %}–{% endif %}</td>
                     <td class="text-nowrap">
                         {% if row.reason == "awox" %}
                             {% translate "Awox" %}

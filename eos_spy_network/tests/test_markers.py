@@ -12,6 +12,7 @@ from corptools.models import (
     MailRecipient,
 )
 
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 from allianceauth.authentication.models import CharacterOwnership
@@ -379,7 +380,7 @@ class TestWallet(MarkerTestCase):
 
 
 class TestContracts(MarkerTestCase):
-    def add_contract(self, contract_id, issuer_id, issuer_corporation_id, assignee_id, acceptor_id=0, days_ago=0):
+    def add_contract(self, contract_id, issuer_id, issuer_corporation_id, assignee_id, acceptor_id=0, days_ago=0, **isk):
         now = timezone.now() - timedelta(days=days_ago)
         Contract.objects.create(
             id=f"{self.audit.pk}-{contract_id}", contract_id=contract_id, character=self.audit,
@@ -388,8 +389,18 @@ class TestContracts(MarkerTestCase):
             assignee_id=assignee_id, assignee_name=eve_name(assignee_id),
             acceptor_id=acceptor_id, acceptor_name=eve_name(acceptor_id),
             for_corporation=False, date_expired=now, date_issued=now, status="finished",
-            contract_type="item_exchange", availability="personal", title="",
+            contract_type="item_exchange", availability="personal", title="", **isk,
         )
+
+    def test_should_sum_up_price_and_reward_without_the_collateral(self):
+        self.add_contract(1, self.main.character_id, 2001, HOSTILE_CORP, price=1_000_000_000)
+        self.add_contract(2, self.main.character_id, 2001, HOSTILE_CORP, reward=250_000_000, collateral=9_000_000_000)
+
+        (row,) = self.suspect().markers[markers.CONTRACTS].rows
+
+        self.assertEqual(row["million"], 1_250)
+        html = render_to_string("eos_spy_network/partials/dealings.html", {"marker": {"kind": markers.CONTRACTS, "rows": [row]}})
+        self.assertIn("1,250.0 M", html)
 
     def test_should_mark_a_contract_to_a_hostile(self):
         self.add_contract(1, self.main.character_id, 2001, HOSTILE_MEMBER)

@@ -11,7 +11,7 @@
                     <th>{% translate "Alliance" context "EVE jargon" %}</th>
                 {% endif %}
                 <th>{% translate "Count" %}</th>
-                {% if marker.kind == "wallet" %}<th>ISK</th>{% endif %}
+                {% if marker.kind == "wallet" %}<th>ISK</th>{% elif marker.kind == "contracts" %}<th>{% translate "Value" %}</th>{% endif %}
                 <th>{% translate "Period" %}</th>
                 <th>{% translate "Kind" %}</th>
             </tr>
@@ -23,7 +23,7 @@
                     <td class="text-break text-danger">{{ row.counterpart }}</td>
                     {% if marker.affiliated %}{% include "eos_spy_network/partials/affiliation-cells.html" %}{% endif %}
                     <td>{{ row.count }}</td>
-                    {% if marker.kind == "wallet" %}<td class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>{% endif %}
+                    {% if marker.kind == "wallet" %}<td class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>{% elif marker.kind == "contracts" %}<td class="text-nowrap">{% if row.million is not None %}{{ row.million|floatformat:"1g" }} M{% else %}–{% endif %}</td>{% endif %}
                     <td class="text-nowrap">{% include "eos_spy_network/partials/period.html" with first=row.first last=row.last %}</td>
                     <td>
                         {{ row.types|join:", " }}

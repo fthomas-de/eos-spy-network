@@ -388,6 +388,7 @@ TRANSLATIONS = {
     "Date": ("Datum", "Дата", "日期"),
     "Victim": ("Opfer", "Жертва", "受害者"),
     "Ship": ("Schiff", "Корабль", "舰船"),
+    "Value": ("Wert", "Стоимость", "价值"),
     "Reason": ("Grund", "Причина", "原因"),
     "Awox": ("Awox", "Awox", "Awox"),
     "Blue": ("Blue", "Blue", "Blue"),

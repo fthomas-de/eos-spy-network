@@ -172,6 +172,7 @@
                                             <th>{% translate "Corporation" context "EVE jargon" %}</th>
                                             <th>{% translate "Alliance" context "EVE jargon" %}</th>
                                             <th>{% translate "Ship" %}</th>
+                                            <th>{% translate "Value" %}</th>
                                             <th>{% translate "Reason" %}</th>
                                             <th>{% translate "Cleared" context "eos-spy-network" %}</th>
                 <th>{% translate "Note" %}</th>
@@ -190,6 +191,7 @@
                                                 <td class="text-break">{{ kill.victim_corporation }}{% include "eos_spy_network/partials/evewho-link.html" with category="corporation" eve_id=kill.victim_corporation_id %}</td>
                                                 <td class="text-break">{{ kill.victim_alliance }}{% include "eos_spy_network/partials/evewho-link.html" with category="alliance" eve_id=kill.victim_alliance_id %}</td>
                                                 <td class="text-break">{{ kill.ship }}</td>
+                                                <td class="text-nowrap" data-order="{{ kill.value|default_if_none:0|stringformat:'f' }}">{% if kill.million is not None %}{{ kill.million|floatformat:"1g" }} M{% else %}–{% endif %}</td>
                                                 <td class="text-nowrap">
                                                     {% if kill.reason == "awox" %}
                                                         {% translate "Awox" %}

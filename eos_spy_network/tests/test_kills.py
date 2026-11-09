@@ -299,6 +299,17 @@ class TestKillsPage(KillTestCase):
         self.assertContains(response, "https://zkillboard.com/kill/4711/")
         self.assertContains(response, "Blue (10)")
 
+    def test_should_show_the_value_in_million(self):
+        add_killmail(4711, [ALT], victim_id=90000001, alliance_id=BLUE_ALLIANCE, value=1_234_567_890)
+        add_killmail(4712, [ALT], victim_id=90000001, alliance_id=BLUE_ALLIANCE)
+        snapshot.update()
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, "1,234.6 M")
+        # the kill zKillboard sent no value for
+        self.assertContains(response, "<td class=\"text-nowrap\">–</td>", html=True)
+
     @patch("eos_spy_network.killmails.is_storing", return_value=False)
     def test_should_say_that_killtracker_stores_no_killmails(self, _storing):
         response = self.client.get(reverse("eos_spy_network:corporations"))

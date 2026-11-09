@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.20] - 2026-11-09
+
+### Added
+
+- *Blue kills* (marker and settings tab): a *Value* column with the
+  killmail's value in million ISK, the unit of the minimum kill value, so a
+  reviewer sees at a glance whether a kill matters; "–" when zKillboard sent
+  no value. The marker page shows it after the next recalculation.
+- *Contracts with hostiles*: a *Value* column in million ISK per own
+  character and hostile, the sum of price and reward of its contracts. The
+  row only said how often and when, not how much changed hands; the
+  collateral is left out, it is a deposit that comes back. Shows after the
+  next recalculation.
+
 ## [0.0.19] - 2026-11-09
 
 ### Added

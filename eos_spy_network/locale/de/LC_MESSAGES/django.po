@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-09 14:55+0000\n"
-"PO-Revision-Date: 2026-11-09 14:55+0000\n"
+"POT-Creation-Date: 2026-11-09 16:38+0000\n"
+"PO-Revision-Date: 2026-11-09 16:38+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: de\n"
 "Language: de\n"
@@ -36,7 +36,7 @@ msgstr "Character"
 #: templates/eos_spy_network/partials/kills.html:10
 #: templates/eos_spy_network/partials/network-legend.html:8
 #: templates/eos_spy_network/settings.html:172
-#: templates/eos_spy_network/settings.html:232
+#: templates/eos_spy_network/settings.html:234
 msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
@@ -49,7 +49,7 @@ msgstr "Corporation"
 #: templates/eos_spy_network/partials/network-legend.html:10
 #: templates/eos_spy_network/settings.html:17
 #: templates/eos_spy_network/settings.html:173
-#: templates/eos_spy_network/settings.html:233
+#: templates/eos_spy_network/settings.html:235
 msgctxt "EVE jargon"
 msgid "Alliance"
 msgstr "Alliance"
@@ -314,14 +314,14 @@ msgstr "Zurück"
 
 #: templates/eos_spy_network/corporation.html:47
 #: templates/eos_spy_network/partials/network-legend.html:4
-#: templates/eos_spy_network/settings.html:229
+#: templates/eos_spy_network/settings.html:231
 msgctxt "EVE jargon"
 msgid "Main"
 msgstr "Main"
 
 #: templates/eos_spy_network/corporation.html:48
 #: templates/eos_spy_network/partials/contacts.html:7
-#: templates/eos_spy_network/settings.html:230
+#: templates/eos_spy_network/settings.html:232
 msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
@@ -431,7 +431,7 @@ msgstr "Zahlungen"
 #: templates/eos_spy_network/network_corporation.html:65
 #: templates/eos_spy_network/partials/contacts.html:13
 #: templates/eos_spy_network/partials/group-cell.html:7
-#: templates/eos_spy_network/settings.html:234
+#: templates/eos_spy_network/settings.html:236
 msgctxt "eos-spy-network"
 msgid "Standing"
 msgstr "Standing"
@@ -453,7 +453,7 @@ msgid "unknown"
 msgstr "unbekannt"
 
 #: templates/eos_spy_network/partials/contacts.html:8
-#: templates/eos_spy_network/settings.html:231
+#: templates/eos_spy_network/settings.html:233
 msgctxt "eos-spy-network"
 msgid "Contact"
 msgstr "Kontakt"
@@ -461,9 +461,9 @@ msgstr "Kontakt"
 #: templates/eos_spy_network/partials/contacts.html:14
 #: templates/eos_spy_network/partials/kill-note-button.html:8
 #: templates/eos_spy_network/partials/kill-note-modal.html:31
-#: templates/eos_spy_network/partials/kills.html:14
-#: templates/eos_spy_network/settings.html:176
-#: templates/eos_spy_network/settings.html:235
+#: templates/eos_spy_network/partials/kills.html:15
+#: templates/eos_spy_network/settings.html:177
+#: templates/eos_spy_network/settings.html:237
 msgctxt "eos-spy-network"
 msgid "Cleared"
 msgstr "Geklärt"
@@ -472,9 +472,9 @@ msgstr "Geklärt"
 #: templates/eos_spy_network/partials/kill-note-button.html:31
 #: templates/eos_spy_network/partials/kill-note-modal.html:19
 #: templates/eos_spy_network/partials/kill-note-modal.html:24
-#: templates/eos_spy_network/partials/kills.html:15
-#: templates/eos_spy_network/settings.html:177
-#: templates/eos_spy_network/settings.html:236
+#: templates/eos_spy_network/partials/kills.html:16
+#: templates/eos_spy_network/settings.html:178
+#: templates/eos_spy_network/settings.html:238
 msgid "Note"
 msgstr "Notiz"
 
@@ -563,14 +563,20 @@ msgstr "Keine Contracts zu diesen Zahlungen gefunden."
 msgid "Count"
 msgstr "Anzahl"
 
+#: templates/eos_spy_network/partials/dealings.html:14
+#: templates/eos_spy_network/partials/kills.html:13
+#: templates/eos_spy_network/settings.html:175
+msgid "Value"
+msgstr "Wert"
+
 #: templates/eos_spy_network/partials/dealings.html:16
 msgid "Kind"
 msgstr "Art"
 
 #: templates/eos_spy_network/partials/kill-note-button.html:29
 #: templates/eos_spy_network/partials/kill-note-modal.html:10
-#: templates/eos_spy_network/settings.html:203
-#: templates/eos_spy_network/settings.html:252
+#: templates/eos_spy_network/settings.html:205
+#: templates/eos_spy_network/settings.html:254
 msgid "Add a note"
 msgstr "Notiz hinzufügen"
 
@@ -618,18 +624,18 @@ msgstr "Opfer"
 msgid "Ship"
 msgstr "Schiff"
 
-#: templates/eos_spy_network/partials/kills.html:13
-#: templates/eos_spy_network/settings.html:175
+#: templates/eos_spy_network/partials/kills.html:14
+#: templates/eos_spy_network/settings.html:176
 msgid "Reason"
 msgstr "Grund"
 
-#: templates/eos_spy_network/partials/kills.html:33
-#: templates/eos_spy_network/settings.html:195
+#: templates/eos_spy_network/partials/kills.html:36
+#: templates/eos_spy_network/settings.html:197
 msgid "Awox"
 msgstr "Awox"
 
-#: templates/eos_spy_network/partials/kills.html:35
-#: templates/eos_spy_network/settings.html:197
+#: templates/eos_spy_network/partials/kills.html:38
+#: templates/eos_spy_network/settings.html:199
 msgid "Blue"
 msgstr "Blue"
 
@@ -853,17 +859,17 @@ msgstr ""
 " Grund und Standing sind die vom Zeitpunkt des Funds; ein geklärter Kill "
 "zählt nicht mehr für den Marker."
 
-#: templates/eos_spy_network/settings.html:201
-#: templates/eos_spy_network/settings.html:250
+#: templates/eos_spy_network/settings.html:203
+#: templates/eos_spy_network/settings.html:252
 #, python-format
 msgid "Last changed by %(name)s, %(at)s"
 msgstr "Zuletzt geändert von %(name)s, %(at)s"
 
-#: templates/eos_spy_network/settings.html:212
+#: templates/eos_spy_network/settings.html:214
 msgid "No blue kill stored."
 msgstr "Kein Blue-Kill gespeichert."
 
-#: templates/eos_spy_network/settings.html:222
+#: templates/eos_spy_network/settings.html:224
 msgid ""
 "Every friendly hostile contact of the last calculation, the cleared ones "
 "too. A cleared contact no longer counts for the marker; at another standing "
@@ -873,7 +879,7 @@ msgstr ""
 "geklärten. Ein geklärter Kontakt zählt nicht mehr für den Marker; mit "
 "anderem Standing ist er ein neuer Fund."
 
-#: templates/eos_spy_network/settings.html:261
+#: templates/eos_spy_network/settings.html:263
 msgid "No friendly hostile contact found."
 msgstr "Kein freundlicher feindlicher Kontakt gefunden."
 
@@ -881,23 +887,23 @@ msgstr "Kein freundlicher feindlicher Kontakt gefunden."
 msgid "Suspects"
 msgstr "Verdächtige"
 
-#: views.py:423
+#: views.py:424
 msgid "The markers and connections are being recalculated."
 msgstr "Marker und Verbindungen werden neu berechnet."
 
-#: views.py:425
+#: views.py:426
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr ""
 "Die Neuberechnung konnte nicht gestartet werden: Die Task-Queue ist nicht "
 "erreichbar."
 
-#: views.py:452
+#: views.py:453
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr ""
 "Einstellungen gespeichert. Marker und Verbindungen werden neu berechnet."
 
-#: views.py:456
+#: views.py:457
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

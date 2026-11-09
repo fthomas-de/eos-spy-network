@@ -132,6 +132,11 @@ class Marker:
         return self.kind == CONTACTS and bool(self.rows)
 
 
+def million(isk) -> float | None:
+    """ISK in million, as the minimum kill value is set (user); None stays unknown."""
+    return None if isk is None else float(isk) / 1_000_000
+
+
 @dataclass
 class Dealings:
     """What one own character did with one hostile: how often, how much, when, in which way."""
@@ -162,6 +167,7 @@ class Dealings:
             "counterpart": counterpart,
             "count": self.count,
             "isk": str(self.isk),
+            "million": million(self.isk),
             "first": self.first.date().isoformat(),
             "last": self.last.date().isoformat(),
             "types": sorted(self.types),
@@ -490,6 +496,8 @@ def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counter
         acceptor_id,
         date_issued,
         contract_type,
+        price,
+        reward,
     ) in contracts.filter(
         Q(issuer_id__in=hostile_ids)
         | Q(issuer_corporation_id__in=hostile_ids)
@@ -504,6 +512,8 @@ def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counter
         "acceptor_id",
         "date_issued",
         "contract_type",
+        "price",
+        "reward",
     ):
         character_id = audits[audit_id]
         user_id = owner[character_id]
@@ -514,7 +524,8 @@ def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counter
         parties = counterparts(user_id, *parties)
         found.add((user_id, contract_id), parties, character_id)
         for party_id in parties:
-            dealings[(user_id, character_id, party_id)].add(date_issued, contract_type)
+            # what changes hands; the collateral is a deposit that comes back (user)
+            dealings[(user_id, character_id, party_id)].add(date_issued, contract_type, (price or 0) + (reward or 0))
     _mark_found(accounts, index, found, CONTRACTS)
     _add_rows(accounts, index, names, dealings, CONTRACTS)
 
@@ -612,6 +623,7 @@ def _check_kills(accounts, config, characters):
                 "alliance": kill.victim_alliance,
                 "alliance_id": kill.victim_alliance_id,
                 "ship": kill.ship,
+                "million": million(kill.value),
                 "reason": kill.reason,
                 # normalize: 5, not the column's 5.0
                 "standing": None if kill.standing is None else f"{kill.standing.normalize():f}",
