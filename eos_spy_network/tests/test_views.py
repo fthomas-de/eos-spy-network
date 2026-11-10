@@ -140,6 +140,22 @@ class TestCorporationsPage(SuspectPageTestCase):
         # only the clean tile of 2002 is marked for hiding, not the one with the suspect
         self.assertContains(response, "data-eos-spy-network-clean", count=1)
 
+    def test_should_draw_markers_in_info_and_clean_tiles_in_green(self):
+        # red is left to problems and hostiles (user, 2026-11-10)
+        make_corporation(2002)
+        snapshot.update()
+
+        response = self.client.get(reverse("eos_spy_network:corporations"))
+
+        self.assertContains(response, "card h-100 border-info", count=1)
+        self.assertContains(response, "card h-100 border-success", count=1)
+        self.assertContains(response, "fw-semibold text-info", count=1)
+        self.assertContains(response, "badge text-bg-info text-wrap")
+        # Alliance Auth's navbar has text-danger of its own
+        self.assertNotContains(response, "border-danger")
+        self.assertNotContains(response, "fw-semibold text-danger")
+        self.assertNotContains(response, "text-bg-danger")
+
     def test_should_show_the_metrics_in_the_footer(self):
         response = self.client.get(reverse("eos_spy_network:corporations"))
 
@@ -260,6 +276,12 @@ class TestCorporationPage(SuspectPageTestCase):
             [suspect.main.character_id for suspect in response.context["tile"].suspects],
             [self.suspect_main.character_id],
         )
+
+    def test_should_draw_the_markers_in_info(self):
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, "badge text-bg-info text-wrap")
+        self.assertNotContains(response, "text-bg-danger")
 
     def test_should_refuse_a_corporation_outside_the_alliance(self):
         make_corporation(2999, alliance_id=None)

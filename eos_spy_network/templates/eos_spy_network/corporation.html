@@ -67,7 +67,7 @@
                                     <td data-order="{{ suspect.markers|length }}">
                                         {% for marker in suspect.marker_list %}
                                             <div class="mb-1">
-                                                <span class="badge text-bg-danger text-wrap" title="{{ marker.description }}">{{ marker.label }}{% if marker.count > 1 %} ({{ marker.count }}){% endif %}</span>
+                                                <span class="badge text-bg-info text-wrap" title="{{ marker.description }}">{{ marker.label }}{% if marker.count > 1 %} ({{ marker.count }}){% endif %}</span>
                                                 {# mails, ISK and contracts are evidence: their counterparts only with view_evidence #}
                                                 {% if marker.joins %}
                                                     {# the Corporations joined, one per line in the tooltip #}

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.21] - 2026-11-10
+
+### Changed
+
+- Spy markers are Bootstrap's *info* colour (cyan) instead of red: the
+  marker badges on the Markers and Corporation pages, and on a tile with
+  markers its border and the *Mains with markers* count. Red also meant
+  hostile contacts, Corporations and Alliances, so a marker and a hostile
+  looked the same; eos-auth-monitor draws its markers in the same colour.
+  Hostiles stay red, tiles without markers stay green. A standard colour
+  rather than purple: purple text is hard to read in Alliance Auth's dark
+  theme, and Bootstrap has no purple utilities.
+
 ## [0.0.20] - 2026-11-09
 
 ### Added

@@ -4,10 +4,16 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-09.
+Last updated 2026-11-10.
 
 ## State
 
+- Unreleased (2026-11-10): spy markers in Bootstrap info (cyan) instead of
+  red: `text-bg-info` badges in `corporations.html` and `corporation.html`,
+  `border-info` and `text-info` on a tile with markers; no CSS of our own.
+  Tests: one each in `test_views.TestCorporationsPage` and
+  `TestCorporationPage`, red against the old templates. Not seen in the
+  running app (no SSO session, no marker in `aa_dev`).
 - Version: `0.0.20`, 2026-11-09 (see `CHANGELOG.md`): *Value* columns in
   million ISK (`markers.million`, `floatformat:"1g"` + " M", "–" when
   unknown) for the blue kills (marker row key `million`,
@@ -337,6 +343,14 @@ Last updated 2026-11-09.
   million ISK, in both blue kill tables (marker and settings tab); the
   contract value is price + reward, the collateral stays out (a deposit);
   the ISK marker's own column stays in full ISK.
+- Colours (user, 2026-11-10): spy markers in Bootstrap info (cyan) in this
+  app and in eos-auth-monitor - first purple, dropped the same day because
+  purple text is hard to read in AA's dark theme and a standard colour needs
+  no CSS. Red only for problems and hostiles (group cells, dealings,
+  network partners and graph stay red), yellow for warnings, green for
+  clean. Cyan is shared with *Player trading* on the network pages
+  (accepted). The menu badge is Alliance Auth's own (`text-bg-primary`,
+  blue) and stays.
 - Menu badge (user, 2026-11-07): counts the mains with open markers (not
   markers or findings), only for `view_suspects`.
 - Own kills (user, 2026-11-07): a blue kill whose victim belongs to the
