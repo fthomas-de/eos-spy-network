@@ -8,31 +8,28 @@ Last updated 2026-11-10.
 
 ## State
 
-- Unreleased (2026-11-10, not committed): the *Mains with markers* count
-  is `text-info-emphasis` (contrast; eos-auth-monitor does the same); the
-  network legend uses Bootstrap classes (`partials/network-legend.html`),
-  the graph `border rounded` without a fixed height; `network.css` holds
-  only `legend-hostile_alliance` (`#8b1a1a`). The progress bar's
-  `min-width` moved into its own `progress.css`, loaded by `base.html`
-  next to `progress.js` (before, only the network Corporation page had
-  it). Tests: the marker colour test sharpened,
+- Version: `0.0.22`, 2026-11-10 (see `CHANGELOG.md`): the *Mains with
+  markers* count is `text-info-emphasis` (plain `text-info` has about 2:1
+  contrast on white; eos-auth-monitor does the same). The network legend
+  uses Bootstrap classes (`partials/network-legend.html`, lighter shades
+  `text-opacity-50`); the `eos-spy-network-legend-*` classes stay as the
+  hook `network.js` reads the colours from. The graph is `border rounded`
+  without a fixed height (`network.js` sets it). `network.css` holds only
+  `legend-hostile_alliance` (`#8b1a1a`); the progress bar's `min-width`
+  moved into `progress.css`, loaded by `base.html` next to `progress.js`
+  (before, only the network Corporation page loaded it). Tests: marker
+  colour test sharpened,
   `test_views.TestNetworkPages.test_should_colour_the_legend_with_bootstrap_classes`
-  new, a `progress.css` assertion in
-  `test_progress.TestPages.test_should_show_the_bar_instead_of_the_button_after_the_click`;
-  all red against the old state; `test_views` + `test_progress` 62 green. Graph
-  seen in a browser, light and dark, as a static page with the real
-  legend, `network.css`, `network.js`, Bootstrap 5.3.3 and vis-network
-  10.1.2 (`aa_dev` has no network partner): all ten colours arrive, the
-  `rgba(...)` of `text-opacity-50` is drawn by vis. The count itself not
-  seen (no marker in `aa_dev`).
-- Version: `0.0.21`, 2026-11-10 (see `CHANGELOG.md`): spy markers in
-  Bootstrap info (cyan) instead of red, as in eos-auth-monitor:
-  `text-bg-info` badges in `corporations.html` and `corporation.html`,
-  `border-info` and `text-info` on a tile with markers; no CSS of our own.
-  Tests: one each in `test_views.TestCorporationsPage` and
-  `TestCorporationPage`, red against the old templates; 289 without
-  translation tests. Not seen in the running app (no SSO session, no
-  marker in `aa_dev`).
+  new, a `progress.css` assertion in `test_progress.TestPages`; all red
+  against the old state. Graph seen in a browser, light and dark, as a
+  static page with the real legend, `network.css`, `network.js`,
+  Bootstrap 5.3.3 and vis-network 10.1.2 (`aa_dev` has no network
+  partner): all ten colours arrive, vis draws the `rgba(...)` of
+  `text-opacity-50`. Not seen: the count in the running app (no marker in
+  `aa_dev`), the progress bar (needs a running recalculation).
+- Before (0.0.21): spy markers in Bootstrap info (cyan) instead of red,
+  as in eos-auth-monitor: `text-bg-info` badges in `corporations.html` and
+  `corporation.html`, `border-info` on a tile with markers.
 - Before (0.0.20): *Value* columns in
   million ISK (`markers.million`, `floatformat:"1g"` + " M", "–" when
   unknown) for the blue kills (marker row key `million`,
@@ -178,10 +175,10 @@ Last updated 2026-11-10.
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 289 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.21 added 2 for the marker colour); every new
-  test checked against sabotaged code (0.0.21: against the old templates,
-  both caught). `tests.base.SpyTestCase` patches
+- Tests: 290 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.22 added 1 for the legend); every new test
+  checked against sabotaged code (0.0.22: against the old templates and
+  CSS, all caught). `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
@@ -369,7 +366,11 @@ Last updated 2026-11-10.
   network partners and graph stay red), yellow for warnings, green for
   clean. Cyan is shared with *Player trading* on the network pages
   (accepted). The menu badge is Alliance Auth's own (`text-bg-primary`,
-  blue) and stays.
+  blue) and stays. Coloured text in info is `text-info-emphasis`, not
+  `text-info` (contrast, 0.0.22). Legend colours are Bootstrap classes;
+  only the hostile Alliance keeps its own `#8b1a1a`, because
+  `text-danger-emphasis` turns lighter in the dark theme (user,
+  2026-11-10).
 - Menu badge (user, 2026-11-07): counts the mains with open markers (not
   markers or findings), only for `view_suspects`.
 - Own kills (user, 2026-11-07): a blue kill whose victim belongs to the
@@ -397,7 +398,7 @@ Last updated 2026-11-10.
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
   code since 0.0.7 - check `pgrep -af celery` and start it again before
-  testing the button. `collectstatic` ran with the 0.0.7 `network.js`.
+  testing the button. `collectstatic` ran with the 0.0.22 static files.
 
 ## Traps
 
@@ -463,3 +464,9 @@ Last updated 2026-11-10.
   posted dict there.
 - A heredoc inside `wsl.exe ... bash -lc '...'` breaks on the first
   apostrophe in the text: write files with the Write/Edit tools instead.
+- To see the graph without SSO and without network data: a static page with
+  the legend partial, `network.css`, `network.js` and a json_script graph.
+  The Claude browser pane opens a `file://` page only as a snapshot without
+  scripts; serve the folder over HTTP (`python3 -m http.server`) instead.
+  `?dark` plus `data-bs-theme="dark"` on `<html>` before the scripts gives
+  the dark theme - `network.js` reads the colours once at load.
