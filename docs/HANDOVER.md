@@ -8,13 +8,15 @@ Last updated 2026-11-10.
 
 ## State
 
-- Unreleased (2026-11-10): spy markers in Bootstrap info (cyan) instead of
-  red: `text-bg-info` badges in `corporations.html` and `corporation.html`,
+- Version: `0.0.21`, 2026-11-10 (see `CHANGELOG.md`): spy markers in
+  Bootstrap info (cyan) instead of red, as in eos-auth-monitor:
+  `text-bg-info` badges in `corporations.html` and `corporation.html`,
   `border-info` and `text-info` on a tile with markers; no CSS of our own.
   Tests: one each in `test_views.TestCorporationsPage` and
-  `TestCorporationPage`, red against the old templates. Not seen in the
-  running app (no SSO session, no marker in `aa_dev`).
-- Version: `0.0.20`, 2026-11-09 (see `CHANGELOG.md`): *Value* columns in
+  `TestCorporationPage`, red against the old templates; 289 without
+  translation tests. Not seen in the running app (no SSO session, no
+  marker in `aa_dev`).
+- Before (0.0.20): *Value* columns in
   million ISK (`markers.million`, `floatformat:"1g"` + " M", "–" when
   unknown) for the blue kills (marker row key `million`,
   `views._kill_rows` sets `row.million`; the settings tab sorts by the raw
@@ -159,10 +161,10 @@ Last updated 2026-11-10.
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 287 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.20 added 3 for the value columns); every new
-  test checked against sabotaged code (0.0.20: 7 faults, all
-  caught). `tests.base.SpyTestCase` patches
+- Tests: 289 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.21 added 2 for the marker colour); every new
+  test checked against sabotaged code (0.0.21: against the old templates,
+  both caught). `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
