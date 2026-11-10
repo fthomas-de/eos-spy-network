@@ -8,6 +8,23 @@ Last updated 2026-11-10.
 
 ## State
 
+- Unreleased (2026-11-10, not committed): the *Mains with markers* count
+  is `text-info-emphasis` (contrast; eos-auth-monitor does the same); the
+  network legend uses Bootstrap classes (`partials/network-legend.html`),
+  the graph `border rounded` without a fixed height; `network.css` holds
+  only `legend-hostile_alliance` (`#8b1a1a`). The progress bar's
+  `min-width` moved into its own `progress.css`, loaded by `base.html`
+  next to `progress.js` (before, only the network Corporation page had
+  it). Tests: the marker colour test sharpened,
+  `test_views.TestNetworkPages.test_should_colour_the_legend_with_bootstrap_classes`
+  new, a `progress.css` assertion in
+  `test_progress.TestPages.test_should_show_the_bar_instead_of_the_button_after_the_click`;
+  all red against the old state; `test_views` + `test_progress` 62 green. Graph
+  seen in a browser, light and dark, as a static page with the real
+  legend, `network.css`, `network.js`, Bootstrap 5.3.3 and vis-network
+  10.1.2 (`aa_dev` has no network partner): all ten colours arrive, the
+  `rgba(...)` of `text-opacity-50` is drawn by vis. The count itself not
+  seen (no marker in `aa_dev`).
 - Version: `0.0.21`, 2026-11-10 (see `CHANGELOG.md`): spy markers in
   Bootstrap info (cyan) instead of red, as in eos-auth-monitor:
   `text-bg-info` badges in `corporations.html` and `corporation.html`,

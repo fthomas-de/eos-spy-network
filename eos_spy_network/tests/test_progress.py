@@ -69,6 +69,8 @@ class TestPages(SpyTestCase):
 
         self.assertContains(response, "data-eos-spy-network-progress")
         self.assertNotContains(response, f'action="{reverse("eos_spy_network:rebuild")}"')
+        # its minimum width once lived in network.css, which only the network Corporation page loads
+        self.assertContains(response, "eos_spy_network/css/progress.")
 
     def test_should_show_the_button_while_nothing_runs(self):
         response = self.client.get(reverse("eos_spy_network:corporations"))

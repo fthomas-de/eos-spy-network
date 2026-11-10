@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.22] - 2026-11-10
+
+### Changed
+
+- The *Mains with markers* count on a tile with markers is
+  `text-info-emphasis` instead of `text-info`, as in eos-auth-monitor:
+  plain info cyan has a contrast of about 2:1 on white and was hard to read
+  in the light theme.
+- The network graph's legend takes its colours from Bootstrap classes
+  (`text-success`, `text-warning`, `text-secondary`, `text-danger`,
+  `text-info`, the lighter ones with `text-opacity-50`) instead of rules of
+  its own in `network.css`, and the graph's frame is `border rounded`; the
+  fixed height of 520 px is gone, `network.js` sets the height itself
+  before it draws. The `eos-spy-network-legend-*` classes stay, `network.js`
+  reads the colours from them. `network.css` keeps only the deep red of a
+  hostile Alliance, which Bootstrap has no class for (`text-danger-emphasis`
+  turns lighter in the dark theme). The lighter colours are now 50 %
+  instead of 55-60 %, the steps Bootstrap offers.
+
+### Fixed
+
+- The recalculation's progress bar keeps its minimum width on every page.
+  The rule lived in `network.css`, which only the network Corporation page
+  loads, so on the Markers, Corporation and Network pages the empty bar
+  could shrink. It now has its own `progress.css`, loaded by `base.html`
+  next to `progress.js`.
+
 ## [0.0.21] - 2026-11-10
 
 ### Changed

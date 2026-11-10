@@ -149,7 +149,8 @@ class TestCorporationsPage(SuspectPageTestCase):
 
         self.assertContains(response, "card h-100 border-info", count=1)
         self.assertContains(response, "card h-100 border-success", count=1)
-        self.assertContains(response, "fw-semibold text-info", count=1)
+        # emphasis: plain text-info has a contrast of about 2:1 on white
+        self.assertContains(response, 'fw-semibold text-info-emphasis"', count=1)
         self.assertContains(response, "badge text-bg-info text-wrap")
         # Alliance Auth's navbar has text-danger of its own
         self.assertNotContains(response, "border-danger")
@@ -437,6 +438,25 @@ class TestNetworkPages(SuspectPageTestCase):
         self.assertContains(response, "data-eos-spy-network-graph")
         self.assertContains(response, "vis-network.min.js")
         self.assertContains(response, f'<td data-order="{timezone.now().date().isoformat()}" class="text-nowrap">')
+
+    def test_should_colour_the_legend_with_bootstrap_classes(self):
+        # network.js reads the graph colours from these icons; the hook class stays for it
+        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+
+        for classes in (
+            "fa-circle text-success eos-spy-network-legend-main",
+            "fa-circle text-success text-opacity-50 eos-spy-network-legend-alt",
+            "fa-diamond text-warning eos-spy-network-legend-partner",
+            "fa-diamond text-danger text-opacity-50 eos-spy-network-legend-hostile_partner",
+            "fa-square text-secondary eos-spy-network-legend-corporation",
+            "fa-square text-danger eos-spy-network-legend-hostile_corporation",
+            "fa-shield-halved text-secondary text-opacity-50 eos-spy-network-legend-alliance",
+            "fa-minus text-warning eos-spy-network-legend-payment-edge",
+            "fa-minus text-info eos-spy-network-legend-trading-edge",
+        ):
+            with self.subTest(classes=classes):
+                self.assertContains(response, classes)
+        self.assertContains(response, 'class="eos-spy-network-graph border rounded mb-3"')
 
     def test_should_refuse_a_corporation_outside_the_alliance(self):
         response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2999]))

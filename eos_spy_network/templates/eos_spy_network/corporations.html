@@ -27,7 +27,7 @@
 
                             <div class="small mb-2">
                                 {% translate "Mains" context "eos-spy-network" %}: {{ tile.mains }} ·
-                                {% translate "Mains with markers" %}: <span class="fw-semibold {% if tile.suspects %}text-info{% else %}text-success{% endif %}">{{ tile.suspects|length }}</span>
+                                {% translate "Mains with markers" %}: <span class="fw-semibold {% if tile.suspects %}text-info-emphasis{% else %}text-success{% endif %}">{{ tile.suspects|length }}</span>
                             </div>
 
                             {% if tile.suspects %}

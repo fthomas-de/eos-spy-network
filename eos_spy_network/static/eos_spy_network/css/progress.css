@@ -1,0 +1,7 @@
+/*
+ * The progress bar of partials/state.html, on every page like progress.js.
+ * Bootstrap has no min-width utility; without one the empty bar collapses.
+ */
+.eos-spy-network-progress {
+    min-width: 16rem;
+}
