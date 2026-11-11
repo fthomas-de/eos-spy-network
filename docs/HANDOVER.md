@@ -8,7 +8,7 @@ Last updated 2026-11-11.
 
 ## State
 
-- Unreleased (2026-11-11): settings tab *Log* (`TAB_LOG`,
+- Version: `0.0.23`, 2026-11-11 (see `CHANGELOG.md`): settings tab *Log* (`TAB_LOG`,
   `views._log_rows`), model `ReviewLog` (alliance, kind, `character_id`,
   key, cleared, note, `previous_cleared`, `previous_note`, `changed_at`,
   `changed_by`), written by `kill_note` and `finding_note` inside
@@ -18,8 +18,9 @@ Last updated 2026-11-11.
   seeds one entry per earlier review (blue kills deduplicated by alliance,
   killmail, `reviewed_at`, `reviewed_by`), applied to `aa_dev` (0 entries:
   none of its kills was ever reviewed). Tests `test_review_log.py` (8),
-  checked against 8 faults, all caught. Glossary has the new texts; the
-  catalogues follow at `/commit`. Not seen in a browser. The tab is
+  checked against 8 faults, all caught. New texts (Log, Changed by,
+  Marker, Finding, Note before, ...) machine-translated, not reviewed by
+  the user. Not seen in a browser. The tab is
   rendered once with the page: a tick in another tab shows in the log only
   after a reload (said in the tab's help text).
 - Prod question (user, 2026-11-11): 5 blue kills ticked, the settings tab
@@ -28,26 +29,15 @@ Last updated 2026-11-11.
   minimum kill value set after the last recalculation (the settings tab
   filters at once, the marker page only after a recalculation), the 5 ticks
   on one killmail, or the DataTables search. The user was given a shell
-  line for prod to list the reviewed `BlueKill` rows; the answer is open.
-- Version: `0.0.22`, 2026-11-10 (see `CHANGELOG.md`): the *Mains with
-  markers* count is `text-info-emphasis` (plain `text-info` has about 2:1
-  contrast on white; eos-auth-monitor does the same). The network legend
-  uses Bootstrap classes (`partials/network-legend.html`, lighter shades
-  `text-opacity-50`); the `eos-spy-network-legend-*` classes stay as the
-  hook `network.js` reads the colours from. The graph is `border rounded`
-  without a fixed height (`network.js` sets it). `network.css` holds only
-  `legend-hostile_alliance` (`#8b1a1a`); the progress bar's `min-width`
-  moved into `progress.css`, loaded by `base.html` next to `progress.js`
-  (before, only the network Corporation page loaded it). Tests: marker
-  colour test sharpened,
-  `test_views.TestNetworkPages.test_should_colour_the_legend_with_bootstrap_classes`
-  new, a `progress.css` assertion in `test_progress.TestPages`; all red
-  against the old state. Graph seen in a browser, light and dark, as a
-  static page with the real legend, `network.css`, `network.js`,
-  Bootstrap 5.3.3 and vis-network 10.1.2 (`aa_dev` has no network
-  partner): all ten colours arrive, vis draws the `rgba(...)` of
-  `text-opacity-50`. Not seen: the count in the running app (no marker in
-  `aa_dev`), the progress bar (needs a running recalculation).
+  line for prod to list the reviewed `BlueKill` rows (ID, character,
+  cleared, value, reviewed_at, note, plus `min_kill_value`); the answer is
+  open - next step once it comes. With 0.0.23 on prod the *Log* tab shows
+  the seeded state of those reviews too.
+- Before (0.0.22): *Mains with markers* count `text-info-emphasis`;
+  network legend from Bootstrap classes (`eos-spy-network-legend-*` stay
+  as the hook `network.js` reads), `network.css` only keeps the hostile
+  Alliance's `#8b1a1a`; the progress bar's `min-width` in `progress.css`,
+  loaded by `base.html`. Graph seen as a static page, light and dark.
 - Before (0.0.21): spy markers in Bootstrap info (cyan) instead of red,
   as in eos-auth-monitor: `text-bg-info` badges in `corporations.html` and
   `corporation.html`, `border-info` on a tile with markers.
@@ -196,10 +186,9 @@ Last updated 2026-11-11.
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 290 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.22 added 1 for the legend); every new test
-  checked against sabotaged code (0.0.22: against the old templates and
-  CSS, all caught). `tests.base.SpyTestCase` patches
+- Tests: 298 without translation tests plus 3 translation tests, all green
+  in the dev instance (0.0.23 added 8 for the log); every new test
+  checked against sabotaged code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
@@ -392,6 +381,10 @@ Last updated 2026-11-11.
   only the hostile Alliance keeps its own `#8b1a1a`, because
   `text-danger-emphasis` turns lighter in the dark theme (user,
   2026-11-10).
+- Review log (user, 2026-11-11): every save of a note or tick is kept,
+  shown in an own settings tab (not a popup per row); the reviews made
+  before the log are seeded once with their last state. Blue kills stay
+  grouped per main and killmail in both tables, nothing more (user).
 - Menu badge (user, 2026-11-07): counts the mains with open markers (not
   markers or findings), only for `view_suspects`.
 - Own kills (user, 2026-11-07): a blue kill whose victim belongs to the
@@ -404,7 +397,7 @@ Last updated 2026-11-11.
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0009
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0010
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
@@ -419,7 +412,7 @@ Last updated 2026-11-11.
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
   code since 0.0.7 - check `pgrep -af celery` and start it again before
-  testing the button. `collectstatic` ran with the 0.0.22 static files.
+  testing the button. `collectstatic` ran with the 0.0.22 static files (0.0.23 changed none).
 
 ## Traps
 
