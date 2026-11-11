@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.23] - 2026-11-11
+
+### Added
+
+- Settings tab *Log*: every save of a note or a *Cleared* tick of a blue
+  kill or a friendly hostile contact, the latest first, with who and when,
+  the main, the finding (victim with zKB link, or the contact), the tick
+  before and after and the note before and after. Until now each save
+  overwrote the last one, so nobody could tell who had cleared a finding
+  before or what the note had said. New model `ReviewLog`, written by
+  `kill_note` and `finding_note` in the same transaction as the review.
+  A blue kill's entry keeps the character it was saved for; its main is
+  looked up when the tab is shown, like the victims' mains. Migration 0010
+  copies each review made before the log in as one entry with its last
+  state (a main's characters of one killmail as one entry); it reads and
+  writes only this app's tables.
+
 ## [0.0.22] - 2026-11-10
 
 ### Changed

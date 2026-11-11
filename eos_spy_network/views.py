@@ -3,6 +3,7 @@ import time
 from kombu.exceptions import OperationalError
 
 from django.contrib import messages
+from django.db import transaction
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -19,7 +20,7 @@ from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
 from .markers import BLUE_KILLS, CONTACTS, KINDS, LABELS, corptools_installed, million, own_kill, worth_counting
-from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, SpyConfiguration
+from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, ReviewLog, SpyConfiguration
 from .permissions import (
     APP_PERMISSIONS,
     MANAGE_SETTINGS,
@@ -49,7 +50,8 @@ TAB_SOURCES = "sources"
 TAB_MARKERS = "markers"
 TAB_KILLS = "kills"
 TAB_CONTACTS = "contacts"
-SETTINGS_TABS = (TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS, TAB_KILLS, TAB_CONTACTS)
+TAB_LOG = "log"
+SETTINGS_TABS = (TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS, TAB_KILLS, TAB_CONTACTS, TAB_LOG)
 
 
 def _render(request, template, context=None, nav=None, started=None):
@@ -214,6 +216,44 @@ def _contact_rows(config) -> list:
     return rows
 
 
+def _log_rows(config, contact_rows) -> list:
+    """Every saved note and tick of the configured Alliance, the latest first."""
+    if not config.alliance:
+        return []
+    entries = list(
+        ReviewLog.objects.filter(alliance_id=config.alliance.alliance_id)
+        .select_related("changed_by__profile__main_character")
+        .order_by("-changed_at", "-id")
+    )
+    kill_characters = {entry.character_id for entry in entries if entry.kind == BLUE_KILLS}
+    # read now, as the victims' mains: an entry keeps the character its kill was saved for
+    mains = _victim_mains(kill_characters)
+    names = dict(
+        EveCharacter.objects.filter(
+            character_id__in={entry.character_id for entry in entries} | set(mains.values())
+        ).values_list("character_id", "character_name")
+    )
+    victims = dict(
+        BlueKill.objects.filter(
+            alliance_id=config.alliance.alliance_id,
+            killmail_id__in=[int(entry.key) for entry in entries if entry.kind == BLUE_KILLS],
+        ).values_list("killmail_id", "victim")
+    )
+    # a contact gone from the last calculation keeps its key "<contact ID>:<standing>"
+    contacts_by_key = {(row["main_id"], row["key"]): row["contact"] for row in contact_rows}
+    for entry in entries:
+        entry.label = LABELS.get(entry.kind, entry.kind)
+        if entry.kind == BLUE_KILLS:
+            entry.main_id = mains.get(entry.character_id, entry.character_id)
+            entry.killmail_id = int(entry.key)
+            entry.finding = victims.get(entry.killmail_id) or entry.key
+        else:
+            entry.main_id = entry.character_id
+            entry.finding = contacts_by_key.get((entry.character_id, entry.key), entry.key)
+        entry.main_name = names.get(entry.main_id) or str(entry.main_id)
+    return entries
+
+
 @any_permission_required(VIEW_SUSPECTS)
 @require_POST
 def kill_note(request):
@@ -231,13 +271,30 @@ def kill_note(request):
     owner = CharacterOwnership.objects.filter(character__character_id=character_id).values_list("user_id", flat=True)
     characters = CharacterOwnership.objects.filter(user_id__in=owner).values_list("character__character_id", flat=True)
     # only a kill of the configured Alliance: the pages show no other
-    updated = BlueKill.objects.filter(
+    group = BlueKill.objects.filter(
         alliance_id=config.alliance.alliance_id if config.alliance else None,
         killmail_id=killmail_id,
         character_id__in=[character_id, *characters],
-    ).update(note=text, cleared=cleared, reviewed_at=timezone.now(), reviewed_by=request.user)
-    if not updated:
-        raise Http404
+    )
+    with transaction.atomic():
+        # the group's state as _kill_rows shows it: cleared only when every row is
+        previous = list(group.select_for_update().values_list("cleared", "note"))
+        if not previous:
+            raise Http404
+        now = timezone.now()
+        group.update(note=text, cleared=cleared, reviewed_at=now, reviewed_by=request.user)
+        ReviewLog.objects.create(
+            alliance_id=config.alliance.alliance_id,
+            kind=BLUE_KILLS,
+            character_id=character_id,
+            key=str(killmail_id),
+            cleared=cleared,
+            note=text,
+            previous_cleared=all(was_cleared for was_cleared, _note in previous),
+            previous_note=next((note for _cleared, note in previous if note), ""),
+            changed_at=now,
+            changed_by=request.user,
+        )
     return JsonResponse({"note": text, "cleared": cleared})
 
 
@@ -277,13 +334,25 @@ def finding_note(request):
     text, cleared, refused = _posted_note(request)
     if refused:
         return refused
-    FindingReview.objects.update_or_create(
-        alliance_id=config.alliance.alliance_id,
-        kind=kind,
-        main_id=main_id,
-        key=key,
-        defaults={"note": text, "cleared": cleared, "reviewed_at": timezone.now(), "reviewed_by": request.user},
-    )
+    finding = {"alliance_id": config.alliance.alliance_id, "kind": kind, "key": key}
+    with transaction.atomic():
+        previous = FindingReview.objects.select_for_update().filter(main_id=main_id, **finding).first()
+        now = timezone.now()
+        FindingReview.objects.update_or_create(
+            main_id=main_id,
+            **finding,
+            defaults={"note": text, "cleared": cleared, "reviewed_at": now, "reviewed_by": request.user},
+        )
+        ReviewLog.objects.create(
+            character_id=main_id,
+            **finding,
+            cleared=cleared,
+            note=text,
+            previous_cleared=previous.cleared if previous else None,
+            previous_note=previous.note if previous else "",
+            changed_at=now,
+            changed_by=request.user,
+        )
     return JsonResponse({"note": text, "cleared": cleared})
 
 
@@ -464,6 +533,7 @@ def settings(request):
     if form.errors:
         # the tab with the error, or it hides behind another
         tab = TAB_MARKERS if set(form.errors) == {"markers"} else TAB_ALLIANCE
+    contact_rows = _contact_rows(config)
     return _render(
         request,
         "eos_spy_network/settings.html",
@@ -471,7 +541,8 @@ def settings(request):
             "form": form,
             "rows": rows,
             "kills": _kill_rows(config),
-            "contacts": _contact_rows(config),
+            "contacts": contact_rows,
+            "log": _log_rows(config, contact_rows),
             "note_length": KILL_NOTE_LENGTH,
             "tab": tab if tab in SETTINGS_TABS else TAB_ALLIANCE,
         },

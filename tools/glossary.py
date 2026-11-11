@@ -465,6 +465,21 @@ TRANSLATIONS = {
         "Дружественных враждебных контактов не найдено.",
         "未发现友好的敌对联系人。",
     ),
+    "Log": ("Protokoll", "Журнал", "日志"),
+    "Changed by": ("Geändert von", "Изменил", "修改人"),
+    "Marker": ("Marker", "Маркер", "标记"),
+    "Finding": ("Fund", "Находка", "发现"),
+    "Note before": ("Notiz vorher", "Заметка до", "之前的备注"),
+    "Nothing saved yet.": ("Noch nichts gespeichert.", "Пока ничего не сохранено.", "尚未保存任何内容。"),
+    "Every save of a note or a Cleared tick, the latest first. The reviews made before the log came with their "
+    "last state only. A change made on this page shows here after a reload.": (
+        "Jedes Speichern einer Notiz oder eines Geklärt-Hakens, das neueste zuerst. Die Prüfungen von vor dem "
+        "Protokoll stehen nur mit ihrem letzten Stand hier. Eine Änderung auf dieser Seite erscheint hier nach "
+        "dem Neuladen.",
+        "Каждое сохранение заметки или отметки «Улажено», новые сверху. Проверки, сделанные до появления журнала, "
+        "есть только в последнем состоянии. Изменение на этой странице появится здесь после перезагрузки.",
+        "每次保存备注或“已澄清”勾选，最新的在前。日志启用前的审核只保留最后状态。在本页所做的更改需重新加载后显示。",
+    ),
 }
 
 PLURALS = {}

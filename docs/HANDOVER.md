@@ -4,10 +4,31 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-10.
+Last updated 2026-11-11.
 
 ## State
 
+- Unreleased (2026-11-11): settings tab *Log* (`TAB_LOG`,
+  `views._log_rows`), model `ReviewLog` (alliance, kind, `character_id`,
+  key, cleared, note, `previous_cleared`, `previous_note`, `changed_at`,
+  `changed_by`), written by `kill_note` and `finding_note` inside
+  `transaction.atomic` with `select_for_update` on the review rows. For a
+  blue kill `character_id` is the posted character, its main looked up at
+  view time (`_victim_mains`); for a finding it is the main. Migration 0010
+  seeds one entry per earlier review (blue kills deduplicated by alliance,
+  killmail, `reviewed_at`, `reviewed_by`), applied to `aa_dev` (0 entries:
+  none of its kills was ever reviewed). Tests `test_review_log.py` (8),
+  checked against 8 faults, all caught. Glossary has the new texts; the
+  catalogues follow at `/commit`. Not seen in a browser. The tab is
+  rendered once with the page: a tick in another tab shows in the log only
+  after a reload (said in the tab's help text).
+- Prod question (user, 2026-11-11): 5 blue kills ticked, the settings tab
+  *Blue kills* showed only one. The code groups only per main and killmail
+  (what the user wants), so 5 different killmails give 5 rows. Suspects: a
+  minimum kill value set after the last recalculation (the settings tab
+  filters at once, the marker page only after a recalculation), the 5 ticks
+  on one killmail, or the DataTables search. The user was given a shell
+  line for prod to list the reviewed `BlueKill` rows; the answer is open.
 - Version: `0.0.22`, 2026-11-10 (see `CHANGELOG.md`): the *Mains with
   markers* count is `text-info-emphasis` (plain `text-info` has about 2:1
   contrast on white; eos-auth-monitor does the same). The network legend
@@ -193,7 +214,7 @@ Last updated 2026-11-10.
 | Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links, note and Cleared tick |
 | Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
-| Settings | `manage_settings` | tabs: Alliance (hostile and blue threshold, minimum kill value, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in the last two note and tick editable with `view_suspects`, clearing without a note |
+| Settings | `manage_settings` | tabs: Alliance (hostile and blue threshold, minimum kill value, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
 
 ## Open
 

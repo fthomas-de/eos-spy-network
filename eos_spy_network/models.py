@@ -222,6 +222,37 @@ class FindingReview(models.Model):
         return f"{self.kind} {self.key} of {self.main_id}"
 
 
+class ReviewLog(models.Model):
+    """One save of a note and cleared tick, of a blue kill or another finding.
+
+    The review rows keep only the latest state; this keeps every change, so a
+    reader can tell who cleared what and what the note said before.
+    """
+
+    alliance_id = models.PositiveBigIntegerField()
+    # the marker: blue_kills or the kind of a FindingReview
+    kind = models.CharField(max_length=32)
+    # the main of a finding; for a blue kill the character it was saved for, its main looked up when shown
+    character_id = models.PositiveBigIntegerField()
+    # the killmail ID for a blue kill, the FindingReview key otherwise
+    key = models.CharField(max_length=64)
+    cleared = models.BooleanField()
+    note = models.CharField(max_length=KILL_NOTE_LENGTH, blank=True)
+    # none for the first save and for the entries copied from the reviews made before the log
+    previous_cleared = models.BooleanField(null=True)
+    previous_note = models.CharField(max_length=KILL_NOTE_LENGTH, blank=True)
+    changed_at = models.DateTimeField()
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        default_permissions = ()
+
+    def __str__(self):
+        return f"{self.kind} {self.key} of {self.character_id} at {self.changed_at}"
+
+
 class ContactSource(models.Model):
     """The Alliance or one of its Corporations whose aa-contacts contacts make up the hostile list.
 

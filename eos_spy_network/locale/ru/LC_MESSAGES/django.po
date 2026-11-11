@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-09 16:38+0000\n"
-"PO-Revision-Date: 2026-11-09 16:38+0000\n"
+"POT-Creation-Date: 2026-11-11 15:03+0000\n"
+"PO-Revision-Date: 2026-11-11 15:03+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: ru\n"
 "Language: ru\n"
@@ -24,32 +24,32 @@ msgstr "Spy Network"
 #: contacts.py:25 templates/eos_spy_network/network_corporation.html:97
 #: templates/eos_spy_network/partials/dealings.html:7
 #: templates/eos_spy_network/partials/kills.html:8
-#: templates/eos_spy_network/settings.html:170
+#: templates/eos_spy_network/settings.html:178
 msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:236
+#: contacts.py:26 models.py:267
 #: templates/eos_spy_network/network_corporation.html:99
 #: templates/eos_spy_network/partials/contacts.html:10
 #: templates/eos_spy_network/partials/dealings.html:10
 #: templates/eos_spy_network/partials/kills.html:10
 #: templates/eos_spy_network/partials/network-legend.html:8
-#: templates/eos_spy_network/settings.html:172
-#: templates/eos_spy_network/settings.html:234
+#: templates/eos_spy_network/settings.html:180
+#: templates/eos_spy_network/settings.html:242
 msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:26 models.py:43 models.py:235
+#: contacts.py:27 forms.py:26 models.py:43 models.py:266
 #: templates/eos_spy_network/network_corporation.html:100
 #: templates/eos_spy_network/partials/contacts.html:11
 #: templates/eos_spy_network/partials/dealings.html:11
 #: templates/eos_spy_network/partials/kills.html:11
 #: templates/eos_spy_network/partials/network-legend.html:10
 #: templates/eos_spy_network/settings.html:17
-#: templates/eos_spy_network/settings.html:173
-#: templates/eos_spy_network/settings.html:235
+#: templates/eos_spy_network/settings.html:181
+#: templates/eos_spy_network/settings.html:243
 msgctxt "EVE jargon"
 msgid "Alliance"
 msgstr "Alliance"
@@ -61,7 +61,7 @@ msgstr "Faction"
 
 #: forms.py:40 snapshot.py:44 templates/eos_spy_network/base.html:12
 #: templates/eos_spy_network/corporation.html:49
-#: templates/eos_spy_network/settings.html:33 views.py:35
+#: templates/eos_spy_network/settings.html:33 views.py:36
 msgid "Markers"
 msgstr "Маркеры"
 
@@ -271,8 +271,8 @@ msgstr "Определение Corporation и Alliance"
 msgid "Saving the result"
 msgstr "Сохранение результата"
 
-#: snapshot.py:44 templates/eos_spy_network/base.html:19 views.py:37
-#: views.py:38
+#: snapshot.py:44 templates/eos_spy_network/base.html:19 views.py:38
+#: views.py:39
 msgid "Network"
 msgstr "Сеть"
 
@@ -280,7 +280,7 @@ msgstr "Сеть"
 msgid "Affiliations"
 msgstr "Принадлежность"
 
-#: templates/eos_spy_network/base.html:25 views.py:39
+#: templates/eos_spy_network/base.html:25 views.py:40
 msgid "Settings"
 msgstr "Настройки"
 
@@ -309,14 +309,15 @@ msgstr "Назад"
 
 #: templates/eos_spy_network/corporation.html:47
 #: templates/eos_spy_network/partials/network-legend.html:4
-#: templates/eos_spy_network/settings.html:231
+#: templates/eos_spy_network/settings.html:239
+#: templates/eos_spy_network/settings.html:290
 msgctxt "EVE jargon"
 msgid "Main"
 msgstr "Main"
 
 #: templates/eos_spy_network/corporation.html:48
 #: templates/eos_spy_network/partials/contacts.html:7
-#: templates/eos_spy_network/settings.html:232
+#: templates/eos_spy_network/settings.html:240
 msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
@@ -424,7 +425,7 @@ msgstr "Платежи"
 #: templates/eos_spy_network/network_corporation.html:65
 #: templates/eos_spy_network/partials/contacts.html:13
 #: templates/eos_spy_network/partials/group-cell.html:7
-#: templates/eos_spy_network/settings.html:236
+#: templates/eos_spy_network/settings.html:244
 msgctxt "eos-spy-network"
 msgid "Standing"
 msgstr "Standing"
@@ -446,7 +447,7 @@ msgid "unknown"
 msgstr "неизвестно"
 
 #: templates/eos_spy_network/partials/contacts.html:8
-#: templates/eos_spy_network/settings.html:233
+#: templates/eos_spy_network/settings.html:241
 msgctxt "eos-spy-network"
 msgid "Contact"
 msgstr "Контакт"
@@ -455,8 +456,9 @@ msgstr "Контакт"
 #: templates/eos_spy_network/partials/kill-note-button.html:8
 #: templates/eos_spy_network/partials/kill-note-modal.html:31
 #: templates/eos_spy_network/partials/kills.html:15
-#: templates/eos_spy_network/settings.html:177
-#: templates/eos_spy_network/settings.html:237
+#: templates/eos_spy_network/settings.html:185
+#: templates/eos_spy_network/settings.html:245
+#: templates/eos_spy_network/settings.html:292
 msgctxt "eos-spy-network"
 msgid "Cleared"
 msgstr "Улажено"
@@ -466,8 +468,9 @@ msgstr "Улажено"
 #: templates/eos_spy_network/partials/kill-note-modal.html:19
 #: templates/eos_spy_network/partials/kill-note-modal.html:24
 #: templates/eos_spy_network/partials/kills.html:16
-#: templates/eos_spy_network/settings.html:178
-#: templates/eos_spy_network/settings.html:238
+#: templates/eos_spy_network/settings.html:186
+#: templates/eos_spy_network/settings.html:246
+#: templates/eos_spy_network/settings.html:294
 msgid "Note"
 msgstr "Заметка"
 
@@ -558,7 +561,7 @@ msgstr "Количество"
 
 #: templates/eos_spy_network/partials/dealings.html:14
 #: templates/eos_spy_network/partials/kills.html:13
-#: templates/eos_spy_network/settings.html:175
+#: templates/eos_spy_network/settings.html:183
 msgid "Value"
 msgstr "Стоимость"
 
@@ -568,8 +571,8 @@ msgstr "Вид"
 
 #: templates/eos_spy_network/partials/kill-note-button.html:29
 #: templates/eos_spy_network/partials/kill-note-modal.html:10
-#: templates/eos_spy_network/settings.html:205
-#: templates/eos_spy_network/settings.html:254
+#: templates/eos_spy_network/settings.html:213
+#: templates/eos_spy_network/settings.html:262
 msgid "Add a note"
 msgstr "Добавить заметку"
 
@@ -596,40 +599,41 @@ msgid "Cancel"
 msgstr "Отмена"
 
 #: templates/eos_spy_network/partials/kill-note-modal.html:42
-#: templates/eos_spy_network/settings.html:67
-#: templates/eos_spy_network/settings.html:135
-#: templates/eos_spy_network/settings.html:155
+#: templates/eos_spy_network/settings.html:75
+#: templates/eos_spy_network/settings.html:143
+#: templates/eos_spy_network/settings.html:163
 msgctxt "eos-spy-network"
 msgid "Save"
 msgstr "Сохранить"
 
 #: templates/eos_spy_network/partials/kills.html:7
-#: templates/eos_spy_network/settings.html:169
+#: templates/eos_spy_network/settings.html:177
+#: templates/eos_spy_network/settings.html:287
 msgid "Date"
 msgstr "Дата"
 
 #: templates/eos_spy_network/partials/kills.html:9
-#: templates/eos_spy_network/settings.html:171
+#: templates/eos_spy_network/settings.html:179
 msgid "Victim"
 msgstr "Жертва"
 
 #: templates/eos_spy_network/partials/kills.html:12
-#: templates/eos_spy_network/settings.html:174
+#: templates/eos_spy_network/settings.html:182
 msgid "Ship"
 msgstr "Корабль"
 
 #: templates/eos_spy_network/partials/kills.html:14
-#: templates/eos_spy_network/settings.html:176
+#: templates/eos_spy_network/settings.html:184
 msgid "Reason"
 msgstr "Причина"
 
 #: templates/eos_spy_network/partials/kills.html:36
-#: templates/eos_spy_network/settings.html:197
+#: templates/eos_spy_network/settings.html:205
 msgid "Awox"
 msgstr "Awox"
 
 #: templates/eos_spy_network/partials/kills.html:38
-#: templates/eos_spy_network/settings.html:199
+#: templates/eos_spy_network/settings.html:207
 msgid "Blue"
 msgstr "Blue"
 
@@ -754,7 +758,11 @@ msgstr "Пересчитать"
 msgid "Contact sources"
 msgstr "Источники контактов"
 
-#: templates/eos_spy_network/settings.html:74
+#: templates/eos_spy_network/settings.html:57
+msgid "Log"
+msgstr "Журнал"
+
+#: templates/eos_spy_network/settings.html:82
 msgid ""
 "Tick whose contacts make up the hostile list. The contacts come from aa-"
 "contacts: a source needs a token there, and aa-contacts' own task keeps them"
@@ -764,71 +772,73 @@ msgstr ""
 "contacts: источнику нужен там токен, а собственная задача aa-contacts "
 "поддерживает их в актуальном состоянии."
 
-#: templates/eos_spy_network/settings.html:75
+#: templates/eos_spy_network/settings.html:83
 msgid "Open aa-contacts"
 msgstr "Открыть aa-contacts"
 
-#: templates/eos_spy_network/settings.html:79
+#: templates/eos_spy_network/settings.html:87
 msgid ""
 "aa-contacts is not installed: the hostile list is made from its contacts."
 msgstr "aa-contacts не установлен: список врагов строится из его контактов."
 
-#: templates/eos_spy_network/settings.html:87
+#: templates/eos_spy_network/settings.html:95
 msgid "Ticked"
 msgstr "Отмечено"
 
-#: templates/eos_spy_network/settings.html:88
+#: templates/eos_spy_network/settings.html:96
 msgctxt "eos-spy-network"
 msgid "Name"
 msgstr "Название"
 
-#: templates/eos_spy_network/settings.html:89
+#: templates/eos_spy_network/settings.html:97
 msgctxt "eos-spy-network"
 msgid "Type"
 msgstr "Тип"
 
-#: templates/eos_spy_network/settings.html:90
+#: templates/eos_spy_network/settings.html:98
 msgid "Token in aa-contacts"
 msgstr "Токен в aa-contacts"
 
-#: templates/eos_spy_network/settings.html:91
+#: templates/eos_spy_network/settings.html:99
 msgid "Contacts as of"
 msgstr "Контакты на"
 
-#: templates/eos_spy_network/settings.html:92
+#: templates/eos_spy_network/settings.html:100
 msgid "Contacts"
 msgstr "Контакты"
 
-#: templates/eos_spy_network/settings.html:93
+#: templates/eos_spy_network/settings.html:101
 msgctxt "eos-spy-network"
 msgid "Hostile"
 msgstr "Враждебные"
 
-#: templates/eos_spy_network/settings.html:105
+#: templates/eos_spy_network/settings.html:113
 msgid "Not in the Alliance"
 msgstr "Не в Alliance"
 
-#: templates/eos_spy_network/settings.html:111
+#: templates/eos_spy_network/settings.html:119
+#: templates/eos_spy_network/settings.html:312
 msgctxt "eos-spy-network"
 msgid "Yes"
 msgstr "Да"
 
-#: templates/eos_spy_network/settings.html:113
+#: templates/eos_spy_network/settings.html:121
+#: templates/eos_spy_network/settings.html:312
 msgctxt "eos-spy-network"
 msgid "No"
 msgstr "Нет"
 
-#: templates/eos_spy_network/settings.html:120
+#: templates/eos_spy_network/settings.html:128
 msgid "Not read yet"
 msgstr "Ещё не прочитано"
 
-#: templates/eos_spy_network/settings.html:131
+#: templates/eos_spy_network/settings.html:139
 msgid ""
 "Choose an Alliance first: its Corporations are listed here once it is saved."
 msgstr ""
 "Сначала выберите Alliance: её Corporation появятся здесь после сохранения."
 
-#: templates/eos_spy_network/settings.html:141
+#: templates/eos_spy_network/settings.html:149
 msgid ""
 "A marker switched off is still calculated, but the Markers pages leave it "
 "out: a main marked by nothing else counts as clean. Switched on again, it "
@@ -838,7 +848,7 @@ msgstr ""
 "показывают: Main без других маркеров считается чистым. После повторного "
 "включения он сразу появляется, без пересчёта."
 
-#: templates/eos_spy_network/settings.html:162
+#: templates/eos_spy_network/settings.html:170
 msgid ""
 "Every blue kill stored for the Alliance, also those outside the time frame. "
 "Reason and standing are those of the time the kill was found; a cleared kill"
@@ -848,17 +858,17 @@ msgstr ""
 "Причина и standing — на момент обнаружения килла; улаженный килл больше не "
 "учитывается в маркере."
 
-#: templates/eos_spy_network/settings.html:203
-#: templates/eos_spy_network/settings.html:252
+#: templates/eos_spy_network/settings.html:211
+#: templates/eos_spy_network/settings.html:260
 #, python-format
 msgid "Last changed by %(name)s, %(at)s"
 msgstr "Последнее изменение: %(name)s, %(at)s"
 
-#: templates/eos_spy_network/settings.html:214
+#: templates/eos_spy_network/settings.html:222
 msgid "No blue kill stored."
 msgstr "Нет сохранённых blue-киллов."
 
-#: templates/eos_spy_network/settings.html:224
+#: templates/eos_spy_network/settings.html:232
 msgid ""
 "Every friendly hostile contact of the last calculation, the cleared ones "
 "too. A cleared contact no longer counts for the marker; at another standing "
@@ -868,28 +878,58 @@ msgstr ""
 "улаженные. Улаженный контакт больше не учитывается в маркере; с другим "
 "Standing это новая находка."
 
-#: templates/eos_spy_network/settings.html:263
+#: templates/eos_spy_network/settings.html:271
 msgid "No friendly hostile contact found."
 msgstr "Дружественных враждебных контактов не найдено."
 
-#: views.py:36
+#: templates/eos_spy_network/settings.html:280
+msgid ""
+"Every save of a note or a Cleared tick, the latest first. The reviews made "
+"before the log came with their last state only. A change made on this page "
+"shows here after a reload."
+msgstr ""
+"Каждое сохранение заметки или отметки «Улажено», новые сверху. Проверки, "
+"сделанные до появления журнала, есть только в последнем состоянии. Изменение"
+" на этой странице появится здесь после перезагрузки."
+
+#: templates/eos_spy_network/settings.html:288
+msgid "Changed by"
+msgstr "Изменил"
+
+#: templates/eos_spy_network/settings.html:289
+msgid "Marker"
+msgstr "Маркер"
+
+#: templates/eos_spy_network/settings.html:291
+msgid "Finding"
+msgstr "Находка"
+
+#: templates/eos_spy_network/settings.html:293
+msgid "Note before"
+msgstr "Заметка до"
+
+#: templates/eos_spy_network/settings.html:322
+msgid "Nothing saved yet."
+msgstr "Пока ничего не сохранено."
+
+#: views.py:37
 msgid "Suspects"
 msgstr "Подозреваемые"
 
-#: views.py:424
+#: views.py:493
 msgid "The markers and connections are being recalculated."
 msgstr "Маркеры и связи пересчитываются."
 
-#: views.py:426
+#: views.py:495
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr "Не удалось запустить пересчёт: очередь задач недоступна."
 
-#: views.py:453
+#: views.py:522
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr "Настройки сохранены. Маркеры и связи пересчитываются."
 
-#: views.py:457
+#: views.py:526
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

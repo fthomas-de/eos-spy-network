@@ -116,7 +116,7 @@ every one with a standing below a configurable value.
   entity one of its Corporations is at war with. The Alliance itself and its
   Corporations never count as hostile. A hostile Corporation or Alliance
   also makes its members hostile - as far as Auth knows them (see below)
-- **Settings page**, in five tabs; the first three saved together. *Alliance*: the Alliance, chosen from a searchable dropdown; the
+- **Settings page**, in six tabs; the first three saved together. *Alliance*: the Alliance, chosen from a searchable dropdown; the
   standing below which a contact is hostile (default: below 0); the
   standing from which a contact of the Alliance is blue for the blue kills
   (default 5); the minimum value of a blue kill in million ISK (default 0:
@@ -140,7 +140,10 @@ every one with a standing below a configurable value.
   note and the tick of each row and who changed them last. *Friendly to
   hostiles*: every friendly hostile contact of the last calculation, the
   cleared ones too, per main, contact and standing, alike. In both a user
-  with `manage_settings` and `view_suspects` ticks a row off without a note
+  with `manage_settings` and `view_suspects` ticks a row off without a note.
+  *Log*: every save of a note or a tick in either, the latest first, with
+  who and when, the main, the finding, the tick and the note before and
+  after; reviews made before the log are in it with their last state only
 - **Notices** above the marker and network pages for every ticked source aa-contacts has
   no contacts of yet, and when aa-contacts or corptools is not installed;
   above the marker pages for the markers switched off, and - while the

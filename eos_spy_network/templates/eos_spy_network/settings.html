@@ -49,6 +49,14 @@
                     {% translate "Friendly to hostiles" %}
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link{% if tab == 'log' %} active{% endif %}" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-log"
+                        aria-controls="eos-spy-network-settings-log"
+                        aria-selected="{% if tab == 'log' %}true{% else %}false{% endif %}">
+                    {% translate "Log" %}
+                </button>
+            </li>
         </ul>
 
         <div class="tab-content">
@@ -261,6 +269,57 @@
                             </div>
                         {% else %}
                             <p class="mb-0 text-body-secondary">{% translate "No friendly hostile contact found." %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade{% if tab == 'log' %} show active{% endif %}" id="eos-spy-network-settings-log" role="tabpanel">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="small text-body-secondary">
+                            {% translate "Every save of a note or a Cleared tick, the latest first. The reviews made before the log came with their last state only. A change made on this page shows here after a reload." %}
+                        </p>
+                        {% if log %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped table-hover w-100 eos-spy-network-sortable">
+                                    <thead>
+                                        <tr>
+                                            <th>{% translate "Date" %}</th>
+                                            <th>{% translate "Changed by" %}</th>
+                                            <th>{% translate "Marker" %}</th>
+                                            <th>{% translate "Main" context "EVE jargon" %}</th>
+                                            <th>{% translate "Finding" %}</th>
+                                            <th>{% translate "Cleared" context "eos-spy-network" %}</th>
+                                            <th>{% translate "Note before" %}</th>
+                                            <th>{% translate "Note" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for entry in log %}
+                                            <tr>
+                                                <td class="text-nowrap" data-order="{{ entry.changed_at|date:'U' }}">{{ entry.changed_at|date:"Y-m-d H:i" }}</td>
+                                                <td class="text-break">{{ entry.changed_by.profile.main_character.character_name|default:entry.changed_by.username|default:"?" }}</td>
+                                                <td>{{ entry.label }}</td>
+                                                <td class="text-break">{{ entry.main_name }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=entry.main_id %}</td>
+                                                <td class="text-break">
+                                                    {% if entry.killmail_id %}
+                                                        <a href="https://zkillboard.com/kill/{{ entry.killmail_id }}/" target="_blank" rel="noopener noreferrer">{{ entry.finding }}</a>
+                                                    {% else %}
+                                                        {{ entry.finding }}
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-nowrap">
+                                                    {% if entry.previous_cleared is not None %}{% if entry.previous_cleared %}{% translate "Yes" context "eos-spy-network" %}{% else %}{% translate "No" context "eos-spy-network" %}{% endif %} &rarr; {% endif %}{% if entry.cleared %}{% translate "Yes" context "eos-spy-network" %}{% else %}{% translate "No" context "eos-spy-network" %}{% endif %}
+                                                </td>
+                                                <td class="small text-break text-body-secondary">{{ entry.previous_note }}</td>
+                                                <td class="small text-break">{{ entry.note }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="mb-0 text-body-secondary">{% translate "Nothing saved yet." %}</p>
                         {% endif %}
                     </div>
                 </div>
