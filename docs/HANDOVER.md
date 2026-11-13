@@ -4,11 +4,26 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-13 (0.0.27).
+Last updated 2026-11-13 (0.0.28).
 
 ## State
 
-- Version: `0.0.27`, 2026-11-13 (see `CHANGELOG.md`): card *Cleared
+- Version: `0.0.28`, 2026-11-13 (see `CHANGELOG.md`): two table changes.
+  - *Friendly to hostiles*, both tables (`partials/contacts.html`,
+    settings tab): new column *Reference standing* before the member's
+    own, now headed *Suspect standing*. `snapshot._reference_rows` (called
+    right after `_affiliate_rows` for the contact rows) stores per row
+    `reference = {"standing", "sources": [[name, standing]]}` or `None`:
+    the hostile entry of the contact itself, else of its Corporation, else
+    of its Alliance. The cell shows the lowest standing, the sources as a
+    `title` tooltip, `data-order` for DataTables; a row without
+    `reference` (snapshot of 0.0.27 or older) shows "–". The review key
+    (`contact_key`: contact + the member's standing), *Cleared findings*
+    and `api.py` are unchanged. 5 new tests in `test_finding_reviews`.
+  - Blue kill tables (`partials/kills.html`, settings tab): the columns
+    after *Victim* are headed *Victim Corporation* and *Victim Alliance*
+    (plain msgids, no context). 2 new tests.
+- Before (0.0.27): card *Cleared
   findings* at the foot of the Corporation page. `Report._tile` collects a
   main whose every visible finding is cleared (`reviewed_kills` /
   `reviewed_contacts` gave `None`) into `CorporationTile.cleared`
@@ -76,16 +91,21 @@ Last updated 2026-11-13 (0.0.27).
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 339 without translation tests plus 3 translation tests, all green
-  in the dev instance at 0.0.27 (fresh test database); every new test
-  checked against the unfixed code. `tests.base.SpyTestCase` patches
+- Tests: 346 without translation tests plus 3 translation tests, all green
+  in the dev instance at 0.0.28 (fresh test database); every new test
+  checked against the unfixed code - except
+  `test_should_show_a_dash_for_a_snapshot_without_the_reference_standing`,
+  which failed there only on a `KeyError` of its own, fixed afterwards and
+  not run against the old code again. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
   not reviewed by the user (0.0.13 added the blue kill texts, 0.0.14 the
   note texts, 0.0.19 the minimum value and contacts tab texts, 0.0.25
   "Ignored ships" and its help text, 0.0.26 the note buttons and day texts,
-  0.0.27 the three *Cleared findings* texts; Awox and
+  0.0.27 the three *Cleared findings* texts, 0.0.28 the four headings
+  "Victim Corporation", "Victim Alliance", "Reference standing", "Suspect
+  standing" - Standing stays English; Awox and
   Blue stay English; "Cleared" carries the `eos-spy-network` context -
   another app translates it differently in ru).
 
@@ -99,6 +119,13 @@ Last updated 2026-11-13 (0.0.27).
 
 ## Open
 
+- 0.0.28 on prod: no migration, no new static file. *Reference standing*
+  shows "–" until the next calculation (button, saving the settings or the
+  periodic task). Neither change was seen in a browser: `aa_dev` has no
+  contacts marker, so the column, its tooltip and its sorting in the
+  settings tab were only rendered in tests. A contact hostile only through
+  its group shows the same standing twice: as the reference and as the red
+  badge in its Corporation or Alliance cell (left as is).
 - 0.0.27 on prod: no migration; `collectstatic` (new `cleared.js`). Look
   once at a Corporation with a fully cleared main: the folded group, the
   search, the dark theme. Not decided: the settings tabs stay flat (no
@@ -294,6 +321,14 @@ Last updated 2026-11-13 (0.0.27).
   main still listed above keeps its cleared rows greyed there, no
   duplicate); one table for blue kills and contacts; read only - a note is
   changed in the settings tabs; groups folded at first.
+- Reference standing (user, 2026-11-13): the lowest standing of the ticked
+  sources as the value, the sources only in a tooltip; headings
+  *Reference standing* and *Suspect standing*; in both tables; stored
+  with the calculation rather than looked up at view time (one place
+  instead of two, at the price of a recalculation).
+- Victim headings (user, 2026-11-13): *Victim Corporation* / *Victim
+  Alliance* in the long form, in both blue kill tables - a bare
+  "Corporation" reads as the member's own.
 - Value columns (user, 2026-11-09): kill value and contract value in
   million ISK, in both blue kill tables (marker and settings tab); the
   contract value is price + reward, the collateral stays out (a deposit);
@@ -347,9 +382,14 @@ Last updated 2026-11-13 (0.0.27).
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
   code since 0.0.7 - check `pgrep -af celery` and start it again before
-  testing the button. `collectstatic` ran with the 0.0.27 static files (`cleared.js`). `aa_dev` is at 0012 (0.0.27 adds none).
+  testing the button. `collectstatic` ran with the 0.0.27 static files (`cleared.js`; 0.0.28 adds none). `aa_dev` is at 0012 (0.0.27 and 0.0.28 add none); its snapshot was not rebuilt with 0.0.28.
 
 ## Traps
+
+- The Edit tool refuses a file under `\\wsl.localhost\...` that was only
+  seen through Grep: Read it (the lines are enough) first.
+- A new test is cheapest checked against the old code by writing it
+  before the change and running it red, instead of stashing afterwards.
 
 - Checking new tests against the unfixed code in one go: `git stash push
   -- <the changed code files>` (tests left in place), run the modules,
