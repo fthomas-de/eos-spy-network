@@ -8,19 +8,22 @@ Last updated 2026-11-13.
 
 ## State
 
-- 0.0.25 (committed, not pushed): settings *Alliance* -> *Ignored ships*
-  (`SpyConfiguration.ignored_ships`, names, migration 0011), choices from
-  killtracker's private `_require_victim_ship_types_query` on eveuniverse
-  `EveType` (601 in `aa_dev`) plus the `BlueKill` ships and the stored
-  names; an `ImportError` falls back to those two. Filtered in
-  `markers.worth_counting`, part of `snapshot._inputs()`. 5 new tests,
-  each failed against the unfixed code; glossary has the 2 new msgids.
-  Not seen in a browser.
-- Version: `0.0.24`, 2026-11-13 (see `CHANGELOG.md`): the eight fixes of
-  the audit of 2026-11-11. The report is `docs/AUDIT.md` - **untracked on
-  purpose** (user), keep it out of commits; it holds per finding the
-  trace, the fix and the test, plus "Checked and fine" (areas audited
-  without a finding - no need to audit them again).
+- Version: `0.0.25`, 2026-11-13 (see `CHANGELOG.md`): settings *Alliance*
+  -> *Ignored ships* (`SpyConfiguration.ignored_ships`, ship names, since a
+  `BlueKill` keeps no type ID; migration 0011). Choices: killtracker's
+  private `_require_victim_ship_types_query` on eveuniverse `EveType` (601
+  in `aa_dev`, structures/deployables/mining drones included - user's
+  choice) plus the `BlueKill` ships and the stored names; an `ImportError`
+  falls back to those two. Filtered in `markers.worth_counting` like the
+  minimum value (hidden, never deleted), part of `snapshot._inputs()`.
+  5 new tests, the 4 that pin the change failed against the old code.
+  Settings page rendered in `aa_dev` through `django.test.Client` (200,
+  601 choices), not clicked in a browser.
+- Before (0.0.24): the eight fixes of the audit of 2026-11-11. The report
+  is `docs/AUDIT.md` - **untracked on purpose** (user), keep it out of
+  commits; it holds per finding the trace, the fix and the test, plus
+  "Checked and fine" (areas audited without a finding - no need to audit
+  them again).
   - Contract popup (`views.contracts`) answers only for a pair the ISK
     marker shows with a contract payment, else 404; it reads `_report`.
   - `finding_note` stores only for a (main, key) in `_contact_rows`, else
@@ -67,7 +70,7 @@ Last updated 2026-11-13.
   text, legend from Bootstrap classes, only the hostile Alliance keeps
   `#8b1a1a` in `network.css`.
 - What the app does today: settings (Alliance, hostile threshold, blue
-  threshold, minimum kill value, Corporation changes per year, time frame,
+  threshold, minimum kill value, ignored ships, Corporation changes per year, time frame,
   ignored wallet entry types; contact sources; marker switches; every
   stored blue kill and every friendly hostile contact with note and Cleared
   tick, an admin clears without a note); Markers: the Corporations as
@@ -75,14 +78,15 @@ Last updated 2026-11-13.
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 312 without translation tests plus 3 translation tests, all green
-  in the dev instance at 0.0.24 (fresh test database); every new test
+- Tests: 317 without translation tests plus 3 translation tests, all green
+  in the dev instance at 0.0.25 (fresh test database); every new test
   checked against the unfixed code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
   not reviewed by the user (0.0.13 added the blue kill texts, 0.0.14 the
-  note texts, 0.0.19 the minimum value and contacts tab texts; Awox and
+  note texts, 0.0.19 the minimum value and contacts tab texts, 0.0.25
+  "Ignored ships" and its help text; Awox and
   Blue stay English; "Cleared" carries the `eos-spy-network` context -
   another app translates it differently in ru).
 
@@ -92,10 +96,16 @@ Last updated 2026-11-13.
 | Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links, note and Cleared tick |
 | Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
-| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles, Log) | tabs: Alliance (hostile and blue threshold, minimum kill value, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
+| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles, Log) | tabs: Alliance (hostile and blue threshold, minimum kill value, ignored ships, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
 
 ## Open
 
+- 0.0.25 on prod: run migration 0011. The ship list needs eveuniverse's
+  ship types loaded (killtracker's own setup loads them); with few loaded,
+  only the stored blue kill ships are offered. Click the multi-select
+  once in a browser. After a killtracker update, check that
+  `_require_victim_ship_types_query` still exists (else the list shrinks
+  to the stored names, without an error).
 - 0.0.24 on prod: an admin with `manage_settings` but without
   `view_suspects` loses the three review tabs - give them `view_suspects`
   if they are meant to review. After the next calculation the *Hostile
@@ -319,7 +329,7 @@ Last updated 2026-11-13.
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
   code since 0.0.7 - check `pgrep -af celery` and start it again before
-  testing the button. `collectstatic` ran with the 0.0.22 static files (0.0.23 and 0.0.24 changed none). 0.0.24 has no migration; `aa_dev` is at 0011 (the unreleased ignored ships).
+  testing the button. `collectstatic` ran with the 0.0.22 static files (0.0.23 and 0.0.24 changed none). `aa_dev` is at 0011 (0.0.25); 0.0.25 changed no static file.
 
 ## Traps
 
