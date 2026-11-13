@@ -183,8 +183,8 @@
                                             <th>{% translate "Date" %}</th>
                                             <th>{% translate "Character" context "EVE jargon" %}</th>
                                             <th>{% translate "Victim" %}</th>
-                                            <th>{% translate "Corporation" context "EVE jargon" %}</th>
-                                            <th>{% translate "Alliance" context "EVE jargon" %}</th>
+                                            <th>{% translate "Victim Corporation" %}</th>
+                                            <th>{% translate "Victim Alliance" %}</th>
                                             <th>{% translate "Ship" %}</th>
                                             <th>{% translate "Value" %}</th>
                                             <th>{% translate "Reason" %}</th>
@@ -247,7 +247,8 @@
                                             <th>{% translate "Contact" context "eos-spy-network" %}</th>
                                             <th>{% translate "Corporation" context "EVE jargon" %}</th>
                                             <th>{% translate "Alliance" context "EVE jargon" %}</th>
-                                            <th>{% translate "Standing" context "eos-spy-network" %}</th>
+                                            <th>{% translate "Reference standing" %}</th>
+                                            <th>{% translate "Suspect standing" %}</th>
                                             <th>{% translate "Cleared" context "eos-spy-network" %}</th>
                                             <th>{% translate "Note" %}</th>
                                         </tr>
@@ -261,6 +262,7 @@
                                                 </td>
                                                 <td class="text-break">{{ row.contact }}{% include "eos_spy_network/partials/evewho-link.html" with category=row.category eve_id=row.contact_id %}</td>
                                                 {% include "eos_spy_network/partials/affiliation-cells.html" %}
+                                                {% if row.reference %}<td class="text-nowrap" title="{% for name, standing in row.reference.sources %}{{ name }}: {{ standing|floatformat:"-1" }}{% if not forloop.last %}, {% endif %}{% endfor %}" data-order="{{ row.reference.standing }}">{{ row.reference.standing|floatformat:"-1" }}</td>{% else %}<td class="text-nowrap">–</td>{% endif %}
                                                 <td class="text-nowrap">{{ row.standing }}</td>
                                                 {% if row.reviewed_at %}
                                                     {% blocktranslate asvar reviewed with name=row.reviewed_by.profile.main_character.character_name|default:row.reviewed_by.username|default:"?" at=row.reviewed_at|date:"Y-m-d H:i" %}Last changed by {{ name }}, {{ at }}{% endblocktranslate %}

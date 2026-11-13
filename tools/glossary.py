@@ -520,6 +520,10 @@ TRANSLATIONS = {
         "Поиск по Main, находке или заметке",
         "搜索 Main、发现或备注",
     ),
+    "Victim Corporation": ("Opfer-Corporation", "Corporation жертвы", "受害者 Corporation"),
+    "Victim Alliance": ("Opfer-Alliance", "Alliance жертвы", "受害者 Alliance"),
+    "Reference standing": ("Referenz-Standing", "Опорный Standing", "参考 Standing"),
+    "Suspect standing": ("Standing des Verdächtigen", "Standing подозреваемого", "嫌疑人 Standing"),
 }
 
 PLURALS = {}

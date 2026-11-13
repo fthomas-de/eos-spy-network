@@ -8,7 +8,7 @@ from eos_spy_network import api, markers, snapshot
 from eos_spy_network.models import FindingReview, ReviewLog
 
 from .base import ALLIANCE_ID, OTHER_ALLIANCE_ID, configure, make_user
-from .test_markers import HOSTILE_CORP, MarkerTestCase, eve_name
+from .test_markers import HOSTILE_CORP, HOSTILE_MEMBER, MarkerTestCase, eve_name
 
 VIEW_SUSPECTS = "eos_spy_network.view_suspects"
 MANAGE_SETTINGS = "eos_spy_network.manage_settings"
@@ -64,6 +64,22 @@ class TestRows(FindingTestCase):
         self.assertEqual(row["category"], "corporation")
         self.assertEqual(row["corporation"], {"name": "Bad Corp", "standing": "-10.0"})
         self.assertTrue(self.report_marker().affiliated)
+
+    def test_should_name_the_standing_that_makes_the_contact_hostile(self):
+        (row,) = self.report_marker().rows
+
+        self.assertEqual(row["reference"], {"standing": "-10.0", "sources": [["Us", "-10.0"]]})
+
+    def test_should_take_the_corporations_standing_for_a_contact_hostile_through_it(self):
+        CharacterContact.objects.create(
+            id=1, character=self.audit, contact_id=HOSTILE_MEMBER, contact_type="character",
+            contact_name=eve_name(HOSTILE_MEMBER), standing=10,
+        )
+        snapshot.update()
+
+        row = next(row for row in self.report_marker().rows if row["contact_id"] == HOSTILE_MEMBER)
+
+        self.assertEqual(row["reference"], {"standing": "-10.0", "sources": [["Us", "-10.0"]]})
 
     def test_should_pair_each_character_with_its_id(self):
         (row,) = self.report_marker().rows
@@ -213,6 +229,24 @@ class TestFindingNote(FindingTestCase):
         self.assertContains(response, f'href="https://evewho.com/character/{ALT}"')
         self.assertContains(response, "<td class=\"text-break text-danger fw-semibold\" data-order=\"Bad Corp\">")
 
+    def test_should_show_the_reference_standing_next_to_the_suspects(self):
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, "<th>Reference standing</th>")
+        self.assertContains(response, "<th>Suspect standing</th>")
+        self.assertContains(response, 'title="Us: -10" data-order="-10.0">-10</td>')
+
+    def test_should_show_a_dash_for_a_snapshot_without_the_reference_standing(self):
+        stored = snapshot.current()
+        for marker in stored.data["corporations"][0]["suspects"][0]["markers"]:
+            for row in marker.get("rows", []):
+                row.pop("reference", None)
+        stored.save()
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, '<td class="text-nowrap">–</td>')
+
     def test_should_show_a_cleared_contact_greyed_while_another_stays_open(self):
         # with every contact cleared the marker is gone; the open one keeps the table on the page
         CharacterContact.objects.filter(character=self.alt_audit).update(standing=10)
@@ -244,6 +278,13 @@ class TestSettingsTab(FindingTestCase):
         self.assertContains(response, f'data-eos-spy-network-kill-main="{self.main.character_id}"')
         self.assertContains(response, self.main.character_name)
         self.assertContains(response, "data-eos-spy-network-kill-admin")
+
+    def test_should_show_the_reference_standing_next_to_the_suspects(self):
+        response = self.get()
+
+        self.assertContains(response, "<th>Reference standing</th>")
+        self.assertContains(response, "<th>Suspect standing</th>")
+        self.assertContains(response, 'title="Us: -10" data-order="-10.0">-10</td>')
 
     def test_should_keep_a_cleared_contact_greyed_with_who_cleared_it(self):
         self.client.post(

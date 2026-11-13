@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.28] - 2026-11-13
+
+### Added
+
+- Friendly to hostiles (Corporation page and settings tab): a column
+  *Reference standing* before the member's own, now headed *Suspect
+  standing*. The table showed only the standing the member gave the
+  contact, not how hostile the contact is: +10 towards a -10 reads
+  differently than towards a -1. The reference is the lowest standing the
+  ticked sources hold against the contact - or, for a contact hostile only
+  through it, against its Corporation, else its Alliance; a tooltip names
+  each source with its value. Stored with the calculation: a snapshot made
+  before shows "–" until the next run.
+
+### Changed
+
+- Blue kill tables (Corporation page and settings tab *Blue kills*): the
+  columns after *Victim* are headed *Victim Corporation* and *Victim
+  Alliance*. Headed plain *Corporation* and *Alliance*, right after the
+  member's character, they read as the member's own.
+
 ## [0.0.27] - 2026-11-13
 
 ### Added

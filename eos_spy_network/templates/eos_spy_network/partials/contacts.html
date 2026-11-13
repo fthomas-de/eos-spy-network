@@ -10,7 +10,8 @@
                     <th>{% translate "Corporation" context "EVE jargon" %}</th>
                     <th>{% translate "Alliance" context "EVE jargon" %}</th>
                 {% endif %}
-                <th>{% translate "Standing" context "eos-spy-network" %}</th>
+                <th>{% translate "Reference standing" %}</th>
+                <th>{% translate "Suspect standing" %}</th>
                 <th>{% translate "Cleared" context "eos-spy-network" %}</th>
                 <th>{% translate "Note" %}</th>
             </tr>
@@ -23,6 +24,8 @@
                     </td>
                     <td class="text-break">{{ row.contact }}{% include "eos_spy_network/partials/evewho-link.html" with category=row.category eve_id=row.contact_id %}</td>
                     {% if marker.affiliated %}{% include "eos_spy_network/partials/affiliation-cells.html" %}{% endif %}
+                    {# what the ticked sources hold against the contact, or its Corporation or Alliance; a snapshot of 0.0.27 or older has none #}
+                    {% if row.reference %}<td class="text-nowrap" title="{% for name, standing in row.reference.sources %}{{ name }}: {{ standing|floatformat:"-1" }}{% if not forloop.last %}, {% endif %}{% endfor %}" data-order="{{ row.reference.standing }}">{{ row.reference.standing|floatformat:"-1" }}</td>{% else %}<td class="text-nowrap">–</td>{% endif %}
                     <td class="text-nowrap">{{ row.standing }}</td>
                     {% include "eos_spy_network/partials/kill-note-button.html" with kind=marker.kind main_id=suspect.main.character_id key=row.key character=row.contact note=row.note cleared=row.cleared reviewed=row.note %}
                 </tr>

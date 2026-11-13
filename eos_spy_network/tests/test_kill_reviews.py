@@ -267,6 +267,12 @@ class TestSettingsTab(ReviewTestCase):
         self.assertContains(response, "https://zkillboard.com/kill/2/")
         self.assertContains(response, 'id="eos-spy-network-settings-kills"')
 
+    def test_should_head_the_victims_corporation_and_alliance_as_the_victims(self):
+        response = self.get()
+
+        self.assertContains(response, "<th>Victim Corporation</th>")
+        self.assertContains(response, "<th>Victim Alliance</th>")
+
     def test_should_leave_out_the_kills_of_another_alliance(self):
         BlueKill.objects.filter(killmail_id=1).update(alliance_id=OTHER_ALLIANCE_ID)
 

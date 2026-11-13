@@ -316,6 +316,16 @@ class TestKillsPage(KillTestCase):
         self.assertContains(response, "https://zkillboard.com/kill/4711/")
         self.assertContains(response, "Blue (10)")
 
+    def test_should_head_the_victims_corporation_and_alliance_as_the_victims(self):
+        add_killmail(4711, [ALT], victim_id=90000001, alliance_id=BLUE_ALLIANCE)
+        snapshot.update()
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        # a bare "Corporation" next to the character reads as the member's own
+        self.assertContains(response, "<th>Victim Corporation</th>")
+        self.assertContains(response, "<th>Victim Alliance</th>")
+
     def test_should_show_the_value_in_million(self):
         add_killmail(4711, [ALT], victim_id=90000001, alliance_id=BLUE_ALLIANCE, value=1_234_567_890)
         add_killmail(4712, [ALT], victim_id=90000001, alliance_id=BLUE_ALLIANCE)

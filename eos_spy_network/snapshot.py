@@ -151,6 +151,7 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
         )
         _affiliate_rows(dealing_rows, entities, hostiles)
         _affiliate_rows(contact_rows, entities, hostiles, "contact_id")
+        _reference_rows(contact_rows, entities, hostiles)
         found = hostile_only(found)
 
     by_corporation = {}
@@ -228,6 +229,19 @@ def _affiliate_rows(rows: list, entities: dict, hostiles: dict, id_key: str = "c
         row["category"] = category
         row["corporation"] = group(corporation_id)
         row["alliance"] = group(alliance_id)
+
+
+def _reference_rows(rows: list, entities: dict, hostiles: dict) -> None:
+    """The standing that makes each contact hostile, with the sources that hold it: the contact's own,
+    else its Corporation's, else its Alliance's - the closest reason, as in ``hostile_index``."""
+    for row in rows:
+        entity = entities.get(row["contact_id"])
+        ids = [row["contact_id"], *((entity.corporation_id, entity.alliance_id) if entity else ())]
+        hostile = next((hostiles[eve_id] for eve_id in ids if eve_id in hostiles), None)
+        row["reference"] = hostile and {
+            "standing": str(hostile.standing),
+            "sources": [[name, str(standing)] for name, standing in hostile.sources],
+        }
 
 
 def _suspect_data(suspect: Suspect) -> dict:
