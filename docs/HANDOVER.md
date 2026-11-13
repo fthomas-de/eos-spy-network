@@ -4,11 +4,24 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-13 (0.0.26).
+Last updated 2026-11-13 (0.0.27).
 
 ## State
 
-- Version: `0.0.26`, 2026-11-13 (see `CHANGELOG.md`):
+- Version: `0.0.27`, 2026-11-13 (see `CHANGELOG.md`): card *Cleared
+  findings* at the foot of the Corporation page. `Report._tile` collects a
+  main whose every visible finding is cleared (`reviewed_kills` /
+  `reviewed_contacts` gave `None`) into `CorporationTile.cleared`
+  (`{"main", "rows"}`, by name) through `snapshot.cleared_rows`; the row
+  logic now lives in `kill_rows` / `contact_rows`, the two `reviewed_*`
+  keep their `None` contract (`api.py` unchanged). A main marked only by
+  switched-off markers stays out. Template: a Bootstrap collapse per main
+  inside a `list-group`, one read-only table (Marker, Date, Finding with
+  zKB link, Characters, Note); `cleared.js` filters rows and unfolds
+  matching groups. 6 new tests, 5 failed against the old code (the 6th is
+  a negative one). The JS was checked only on a static copy of the markup
+  (search, unfold, fold back); the real page not seen with data.
+- Before (0.0.26):
   - Note buttons: `SpyConfiguration.note_presets` (free text, default
     `default_note_presets()` -> "bomb", "sb ratting"; migration 0012), tab
     *Alliance*, Tom Select with `create` (`searchable.js` reads
@@ -26,10 +39,6 @@ Last updated 2026-11-13 (0.0.26).
     main and date from `_report` (404 otherwise), skips a group cleared
     meanwhile under `select_for_update`, writes a `ReviewLog` per
     killmail. Corporation page only; the settings tab stays flat.
-  16 new tests, one adjusted (7 ticks instead of 4 with the day rows); 14
-  failed against the old code (the default test passed because the model
-  was not stashed, the "no buttons" test is a negative one). Settings page
-  rendered in `aa_dev` (200, both buttons); nothing clicked in a browser.
 - Before (0.0.25): *Ignored ships* (migration 0011), choices from
   killtracker's private `_require_victim_ship_types_query` plus the stored
   names, filtered in `markers.worth_counting` like the minimum value.
@@ -67,28 +76,33 @@ Last updated 2026-11-13 (0.0.26).
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 333 without translation tests plus 3 translation tests, all green
-  in the dev instance at 0.0.26 (fresh test database); every new test
+- Tests: 339 without translation tests plus 3 translation tests, all green
+  in the dev instance at 0.0.27 (fresh test database); every new test
   checked against the unfixed code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
   not reviewed by the user (0.0.13 added the blue kill texts, 0.0.14 the
   note texts, 0.0.19 the minimum value and contacts tab texts, 0.0.25
-  "Ignored ships" and its help text, 0.0.26 the note buttons and day texts; Awox and
+  "Ignored ships" and its help text, 0.0.26 the note buttons and day texts,
+  0.0.27 the three *Cleared findings* texts; Awox and
   Blue stay English; "Cleared" carries the `eos-spy-network` context -
   another app translates it differently in ru).
 
 | Page | Permission | What |
 |---|---|---|
 | Markers | `view_suspects` | a tile per Corporation: mains, mains with markers, count per marker; switch to hide clean ones |
-| Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links, note and Cleared tick, grouped by date with a row to clear the day's open kills |
+| Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links, note and Cleared tick, grouped by date with a row to clear the day's open kills; at the foot *Cleared findings*: mains with everything cleared, folded per main, searchable, read only |
 | Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
 | Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles, Log) | tabs: Alliance (hostile and blue threshold, minimum kill value, ignored ships, note buttons, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
 
 ## Open
 
+- 0.0.27 on prod: no migration; `collectstatic` (new `cleared.js`). Look
+  once at a Corporation with a fully cleared main: the folded group, the
+  search, the dark theme. Not decided: the settings tabs stay flat (no
+  grouping per main there).
 - 0.0.26 on prod: run migration 0012 (adds "bomb" and "sb ratting").
   Not clicked in a browser yet: a note button (saves and reloads), the
   day row's tick and pen, adding a free text in the *Note buttons* field
@@ -276,6 +290,10 @@ Last updated 2026-11-13 (0.0.26).
 - Clearing a day (user, 2026-11-13): Corporation page only, a head row per
   date in the main's kill table; it touches only the open kills of that
   day, a cleared one keeps its note.
+- Cleared findings (user, 2026-11-13): only mains with nothing open (a
+  main still listed above keeps its cleared rows greyed there, no
+  duplicate); one table for blue kills and contacts; read only - a note is
+  changed in the settings tabs; groups folded at first.
 - Value columns (user, 2026-11-09): kill value and contract value in
   million ISK, in both blue kill tables (marker and settings tab); the
   contract value is price + reward, the collateral stays out (a deposit);
@@ -329,7 +347,7 @@ Last updated 2026-11-13 (0.0.26).
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
   code since 0.0.7 - check `pgrep -af celery` and start it again before
-  testing the button. `collectstatic` ran with the 0.0.26 static files (`kills.js`, `searchable.js`). `aa_dev` is at 0012 (0.0.26).
+  testing the button. `collectstatic` ran with the 0.0.27 static files (`cleared.js`). `aa_dev` is at 0012 (0.0.27 adds none).
 
 ## Traps
 
