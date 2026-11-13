@@ -18,6 +18,11 @@ def default_ignored_ref_types() -> list[str]:
     return ["market_transaction"]
 
 
+def default_note_presets() -> list[str]:
+    # the user's two everyday reasons a blue died to an own character
+    return ["bomb", "sb ratting"]
+
+
 class General(models.Model):
     """Meta model for app permissions"""
 
@@ -78,6 +83,15 @@ class SpyConfiguration(SingletonModel):
         blank=True,
         verbose_name=_("Ignored ships"),
         help_text=_("A blue kill whose victim flew one of these does not count."),
+    )
+    note_presets = models.JSONField(
+        default=default_note_presets,
+        blank=True,
+        verbose_name=_("Note buttons"),
+        help_text=_(
+            "A button each in the note popup of a blue kill: a click enters the text, ticks Cleared and saves. "
+            "Type a new text and press Enter."
+        ),
     )
     corp_changes_per_year = models.PositiveSmallIntegerField(
         default=4,

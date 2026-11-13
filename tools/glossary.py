@@ -453,6 +453,27 @@ TRANSLATIONS = {
         "Blue-килл, жертва которого летела на одном из этих кораблей, не учитывается.",
         "受害者驾驶其中任一舰船的 blue 击杀不计入。",
     ),
+    "Note buttons": ("Notiz-Buttons", "Кнопки заметок", "备注按钮"),
+    (
+        "A button each in the note popup of a blue kill: a click enters the text, ticks Cleared and saves. "
+        "Type a new text and press Enter."
+    ): (
+        "Je ein Button im Notiz-Popup eines Blue-Kills: ein Klick trägt den Text ein, setzt den Haken "
+        "Geklärt und speichert. Neuen Text eintippen und Enter drücken.",
+        "По кнопке на каждый текст во всплывающем окне заметки blue-килла: щелчок вписывает текст, "
+        "ставит отметку «Улажено» и сохраняет. Введите новый текст и нажмите Enter.",
+        "blue 击杀的备注弹窗中每个文本一个按钮：点击即填入文本、勾选“已澄清”并保存。输入新文本后按 Enter。",
+    ),
+    "A text may have at most %(length)s characters.": (
+        "Ein Text darf höchstens %(length)s Zeichen haben.",
+        "Текст может содержать не более %(length)s символов.",
+        "文本最多 %(length)s 个字符。",
+    ),
+    "Open blue kills of this day": (
+        "Offene Blue-Kills dieses Tages",
+        "Открытые blue-киллы за этот день",
+        "当天未处理的 blue 击杀",
+    ),
     "A cleared finding no longer counts for the marker; it takes effect at once.": (
         "Ein geklärter Fund zählt nicht mehr für den Marker; das wirkt sofort.",
         "Улаженная находка больше не учитывается в маркере; это действует сразу.",

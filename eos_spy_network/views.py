@@ -1,4 +1,5 @@
 import time
+from datetime import date
 
 from kombu.exceptions import OperationalError
 
@@ -307,6 +308,61 @@ def kill_note(request):
     return JsonResponse({"note": text, "cleared": cleared})
 
 
+@any_permission_required(VIEW_SUSPECTS)
+@require_POST
+def kill_day_note(request):
+    """Stores one note and tick on every open blue kill of a main on one date, as the Corporation page groups them."""
+    config = SpyConfiguration.get_solo()
+    try:
+        main_id = int(request.POST.get("main_id", ""))
+        day = date.fromisoformat(request.POST.get("date", "")).isoformat()
+    except ValueError:
+        return HttpResponseBadRequest("main_id must be a number and date a date")
+    text, cleared, refused = _posted_note(request)
+    if refused:
+        return refused
+    report = _report(config)
+    # only the kills the page shows, and of them only the open ones (user, 2026-11-13): a cleared one keeps its note
+    rows = [
+        row
+        for tile in (report.tiles if report else [])
+        for suspect in tile.suspects
+        if suspect.main.character_id == main_id and BLUE_KILLS in suspect.markers
+        for row in suspect.markers[BLUE_KILLS].rows
+        if row["date"] == day and not row["cleared"]
+    ]
+    if not rows:
+        raise Http404
+    stored = 0
+    with transaction.atomic():
+        now = timezone.now()
+        for row in rows:
+            group = BlueKill.objects.filter(
+                alliance_id=config.alliance.alliance_id,
+                killmail_id=row["killmail_id"],
+                character_id__in=row["character_ids"],
+            )
+            previous = list(group.select_for_update().values_list("cleared", "note"))
+            # cleared by someone else since the snapshot was read: theirs stays
+            if not previous or all(was_cleared for was_cleared, _note in previous):
+                continue
+            group.update(note=text, cleared=cleared, reviewed_at=now, reviewed_by=request.user)
+            ReviewLog.objects.create(
+                alliance_id=config.alliance.alliance_id,
+                kind=BLUE_KILLS,
+                character_id=row["character_ids"][0],
+                key=str(row["killmail_id"]),
+                cleared=cleared,
+                note=text,
+                previous_cleared=False,
+                previous_note=next((note for _cleared, note in previous if note), ""),
+                changed_at=now,
+                changed_by=request.user,
+            )
+            stored += 1
+    return JsonResponse({"note": text, "cleared": cleared, "count": stored})
+
+
 def _posted_note(request) -> tuple:
     """(note, cleared, None) as posted, or a refusal in the last place."""
     text = " ".join(request.POST.get("note", "").split())
@@ -429,6 +485,7 @@ def corporation(request, corporation_id):
             "report": report,
             "tile": tile,
             "note_length": KILL_NOTE_LENGTH,
+            "note_presets": config.note_presets,
             "switched_off": _switched_off(config),
             "killmails_missing": _killmails_missing(config),
         },
@@ -574,6 +631,7 @@ def settings(request):
             "contacts": contact_rows,
             "log": _log_rows(config, contact_rows) if reviewer else [],
             "note_length": KILL_NOTE_LENGTH,
+            "note_presets": config.note_presets,
             "tab": tab if tab in tabs else TAB_ALLIANCE,
         },
         NAV_SETTINGS,

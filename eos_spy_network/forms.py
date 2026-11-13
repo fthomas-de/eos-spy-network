@@ -6,7 +6,7 @@ from django.utils.translation import pgettext_lazy
 from allianceauth.eveonline.models import EveAllianceInfo
 
 from .markers import DESCRIPTIONS, KINDS, LABELS
-from .models import BlueKill, SpyConfiguration
+from .models import KILL_NOTE_LENGTH, BlueKill, SpyConfiguration
 from .network import PAYMENT_REF_TYPES
 
 
@@ -59,6 +59,13 @@ class SpyConfigurationForm(forms.ModelForm):
         help_text=SpyConfiguration._meta.get_field("ignored_ships").help_text,
         widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
     )
+    # free text: the choices are only what is stored, a typed text is added as an option (Tom Select's create)
+    note_presets = forms.MultipleChoiceField(
+        label=SpyConfiguration._meta.get_field("note_presets").verbose_name,
+        required=False,
+        help_text=SpyConfiguration._meta.get_field("note_presets").help_text,
+        widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": "", "data-eos-spy-network-create": ""}),
+    )
     # the switched-on markers; stored the other way round, as disabled_markers
     markers = forms.MultipleChoiceField(
         label=_("Markers"),
@@ -75,6 +82,7 @@ class SpyConfigurationForm(forms.ModelForm):
             "blue_from",
             "min_kill_value",
             "ignored_ships",
+            "note_presets",
             "corp_changes_per_year",
             "lookback_days",
             "ignored_ref_types",
@@ -90,8 +98,21 @@ class SpyConfigurationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["ignored_ref_types"].choices = ref_type_choices(self.instance.ignored_ref_types)
         self.fields["ignored_ships"].choices = ship_choices(self.instance.ignored_ships)
+        # the posted texts are valid choices too: clean_note_presets checks them instead
+        posted = self.data.getlist("note_presets") if hasattr(self.data, "getlist") else []
+        presets = dict.fromkeys([*(self.instance.note_presets or ()), *posted])
+        self.fields["note_presets"].choices = [(text, text) for text in presets]
         disabled = self.instance.disabled_markers or ()
         self.fields["markers"].initial = [kind for kind in KINDS if kind not in disabled]
+
+    def clean_note_presets(self) -> list[str]:
+        # stored as a note: whitespace collapsed as kill_note does, no longer than a note may be
+        texts = [" ".join(text.split()) for text in self.cleaned_data["note_presets"]]
+        if any(len(text) > KILL_NOTE_LENGTH for text in texts):
+            raise forms.ValidationError(
+                _("A text may have at most %(length)s characters."), params={"length": KILL_NOTE_LENGTH}
+            )
+        return [text for text in dict.fromkeys(texts) if text]
 
     def marker_switches(self) -> list[tuple]:
         """Each marker's checkbox with its description, for the switches of the Markers tab."""

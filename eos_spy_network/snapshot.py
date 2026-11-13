@@ -8,6 +8,7 @@ pages, and stores the result as JSON in one row. A page reads that row only.
 
 import json
 import time
+from collections import Counter
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -351,6 +352,10 @@ def reviewed_kills(marker: dict, reviews: dict) -> dict | None:
     open_rows = [row for row in rows if not row["cleared"]]
     if not open_rows:
         return None
+    # the Corporation page heads each date with its open kills, to clear them in one go
+    day_open = Counter(row["date"] for row in open_rows)
+    for row in rows:
+        row["day_open"] = day_open[row["date"]]
     return {
         **marker,
         "rows": rows,

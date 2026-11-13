@@ -10,7 +10,7 @@ from django.urls import reverse
 from allianceauth.authentication.models import CharacterOwnership
 
 from eos_spy_network import api, markers, snapshot
-from eos_spy_network.models import KILL_NOTE_LENGTH, BlueKill, SpyConfiguration
+from eos_spy_network.models import KILL_NOTE_LENGTH, BlueKill, ReviewLog, SpyConfiguration
 
 from .base import ALLIANCE_ID, OTHER_ALLIANCE_ID, configure, make_character, make_user
 from .test_kills import ALT, BLUE_ALLIANCE, VIEW_SUSPECTS, KillTestCase, add_killmail
@@ -355,7 +355,8 @@ class TestPerMainAndKillmail(ReviewTestCase):
 
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
-        self.assertContains(response, "data-eos-spy-network-kill-tick", count=4)
+        # four kill rows and three day rows (the main's two days, the other main's one)
+        self.assertContains(response, "data-eos-spy-network-kill-tick", count=7)
         self.assertContains(response, "checked", count=1)
 
 
@@ -405,3 +406,144 @@ class TestKillLinks(ReviewTestCase):
         self.assertNotContains(response, f'href="https://evewho.com/character/{self.VICTIM_ALT}"')
         self.assertNotContains(response, 'title="Audit"')
         self.assertNotContains(response, 'href="https://evewho.com/character/"')
+
+
+class TestDayNote(ReviewTestCase):
+    """Killmail 3 on the day of killmail 2: two kills of the main that day, killmail 1 the day before."""
+
+    def setUp(self):
+        super().setUp()
+        add_killmail(3, [ALT], victim_id=90000003, alliance_id=ALLIANCE_ID, days_ago=1)
+        snapshot.update()
+        self.day = BlueKill.objects.get(killmail_id=2).time.date().isoformat()
+        self.day_before = BlueKill.objects.get(killmail_id=1).time.date().isoformat()
+        self.viewer = make_user("viewer", VIEW_SUSPECTS)
+        self.client.force_login(self.viewer)
+
+    def post(self, day=None, main_id=None, **fields):
+        return self.client.post(
+            reverse("eos_spy_network:kill_day_note"),
+            {"main_id": main_id or self.main.character_id, "date": day or self.day, **fields},
+        )
+
+    def test_should_clear_every_open_kill_of_the_day(self):
+        response = self.post(note="bomb", cleared="1")
+
+        self.assertEqual(response.json(), {"note": "bomb", "cleared": True, "count": 2})
+        self.assertEqual(
+            dict(BlueKill.objects.values_list("killmail_id", "cleared")), {1: False, 2: True, 3: True}
+        )
+        self.assertEqual(self.report_marker().count, 1)
+
+    def test_should_leave_a_cleared_kill_of_the_day_alone(self):
+        self.review(2, note="Fleet fight")
+
+        self.post(note="bomb", cleared="1")
+
+        self.assertEqual(BlueKill.objects.get(killmail_id=2).note, "Fleet fight")
+        self.assertEqual(BlueKill.objects.get(killmail_id=3).note, "bomb")
+
+    def test_should_log_each_killmail(self):
+        self.review(3, cleared=False, note="Asked him")
+
+        self.post(note="bomb", cleared="1")
+
+        logs = {log.key: log for log in ReviewLog.objects.all()}
+        self.assertEqual(set(logs), {"2", "3"})
+        self.assertEqual(logs["3"].previous_note, "Asked him")
+        self.assertEqual(logs["3"].changed_by, self.viewer)
+
+    def test_should_refuse_to_clear_without_a_note(self):
+        self.assertEqual(self.post(note=" ", cleared="1").status_code, 400)
+        self.assertFalse(BlueKill.objects.filter(cleared=True).exists())
+
+    def test_should_refuse_a_malformed_date(self):
+        self.assertEqual(self.post(day="13.11.2026", note="bomb").status_code, 400)
+
+    def test_should_not_find_the_day_of_another_main(self):
+        other = make_user("other").profile.main_character.character_id
+
+        self.assertEqual(self.post(main_id=other, note="bomb", cleared="1").status_code, 404)
+        self.assertFalse(BlueKill.objects.filter(cleared=True).exists())
+
+    def test_should_not_find_a_day_without_open_kills(self):
+        self.review(1, note="Agreed")
+
+        self.assertEqual(self.post(day=self.day_before, note="bomb", cleared="1").status_code, 404)
+
+    def test_should_need_view_suspects(self):
+        self.client.force_login(make_user("settings", MANAGE_SETTINGS))
+
+        self.assertEqual(self.post(note="bomb", cleared="1").status_code, 302)
+        self.assertFalse(BlueKill.objects.filter(cleared=True).exists())
+
+    def test_should_head_each_date_with_its_open_kills(self):
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, f'data-eos-spy-network-kill-day="{self.day}"', count=1)
+        self.assertContains(response, f'data-eos-spy-network-kill-day="{self.day_before}"', count=1)
+        self.assertEqual([row["day_open"] for row in self.report_marker().rows], [2, 2, 1])
+
+    def test_should_lock_a_day_whose_kills_are_all_cleared(self):
+        self.review(1, note="Agreed")
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertNotContains(response, f'data-eos-spy-network-kill-day="{self.day_before}"')
+        self.assertRegex(response.content.decode(), r"checked\s+disabled>")
+
+
+class TestNotePresets(ReviewTestCase):
+    def setUp(self):
+        super().setUp()
+        self.admin = make_user("admin", MANAGE_SETTINGS, VIEW_SUSPECTS)
+        self.client.force_login(self.admin)
+
+    def save(self, presets):
+        return self.client.post(
+            reverse("eos_spy_network:settings"),
+            {
+                "alliance": SpyConfiguration.get_solo().alliance.pk,
+                "hostile_below": "0",
+                "blue_from": "5",
+                "min_kill_value": "0",
+                "note_presets": presets,
+                "corp_changes_per_year": "4",
+                "lookback_days": "365",
+            },
+        )
+
+    def test_should_start_with_bomb_and_sb_ratting(self):
+        self.assertEqual(SpyConfiguration.get_solo().note_presets, ["bomb", "sb ratting"])
+
+    def test_should_offer_a_button_per_text_in_the_popup(self):
+        for page in (reverse("eos_spy_network:corporation", args=[2001]), reverse("eos_spy_network:settings")):
+            response = self.client.get(page)
+
+            self.assertContains(response, 'data-eos-spy-network-kill-preset="bomb"')
+            self.assertContains(response, 'data-eos-spy-network-kill-preset="sb ratting"')
+
+    def test_should_offer_no_buttons_without_a_text(self):
+        configure(note_presets=[])
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertNotContains(response, "data-eos-spy-network-kill-presets")
+
+    def test_should_save_free_text(self):
+        response = self.save(["  Fleet   fight ", "bomb", "Fleet fight", " "])
+
+        self.assertRedirects(response, reverse("eos_spy_network:settings"))
+        self.assertEqual(SpyConfiguration.get_solo().note_presets, ["Fleet fight", "bomb"])
+
+    def test_should_refuse_a_text_longer_than_a_note(self):
+        response = self.save(["x" * (KILL_NOTE_LENGTH + 1)])
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SpyConfiguration.get_solo().note_presets, ["bomb", "sb ratting"])
+
+    def test_should_offer_the_stored_texts_as_free_text_in_the_settings(self):
+        response = self.client.get(reverse("eos_spy_network:settings"))
+
+        self.assertContains(response, "data-eos-spy-network-create")
+        self.assertContains(response, '<option value="sb ratting" selected>sb ratting</option>', html=True)

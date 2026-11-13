@@ -12,6 +12,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const control = new TomSelect(select, {
             allowEmptyOption: true,
             maxOptions: null,
+            // free text lists (note buttons): a typed text becomes an option, gone again once removed
+            create: "eosSpyNetworkCreate" in select.dataset,
+            persist: false,
         });
 
         control.wrapper.style.setProperty("--eos-spy-network-ts-bg", background);

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.26] - 2026-11-13
+
+### Added
+
+- Note popup of a blue kill: a button per text of the new setting *Note
+  buttons* (tab *Alliance*, free text, default "bomb" and "sb ratting").
+  A click enters the text, ticks *Cleared* and saves, so the everyday
+  reasons no longer have to be typed kill by kill. Offered on the
+  Corporation page and in the settings tab *Blue kills*, not for the
+  friendly hostile contacts, whose reasons are different. Texts are
+  normalised like a note and no longer than one. Migration 0012.
+- Corporation page: the blue kills of a main are grouped by date, each
+  date headed by a row with its number of open kills, a tick and a note.
+  It clears every open kill of the main on that day at once (new endpoint
+  `kills/day/`), e.g. a whole evening of bombing. Kills already cleared
+  keep their note; each killmail gets its own *Log* entry as with a single
+  tick. A day with nothing open shows its tick locked.
+
 ## [0.0.25] - 2026-11-13
 
 ### Added

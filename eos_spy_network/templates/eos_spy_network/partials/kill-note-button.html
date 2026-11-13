@@ -1,17 +1,18 @@
 {% load i18n %}
 {# The Cleared and Note cells of one reviewed row; kills.js saves the tick and opens the popup. #}
 {# A blue kill (one main, one killmail) takes character_id and killmail_id, a finding of another marker kind, main_id and key; #}
-{# both take character, note, cleared, reviewed (a tooltip line, may be empty). #}
+{# A day row of the Corporation page (every open kill of a main on one date) takes main_id and day, and locked once none is open. #}
+{# All take character, note, cleared, reviewed (a tooltip line, may be empty). #}
 {# data-order sorts the cleared ones together in the settings tab; the search finds the note's text #}
 <td class="text-center" data-order="{% if cleared %}1{% else %}0{% endif %}">
     <input class="form-check-input" type="checkbox" data-eos-spy-network-kill-tick
            aria-label="{% translate 'Cleared' context 'eos-spy-network' %}"
            {% if cleared %}checked{% endif %}
-           {% if not perms.eos_spy_network.view_suspects %}disabled{% endif %}>
+           {% if locked or not perms.eos_spy_network.view_suspects %}disabled{% endif %}>
 </td>
 <td>
     <div class="d-flex align-items-start gap-2">
-        {% if perms.eos_spy_network.view_suspects %}
+        {% if perms.eos_spy_network.view_suspects and not locked %}
             <button type="button"
                     class="btn btn-sm btn-outline-secondary flex-shrink-0"
                     data-bs-toggle="modal" data-bs-target="#eos-spy-network-kill-note"
@@ -19,6 +20,9 @@
                         data-eos-spy-network-kill-kind="{{ kind }}"
                         data-eos-spy-network-kill-main="{{ main_id }}"
                         data-eos-spy-network-kill-key="{{ key }}"
+                    {% elif day %}
+                        data-eos-spy-network-kill-main="{{ main_id }}"
+                        data-eos-spy-network-kill-day="{{ day }}"
                     {% else %}
                         data-eos-spy-network-kill-character="{{ character_id }}"
                         data-eos-spy-network-kill-killmail="{{ killmail_id }}"

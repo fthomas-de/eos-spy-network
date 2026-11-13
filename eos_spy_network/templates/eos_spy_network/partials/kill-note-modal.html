@@ -7,6 +7,7 @@
          aria-labelledby="eos-spy-network-kill-note-title" aria-hidden="true"
          data-eos-spy-network-kill-url="{% url 'eos_spy_network:kill_note' %}"
          data-eos-spy-network-finding-url="{% url 'eos_spy_network:finding_note' %}"
+         data-eos-spy-network-day-url="{% url 'eos_spy_network:kill_day_note' %}"
          data-eos-spy-network-kill-empty="{% translate 'Add a note' %}"
          data-eos-spy-network-kill-error="{% translate 'Could not save the note.' %}"
          {% if reload %}data-eos-spy-network-kill-reload{% endif %}
@@ -21,6 +22,14 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
                 </div>
                 <div class="modal-body">
+                    {# the settings' note buttons, blue kills only: kills.js hides them for another finding #}
+                    {% if note_presets %}
+                        <div class="d-flex flex-wrap gap-1 mb-2" data-eos-spy-network-kill-presets>
+                            {% for text in note_presets %}
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-eos-spy-network-kill-preset="{{ text }}">{{ text }}</button>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                     <label for="eos-spy-network-kill-note-text" class="visually-hidden">{% translate "Note" %}</label>
                     <textarea class="form-control" id="eos-spy-network-kill-note-text" rows="3" maxlength="{{ note_length }}"></textarea>
                     <div class="form-text">

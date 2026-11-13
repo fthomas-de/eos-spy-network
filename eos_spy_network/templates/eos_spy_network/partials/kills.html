@@ -18,6 +18,20 @@
         </thead>
         <tbody>
             {% for row in marker.rows %}
+                {# a row per date above its kills: one note and tick for every open kill of the main on that day #}
+                {% ifchanged row.date %}
+                    <tr class="table-active">
+                        <th colspan="8" class="text-nowrap">
+                            {{ row.date }}
+                            <span class="badge text-bg-info ms-1" title="{% translate 'Open blue kills of this day' %}">{{ row.day_open }}</span>
+                        </th>
+                        {% with day_name=suspect.main.character_name|add:" "|add:row.date %}
+                            {% translate "Open blue kills of this day" as day_title %}
+                            {# every kill of the day cleared: nothing left to clear, the tick shows it and is locked #}
+                            {% include "eos_spy_network/partials/kill-note-button.html" with day=row.date main_id=suspect.main.character_id character=day_name note="" cleared=row.day_open|yesno:",1" locked=row.day_open|yesno:",1" reviewed=day_title %}
+                        {% endwith %}
+                    </tr>
+                {% endifchanged %}
                 <tr{% if row.cleared %} class="opacity-50"{% endif %}>
                     <td class="text-nowrap">
                         <a href="https://zkillboard.com/kill/{{ row.killmail_id }}/" target="_blank" rel="noopener noreferrer">{{ row.date }}</a>

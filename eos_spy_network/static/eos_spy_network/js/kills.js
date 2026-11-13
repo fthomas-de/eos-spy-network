@@ -12,6 +12,10 @@
  * value and dataset, written to value, textContent and attributes - never as
  * markup. The page shows what the server stored, not what was typed.
  *
+ * A note button of the settings (blue kills only) enters its text, sets the
+ * tick and saves. A day row of the Corporation page stands for every open
+ * kill of one main on that date and is saved like a kill row.
+ *
  * On the Corporation page the marker's count depends on the tick, so the
  * page reloads after a save; in the settings tab the row is updated in place
  * and DataTables told, so sorting and the search see the new note.
@@ -28,7 +32,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const count = modal.querySelector("[data-eos-spy-network-kill-note-count]");
     const error = modal.querySelector("[data-eos-spy-network-kill-note-error]");
     const save = modal.querySelector("[data-eos-spy-network-kill-note-save]");
+    const presets = modal.querySelector("[data-eos-spy-network-kill-presets]");
     let button = null;
+    let saving = false;
     // set by ticking a row without a note: the popup opens with the tick already set
     let tickOnOpen = false;
     // the server takes a cleared finding without a note from an admin only
@@ -49,8 +55,26 @@ document.addEventListener("DOMContentLoaded", () => {
         cleared.checked = tickOnOpen || button.dataset.eosSpyNetworkKillCleared === "1";
         tickOnOpen = false;
         error.textContent = "";
+        if (presets) {
+            // the texts are kill reasons: a finding of another marker gets none
+            presets.hidden = "eosSpyNetworkKillKey" in button.dataset;
+        }
         showCount();
     });
+
+    if (presets) {
+        presets.addEventListener("click", (event) => {
+            const preset = event.target.closest("[data-eos-spy-network-kill-preset]");
+            // a second click while the first save runs would post twice
+            if (!preset || saving) {
+                return;
+            }
+            textarea.value = preset.dataset.eosSpyNetworkKillPreset;
+            cleared.checked = true;
+            showCount();
+            save.click();
+        });
+    }
 
     modal.addEventListener("shown.bs.modal", () => {
         textarea.focus();
@@ -78,10 +102,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const body = new URLSearchParams();
         // a finding of another marker names its main and key; a blue kill its character and killmail
         const finding = "eosSpyNetworkKillKey" in target.dataset;
+        // a day row: every open kill of its main on that date
+        const day = "eosSpyNetworkKillDay" in target.dataset;
+        let url = modal.dataset.eosSpyNetworkKillUrl;
         if (finding) {
+            url = modal.dataset.eosSpyNetworkFindingUrl;
             body.set("kind", target.dataset.eosSpyNetworkKillKind);
             body.set("main_id", target.dataset.eosSpyNetworkKillMain);
             body.set("key", target.dataset.eosSpyNetworkKillKey);
+        } else if (day) {
+            url = modal.dataset.eosSpyNetworkDayUrl;
+            body.set("main_id", target.dataset.eosSpyNetworkKillMain);
+            body.set("date", target.dataset.eosSpyNetworkKillDay);
         } else {
             body.set("character_id", target.dataset.eosSpyNetworkKillCharacter);
             body.set("killmail_id", target.dataset.eosSpyNetworkKillKillmail);
@@ -90,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isCleared) {
             body.set("cleared", "1");
         }
-        return fetch(finding ? modal.dataset.eosSpyNetworkFindingUrl : modal.dataset.eosSpyNetworkKillUrl, {
+        return fetch(url, {
             method: "POST",
             credentials: "same-origin",
             headers: {
@@ -117,6 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     save.addEventListener("click", () => {
         save.disabled = true;
+        saving = true;
         error.textContent = "";
         store(button, textarea.value, cleared.checked)
             .then(() => {
@@ -126,7 +159,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 error.textContent = modal.dataset.eosSpyNetworkKillError;
                 console.error("eos_spy_network: saving the note failed", failure);
             })
-            .finally(showCount);
+            .finally(() => {
+                saving = false;
+                showCount();
+            });
     });
 
     document.addEventListener("change", (event) => {
