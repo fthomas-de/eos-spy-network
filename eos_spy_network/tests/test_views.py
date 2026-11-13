@@ -48,6 +48,14 @@ class TestAccess(SpyTestCase):
                 response = self.client.get(url)
                 self.assertTrue(response.url.startswith(LOGIN))
 
+    def test_should_turn_away_view_evidence_alone(self):
+        # it only adds to view_suspects: no page opens with it
+        self.client.force_login(make_user("reader", VIEW_EVIDENCE))
+
+        response = self.client.get(reverse("eos_spy_network:index"))
+
+        self.assertTrue(response.url.startswith(LOGIN))
+
     def test_should_keep_settings_from_viewers(self):
         self.client.force_login(make_user("viewer", VIEW_SUSPECTS))
 
@@ -378,6 +386,12 @@ class TestRebuild(SuspectPageTestCase):
 
         self.assertRedirects(response, reverse("eos_spy_network:index"), fetch_redirect_response=False)
 
+    def test_should_not_take_a_bare_word_as_next(self):
+        # redirect() looks a word without a slash up as a URL name: an unknown one was a 500
+        response = self.client.post(reverse("eos_spy_network:rebuild"), {"next": "x"})
+
+        self.assertRedirects(response, reverse("eos_spy_network:index"), fetch_redirect_response=False)
+
     def test_should_refuse_get(self):
         response = self.client.get(reverse("eos_spy_network:rebuild"))
 
@@ -670,6 +684,7 @@ class TestContractDetails(SuspectPageTestCase):
     def test_should_show_the_contract_of_the_payment(self):
         self.add_contract(77, "Spy gear")
         self.pay(1, "contract_price", context_id=77)
+        snapshot.update()
         self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
 
         response = self.client.get(self.url)
@@ -680,6 +695,7 @@ class TestContractDetails(SuspectPageTestCase):
 
     def test_should_say_when_corptools_never_stored_the_contract(self):
         self.pay(1, "contract_price", context_id=78)
+        snapshot.update()
         self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
 
         response = self.client.get(self.url)
@@ -691,12 +707,33 @@ class TestContractDetails(SuspectPageTestCase):
         self.add_contract(79, "Not ours")
         self.pay(1, "player_donation", context_id=79)
         self.pay(2, "contract_price", context_id=79, party_id=5001)
+        # the payment that makes the marker offer this pair
+        self.pay(3, "contract_price", context_id=81)
+        snapshot.update()
         self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
 
         response = self.client.get(self.url)
 
         self.assertNotContains(response, "Not ours")
-        self.assertContains(response, "No contracts found")
+        self.assertContains(response, "Contract 81")
+
+    def test_should_not_show_a_pair_the_marker_does_not_offer(self):
+        # corptools holds the contract, but no calculation put the pair on a page
+        self.add_contract(77, "Spy gear")
+        self.pay(1, "contract_price", context_id=77)
+        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+
+    def test_should_not_show_another_counterpart_of_the_character(self):
+        self.pay(1, "contract_price", context_id=80)
+        self.pay(2, "contract_price", context_id=82, party_id=5001)
+        snapshot.update()
+        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+
+        response = self.client.get(reverse("eos_spy_network:contracts", args=[self.main.character_id, 5001]))
+
+        self.assertEqual(response.status_code, 404)
 
     def test_should_need_view_evidence(self):
         self.login(VIEW_SUSPECTS)

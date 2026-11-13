@@ -8,7 +8,26 @@ Last updated 2026-11-11.
 
 ## State
 
-- Version: `0.0.23`, 2026-11-11 (see `CHANGELOG.md`): settings tab *Log* (`TAB_LOG`,
+- Unreleased, 2026-11-13, not committed: the eight fixes of the audit
+  (`docs/AUDIT.md`, SPY-01 to SPY-08; `CHANGELOG.md` under `[Unreleased]`).
+  The contract popup answers only for a pair the ISK marker offers
+  (`views.contracts` reads `_report`); `finding_note` only for a finding
+  in `_contact_rows`; `rebuild` takes only a `next` starting with `/`;
+  a current hostile membership counts once (`markers._check` hands its
+  marked pairs to `_check_history`); `snapshot.update` repeats itself once
+  when `_inputs()` (settings and contact sources) changed during the run;
+  `APP_PERMISSIONS` is `view_suspects` and `manage_settings` only; the
+  settings tabs *Blue kills*, *Friendly to hostiles* and *Log* are neither
+  rendered nor read without `view_suspects`; the *Log* tab shows an
+  *Own account* badge (`entry.own_account`, ownership of today). 14 new
+  tests, one replaced, so 312 expected without the translation tests; each
+  new one that tests a fix fails against the old code (the five changed
+  code files stashed, modules run, restored). The eight affected modules
+  are green; the full suite and the translation run are left for
+  `/commit`. New msgid "Own account" is in `tools/glossary.py`,
+  machine-made, catalogues not regenerated yet. No migration, no static
+  file changed. Not seen in a browser.
+- Before, version `0.0.23`, 2026-11-11 (see `CHANGELOG.md`): settings tab *Log* (`TAB_LOG`,
   `views._log_rows`), model `ReviewLog` (alliance, kind, `character_id`,
   key, cleared, note, `previous_cleared`, `previous_note`, `changed_at`,
   `changed_by`), written by `kill_note` and `finding_note` inside
@@ -203,7 +222,7 @@ Last updated 2026-11-11.
 | Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links, note and Cleared tick |
 | Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
-| Settings | `manage_settings` | tabs: Alliance (hostile and blue threshold, minimum kill value, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
+| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles, Log) | tabs: Alliance (hostile and blue threshold, minimum kill value, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
 
 ## Open
 
@@ -385,6 +404,12 @@ Last updated 2026-11-11.
   shown in an own settings tab (not a popup per row); the reviews made
   before the log are seeded once with their last state. Blue kills stay
   grouped per main and killmail in both tables, nothing more (user).
+- Audit (user, 2026-11-12): `manage_settings` alone does not see the
+  findings - the three review tabs need `view_suspects` too. A reviewer
+  may clear findings of their own account; the log marks it, no refusal.
+  The contract popup is bound to the pairs the ISK marker shows, not to
+  every character of the Alliance. A save during a running calculation
+  makes that run repeat itself once, rather than a message to the admin.
 - Menu badge (user, 2026-11-07): counts the mains with open markers (not
   markers or findings), only for `view_suspects`.
 - Own kills (user, 2026-11-07): a blue kill whose victim belongs to the

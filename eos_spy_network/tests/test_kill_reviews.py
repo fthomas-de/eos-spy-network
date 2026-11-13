@@ -264,14 +264,18 @@ class TestSettingsTab(ReviewTestCase):
         # killmail 2 has no known value: it counts
         self.assertContains(response, "https://zkillboard.com/kill/2/")
 
-    def test_should_show_the_note_without_a_button_to_a_viewer_without_view_suspects(self):
+    def test_should_keep_the_findings_from_a_viewer_without_view_suspects(self):
+        # manage_settings changes the settings; who is suspected is view_suspects' to see (user, 2026-11-12)
         self.review(1, cleared=False, note="Read only")
         self.client.force_login(make_user("settings", MANAGE_SETTINGS))
 
         response = self.get()
 
-        self.assertContains(response, "Read only")
-        self.assertNotContains(response, 'data-bs-target="#eos-spy-network-kill-note"')
+        self.assertNotContains(response, "Read only")
+        self.assertNotContains(response, "eos-spy-network-settings-kills")
+        self.assertNotContains(response, "eos-spy-network-settings-contacts")
+        self.assertNotContains(response, "eos-spy-network-settings-log")
+        self.assertContains(response, "eos-spy-network-settings-alliance")
 
     def test_should_say_so_without_a_kill(self):
         BlueKill.objects.all().delete()

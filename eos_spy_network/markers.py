@@ -324,6 +324,7 @@ def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, charac
     # EVE ID of every character -> its account; a character of the own account is never a counterpart
     owner = {}
     names = {}
+    current = set()  # (character, Corporation or Alliance) marked as a membership of today
     for user_id, character_id, name, corporation_id, alliance_id in characters:
         owner[character_id] = user_id
         names[character_id] = name
@@ -331,6 +332,7 @@ def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, charac
         for group_id in (corporation_id, alliance_id):
             if group_id in index:
                 accounts[user_id].mark(MEMBERSHIP, f"{name}: {index.describe(group_id)}", character_id)
+                current.add((character_id, group_id))
                 break
 
     if not corptools_installed():
@@ -348,7 +350,7 @@ def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, charac
     # the hostile list is today's: the further back, the likelier a hostile was a friend then
     since = config.since()
     step("history")
-    _check_history(accounts, index, config, owner, names, audits, since)
+    _check_history(accounts, index, config, owner, names, audits, since, current)
     step("contacts")
     # contacts carry no date in corptools: today's are checked whatever the time frame
     _check_contacts(accounts, index, owner, names, audits, hostile_ids)
@@ -362,7 +364,7 @@ def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, charac
     _check_contracts(accounts, index, owner, names, audits, hostile_ids, counterparts, since)
 
 
-def _check_history(accounts, index, config, owner, names, audits, since=None):
+def _check_history(accounts, index, config, owner, names, audits, since=None, current=frozenset()):
     from corptools.models import CorporationHistory
 
     year_ago = timezone.now() - timedelta(days=365)
@@ -378,7 +380,12 @@ def _check_history(accounts, index, config, owner, names, audits, since=None):
         # a membership ends where the next one starts; the last one lasts until today
         ends = [following[0] for following in history[1:]] + [None]
         for (start_date, corporation_id, corporation_name), end_date in zip(history, ends):
-            if corporation_id in index and (since is None or end_date is None or end_date >= since):
+            if (
+                corporation_id in index
+                and (since is None or end_date is None or end_date >= since)
+                # the open-ended record is today's membership, marked already: one fact, not two findings
+                and not (end_date is None and (character_id, corporation_id) in current)
+            ):
                 accounts[owner[character_id]].mark(
                     MEMBERSHIP, f"{names[character_id]}: {index.describe(corporation_id)}", character_id
                 )

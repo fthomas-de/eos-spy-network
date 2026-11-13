@@ -146,6 +146,34 @@ class TestMembership(MarkerTestCase):
             start_date=timezone.now() - timedelta(days=days_ago),
         )
 
+    def test_should_count_a_current_membership_once(self):
+        # Auth's Corporation of today and the open-ended history record are one membership
+        alt = self.add_alt(5001, corporation_id=HOSTILE_CORP, alliance_id=None)
+        CorporationHistory.objects.create(
+            character=CharacterAudit.objects.create(character=alt),
+            corporation_id=HOSTILE_CORP,
+            corporation_name=eve_name(HOSTILE_CORP, "corporation"),
+            record_id=1,
+            start_date=timezone.now() - timedelta(days=100),
+        )
+
+        self.assertEqual(self.suspect().markers[markers.MEMBERSHIP].count, 1)
+
+    def test_should_count_an_ended_membership_beside_the_current_one(self):
+        configure(lookback_days=0)
+        alt = self.add_alt(5001, corporation_id=HOSTILE_CORP, alliance_id=None)
+        audit = CharacterAudit.objects.create(character=alt)
+        for record_id, corporation_id, days_ago in ((1, HOSTILE_CORP, 900), (2, NEUTRAL_CORP, 800), (3, HOSTILE_CORP, 100)):
+            CorporationHistory.objects.create(
+                character=audit,
+                corporation_id=corporation_id,
+                corporation_name=eve_name(corporation_id, "corporation"),
+                record_id=record_id,
+                start_date=timezone.now() - timedelta(days=days_ago),
+            )
+
+        self.assertEqual(self.suspect().markers[markers.MEMBERSHIP].count, 2)
+
     def test_should_ignore_a_hostile_membership_that_ended_before_the_time_frame(self):
         configure(lookback_days=100)
         self.add_record(1, HOSTILE_CORP, 900)

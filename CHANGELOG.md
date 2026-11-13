@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.24] - 2026-11-13
+
+Fixes from the audit of 2026-11-11 (`docs/AUDIT.md`, SPY-01 to SPY-08).
+
+### Added
+
+- The settings tab *Log* marks a save a reviewer made on their own account
+  with an *Own account* badge. Anyone with `view_suspects` may clear a
+  finding of their own characters, and the log named them, but a reader had
+  to compare *Changed by* with *Main* row by row to notice. The save stays
+  allowed (user, 2026-11-12). Whose account it is is read when the tab is
+  shown, from the ownership of today.
+
+### Changed
+
+- The settings tabs *Blue kills*, *Friendly to hostiles* and *Log* need
+  `view_suspects` as well. With `manage_settings` alone they showed every
+  blue kill, every friendly hostile contact, the notes and the log per
+  main - who is suspected, to a permission meant for the Alliance, the
+  sources and the thresholds. They are now neither rendered nor read
+  without `view_suspects` (user, 2026-11-12).
+- The menu entry and the start page no longer open with `view_evidence`
+  alone. No page opens with it without `view_suspects`: the entry led to
+  the Markers page and from there to the login page.
+
+### Fixed
+
+- The contract popup only answers for a pair the ISK marker shows with a
+  contract payment. `contracts/<character>/<counterpart>/` took any two
+  IDs and returned the contracts of any character corptools audits, in the
+  Alliance or not, with any counterpart, hostile or not. It now reads the
+  stored result first and answers 404 for anything the page does not offer.
+- `findings/note/` only stores a review for a finding the stored result
+  holds. It took any main and any key, so a reviewer could clear a contact
+  before it was found - it then never showed as open - and fill the log
+  with entries nobody could open; a negative main ID ended in a database
+  error. Anything else is now a 404 before a row is written.
+- Settings saved while a calculation runs are applied. The save queues a
+  run, but `QueueOnce` drops it while one is going, and that one had read
+  the settings at its start: the result was made with the old values and
+  stamped as new, while the page said it was being recalculated.
+  `snapshot.update` now compares the settings and the contact sources
+  before and after the calculation and repeats it once when they differ.
+- A current hostile membership counts once. Auth's Corporation of today and
+  the open-ended record of corptools' Corporation history are the same
+  membership, but each added to the count: "Hostile membership (2)" for one
+  alt in one hostile Corporation, 1 without corptools. The history now
+  skips the record the current membership has marked; an earlier, ended
+  membership in the same Corporation still counts.
+- *Recalculate* with a `next` that is no path (`next=x`) no longer ends in
+  a server error. Django's `redirect()` looks a word without a slash up as
+  a URL name and raises on an unknown one; only a value starting with `/`
+  is taken now, anything else goes to the start page.
+
 ## [0.0.23] - 2026-11-11
 
 ### Added

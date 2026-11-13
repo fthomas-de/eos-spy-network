@@ -5,7 +5,7 @@ from corptools.models import CharacterAudit, CharacterContact
 from django.urls import reverse
 
 from eos_spy_network import api, markers, snapshot
-from eos_spy_network.models import FindingReview
+from eos_spy_network.models import FindingReview, ReviewLog
 
 from .base import ALLIANCE_ID, OTHER_ALLIANCE_ID, configure, make_user
 from .test_markers import HOSTILE_CORP, MarkerTestCase, eve_name
@@ -160,6 +160,16 @@ class TestFindingNote(FindingTestCase):
 
         self.assertEqual(self.post(note="", cleared="1").json(), {"note": "", "cleared": True})
         self.assertTrue(FindingReview.objects.get().cleared)
+
+    def test_should_not_store_a_finding_the_result_does_not_hold(self):
+        # a review ahead of its finding would clear it before anyone saw it
+        self.assertEqual(self.post(key="1:5", note="Agreed", cleared="1").status_code, 404)
+        self.assertFalse(FindingReview.objects.exists())
+        self.assertFalse(ReviewLog.objects.exists())
+
+    def test_should_not_store_for_another_main(self):
+        self.assertEqual(self.post(main_id=1, note="Agreed").status_code, 404)
+        self.assertFalse(FindingReview.objects.exists())
 
     def test_should_refuse_a_kind_without_reviews(self):
         self.assertEqual(self.post(kind=markers.MAILS, note="Agreed").status_code, 400)

@@ -19,7 +19,7 @@ from . import __version__, contacts, contract_details, killmails, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
-from .markers import BLUE_KILLS, CONTACTS, KINDS, LABELS, corptools_installed, million, own_kill, worth_counting
+from .markers import BLUE_KILLS, CONTACTS, KINDS, LABELS, WALLET, corptools_installed, million, own_kill, worth_counting
 from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, ReviewLog, SpyConfiguration
 from .permissions import (
     APP_PERMISSIONS,
@@ -233,6 +233,12 @@ def _log_rows(config, contact_rows) -> list:
             character_id__in={entry.character_id for entry in entries} | set(mains.values())
         ).values_list("character_id", "character_name")
     )
+    # read now, like the mains: whose account each entry's character belongs to
+    owners = dict(
+        CharacterOwnership.objects.filter(
+            character__character_id__in={entry.character_id for entry in entries}
+        ).values_list("character__character_id", "user_id")
+    )
     victims = dict(
         BlueKill.objects.filter(
             alliance_id=config.alliance.alliance_id,
@@ -251,6 +257,9 @@ def _log_rows(config, contact_rows) -> list:
             entry.main_id = entry.character_id
             entry.finding = contacts_by_key.get((entry.character_id, entry.key), entry.key)
         entry.main_name = names.get(entry.main_id) or str(entry.main_id)
+        # the reviewer's own account: allowed (user, 2026-11-12), but the reader should see it at a glance
+        # shortcut: ownership of today, not of the save; store it on ReviewLog if characters change hands often
+        entry.own_account = entry.changed_by_id is not None and owners.get(entry.character_id) == entry.changed_by_id
     return entries
 
 
@@ -331,6 +340,9 @@ def finding_note(request):
         main_id = int(request.POST.get("main_id", ""))
     except ValueError:
         return HttpResponseBadRequest("main_id must be a number")
+    # only a finding the pages show: a review ahead of its finding would clear it unseen
+    if not any(row["main_id"] == main_id and row["key"] == key for row in _contact_rows(config)):
+        raise Http404
     text, cleared, refused = _posted_note(request)
     if refused:
         return refused
@@ -463,6 +475,18 @@ def contracts(request, character_id, counterpart_id):
     if not corptools_installed():
         raise Http404
     config = SpyConfiguration.get_solo()
+    report = _report(config)
+    # only a pair the ISK marker offers the button for: any other character's contracts are not ours to show
+    offered = report is not None and any(
+        (row.get("character_id"), row.get("counterpart_id")) == (character_id, counterpart_id)
+        and row.get("contract_payments")
+        for tile in report.tiles
+        for suspect in tile.suspects
+        if WALLET in suspect.markers
+        for row in suspect.markers[WALLET].rows
+    )
+    if not offered:
+        raise Http404
     return render(
         request,
         "eos_spy_network/partials/contract-details.html",
@@ -495,7 +519,10 @@ def rebuild(request):
         messages.error(request, _("The recalculation could not be started: the task queue is not reachable."))
     # back to the page the button was on; only our own pages, never elsewhere
     target = request.POST.get("next", "")
-    if not url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}):
+    # a path only: redirect() would look a bare word up as a URL name and fail on an unknown one
+    if not target.startswith("/") or not url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}
+    ):
         target = ""
     return redirect(target or "eos_spy_network:index")
 
@@ -533,18 +560,21 @@ def settings(request):
     if form.errors:
         # the tab with the error, or it hides behind another
         tab = TAB_MARKERS if set(form.errors) == {"markers"} else TAB_ALLIANCE
-    contact_rows = _contact_rows(config)
+    # the findings and their log are suspicion data: manage_settings alone does not open them
+    reviewer = request.user.has_perm(VIEW_SUSPECTS)
+    contact_rows = _contact_rows(config) if reviewer else []
+    tabs = SETTINGS_TABS if reviewer else SETTINGS_TABS[:3]
     return _render(
         request,
         "eos_spy_network/settings.html",
         {
             "form": form,
             "rows": rows,
-            "kills": _kill_rows(config),
+            "kills": _kill_rows(config) if reviewer else [],
             "contacts": contact_rows,
-            "log": _log_rows(config, contact_rows),
+            "log": _log_rows(config, contact_rows) if reviewer else [],
             "note_length": KILL_NOTE_LENGTH,
-            "tab": tab if tab in SETTINGS_TABS else TAB_ALLIANCE,
+            "tab": tab if tab in tabs else TAB_ALLIANCE,
         },
         NAV_SETTINGS,
     )

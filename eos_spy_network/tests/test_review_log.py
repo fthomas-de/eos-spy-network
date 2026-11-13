@@ -101,6 +101,38 @@ class TestLogTab(FindingTestCase):
         self.assertContains(response, "Spai check")
         self.assertContains(response, "admin main")
 
+    def log(self, character_id, changed_by):
+        ReviewLog.objects.create(
+            alliance_id=ALLIANCE_ID, kind=markers.CONTACTS, character_id=character_id, key=CONTACT_KEY,
+            cleared=True, note="Logged note", changed_at=timezone.now(), changed_by=changed_by,
+        )
+
+    def test_should_mark_a_save_on_the_reviewers_own_account(self):
+        admin = make_user("own", MANAGE_SETTINGS, VIEW_SUSPECTS)
+        self.client.force_login(admin)
+        self.log(admin.profile.main_character.character_id, admin)
+
+        self.assertContains(self.get(), "Own account")
+
+    def test_should_not_mark_a_save_on_another_account(self):
+        admin = make_user("own", MANAGE_SETTINGS, VIEW_SUSPECTS)
+        self.client.force_login(admin)
+        self.log(self.main.character_id, admin)
+
+        response = self.get()
+
+        self.assertContains(response, "Logged note")
+        self.assertNotContains(response, "Own account")
+
+    def test_should_keep_the_log_from_a_viewer_without_view_suspects(self):
+        self.log(self.main.character_id, None)
+        self.client.force_login(make_user("settings", MANAGE_SETTINGS))
+
+        response = self.get()
+
+        self.assertNotContains(response, "Logged note")
+        self.assertEqual(response.context["log"], [])
+
     def test_should_leave_out_another_alliance(self):
         ReviewLog.objects.create(
             alliance_id=OTHER_ALLIANCE_ID, kind=markers.CONTACTS, character_id=1, key="1:5", cleared=True,

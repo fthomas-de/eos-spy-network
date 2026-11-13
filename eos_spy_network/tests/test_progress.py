@@ -4,7 +4,7 @@ from kombu.exceptions import OperationalError
 
 from django.urls import reverse
 
-from eos_spy_network import progress
+from eos_spy_network import progress, snapshot
 from eos_spy_network.tasks import update_snapshot
 
 from .base import SpyTestCase, configure, make_corporation, make_user
@@ -28,6 +28,28 @@ class TestTask(SpyTestCase):
         self.assertEqual(steps[-3:], ["connections", "affiliations", "saving"])
         self.assertEqual(steps, sorted(steps, key=progress.ORDER.index))
         self.assertIsNone(progress.current())
+
+    def test_should_calculate_again_when_the_settings_changed_meanwhile(self):
+        # a save during the run queues no second one: QueueOnce drops it
+        result = {"alliance_name": "A", "metrics": {"seconds": 0}}
+
+        def build(_config, _step):
+            if calls.call_count == 1:
+                configure(lookback_days=30)
+            return result
+
+        with patch("eos_spy_network.snapshot.build", side_effect=build) as calls:
+            snapshot.update()
+
+        self.assertEqual(calls.call_count, 2)
+
+    def test_should_calculate_once_when_nothing_changed(self):
+        result = {"alliance_name": "A", "metrics": {"seconds": 0}}
+
+        with patch("eos_spy_network.snapshot.build", return_value=result) as calls:
+            snapshot.update()
+
+        self.assertEqual(calls.call_count, 1)
 
     def test_should_clear_the_bar_when_the_calculation_fails(self):
         progress.step("wallet")

@@ -30,6 +30,13 @@ class TestMenuBadge(SuspectPageTestCase):
     def test_should_show_no_count_without_view_suspects(self):
         self.assertIsNone(self.count(make_user("admin", MANAGE_SETTINGS)))
 
+    def test_should_show_no_entry_with_view_evidence_alone(self):
+        # no page opens with it alone: the entry would lead to the login page
+        request = RequestFactory().get("/")
+        request.user = make_user("reader", "eos_spy_network.view_evidence")
+
+        self.assertEqual(SpyNetworkMenuItem().render(request), "")
+
     def test_should_not_keep_the_count_of_the_previous_user(self):
         item = SpyNetworkMenuItem()
         request = RequestFactory().get("/")

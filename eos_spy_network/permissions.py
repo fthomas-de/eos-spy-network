@@ -8,7 +8,8 @@ VIEW_SUSPECTS = "eos_spy_network.view_suspects"
 VIEW_EVIDENCE = "eos_spy_network.view_evidence"
 MANAGE_SETTINGS = "eos_spy_network.manage_settings"
 
-APP_PERMISSIONS = (VIEW_SUSPECTS, VIEW_EVIDENCE, MANAGE_SETTINGS)
+# what opens a page; view_evidence only adds to view_suspects and opens none on its own
+APP_PERMISSIONS = (VIEW_SUSPECTS, MANAGE_SETTINGS)
 
 
 def has_app_access(user) -> bool:

@@ -470,6 +470,7 @@ TRANSLATIONS = {
     "Marker": ("Marker", "Маркер", "标记"),
     "Finding": ("Fund", "Находка", "发现"),
     "Note before": ("Notiz vorher", "Заметка до", "之前的备注"),
+    "Own account": ("Eigener Account", "Свой аккаунт", "本人账号"),
     "Nothing saved yet.": ("Noch nichts gespeichert.", "Пока ничего не сохранено.", "尚未保存任何内容。"),
     "Every save of a note or a Cleared tick, the latest first. The reviews made before the log came with their "
     "last state only. A change made on this page shows here after a reload.": (

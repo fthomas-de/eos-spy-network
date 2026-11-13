@@ -33,7 +33,7 @@ from .markers import (
     corporation_tiles,
     roster,
 )
-from .models import BlueKill, FindingReview, Snapshot, SpyConfiguration
+from .models import BlueKill, ContactSource, FindingReview, Snapshot, SpyConfiguration
 from .network import Connections, Link, Standing, affiliate, connections, hostile_only
 
 logger = get_extension_logger(__name__)
@@ -263,9 +263,33 @@ def _connections_data(account: Connections) -> dict:
     }
 
 
+def _inputs() -> tuple:
+    """Every setting a calculation reads, to tell whether one changed while it ran."""
+    return (
+        SpyConfiguration.objects.filter(pk=SpyConfiguration.singleton_instance_id)
+        .values_list(
+            "alliance_id",
+            "hostile_below",
+            "blue_from",
+            "min_kill_value",
+            "corp_changes_per_year",
+            "lookback_days",
+            "ignored_ref_types",
+        )
+        .first(),
+        sorted(ContactSource.objects.values_list("kind", "entity_id")),
+    )
+
+
 def update(step=_no_step) -> Snapshot | None:
     """Recalculate and store; without an Alliance the old result goes."""
-    data = build(SpyConfiguration.get_solo(), step)
+    # a save during the run queues nothing - QueueOnce drops it - so the run repeats itself once
+    # shortcut: one repeat only, a third save in a row waits for the next run
+    for _attempt in range(2):
+        inputs = _inputs()
+        data = build(SpyConfiguration.get_solo(), step)
+        if _inputs() == inputs:
+            break
     step("saving")
     if data is None:
         Snapshot.objects.all().delete()

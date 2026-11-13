@@ -143,7 +143,10 @@ every one with a standing below a configurable value.
   with `manage_settings` and `view_suspects` ticks a row off without a note.
   *Log*: every save of a note or a tick in either, the latest first, with
   who and when, the main, the finding, the tick and the note before and
-  after; reviews made before the log are in it with their last state only
+  after; reviews made before the log are in it with their last state only;
+  a save a reviewer made on their own account carries an *Own account*
+  badge. These three tabs show who is suspected and need `view_suspects`
+  as well
 - **Notices** above the marker and network pages for every ticked source aa-contacts has
   no contacts of yet, and when aa-contacts or corptools is not installed;
   above the marker pages for the markers switched off, and - while the
@@ -221,9 +224,10 @@ know yet is shown by its ID.
 |---|---|
 | `eos_spy_network.view_suspects` | the Corporations and their mains with markers; the *Recalculate* button |
 | `eos_spy_network.view_evidence` | the counterparts behind the mail, ISK and contract markers; together with `view_suspects` the network pages (later: mail headers and subjects, wallet entries, contracts) |
-| `eos_spy_network.manage_settings` | the settings page |
+| `eos_spy_network.manage_settings` | the settings page; its tabs *Blue kills*, *Friendly to hostiles* and *Log* only together with `view_suspects` |
 
-The menu entry shows for anyone holding one of them.
+The menu entry shows for anyone holding `view_suspects` or
+`manage_settings`; `view_evidence` alone opens no page.
 
 ## Installation
 
