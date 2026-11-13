@@ -4,50 +4,39 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-13.
+Last updated 2026-11-13 (0.0.26).
 
 ## State
 
-- Version: `0.0.25`, 2026-11-13 (see `CHANGELOG.md`): settings *Alliance*
-  -> *Ignored ships* (`SpyConfiguration.ignored_ships`, ship names, since a
-  `BlueKill` keeps no type ID; migration 0011). Choices: killtracker's
-  private `_require_victim_ship_types_query` on eveuniverse `EveType` (601
-  in `aa_dev`, structures/deployables/mining drones included - user's
-  choice) plus the `BlueKill` ships and the stored names; an `ImportError`
-  falls back to those two. Filtered in `markers.worth_counting` like the
-  minimum value (hidden, never deleted), part of `snapshot._inputs()`.
-  5 new tests, the 4 that pin the change failed against the old code.
-  Settings page rendered in `aa_dev` through `django.test.Client` (200,
-  601 choices), not clicked in a browser.
+- Version: `0.0.26`, 2026-11-13 (see `CHANGELOG.md`):
+  - Note buttons: `SpyConfiguration.note_presets` (free text, default
+    `default_note_presets()` -> "bomb", "sb ratting"; migration 0012), tab
+    *Alliance*, Tom Select with `create` (`searchable.js` reads
+    `data-eos-spy-network-create`). The form makes the stored plus the
+    posted texts the choices and `clean_note_presets` normalises them like
+    a note (whitespace, max `KILL_NOTE_LENGTH`, no duplicates/empties).
+    Not part of `snapshot._inputs()` (changes no calculation). The popup
+    (`kill-note-modal.html`) gets a button per text; `kills.js` hides them
+    for a contacts finding; a click sets text + Cleared and saves.
+  - Clearing a day: `reviewed_kills` adds `day_open` to each row,
+    `kills.html` heads each date (`ifchanged`) with a row (count badge,
+    tick, pen) through `kill-note-button.html` (`day`, `main_id`,
+    `locked` once nothing is open). `views.kill_day_note`
+    (`kills/day/`, `main_id` + `date`) takes only the open rows of that
+    main and date from `_report` (404 otherwise), skips a group cleared
+    meanwhile under `select_for_update`, writes a `ReviewLog` per
+    killmail. Corporation page only; the settings tab stays flat.
+  16 new tests, one adjusted (7 ticks instead of 4 with the day rows); 14
+  failed against the old code (the default test passed because the model
+  was not stashed, the "no buttons" test is a negative one). Settings page
+  rendered in `aa_dev` (200, both buttons); nothing clicked in a browser.
+- Before (0.0.25): *Ignored ships* (migration 0011), choices from
+  killtracker's private `_require_victim_ship_types_query` plus the stored
+  names, filtered in `markers.worth_counting` like the minimum value.
 - Before (0.0.24): the eight fixes of the audit of 2026-11-11. The report
   is `docs/AUDIT.md` - **untracked on purpose** (user), keep it out of
   commits; it holds per finding the trace, the fix and the test, plus
-  "Checked and fine" (areas audited without a finding - no need to audit
-  them again).
-  - Contract popup (`views.contracts`) answers only for a pair the ISK
-    marker shows with a contract payment, else 404; it reads `_report`.
-  - `finding_note` stores only for a (main, key) in `_contact_rows`, else
-    404 before any row is written.
-  - `rebuild` takes only a `next` starting with `/`.
-  - A current hostile membership counts once: `markers._check` hands the
-    (character, group) pairs it marked to `_check_history`, which skips the
-    open-ended record of the same Corporation.
-  - `snapshot.update` compares `_inputs()` (settings that change the
-    calculation, plus the contact sources) before and after `build` and
-    repeats once when they differ - `QueueOnce` drops the run a save
-    queues while one is going. `disabled_markers` is left out (applied at
-    read time).
-  - `APP_PERMISSIONS` is `view_suspects` + `manage_settings`;
-    `view_evidence` alone opens nothing, no menu entry.
-  - Settings tabs *Blue kills*, *Friendly to hostiles*, *Log* are neither
-    rendered nor read without `view_suspects`.
-  - *Log* tab: badge *Own account* when `changed_by` owns the entry's
-    character today (`entry.own_account`; ownership of today, not of the
-    save - a shortcut noted in the code).
-  14 new tests, one replaced; each new one failed against the old code.
-  New msgid "Own account" (de Eigener Account, ru Свой аккаунт, zh 本人账号),
-  machine-made. No migration, no static file changed. Not seen in a
-  browser.
+  "Checked and fine" (no need to audit those areas again).
 - Before (0.0.23): settings tab *Log*, model `ReviewLog` written by
   `kill_note` and `finding_note` inside `transaction.atomic` with
   `select_for_update`; migration 0010 seeded the earlier reviews (0 in
@@ -70,7 +59,7 @@ Last updated 2026-11-13.
   text, legend from Bootstrap classes, only the hostile Alliance keeps
   `#8b1a1a` in `network.css`.
 - What the app does today: settings (Alliance, hostile threshold, blue
-  threshold, minimum kill value, ignored ships, Corporation changes per year, time frame,
+  threshold, minimum kill value, ignored ships, note buttons, Corporation changes per year, time frame,
   ignored wallet entry types; contact sources; marker switches; every
   stored blue kill and every friendly hostile contact with note and Cleared
   tick, an admin clears without a note); Markers: the Corporations as
@@ -78,28 +67,33 @@ Last updated 2026-11-13.
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 317 without translation tests plus 3 translation tests, all green
-  in the dev instance at 0.0.25 (fresh test database); every new test
+- Tests: 333 without translation tests plus 3 translation tests, all green
+  in the dev instance at 0.0.26 (fresh test database); every new test
   checked against the unfixed code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
   not reviewed by the user (0.0.13 added the blue kill texts, 0.0.14 the
   note texts, 0.0.19 the minimum value and contacts tab texts, 0.0.25
-  "Ignored ships" and its help text; Awox and
+  "Ignored ships" and its help text, 0.0.26 the note buttons and day texts; Awox and
   Blue stay English; "Cleared" carries the `eos-spy-network` context -
   another app translates it differently in ru).
 
 | Page | Permission | What |
 |---|---|---|
 | Markers | `view_suspects` | a tile per Corporation: mains, mains with markers, count per marker; switch to hide clean ones |
-| Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links, note and Cleared tick |
+| Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links, note and Cleared tick, grouped by date with a row to clear the day's open kills |
 | Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
-| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles, Log) | tabs: Alliance (hostile and blue threshold, minimum kill value, ignored ships, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
+| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles, Log) | tabs: Alliance (hostile and blue threshold, minimum kill value, ignored ships, note buttons, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
 
 ## Open
 
+- 0.0.26 on prod: run migration 0012 (adds "bomb" and "sb ratting").
+  Not clicked in a browser yet: a note button (saves and reloads), the
+  day row's tick and pen, adding a free text in the *Note buttons* field
+  (Enter creates it). `aa_dev` has no blue kill in its snapshot, so the
+  day rows were only seen in tests.
 - 0.0.25 on prod: run migration 0011. The ship list needs eveuniverse's
   ship types loaded (killtracker's own setup loads them); with few loaded,
   only the stored blue kill ships are offered. Click the multi-select
@@ -276,6 +270,12 @@ Last updated 2026-11-13.
 - Ignored ships (user, 2026-11-13): the victim's ship, hidden like the
   minimum value; choices are what killtracker offers as a victim's ship
   (not only real ships, not only those already killed); default empty.
+- Note buttons (user, 2026-11-13): a click enters the text, ticks Cleared
+  and saves; blue kills only (not the friendly hostile contacts); free
+  text in tab *Alliance*, default "bomb" and "sb ratting".
+- Clearing a day (user, 2026-11-13): Corporation page only, a head row per
+  date in the main's kill table; it touches only the open kills of that
+  day, a cleared one keeps its note.
 - Value columns (user, 2026-11-09): kill value and contract value in
   million ISK, in both blue kill tables (marker and settings tab); the
   contract value is price + reward, the collateral stays out (a deposit);
@@ -314,7 +314,7 @@ Last updated 2026-11-13.
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0011
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0012
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
@@ -329,7 +329,7 @@ Last updated 2026-11-13.
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
   code since 0.0.7 - check `pgrep -af celery` and start it again before
-  testing the button. `collectstatic` ran with the 0.0.22 static files (0.0.23 and 0.0.24 changed none). `aa_dev` is at 0011 (0.0.25); 0.0.25 changed no static file.
+  testing the button. `collectstatic` ran with the 0.0.26 static files (`kills.js`, `searchable.js`). `aa_dev` is at 0012 (0.0.26).
 
 ## Traps
 
