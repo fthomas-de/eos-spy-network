@@ -6,7 +6,7 @@ from django.utils.translation import pgettext_lazy
 from allianceauth.eveonline.models import EveAllianceInfo
 
 from .markers import DESCRIPTIONS, KINDS, LABELS
-from .models import SpyConfiguration
+from .models import BlueKill, SpyConfiguration
 from .network import PAYMENT_REF_TYPES
 
 
@@ -21,6 +21,24 @@ def ref_type_choices(stored=()) -> list[tuple[str, str]]:
     return [(ref_type, ref_type.replace("_", " ")) for ref_type in sorted(ref_types)]
 
 
+def ship_choices(stored=()) -> list[tuple[str, str]]:
+    """Every type killtracker offers as a victim's ship, the ships of the stored blue kills and whatever
+    is stored already."""
+    ships = set(stored or ()) | set(BlueKill.objects.values_list("ship", flat=True).distinct())
+    if apps.is_installed("killtracker"):
+        from eveuniverse.models import EveType
+
+        try:
+            from killtracker.models.trackers import _require_victim_ship_types_query
+        except ImportError:  # a private name of killtracker: without it the stored names still serve
+            pass
+        else:
+            ships |= set(EveType.objects.filter(_require_victim_ship_types_query()).values_list("name", flat=True))
+    # killtracker stores a killmail before it resolves the names: an empty ship is a fresh one
+    ships.discard("")
+    return [(ship, ship) for ship in sorted(ships)]
+
+
 class SpyConfigurationForm(forms.ModelForm):
     alliance = forms.ModelChoiceField(
         label=pgettext_lazy("EVE jargon", "Alliance"),
@@ -33,6 +51,12 @@ class SpyConfigurationForm(forms.ModelForm):
         label=SpyConfiguration._meta.get_field("ignored_ref_types").verbose_name,
         required=False,
         help_text=SpyConfiguration._meta.get_field("ignored_ref_types").help_text,
+        widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
+    )
+    ignored_ships = forms.MultipleChoiceField(
+        label=SpyConfiguration._meta.get_field("ignored_ships").verbose_name,
+        required=False,
+        help_text=SpyConfiguration._meta.get_field("ignored_ships").help_text,
         widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
     )
     # the switched-on markers; stored the other way round, as disabled_markers
@@ -50,6 +74,7 @@ class SpyConfigurationForm(forms.ModelForm):
             "hostile_below",
             "blue_from",
             "min_kill_value",
+            "ignored_ships",
             "corp_changes_per_year",
             "lookback_days",
             "ignored_ref_types",
@@ -64,6 +89,7 @@ class SpyConfigurationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["ignored_ref_types"].choices = ref_type_choices(self.instance.ignored_ref_types)
+        self.fields["ignored_ships"].choices = ship_choices(self.instance.ignored_ships)
         disabled = self.instance.disabled_markers or ()
         self.fields["markers"].initial = [kind for kind in KINDS if kind not in disabled]
 

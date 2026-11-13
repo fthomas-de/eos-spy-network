@@ -8,7 +8,7 @@ from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from eos_spy_network import snapshot
-from eos_spy_network.models import ContactSource, SpyConfiguration
+from eos_spy_network.models import BlueKill, ContactSource, SpyConfiguration
 
 from .base import (
     ALLIANCE_ID,
@@ -619,6 +619,48 @@ class TestSettingsPage(SpyTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(SpyConfiguration.get_solo().ignored_ref_types, ["market_transaction"])
+
+    def test_should_offer_the_ships_killtracker_offers_as_a_victim(self):
+        from eveuniverse.models import EveCategory, EveGroup, EveType
+
+        configure(ignored_ships=["Retired Hull"])
+        frigate = EveGroup.objects.create(
+            id=25, name="Frigate", published=True, eve_category=EveCategory.objects.create(id=6, name="Ship", published=True)
+        )
+        EveType.objects.create(id=587, name="Rifter", published=True, eve_group=frigate)
+        mineral = EveGroup.objects.create(
+            id=18, name="Mineral", published=True, eve_category=EveCategory.objects.create(id=4, name="Material", published=True)
+        )
+        EveType.objects.create(id=34, name="Tritanium", published=True, eve_group=mineral)
+
+        response = self.client.get(reverse("eos_spy_network:settings"))
+
+        self.assertContains(response, '<option value="Rifter">Rifter</option>', html=True)
+        self.assertNotContains(response, "Tritanium")
+        # a stored name killtracker no longer offers stays selectable
+        self.assertContains(response, '<option value="Retired Hull" selected>Retired Hull</option>', html=True)
+
+    def test_should_save_the_ignored_ships(self):
+        configure()
+        BlueKill.objects.create(
+            alliance_id=ALLIANCE_ID, killmail_id=1, character_id=1001, time=timezone.now(), ship="Capsule", reason="awox"
+        )
+
+        response = self.client.post(
+            reverse("eos_spy_network:settings"),
+            {
+                "alliance": make_alliance().pk,
+                "hostile_below": "0",
+                "blue_from": "5",
+                "min_kill_value": "0",
+                "ignored_ships": ["Capsule"],
+                "corp_changes_per_year": "4",
+                "lookback_days": "365",
+            },
+        )
+
+        self.assertRedirects(response, reverse("eos_spy_network:settings"))
+        self.assertEqual(SpyConfiguration.get_solo().ignored_ships, ["Capsule"])
 
     def test_should_reject_a_threshold_out_of_range(self):
         configure()

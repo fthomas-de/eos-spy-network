@@ -272,6 +272,7 @@ def _inputs() -> tuple:
             "hostile_below",
             "blue_from",
             "min_kill_value",
+            "ignored_ships",
             "corp_changes_per_year",
             "lookback_days",
             "ignored_ref_types",

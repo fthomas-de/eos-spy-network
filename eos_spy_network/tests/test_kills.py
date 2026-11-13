@@ -284,6 +284,23 @@ class TestMinimumValue(KillTestCase):
         self.assertEqual(BlueKill.objects.get().value, 10_000)
 
 
+class TestIgnoredShips(KillTestCase):
+    """A blue kill of an ignored ship does not count; the copy stays, hidden."""
+
+    def test_should_ignore_a_kill_of_an_ignored_ship(self):
+        configure(ignored_ships=["Rifter"])
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=ALLIANCE_ID)
+
+        self.assertIsNone(self.marker())
+        self.assertEqual(BlueKill.objects.get().ship, "Rifter")
+
+    def test_should_count_a_kill_of_another_ship(self):
+        configure(ignored_ships=["Vexor"])
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=ALLIANCE_ID)
+
+        self.assertEqual(self.marker().count, 1)
+
+
 class TestKillsPage(KillTestCase):
     def setUp(self):
         super().setUp()

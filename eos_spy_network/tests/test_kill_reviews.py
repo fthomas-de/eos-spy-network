@@ -264,6 +264,15 @@ class TestSettingsTab(ReviewTestCase):
         # killmail 2 has no known value: it counts
         self.assertContains(response, "https://zkillboard.com/kill/2/")
 
+    def test_should_leave_out_a_kill_of_an_ignored_ship(self):
+        BlueKill.objects.filter(killmail_id=1).update(ship="Capsule")
+        configure(ignored_ships=["Capsule"])
+
+        response = self.get()
+
+        self.assertNotContains(response, "https://zkillboard.com/kill/1/")
+        self.assertContains(response, "https://zkillboard.com/kill/2/")
+
     def test_should_keep_the_findings_from_a_viewer_without_view_suspects(self):
         # manage_settings changes the settings; who is suspected is view_suspects' to see (user, 2026-11-12)
         self.review(1, cleared=False, note="Read only")

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.25] - 2026-11-13
+
+### Added
+
+- Settings tab *Alliance*: *Ignored ships*, a searchable multi-select of the
+  victim's ships whose blue kills do not count. The minimum value alone
+  could not leave out a cheap ship by type, nor a ship whose kill has no
+  known value. The choices are the types killtracker itself offers as a
+  victim's ship (its tracker filter), the ships of the stored blue kills
+  and whatever is ignored already; default none. Like the minimum value it
+  hides the kills (marker, API, settings tab *Blue kills*) and deletes
+  none, so taking a ship off the list brings its kills back. Migration
+  0011.
+
 ## [0.0.24] - 2026-11-13
 
 Fixes from the audit of 2026-11-11 (`docs/AUDIT.md`, SPY-01 to SPY-08).

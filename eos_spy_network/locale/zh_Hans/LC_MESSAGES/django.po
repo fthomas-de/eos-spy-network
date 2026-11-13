@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 08:33+0000\n"
-"PO-Revision-Date: 2026-11-13 08:33+0000\n"
+"POT-Creation-Date: 2026-11-13 12:15+0000\n"
+"PO-Revision-Date: 2026-11-13 12:15+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: zh_Hans\n"
 "Language: zh_Hans\n"
@@ -24,32 +24,32 @@ msgstr "Spy Network"
 #: contacts.py:25 templates/eos_spy_network/network_corporation.html:97
 #: templates/eos_spy_network/partials/dealings.html:7
 #: templates/eos_spy_network/partials/kills.html:8
-#: templates/eos_spy_network/settings.html:182
+#: templates/eos_spy_network/settings.html:183
 msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:267
+#: contacts.py:26 models.py:274
 #: templates/eos_spy_network/network_corporation.html:99
 #: templates/eos_spy_network/partials/contacts.html:10
 #: templates/eos_spy_network/partials/dealings.html:10
 #: templates/eos_spy_network/partials/kills.html:10
 #: templates/eos_spy_network/partials/network-legend.html:8
-#: templates/eos_spy_network/settings.html:184
-#: templates/eos_spy_network/settings.html:246
+#: templates/eos_spy_network/settings.html:185
+#: templates/eos_spy_network/settings.html:247
 msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:26 models.py:43 models.py:266
+#: contacts.py:27 forms.py:44 models.py:43 models.py:273
 #: templates/eos_spy_network/network_corporation.html:100
 #: templates/eos_spy_network/partials/contacts.html:11
 #: templates/eos_spy_network/partials/dealings.html:11
 #: templates/eos_spy_network/partials/kills.html:11
 #: templates/eos_spy_network/partials/network-legend.html:10
 #: templates/eos_spy_network/settings.html:17
-#: templates/eos_spy_network/settings.html:185
-#: templates/eos_spy_network/settings.html:247
+#: templates/eos_spy_network/settings.html:186
+#: templates/eos_spy_network/settings.html:248
 msgctxt "EVE jargon"
 msgid "Alliance"
 msgstr "Alliance"
@@ -59,7 +59,7 @@ msgctxt "EVE jargon"
 msgid "Faction"
 msgstr "Faction"
 
-#: forms.py:40 snapshot.py:44 templates/eos_spy_network/base.html:12
+#: forms.py:64 snapshot.py:44 templates/eos_spy_network/base.html:12
 #: templates/eos_spy_network/corporation.html:49
 #: templates/eos_spy_network/settings.html:33 views.py:36
 msgid "Markers"
@@ -164,21 +164,29 @@ msgstr ""
 "按 zKillboard 估值低于此值的 blue 击杀不计入——太空舱或穿梭机不值得当作 Awox 查看。价值未知的击杀照样计入。0 "
 "表示计入所有击杀。"
 
-#: models.py:78
+#: models.py:79
+msgid "Ignored ships"
+msgstr "忽略的舰船"
+
+#: models.py:80
+msgid "A blue kill whose victim flew one of these does not count."
+msgstr "受害者驾驶其中任一舰船的 blue 击杀不计入。"
+
+#: models.py:85
 msgid "Corporation changes per year"
 msgstr "每年更换 Corporation 次数"
 
-#: models.py:79
+#: models.py:86
 msgid ""
 "A character that joined this many Corporations within the last 365 days gets"
 " a marker."
 msgstr "在过去 365 天内加入这么多 Corporation 的 Character 会被标记。"
 
-#: models.py:85
+#: models.py:92
 msgid "Time frame in days"
 msgstr "时间范围（天）"
 
-#: models.py:87
+#: models.py:94
 msgid ""
 "Only the last this many days count: wallet, contracts, mails, the network's "
 "payments and former Corporations. Standings change - a hostile today may "
@@ -187,26 +195,26 @@ msgstr ""
 "只计算最近这么多天：钱包、合同、邮件、关系网中的付款以及以前的 Corporation。Standings 会变化——今天的敌人当时可能是朋友。0 "
 "表示全部计算。"
 
-#: models.py:94
+#: models.py:101
 msgid "Ignored wallet entry types"
 msgstr "忽略的钱包条目类型"
 
-#: models.py:95
+#: models.py:102
 msgid ""
 "Wallet journal entries of these types count neither as ISK with hostiles nor"
 " as a payment."
 msgstr "这些类型的钱包日志条目既不算作与敌对方的 ISK，也不算作付款。"
 
-#: models.py:101
+#: models.py:108
 msgid "Markers switched off"
 msgstr "已关闭的标记"
 
-#: models.py:102
+#: models.py:109
 msgid ""
 "Still calculated, but left out of the Markers pages until switched on again."
 msgstr "仍会计算，但在重新开启之前不会显示在标记页面上。"
 
-#: models.py:107 models.py:110
+#: models.py:114 models.py:117
 msgid "Configuration"
 msgstr "配置"
 
@@ -296,15 +304,15 @@ msgstr "返回"
 
 #: templates/eos_spy_network/corporation.html:47
 #: templates/eos_spy_network/partials/network-legend.html:4
-#: templates/eos_spy_network/settings.html:243
-#: templates/eos_spy_network/settings.html:294
+#: templates/eos_spy_network/settings.html:244
+#: templates/eos_spy_network/settings.html:295
 msgctxt "EVE jargon"
 msgid "Main"
 msgstr "Main"
 
 #: templates/eos_spy_network/corporation.html:48
 #: templates/eos_spy_network/partials/contacts.html:7
-#: templates/eos_spy_network/settings.html:244
+#: templates/eos_spy_network/settings.html:245
 msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
@@ -410,7 +418,7 @@ msgstr "付款"
 #: templates/eos_spy_network/network_corporation.html:65
 #: templates/eos_spy_network/partials/contacts.html:13
 #: templates/eos_spy_network/partials/group-cell.html:7
-#: templates/eos_spy_network/settings.html:248
+#: templates/eos_spy_network/settings.html:249
 msgctxt "eos-spy-network"
 msgid "Standing"
 msgstr "Standing"
@@ -432,7 +440,7 @@ msgid "unknown"
 msgstr "未知"
 
 #: templates/eos_spy_network/partials/contacts.html:8
-#: templates/eos_spy_network/settings.html:245
+#: templates/eos_spy_network/settings.html:246
 msgctxt "eos-spy-network"
 msgid "Contact"
 msgstr "联系人"
@@ -441,9 +449,9 @@ msgstr "联系人"
 #: templates/eos_spy_network/partials/kill-note-button.html:8
 #: templates/eos_spy_network/partials/kill-note-modal.html:31
 #: templates/eos_spy_network/partials/kills.html:15
-#: templates/eos_spy_network/settings.html:189
-#: templates/eos_spy_network/settings.html:249
-#: templates/eos_spy_network/settings.html:296
+#: templates/eos_spy_network/settings.html:190
+#: templates/eos_spy_network/settings.html:250
+#: templates/eos_spy_network/settings.html:297
 msgctxt "eos-spy-network"
 msgid "Cleared"
 msgstr "已澄清"
@@ -453,9 +461,9 @@ msgstr "已澄清"
 #: templates/eos_spy_network/partials/kill-note-modal.html:19
 #: templates/eos_spy_network/partials/kill-note-modal.html:24
 #: templates/eos_spy_network/partials/kills.html:16
-#: templates/eos_spy_network/settings.html:190
-#: templates/eos_spy_network/settings.html:250
-#: templates/eos_spy_network/settings.html:298
+#: templates/eos_spy_network/settings.html:191
+#: templates/eos_spy_network/settings.html:251
+#: templates/eos_spy_network/settings.html:299
 msgid "Note"
 msgstr "备注"
 
@@ -546,7 +554,7 @@ msgstr "数量"
 
 #: templates/eos_spy_network/partials/dealings.html:14
 #: templates/eos_spy_network/partials/kills.html:13
-#: templates/eos_spy_network/settings.html:187
+#: templates/eos_spy_network/settings.html:188
 msgid "Value"
 msgstr "价值"
 
@@ -556,8 +564,8 @@ msgstr "类别"
 
 #: templates/eos_spy_network/partials/kill-note-button.html:29
 #: templates/eos_spy_network/partials/kill-note-modal.html:10
-#: templates/eos_spy_network/settings.html:217
-#: templates/eos_spy_network/settings.html:266
+#: templates/eos_spy_network/settings.html:218
+#: templates/eos_spy_network/settings.html:267
 msgid "Add a note"
 msgstr "添加备注"
 
@@ -581,41 +589,41 @@ msgid "Cancel"
 msgstr "取消"
 
 #: templates/eos_spy_network/partials/kill-note-modal.html:42
-#: templates/eos_spy_network/settings.html:78
-#: templates/eos_spy_network/settings.html:146
-#: templates/eos_spy_network/settings.html:166
+#: templates/eos_spy_network/settings.html:79
+#: templates/eos_spy_network/settings.html:147
+#: templates/eos_spy_network/settings.html:167
 msgctxt "eos-spy-network"
 msgid "Save"
 msgstr "保存"
 
 #: templates/eos_spy_network/partials/kills.html:7
-#: templates/eos_spy_network/settings.html:181
-#: templates/eos_spy_network/settings.html:291
+#: templates/eos_spy_network/settings.html:182
+#: templates/eos_spy_network/settings.html:292
 msgid "Date"
 msgstr "日期"
 
 #: templates/eos_spy_network/partials/kills.html:9
-#: templates/eos_spy_network/settings.html:183
+#: templates/eos_spy_network/settings.html:184
 msgid "Victim"
 msgstr "受害者"
 
 #: templates/eos_spy_network/partials/kills.html:12
-#: templates/eos_spy_network/settings.html:186
+#: templates/eos_spy_network/settings.html:187
 msgid "Ship"
 msgstr "舰船"
 
 #: templates/eos_spy_network/partials/kills.html:14
-#: templates/eos_spy_network/settings.html:188
+#: templates/eos_spy_network/settings.html:189
 msgid "Reason"
 msgstr "原因"
 
 #: templates/eos_spy_network/partials/kills.html:36
-#: templates/eos_spy_network/settings.html:209
+#: templates/eos_spy_network/settings.html:210
 msgid "Awox"
 msgstr "Awox"
 
 #: templates/eos_spy_network/partials/kills.html:38
-#: templates/eos_spy_network/settings.html:211
+#: templates/eos_spy_network/settings.html:212
 msgid "Blue"
 msgstr "Blue"
 
@@ -735,7 +743,7 @@ msgstr "联系人来源"
 msgid "Log"
 msgstr "日志"
 
-#: templates/eos_spy_network/settings.html:85
+#: templates/eos_spy_network/settings.html:86
 msgid ""
 "Tick whose contacts make up the hostile list. The contacts come from aa-"
 "contacts: a source needs a token there, and aa-contacts' own task keeps them"
@@ -743,79 +751,79 @@ msgid ""
 msgstr ""
 "勾选其联系人构成敌对列表的来源。联系人来自 aa-contacts：来源需要在其中拥有令牌，aa-contacts 自己的任务会保持其最新。"
 
-#: templates/eos_spy_network/settings.html:86
+#: templates/eos_spy_network/settings.html:87
 msgid "Open aa-contacts"
 msgstr "打开 aa-contacts"
 
-#: templates/eos_spy_network/settings.html:90
+#: templates/eos_spy_network/settings.html:91
 msgid ""
 "aa-contacts is not installed: the hostile list is made from its contacts."
 msgstr "未安装 aa-contacts：敌对列表由其联系人生成。"
 
-#: templates/eos_spy_network/settings.html:98
+#: templates/eos_spy_network/settings.html:99
 msgid "Ticked"
 msgstr "已勾选"
 
-#: templates/eos_spy_network/settings.html:99
+#: templates/eos_spy_network/settings.html:100
 msgctxt "eos-spy-network"
 msgid "Name"
 msgstr "名称"
 
-#: templates/eos_spy_network/settings.html:100
+#: templates/eos_spy_network/settings.html:101
 msgctxt "eos-spy-network"
 msgid "Type"
 msgstr "类型"
 
-#: templates/eos_spy_network/settings.html:101
+#: templates/eos_spy_network/settings.html:102
 msgid "Token in aa-contacts"
 msgstr "aa-contacts 中的令牌"
 
-#: templates/eos_spy_network/settings.html:102
+#: templates/eos_spy_network/settings.html:103
 msgid "Contacts as of"
 msgstr "联系人截至"
 
-#: templates/eos_spy_network/settings.html:103
+#: templates/eos_spy_network/settings.html:104
 msgid "Contacts"
 msgstr "联系人"
 
-#: templates/eos_spy_network/settings.html:104
+#: templates/eos_spy_network/settings.html:105
 msgctxt "eos-spy-network"
 msgid "Hostile"
 msgstr "敌对"
 
-#: templates/eos_spy_network/settings.html:116
+#: templates/eos_spy_network/settings.html:117
 msgid "Not in the Alliance"
 msgstr "不在 Alliance 中"
 
-#: templates/eos_spy_network/settings.html:122
-#: templates/eos_spy_network/settings.html:316
+#: templates/eos_spy_network/settings.html:123
+#: templates/eos_spy_network/settings.html:317
 msgctxt "eos-spy-network"
 msgid "Yes"
 msgstr "是"
 
-#: templates/eos_spy_network/settings.html:124
-#: templates/eos_spy_network/settings.html:316
+#: templates/eos_spy_network/settings.html:125
+#: templates/eos_spy_network/settings.html:317
 msgctxt "eos-spy-network"
 msgid "No"
 msgstr "否"
 
-#: templates/eos_spy_network/settings.html:131
+#: templates/eos_spy_network/settings.html:132
 msgid "Not read yet"
 msgstr "尚未读取"
 
-#: templates/eos_spy_network/settings.html:142
+#: templates/eos_spy_network/settings.html:143
 msgid ""
 "Choose an Alliance first: its Corporations are listed here once it is saved."
 msgstr "请先选择 Alliance：保存后，其 Corporation 会列在这里。"
 
-#: templates/eos_spy_network/settings.html:152
+#: templates/eos_spy_network/settings.html:153
 msgid ""
 "A marker switched off is still calculated, but the Markers pages leave it "
 "out: a main marked by nothing else counts as clean. Switched on again, it "
 "shows at once, without a recalculation."
 msgstr "关闭的标记仍会计算，但标记页面不会显示它：没有其他标记的 Main 视为正常。重新开启后会立即显示，无需重新计算。"
 
-#: templates/eos_spy_network/settings.html:174
+#: templates/eos_spy_network/settings.html:175
 msgid ""
 "Every blue kill stored for the Alliance, also those outside the time frame. "
 "Reason and standing are those of the time the kill was found; a cleared kill"
@@ -823,55 +831,55 @@ msgid ""
 msgstr ""
 "为本 Alliance 保存的所有 blue 击杀，包括时间范围之外的。原因和 standing 为发现该击杀时的值；已澄清的击杀不再计入该标记。"
 
-#: templates/eos_spy_network/settings.html:215
-#: templates/eos_spy_network/settings.html:264
+#: templates/eos_spy_network/settings.html:216
+#: templates/eos_spy_network/settings.html:265
 #, python-format
 msgid "Last changed by %(name)s, %(at)s"
 msgstr "最后修改：%(name)s，%(at)s"
 
-#: templates/eos_spy_network/settings.html:226
+#: templates/eos_spy_network/settings.html:227
 msgid "No blue kill stored."
 msgstr "没有已保存的 blue 击杀。"
 
-#: templates/eos_spy_network/settings.html:236
+#: templates/eos_spy_network/settings.html:237
 msgid ""
 "Every friendly hostile contact of the last calculation, the cleared ones "
 "too. A cleared contact no longer counts for the marker; at another standing "
 "it is a new finding."
 msgstr "上次计算中的每个友好敌对联系人，包括已澄清的。已澄清的联系人不再计入该标记；Standing 改变后即为新的发现。"
 
-#: templates/eos_spy_network/settings.html:275
+#: templates/eos_spy_network/settings.html:276
 msgid "No friendly hostile contact found."
 msgstr "未发现友好的敌对联系人。"
 
-#: templates/eos_spy_network/settings.html:284
+#: templates/eos_spy_network/settings.html:285
 msgid ""
 "Every save of a note or a Cleared tick, the latest first. The reviews made "
 "before the log came with their last state only. A change made on this page "
 "shows here after a reload."
 msgstr "每次保存备注或“已澄清”勾选，最新的在前。日志启用前的审核只保留最后状态。在本页所做的更改需重新加载后显示。"
 
-#: templates/eos_spy_network/settings.html:292
+#: templates/eos_spy_network/settings.html:293
 msgid "Changed by"
 msgstr "修改人"
 
-#: templates/eos_spy_network/settings.html:293
+#: templates/eos_spy_network/settings.html:294
 msgid "Marker"
 msgstr "标记"
 
-#: templates/eos_spy_network/settings.html:295
+#: templates/eos_spy_network/settings.html:296
 msgid "Finding"
 msgstr "发现"
 
-#: templates/eos_spy_network/settings.html:297
+#: templates/eos_spy_network/settings.html:298
 msgid "Note before"
 msgstr "之前的备注"
 
-#: templates/eos_spy_network/settings.html:305
+#: templates/eos_spy_network/settings.html:306
 msgid "Own account"
 msgstr "本人账号"
 
-#: templates/eos_spy_network/settings.html:326
+#: templates/eos_spy_network/settings.html:327
 msgid "Nothing saved yet."
 msgstr "尚未保存任何内容。"
 

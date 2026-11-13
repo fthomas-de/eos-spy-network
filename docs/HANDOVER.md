@@ -8,6 +8,14 @@ Last updated 2026-11-13.
 
 ## State
 
+- 0.0.25 (committed, not pushed): settings *Alliance* -> *Ignored ships*
+  (`SpyConfiguration.ignored_ships`, names, migration 0011), choices from
+  killtracker's private `_require_victim_ship_types_query` on eveuniverse
+  `EveType` (601 in `aa_dev`) plus the `BlueKill` ships and the stored
+  names; an `ImportError` falls back to those two. Filtered in
+  `markers.worth_counting`, part of `snapshot._inputs()`. 5 new tests,
+  each failed against the unfixed code; glossary has the 2 new msgids.
+  Not seen in a browser.
 - Version: `0.0.24`, 2026-11-13 (see `CHANGELOG.md`): the eight fixes of
   the audit of 2026-11-11. The report is `docs/AUDIT.md` - **untracked on
   purpose** (user), keep it out of commits; it holds per finding the
@@ -255,6 +263,9 @@ Last updated 2026-11-13.
 - Minimum kill value (user, 2026-11-09): million ISK, default 0 (off);
   below it hidden everywhere (marker, API, settings tab), not left
   uncopied; a kill without a known value counts.
+- Ignored ships (user, 2026-11-13): the victim's ship, hidden like the
+  minimum value; choices are what killtracker offers as a victim's ship
+  (not only real ships, not only those already killed); default empty.
 - Value columns (user, 2026-11-09): kill value and contract value in
   million ISK, in both blue kill tables (marker and settings tab); the
   contract value is price + reward, the collateral stays out (a deposit);
@@ -293,7 +304,7 @@ Last updated 2026-11-13.
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0010
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0011
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
@@ -308,7 +319,7 @@ Last updated 2026-11-13.
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
   code since 0.0.7 - check `pgrep -af celery` and start it again before
-  testing the button. `collectstatic` ran with the 0.0.22 static files (0.0.23 and 0.0.24 changed none). 0.0.24 has no migration; `aa_dev` is at 0010.
+  testing the button. `collectstatic` ran with the 0.0.22 static files (0.0.23 and 0.0.24 changed none). 0.0.24 has no migration; `aa_dev` is at 0011 (the unreleased ignored ships).
 
 ## Traps
 

@@ -581,7 +581,10 @@ RESOLVED_NAMES = ["victim", "victim_corporation", "victim_alliance", "ship", "va
 
 
 def worth_counting(kills, config):
-    """The blue kills at or above the minimum value; one without a known value counts (user)."""
+    """The blue kills at or above the minimum value and not of an ignored ship; one without a known value
+    counts (user)."""
+    if config.ignored_ships:
+        kills = kills.exclude(ship__in=config.ignored_ships)
     if not config.min_kill_value:
         return kills
     return kills.filter(Q(value__isnull=True) | Q(value__gte=config.min_kill_value * 1_000_000))

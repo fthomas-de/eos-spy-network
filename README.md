@@ -66,7 +66,8 @@ every one with a standing below a configurable value.
     many of its characters were on it; a kill of a character of the same
     account does not count. A kill worth less than the minimum value
     (zKillboard's value, in million ISK; default 0 counts every kill) does
-    not count; one without a known value does. Read from killtracker (see
+    not count; one without a known value does. Neither does a kill of one
+    of the ignored ships. Read from killtracker (see
     [Killmails](#killmails)); needs no hostile
 
   Mails, ISK and contracts between characters of the same account never
@@ -120,7 +121,8 @@ every one with a standing below a configurable value.
   standing below which a contact is hostile (default: below 0); the
   standing from which a contact of the Alliance is blue for the blue kills
   (default 5); the minimum value of a blue kill in million ISK (default 0:
-  every kill); the number
+  every kill); the ignored ships of a blue kill's victim, chosen from the
+  types killtracker offers as a victim's ship (default none); the number
   of Corporation changes per year that sets a marker; the time frame in days
   (default 365, 0 takes everything): the hostile list is today's, and the
   further back a payment, mail, contract or former Corporation, the likelier

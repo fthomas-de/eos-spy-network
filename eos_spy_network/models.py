@@ -72,6 +72,13 @@ class SpyConfiguration(SingletonModel):
             "awox worth a look. A kill without a known value counts. 0 counts every kill."
         ),
     )
+    # names, not type IDs: a BlueKill keeps only the name of the victim's ship
+    ignored_ships = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name=_("Ignored ships"),
+        help_text=_("A blue kill whose victim flew one of these does not count."),
+    )
     corp_changes_per_year = models.PositiveSmallIntegerField(
         default=4,
         validators=[MinValueValidator(2), MaxValueValidator(50)],

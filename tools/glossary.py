@@ -447,6 +447,12 @@ TRANSLATIONS = {
         "按 zKillboard 估值低于此值的 blue 击杀不计入——太空舱或穿梭机不值得当作 Awox 查看。价值未知的击杀照样计入。"
         "0 表示计入所有击杀。",
     ),
+    "Ignored ships": ("Ignorierte Schiffe", "Игнорируемые корабли", "忽略的舰船"),
+    "A blue kill whose victim flew one of these does not count.": (
+        "Ein Blue-Kill, dessen Opfer eines dieser Schiffe flog, zählt nicht.",
+        "Blue-килл, жертва которого летела на одном из этих кораблей, не учитывается.",
+        "受害者驾驶其中任一舰船的 blue 击杀不计入。",
+    ),
     "A cleared finding no longer counts for the marker; it takes effect at once.": (
         "Ein geklärter Fund zählt nicht mehr für den Marker; das wirkt sofort.",
         "Улаженная находка больше не учитывается в маркере; это действует сразу.",
