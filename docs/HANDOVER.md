@@ -4,198 +4,60 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-11.
+Last updated 2026-11-13.
 
 ## State
 
-- Unreleased, 2026-11-13, not committed: the eight fixes of the audit
-  (`docs/AUDIT.md`, SPY-01 to SPY-08; `CHANGELOG.md` under `[Unreleased]`).
-  The contract popup answers only for a pair the ISK marker offers
-  (`views.contracts` reads `_report`); `finding_note` only for a finding
-  in `_contact_rows`; `rebuild` takes only a `next` starting with `/`;
-  a current hostile membership counts once (`markers._check` hands its
-  marked pairs to `_check_history`); `snapshot.update` repeats itself once
-  when `_inputs()` (settings and contact sources) changed during the run;
-  `APP_PERMISSIONS` is `view_suspects` and `manage_settings` only; the
-  settings tabs *Blue kills*, *Friendly to hostiles* and *Log* are neither
-  rendered nor read without `view_suspects`; the *Log* tab shows an
-  *Own account* badge (`entry.own_account`, ownership of today). 14 new
-  tests, one replaced, so 312 expected without the translation tests; each
-  new one that tests a fix fails against the old code (the five changed
-  code files stashed, modules run, restored). The eight affected modules
-  are green; the full suite and the translation run are left for
-  `/commit`. New msgid "Own account" is in `tools/glossary.py`,
-  machine-made, catalogues not regenerated yet. No migration, no static
-  file changed. Not seen in a browser.
-- Before, version `0.0.23`, 2026-11-11 (see `CHANGELOG.md`): settings tab *Log* (`TAB_LOG`,
-  `views._log_rows`), model `ReviewLog` (alliance, kind, `character_id`,
-  key, cleared, note, `previous_cleared`, `previous_note`, `changed_at`,
-  `changed_by`), written by `kill_note` and `finding_note` inside
-  `transaction.atomic` with `select_for_update` on the review rows. For a
-  blue kill `character_id` is the posted character, its main looked up at
-  view time (`_victim_mains`); for a finding it is the main. Migration 0010
-  seeds one entry per earlier review (blue kills deduplicated by alliance,
-  killmail, `reviewed_at`, `reviewed_by`), applied to `aa_dev` (0 entries:
-  none of its kills was ever reviewed). Tests `test_review_log.py` (8),
-  checked against 8 faults, all caught. New texts (Log, Changed by,
-  Marker, Finding, Note before, ...) machine-translated, not reviewed by
-  the user. Not seen in a browser. The tab is
-  rendered once with the page: a tick in another tab shows in the log only
-  after a reload (said in the tab's help text).
+- Version: `0.0.24`, 2026-11-13 (see `CHANGELOG.md`): the eight fixes of
+  the audit of 2026-11-11. The report is `docs/AUDIT.md` - **untracked on
+  purpose** (user), keep it out of commits; it holds per finding the
+  trace, the fix and the test, plus "Checked and fine" (areas audited
+  without a finding - no need to audit them again).
+  - Contract popup (`views.contracts`) answers only for a pair the ISK
+    marker shows with a contract payment, else 404; it reads `_report`.
+  - `finding_note` stores only for a (main, key) in `_contact_rows`, else
+    404 before any row is written.
+  - `rebuild` takes only a `next` starting with `/`.
+  - A current hostile membership counts once: `markers._check` hands the
+    (character, group) pairs it marked to `_check_history`, which skips the
+    open-ended record of the same Corporation.
+  - `snapshot.update` compares `_inputs()` (settings that change the
+    calculation, plus the contact sources) before and after `build` and
+    repeats once when they differ - `QueueOnce` drops the run a save
+    queues while one is going. `disabled_markers` is left out (applied at
+    read time).
+  - `APP_PERMISSIONS` is `view_suspects` + `manage_settings`;
+    `view_evidence` alone opens nothing, no menu entry.
+  - Settings tabs *Blue kills*, *Friendly to hostiles*, *Log* are neither
+    rendered nor read without `view_suspects`.
+  - *Log* tab: badge *Own account* when `changed_by` owns the entry's
+    character today (`entry.own_account`; ownership of today, not of the
+    save - a shortcut noted in the code).
+  14 new tests, one replaced; each new one failed against the old code.
+  New msgid "Own account" (de Eigener Account, ru Свой аккаунт, zh 本人账号),
+  machine-made. No migration, no static file changed. Not seen in a
+  browser.
+- Before (0.0.23): settings tab *Log*, model `ReviewLog` written by
+  `kill_note` and `finding_note` inside `transaction.atomic` with
+  `select_for_update`; migration 0010 seeded the earlier reviews (0 in
+  `aa_dev`). The tab is rendered once with the page: a tick in another tab
+  shows in the log only after a reload.
 - Prod question (user, 2026-11-11): 5 blue kills ticked, the settings tab
   *Blue kills* showed only one. The code groups only per main and killmail
   (what the user wants), so 5 different killmails give 5 rows. Suspects: a
   minimum kill value set after the last recalculation (the settings tab
   filters at once, the marker page only after a recalculation), the 5 ticks
   on one killmail, or the DataTables search. The user was given a shell
-  line for prod to list the reviewed `BlueKill` rows (ID, character,
-  cleared, value, reviewed_at, note, plus `min_kill_value`); the answer is
-  open - next step once it comes. With 0.0.23 on prod the *Log* tab shows
-  the seeded state of those reviews too.
-- Before (0.0.22): *Mains with markers* count `text-info-emphasis`;
-  network legend from Bootstrap classes (`eos-spy-network-legend-*` stay
-  as the hook `network.js` reads), `network.css` only keeps the hostile
-  Alliance's `#8b1a1a`; the progress bar's `min-width` in `progress.css`,
-  loaded by `base.html`. Graph seen as a static page, light and dark.
-- Before (0.0.21): spy markers in Bootstrap info (cyan) instead of red,
-  as in eos-auth-monitor: `text-bg-info` badges in `corporations.html` and
-  `corporation.html`, `border-info` on a tile with markers.
-- Before (0.0.20): *Value* columns in
-  million ISK (`markers.million`, `floatformat:"1g"` + " M", "–" when
-  unknown) for the blue kills (marker row key `million`,
-  `views._kill_rows` sets `row.million`; the settings tab sorts by the raw
-  ISK in `data-order`, `stringformat:'f'` keeps it unlocalized) and the
-  *Contracts with hostiles* rows (`Dealings` sums price + reward, the row
-  key `million` exists for ISK rows too but only contracts show it). The
-  marker pages need a recalculation, an older snapshot shows "–". Msgid
-  "Value" (de Wert, ru Стоимость, zh 价值; no AA clash). Tests: one each in
-  `test_kills.TestKillsPage`, `test_kill_reviews.TestSettingsTab`,
-  `test_markers.TestContracts`; checked against 7 faults, all caught. Not
-  seen in a browser.
-- Before (0.0.19), three things:
-  - Minimum blue kill value: `SpyConfiguration.min_kill_value` (million
-    ISK, default 0 = off, Alliance tab) and `BlueKill.value` (float, from
-    killtracker's `EveKillmail.total_value`; migration 0009, applied to
-    `aa_dev`). `killmails.Kill.value`; `markers._copy_kills` writes it and
-    the upsert refreshes it (`RESOLVED_NAMES` now holds `value`), so older
-    copies get it while killtracker still holds the killmail.
-    `markers.worth_counting(queryset, config)` filters in `_check_kills`
-    (marker, API - after a recalculation, which saving the settings
-    starts) and `views._kill_rows` (settings tab, at once). A kill without
-    a value counts. Tests `test_kills.TestMinimumValue` (6), one in
-    `test_kill_reviews.TestSettingsTab`.
-  - New settings tab *Friendly to hostiles* (`TAB_CONTACTS = "contacts"`,
-    `views._contact_rows`): every contacts row of the stored snapshot,
-    cleared ones too, with main, characters, contact, Corporation,
-    Alliance, standing, tick, note, "Last changed by"; reviews read from
-    `FindingReview` of the configured Alliance. `views._snapshot(config)`
-    is the shared "snapshot of this Alliance or None" (also used by
-    `_report`). Tests `test_finding_reviews.TestSettingsTab` (4).
-  - Clearing without a note for admins: `views._posted_note` refuses an
-    empty note only without `manage_settings` (endpoints still need
-    `view_suspects`). The settings page includes the popup with
-    `admin=True` -> `data-eos-spy-network-kill-admin`; `kills.js` then
-    stores the row tick at once and lets Save go without a note. The
-    Corporation page keeps the note in its popup - for admins only a UI
-    rule, the server would take it. Tests in `TestKillNote` and
-    `TestFindingNote`.
-  None of it seen in a browser (`aa_dev` has neither a contacts marker nor
-  real blue kills with a value).
-- Before (0.0.18): *Blue kills* got EveWho icons (own characters, victim,
-  its Corporation and Alliance) in the marker and the settings tab, plus an
-  audit icon (`corptools:reactmain`) to the **main** of a victim with an
-  account in Auth (`views._victim_mains`, read at every view). The victim's
-  icons on the marker page need a recalculation. Not seen in a browser.
-- Before (0.0.17): *Friendly to
-  hostiles* shows the contact's Corporation and Alliance (two columns, red
-  with standing when hostile) and a small EveWho icon after the contact
-  (`/character|corporation|alliance/<id>`, none for a Faction or an
-  unknown category) and after each own character. The contact rows go
-  through the same affiliation step as ISK/contracts
-  (`snapshot._affiliate_rows(..., "contact_id")`, so public ESI in the
-  task for what Auth and corptools do not know); `Marker.affiliated` now
-  covers contacts; `reviewed_contacts` adds `named_characters` (ID, name)
-  at read time because the template cannot zip. New partials
-  `affiliation-cells.html` (shared with `dealings.html`) and
-  `evewho-link.html`. Columns and the contact's link need a
-  recalculation; the own characters' links show at once. Tests
-  `test_finding_reviews.py` (21). Not seen in a browser (`aa_dev` has no
-  contacts marker).
-  Decided (user, 2026-11-07): Corporation **and** Alliance as columns; the
-  link is an icon after the name, the name stays text; a Corporation or
-  Alliance contact links to its own EveWho page.
-- Before (0.0.16), three things:
-  - *Friendly to hostiles* reviewed like the blue kills: note and tick per
-    main, contact and standing. Model `FindingReview` (alliance, kind,
-    **main_id**, key; migration 0008, applied to `aa_dev`), endpoint
-    `views.finding_note` (`findings/note/`, `REVIEWED_KINDS`), applied at
-    read time by `snapshot.finding_reviews` + `reviewed_contacts` (pages
-    and `api.py`); key `<contact ID>:<standing>`; popup and `kills.js`
-    shared with the blue kills (a button with `data-...-kill-key` posts to
-    the finding URL).
-  - Menu badge: mains with open markers (`views.open_mains`, reuses
-    `_report`, so switched-off markers and cleared findings do not count);
-    `auth_hooks` sets `count` on every render - one hook object serves all
-    users - and `None` without `view_suspects`. Tests `test_menu.py`.
-  - Blue kills inside one account (attacker and victim owned by the same
-    user, `markers.own_kill`) are not copied into `BlueKill` and are
-    filtered at read time in `_check_kills` and `views._kill_rows`; old
-    rows stay in the table.
-  None of the three seen in a browser.
-- Before (0.0.15): blue kills
-  reviewed per main and killmail (user): one row, one note, one tick;
-  `snapshot.reviewed_kills` merges the rows of one killmail inside the
-  main's marker, `views._kill_rows` groups by killmail and owner
-  (`CharacterOwnership`), `views.kill_note` updates every `BlueKill` row of
-  the killmail whose character belongs to the posted character's main (no
-  migration). The tick is a checkbox column (`kill-note-button.html`
-  renders the two cells *Cleared* and *Note*; `kills.js`: ticking without
-  a note opens the popup with the tick set). Seen as rendered HTML for the
-  seeded kills in `aa_dev` (Ether Element: 3 rows), not clicked in a
-  browser.
-- Before (0.0.14): note and *Cleared*
-  tick per blue kill row (`BlueKill.note/cleared/reviewed_at/reviewed_by`,
-  migration 0007, applied to `aa_dev`; endpoint `views.kill_note`,
-  `kills/note/`, `view_suspects`; Cleared only with a note, popup
-  `partials/kill-note-modal.html` + `kill-note-button.html`, `kills.js`:
-  reloads on the Corporation page, updates the row in place in the
-  settings tab). Applied at read time (`snapshot.kill_reviews` +
-  `reviewed_kills`, in `views._report` and `api.character_markers`, which
-  now takes a third query when the snapshot holds blue kills). New
-  settings tab *Blue kills* (`views._kill_rows`, every `BlueKill` of the
-  Alliance, no time frame, DataTables via `tables.js`).
-- Before (0.0.13): new marker *Blue
-  kills* (`markers.BLUE_KILLS`, last in `KINDS`, so also in `api.KINDS` -
-  eos-auth-monitor shows it like the others; not tried there). A character
-  among the attackers of a killmail whose victim is in the Alliance
-  (*Awox*) or blue: the victim, its Corporation or Alliance among the
-  **Alliance's own** aa-contacts contacts with standing >=
-  `SpyConfiguration.blue_from` (default 5; `hostiles.blue_entities`,
-  `contacts.contacts(at_least=...)`). Killmails from killtracker's
-  `EveKillmail`/`EveKillmailAttacker` (`killmails.py`, optional behind
-  `apps.is_installed("killtracker")`). Each calculation copies them into the
-  own table `BlueKill` (`markers._copy_kills`, upsert: names follow
-  killtracker, reason and standing frozen at the first copy), the marker
-  reads `BlueKill` by Alliance, own characters and time frame - killtracker
-  purges after 30 days by default. One marker, a row per own character and
-  killmail (zKB link, victim, Corporation, Alliance, ship, reason), counted
-  once per killmail per account; runs even without hostiles (step
-  `kills`); not evidence. Notice on the marker pages when killtracker is
-  missing or does not store (`views._killmails_missing`). Migration 0006
-  (`blue_from` + `BlueKill`).
-- Before (0.0.12): ISK marker rows with contract payments have a *View
-  details* popup (`views.contracts`, `contract_details.details`, live from
-  corptools, `contracts.js`); only the ISK rows, not yet the *Contracts
-  with hostiles* rows (same view). (0.0.11) the contacts marker counts only
-  a standing above 0. (0.0.10) every marker stores `character_ids`; `api.py`
-  for eos-auth-monitor: `character_markers() -> dict[int, list[str]]`
-  (KINDS order, `{}` without snapshot or for another Alliance, switched-off
-  markers left out, two queries - three with blue kills since 0.0.14), `label`, `description`, `KINDS` -
-  a stable contract, change it only together with eos-auth-monitor.
-  (0.0.9) settings tabs and marker switches (`disabled_markers`, hide only);
-  (0.0.8) corptools read by CharacterAudit ID, `test_network.TestQueries`
-  pins the SQL; (0.0.6) time frame and ignored wallet types; (0.0.5)
-  network only with hostile partners; (0.0.4) affiliations, progress bar.
+  line for prod to list the reviewed `BlueKill` rows; the answer is open -
+  next step once it comes. The *Log* tab on prod shows the seeded state of
+  those reviews.
+- Earlier versions (0.0.4 - 0.0.22): see `CHANGELOG.md`. Still relevant
+  from them: `api.py` (0.0.10) is a stable contract with eos-auth-monitor -
+  `character_markers() -> dict[int, list[str]]`, `label`, `description`,
+  `KINDS`; change it only together with eos-auth-monitor. Colours
+  (0.0.21/0.0.22): spy markers Bootstrap info, `text-info-emphasis` for
+  text, legend from Bootstrap classes, only the hostile Alliance keeps
+  `#8b1a1a` in `network.css`.
 - What the app does today: settings (Alliance, hostile threshold, blue
   threshold, minimum kill value, Corporation changes per year, time frame,
   ignored wallet entry types; contact sources; marker switches; every
@@ -205,9 +67,9 @@ Last updated 2026-11-11.
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 298 without translation tests plus 3 translation tests, all green
-  in the dev instance (0.0.23 added 8 for the log); every new test
-  checked against sabotaged code. `tests.base.SpyTestCase` patches
+- Tests: 312 without translation tests plus 3 translation tests, all green
+  in the dev instance at 0.0.24 (fresh test database); every new test
+  checked against the unfixed code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
@@ -226,6 +88,15 @@ Last updated 2026-11-11.
 
 ## Open
 
+- 0.0.24 on prod: an admin with `manage_settings` but without
+  `view_suspects` loses the three review tabs - give them `view_suspects`
+  if they are meant to review. After the next calculation the *Hostile
+  membership* count drops by one for alts in a hostile Corporation with a
+  corptools history. Not clicked in a browser: the hidden tabs, the
+  *Own account* badge, the popup's 404 for a pair not on the page.
+- The `disabled` branch in `partials/kill-note-button.html` is now
+  unreachable (both pages that include it need `view_suspects`); left in,
+  it costs nothing.
 - Menu badge: the count costs a snapshot read and up to three small
   queries on every Auth page for `view_suspects` users; not measured on
   prod. A cache would be the fix if it shows.
@@ -437,9 +308,13 @@ Last updated 2026-11-11.
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
   code since 0.0.7 - check `pgrep -af celery` and start it again before
-  testing the button. `collectstatic` ran with the 0.0.22 static files (0.0.23 changed none).
+  testing the button. `collectstatic` ran with the 0.0.22 static files (0.0.23 and 0.0.24 changed none). 0.0.24 has no migration; `aa_dev` is at 0010.
 
 ## Traps
+
+- Checking new tests against the unfixed code in one go: `git stash push
+  -- <the changed code files>` (tests left in place), run the modules,
+  `git stash pop`. Name the paths, or the tests go into the stash too.
 
 - A Celery worker started before an app joined `INSTALLED_APPS` drops that
   app's tasks as "unregistered", and celery_once keeps their lock for an
