@@ -26,6 +26,7 @@ from .markers import (
     BLUE_KILLS,
     CONTACTS,
     CONTRACTS,
+    LABELS,
     WALLET,
     CorporationTile,
     Marker,
@@ -324,6 +325,25 @@ def reviewed_kills(marker: dict, reviews: dict) -> dict | None:
     Read at every view, not stored: a tick takes effect at once, without a
     recalculation. A cleared kill stays in the rows, it only stops counting.
     """
+    rows = kill_rows(marker, reviews)
+    open_rows = [row for row in rows if not row["cleared"]]
+    if not open_rows:
+        return None
+    # the Corporation page heads each date with its open kills, to clear them in one go
+    day_open = Counter(row["date"] for row in open_rows)
+    for row in rows:
+        row["day_open"] = day_open[row["date"]]
+    return {
+        **marker,
+        "rows": rows,
+        "count": len(open_rows),
+        "details": [row["victim"] or row["corporation"] for row in open_rows],
+        "character_ids": sorted({character_id for row in open_rows for character_id in row["character_ids"]}),
+    }
+
+
+def kill_rows(marker: dict, reviews: dict) -> list:
+    """The rows of a stored blue kills marker with their reviews: one per killmail."""
     # the marker is one main's: one row per killmail, its characters together (the user's rule)
     groups = {}
     for row in marker.get("rows", []):
@@ -349,20 +369,7 @@ def reviewed_kills(marker: dict, reviews: dict) -> dict | None:
         # the template cannot zip: each character with its ID for the EveWho link
         named = list(zip(group["character_ids"], names))
         rows.append({**group, "character": ", ".join(names), "named_characters": named})
-    open_rows = [row for row in rows if not row["cleared"]]
-    if not open_rows:
-        return None
-    # the Corporation page heads each date with its open kills, to clear them in one go
-    day_open = Counter(row["date"] for row in open_rows)
-    for row in rows:
-        row["day_open"] = day_open[row["date"]]
-    return {
-        **marker,
-        "rows": rows,
-        "count": len(open_rows),
-        "details": [row["victim"] or row["corporation"] for row in open_rows],
-        "character_ids": sorted({character_id for row in open_rows for character_id in row["character_ids"]}),
-    }
+    return rows
 
 
 def finding_reviews(alliance_id: int) -> dict:
@@ -387,13 +394,7 @@ def reviewed_contacts(marker: dict, main_id: int, reviews: dict) -> dict | None:
     if not marker.get("rows"):
         # a snapshot of 0.0.15 or older has no rows to review until the next run
         return marker
-    rows = []
-    for row in marker["rows"]:
-        key = contact_key(row)
-        cleared, note = reviews.get((CONTACTS, main_id, key), (False, ""))
-        # the template cannot zip: each character with its ID for the EveWho link
-        named = list(zip(row["character_ids"], row["characters"]))
-        rows.append({**row, "key": key, "cleared": cleared, "note": note, "named_characters": named})
+    rows = contact_rows(marker, main_id, reviews)
     open_rows = [row for row in rows if not row["cleared"]]
     if not open_rows:
         return None
@@ -404,6 +405,49 @@ def reviewed_contacts(marker: dict, main_id: int, reviews: dict) -> dict | None:
         "details": [f"{row['contact']} ({row['standing']})" for row in open_rows],
         "character_ids": sorted({character_id for row in open_rows for character_id in row["character_ids"]}),
     }
+
+
+def contact_rows(marker: dict, main_id: int, reviews: dict) -> list:
+    """The rows of a stored contacts marker with their reviews: one per contact and standing."""
+    rows = []
+    for row in marker.get("rows", []):
+        key = contact_key(row)
+        cleared, note = reviews.get((CONTACTS, main_id, key), (False, ""))
+        # the template cannot zip: each character with its ID for the EveWho link
+        named = list(zip(row["character_ids"], row["characters"]))
+        rows.append({**row, "key": key, "cleared": cleared, "note": note, "named_characters": named})
+    return rows
+
+
+def cleared_rows(markers: list, main_id: int, reviews: dict, findings: dict) -> list:
+    """The findings of a main whose every finding is cleared, kills and contacts in one list for one table."""
+    rows = []
+    for marker in markers:
+        if marker["kind"] == BLUE_KILLS:
+            rows += [
+                {
+                    "label": LABELS[BLUE_KILLS],
+                    "date": row["date"],
+                    "finding": row["victim"] or row["corporation"],
+                    "killmail_id": row["killmail_id"],
+                    "named_characters": row["named_characters"],
+                    "note": row["note"],
+                }
+                for row in kill_rows(marker, reviews)
+            ]
+        else:
+            rows += [
+                {
+                    "label": LABELS[CONTACTS],
+                    "date": "",
+                    "finding": f"{row['contact']} ({row['standing']})",
+                    "killmail_id": None,
+                    "named_characters": row["named_characters"],
+                    "note": row["note"],
+                }
+                for row in contact_rows(marker, main_id, findings)
+            ]
+    return rows
 
 
 class Report:
@@ -442,14 +486,18 @@ class Report:
                 MainCharacter(stored["main_id"], stored["main_name"], stored["corporation_id"]),
                 stored["character_count"],
             )
-            for marker in stored["markers"]:
-                if marker["kind"] in disabled:
+            # the markers every finding of which is cleared
+            done = []
+            for stored_marker in stored["markers"]:
+                if stored_marker["kind"] in disabled:
                     continue
+                marker = stored_marker
                 if marker["kind"] == BLUE_KILLS:
                     marker = reviewed_kills(marker, reviews or {})
                 elif marker["kind"] == CONTACTS:
                     marker = reviewed_contacts(marker, stored["main_id"], findings or {})
                 if marker is None:
+                    done.append(stored_marker)
                     continue
                 suspect.markers[marker["kind"]] = Marker(
                     marker["kind"],
@@ -463,6 +511,11 @@ class Report:
             # a main marked only by switched-off markers or cleared findings is clean
             if suspect.markers:
                 tile.suspects.append(suspect)
+            elif done:
+                # gone from the list above, its cleared findings would be nowhere on the page
+                rows = cleared_rows(done, stored["main_id"], reviews or {}, findings or {})
+                tile.cleared.append({"main": suspect.main, "rows": rows})
+        tile.cleared.sort(key=lambda cleared: cleared["main"].character_name.lower())
         if disabled or reviews or findings:
             # the stored order counted the switched-off markers and the cleared findings too
             tile.suspects.sort(key=by_markers)

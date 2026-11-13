@@ -201,6 +201,8 @@ class CorporationTile:
     mains: int = 0
     # only accounts with at least one marker, the most marked first
     suspects: list = field(default_factory=list)
+    # mains whose every finding is cleared, by name: {"main": ..., "rows": [...]}; filled by snapshot.Report
+    cleared: list = field(default_factory=list)
 
     def counts(self) -> list[tuple]:
         """(marker label, description, number of suspects with it) for every marker found."""

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.27] - 2026-11-13
+
+### Added
+
+- Corporation page: a card *Cleared findings* at the foot. A main whose
+  every blue kill and friendly hostile contact was cleared dropped out of
+  the table, and with it its cleared findings and their notes were nowhere
+  on the page. Now each such main is a folded group (name, number of
+  findings); inside one table for both markers with date, finding (zKB
+  link for a kill), characters and note, read only. A search box above
+  unfolds the groups whose main, finding or note matches and hides the
+  rest. Built from the same snapshot and reviews, no extra query; a main
+  marked only by switched-off markers stays out.
+
 ## [0.0.26] - 2026-11-13
 
 ### Added

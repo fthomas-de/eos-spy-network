@@ -79,6 +79,16 @@ class TestReviewedReport(FindingTestCase):
 
         self.assertIsNone(self.report_marker())
 
+    def test_should_list_the_cleared_contact_at_the_foot_of_the_corporation_page(self):
+        self.review(note="Old friend")
+        report = snapshot.Report(snapshot.current(), (), {}, snapshot.finding_reviews(ALLIANCE_ID))
+
+        (cleared,) = report.tile(2001).cleared
+        (row,) = cleared["rows"]
+
+        self.assertEqual(cleared["main"].character_id, self.main.character_id)
+        self.assertEqual((row["finding"], row["note"], row["killmail_id"]), ("Bad Corp (5)", "Old friend", None))
+
     def test_should_still_count_a_contact_with_a_note_only(self):
         self.review(cleared=False, note="Asked him")
 

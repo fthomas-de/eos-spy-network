@@ -197,6 +197,58 @@ class TestKillNote(ReviewTestCase):
         self.assertContains(response, "No markers.")
 
 
+class TestClearedList(ReviewTestCase):
+    """The mains whose every finding is cleared, at the foot of the Corporation page."""
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(make_user("viewer", VIEW_SUSPECTS))
+
+    def cleared(self, disabled=()):
+        report = snapshot.Report(snapshot.current(), disabled, snapshot.kill_reviews(ALLIANCE_ID))
+        return report.tile(2001).cleared
+
+    def get(self):
+        return self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+    def test_should_list_a_main_once_every_kill_is_cleared(self):
+        self.review(1, note="Bomb")
+        self.review(2, note="Fleet fight")
+
+        (cleared,) = self.cleared()
+
+        self.assertEqual(cleared["main"].character_id, self.main.character_id)
+        self.assertEqual({row["note"] for row in cleared["rows"]}, {"Bomb", "Fleet fight"})
+        self.assertEqual({row["killmail_id"] for row in cleared["rows"]}, {1, 2})
+
+    def test_should_leave_out_a_main_with_a_kill_still_open(self):
+        self.review(1, note="Bomb")
+
+        self.assertEqual(self.cleared(), [])
+
+    def test_should_leave_out_a_main_whose_marker_is_switched_off(self):
+        self.review(1)
+        self.review(2)
+
+        self.assertEqual(self.cleared(disabled=(markers.BLUE_KILLS,)), [])
+
+    def test_should_show_the_cleared_kills_on_the_corporation_page(self):
+        self.review(1, note="Bomb")
+        self.review(2, note="Fleet fight")
+
+        response = self.get()
+
+        self.assertContains(response, "Cleared findings")
+        self.assertContains(response, "Fleet fight")
+        self.assertContains(response, "https://zkillboard.com/kill/2/")
+        self.assertContains(response, "data-eos-spy-network-cleared-search")
+
+    def test_should_show_no_cleared_list_while_a_kill_is_open(self):
+        self.review(1, note="Bomb")
+
+        self.assertNotContains(self.get(), "Cleared findings")
+
+
 class TestSettingsTab(ReviewTestCase):
     def setUp(self):
         super().setUp()

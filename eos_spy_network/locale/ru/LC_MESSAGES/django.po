@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 12:43+0000\n"
-"PO-Revision-Date: 2026-11-13 12:43+0000\n"
+"POT-Creation-Date: 2026-11-13 13:58+0000\n"
+"PO-Revision-Date: 2026-11-13 13:58+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: ru\n"
 "Language: ru\n"
@@ -59,8 +59,8 @@ msgctxt "EVE jargon"
 msgid "Faction"
 msgstr "Faction"
 
-#: forms.py:71 snapshot.py:45 templates/eos_spy_network/base.html:12
-#: templates/eos_spy_network/corporation.html:49
+#: forms.py:71 snapshot.py:46 templates/eos_spy_network/base.html:12
+#: templates/eos_spy_network/corporation.html:50
 #: templates/eos_spy_network/settings.html:33 views.py:37
 msgid "Markers"
 msgstr "Маркеры"
@@ -298,12 +298,12 @@ msgstr "Определение Corporation и Alliance"
 msgid "Saving the result"
 msgstr "Сохранение результата"
 
-#: snapshot.py:45 templates/eos_spy_network/base.html:19 views.py:39
+#: snapshot.py:46 templates/eos_spy_network/base.html:19 views.py:39
 #: views.py:40
 msgid "Network"
 msgstr "Сеть"
 
-#: snapshot.py:45
+#: snapshot.py:46
 msgid "Affiliations"
 msgstr "Принадлежность"
 
@@ -311,7 +311,7 @@ msgstr "Принадлежность"
 msgid "Settings"
 msgstr "Настройки"
 
-#: templates/eos_spy_network/corporation.html:26
+#: templates/eos_spy_network/corporation.html:27
 #: templates/eos_spy_network/corporations.html:29
 #: templates/eos_spy_network/corporations.html:38
 #: templates/eos_spy_network/network.html:29
@@ -323,18 +323,18 @@ msgctxt "eos-spy-network"
 msgid "Mains"
 msgstr "Mains"
 
-#: templates/eos_spy_network/corporation.html:27
-#: templates/eos_spy_network/corporation.html:39
+#: templates/eos_spy_network/corporation.html:28
+#: templates/eos_spy_network/corporation.html:40
 #: templates/eos_spy_network/corporations.html:30
 msgid "Mains with markers"
 msgstr "Mains с маркерами"
 
-#: templates/eos_spy_network/corporation.html:31
+#: templates/eos_spy_network/corporation.html:32
 #: templates/eos_spy_network/network_corporation.html:25
 msgid "Back"
 msgstr "Назад"
 
-#: templates/eos_spy_network/corporation.html:47
+#: templates/eos_spy_network/corporation.html:48
 #: templates/eos_spy_network/partials/network-legend.html:4
 #: templates/eos_spy_network/settings.html:245
 #: templates/eos_spy_network/settings.html:296
@@ -342,33 +342,79 @@ msgctxt "EVE jargon"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_spy_network/corporation.html:48
+#: templates/eos_spy_network/corporation.html:49
+#: templates/eos_spy_network/corporation.html:134
 #: templates/eos_spy_network/partials/contacts.html:7
 #: templates/eos_spy_network/settings.html:246
 msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
 
-#: templates/eos_spy_network/corporation.html:98
+#: templates/eos_spy_network/corporation.html:99
 #: templates/eos_spy_network/corporations.html:45
 msgid "No markers."
 msgstr "Нет маркеров."
 
-#: templates/eos_spy_network/corporation.html:109
+#: templates/eos_spy_network/corporation.html:108
+msgid "Cleared findings"
+msgstr "Улаженные находки"
+
+#: templates/eos_spy_network/corporation.html:112
+msgid ""
+"Mains whose every finding is cleared, so they no longer show above. A note "
+"is changed in the settings tabs."
+msgstr ""
+"Mains, у которых все находки улажены, поэтому их больше нет выше. Заметка "
+"меняется во вкладках настроек."
+
+#: templates/eos_spy_network/corporation.html:115
+msgid "Search main, finding or note"
+msgstr "Поиск по Main, находке или заметке"
+
+#: templates/eos_spy_network/corporation.html:131
+#: templates/eos_spy_network/settings.html:295
+msgid "Marker"
+msgstr "Маркер"
+
+#: templates/eos_spy_network/corporation.html:132
+#: templates/eos_spy_network/partials/kills.html:7
+#: templates/eos_spy_network/settings.html:183
+#: templates/eos_spy_network/settings.html:293
+msgid "Date"
+msgstr "Дата"
+
+#: templates/eos_spy_network/corporation.html:133
+#: templates/eos_spy_network/settings.html:297
+msgid "Finding"
+msgstr "Находка"
+
+#: templates/eos_spy_network/corporation.html:135
+#: templates/eos_spy_network/partials/contacts.html:15
+#: templates/eos_spy_network/partials/kill-note-button.html:35
+#: templates/eos_spy_network/partials/kill-note-modal.html:20
+#: templates/eos_spy_network/partials/kill-note-modal.html:33
+#: templates/eos_spy_network/partials/kills.html:16
+#: templates/eos_spy_network/settings.html:192
+#: templates/eos_spy_network/settings.html:252
+#: templates/eos_spy_network/settings.html:300
+msgid "Note"
+msgstr "Заметка"
+
+#: templates/eos_spy_network/corporation.html:173
 msgctxt "eos-spy-network"
 msgid "Contracts"
 msgstr "Контракты"
 
-#: templates/eos_spy_network/corporation.html:110
+#: templates/eos_spy_network/corporation.html:174
 #: templates/eos_spy_network/partials/kill-note-modal.html:22
 msgid "Close"
 msgstr "Закрыть"
 
-#: templates/eos_spy_network/corporation.html:112
+#: templates/eos_spy_network/corporation.html:176
 msgid "Loading ..."
 msgstr "Загрузка ..."
 
-#: templates/eos_spy_network/corporation.html:112
+#: templates/eos_spy_network/corporation.html:176
 msgid "The contracts could not be loaded."
 msgstr "Не удалось загрузить контракты."
 
@@ -489,17 +535,6 @@ msgstr "Контакт"
 msgctxt "eos-spy-network"
 msgid "Cleared"
 msgstr "Улажено"
-
-#: templates/eos_spy_network/partials/contacts.html:15
-#: templates/eos_spy_network/partials/kill-note-button.html:35
-#: templates/eos_spy_network/partials/kill-note-modal.html:20
-#: templates/eos_spy_network/partials/kill-note-modal.html:33
-#: templates/eos_spy_network/partials/kills.html:16
-#: templates/eos_spy_network/settings.html:192
-#: templates/eos_spy_network/settings.html:252
-#: templates/eos_spy_network/settings.html:300
-msgid "Note"
-msgstr "Заметка"
 
 #: templates/eos_spy_network/partials/contract-details.html:7
 msgid "Contract"
@@ -632,12 +667,6 @@ msgstr "Отмена"
 msgctxt "eos-spy-network"
 msgid "Save"
 msgstr "Сохранить"
-
-#: templates/eos_spy_network/partials/kills.html:7
-#: templates/eos_spy_network/settings.html:183
-#: templates/eos_spy_network/settings.html:293
-msgid "Date"
-msgstr "Дата"
 
 #: templates/eos_spy_network/partials/kills.html:9
 #: templates/eos_spy_network/settings.html:185
@@ -927,14 +956,6 @@ msgstr ""
 #: templates/eos_spy_network/settings.html:294
 msgid "Changed by"
 msgstr "Изменил"
-
-#: templates/eos_spy_network/settings.html:295
-msgid "Marker"
-msgstr "Маркер"
-
-#: templates/eos_spy_network/settings.html:297
-msgid "Finding"
-msgstr "Находка"
 
 #: templates/eos_spy_network/settings.html:299
 msgid "Note before"

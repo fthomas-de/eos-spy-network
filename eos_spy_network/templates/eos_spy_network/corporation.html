@@ -7,6 +7,7 @@
     {{ block.super }}
     {% sri_static "eos_spy_network/js/contracts.js" %}
     {% sri_static "eos_spy_network/js/kills.js" %}
+    {% sri_static "eos_spy_network/js/cleared.js" %}
 {% endblock %}
 
 {% block details %}
@@ -99,6 +100,69 @@
             {% endif %}
         </div>
     </div>
+
+    {% if tile.cleared %}
+        {# mains gone from the table above: their cleared findings, read only; cleared.js searches and folds #}
+        <div class="card mt-3">
+            <div class="card-header">
+                <div class="card-title mb-0">{% translate "Cleared findings" %}</div>
+            </div>
+            <div class="card-body">
+                <p class="small text-body-secondary">
+                    {% translate "Mains whose every finding is cleared, so they no longer show above. A note is changed in the settings tabs." %}
+                </p>
+                <input type="search" class="form-control form-control-sm mb-2" data-eos-spy-network-cleared-search
+                       placeholder="{% translate 'Search main, finding or note' %}" aria-label="{% translate 'Search main, finding or note' %}">
+                <div class="list-group">
+                    {% for cleared in tile.cleared %}
+                        <div class="list-group-item" data-eos-spy-network-cleared-group>
+                            <button type="button" class="btn btn-link text-reset text-decoration-none p-0 d-flex align-items-center gap-2 w-100 text-start"
+                                    data-bs-toggle="collapse" data-bs-target="#eos-spy-network-cleared-{{ cleared.main.character_id }}"
+                                    aria-expanded="false" aria-controls="eos-spy-network-cleared-{{ cleared.main.character_id }}">
+                                <img src="{{ cleared.main.character_id|character_portrait_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
+                                <span class="text-break">{{ cleared.main.character_name }}</span>
+                                <span class="badge text-bg-secondary ms-auto">{{ cleared.rows|length }}</span>
+                            </button>
+                            <div class="collapse" id="eos-spy-network-cleared-{{ cleared.main.character_id }}">
+                                <div class="table-responsive mt-2">
+                                    <table class="table table-sm table-borderless small mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>{% translate "Marker" %}</th>
+                                                <th>{% translate "Date" %}</th>
+                                                <th>{% translate "Finding" %}</th>
+                                                <th>{% translate "Characters" context "eos-spy-network" %}</th>
+                                                <th>{% translate "Note" %}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in cleared.rows %}
+                                                <tr>
+                                                    <td class="text-nowrap">{{ row.label }}</td>
+                                                    <td class="text-nowrap">{{ row.date }}</td>
+                                                    <td class="text-break">
+                                                        {% if row.killmail_id %}
+                                                            <a href="https://zkillboard.com/kill/{{ row.killmail_id }}/" target="_blank" rel="noopener noreferrer">{{ row.finding }}</a>
+                                                        {% else %}
+                                                            {{ row.finding }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="text-break">
+                                                        {% for character_id, name in row.named_characters %}{{ name }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=character_id %}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                                    </td>
+                                                    <td class="text-break">{{ row.note }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
     {% if perms.eos_spy_network.view_evidence %}
         {# one popup for every contract payment; contracts.js fills it #}

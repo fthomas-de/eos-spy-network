@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 12:43+0000\n"
-"PO-Revision-Date: 2026-11-13 12:43+0000\n"
+"POT-Creation-Date: 2026-11-13 13:58+0000\n"
+"PO-Revision-Date: 2026-11-13 13:58+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: zh_Hans\n"
 "Language: zh_Hans\n"
@@ -59,8 +59,8 @@ msgctxt "EVE jargon"
 msgid "Faction"
 msgstr "Faction"
 
-#: forms.py:71 snapshot.py:45 templates/eos_spy_network/base.html:12
-#: templates/eos_spy_network/corporation.html:49
+#: forms.py:71 snapshot.py:46 templates/eos_spy_network/base.html:12
+#: templates/eos_spy_network/corporation.html:50
 #: templates/eos_spy_network/settings.html:33 views.py:37
 msgid "Markers"
 msgstr "标记"
@@ -281,12 +281,12 @@ msgstr "查询 Corporation 和 Alliance"
 msgid "Saving the result"
 msgstr "保存结果"
 
-#: snapshot.py:45 templates/eos_spy_network/base.html:19 views.py:39
+#: snapshot.py:46 templates/eos_spy_network/base.html:19 views.py:39
 #: views.py:40
 msgid "Network"
 msgstr "关系网"
 
-#: snapshot.py:45
+#: snapshot.py:46
 msgid "Affiliations"
 msgstr "所属关系"
 
@@ -294,7 +294,7 @@ msgstr "所属关系"
 msgid "Settings"
 msgstr "设置"
 
-#: templates/eos_spy_network/corporation.html:26
+#: templates/eos_spy_network/corporation.html:27
 #: templates/eos_spy_network/corporations.html:29
 #: templates/eos_spy_network/corporations.html:38
 #: templates/eos_spy_network/network.html:29
@@ -306,18 +306,18 @@ msgctxt "eos-spy-network"
 msgid "Mains"
 msgstr "Mains"
 
-#: templates/eos_spy_network/corporation.html:27
-#: templates/eos_spy_network/corporation.html:39
+#: templates/eos_spy_network/corporation.html:28
+#: templates/eos_spy_network/corporation.html:40
 #: templates/eos_spy_network/corporations.html:30
 msgid "Mains with markers"
 msgstr "有标记的 Mains"
 
-#: templates/eos_spy_network/corporation.html:31
+#: templates/eos_spy_network/corporation.html:32
 #: templates/eos_spy_network/network_corporation.html:25
 msgid "Back"
 msgstr "返回"
 
-#: templates/eos_spy_network/corporation.html:47
+#: templates/eos_spy_network/corporation.html:48
 #: templates/eos_spy_network/partials/network-legend.html:4
 #: templates/eos_spy_network/settings.html:245
 #: templates/eos_spy_network/settings.html:296
@@ -325,33 +325,77 @@ msgctxt "EVE jargon"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_spy_network/corporation.html:48
+#: templates/eos_spy_network/corporation.html:49
+#: templates/eos_spy_network/corporation.html:134
 #: templates/eos_spy_network/partials/contacts.html:7
 #: templates/eos_spy_network/settings.html:246
 msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
 
-#: templates/eos_spy_network/corporation.html:98
+#: templates/eos_spy_network/corporation.html:99
 #: templates/eos_spy_network/corporations.html:45
 msgid "No markers."
 msgstr "没有标记。"
 
-#: templates/eos_spy_network/corporation.html:109
+#: templates/eos_spy_network/corporation.html:108
+msgid "Cleared findings"
+msgstr "已澄清的发现"
+
+#: templates/eos_spy_network/corporation.html:112
+msgid ""
+"Mains whose every finding is cleared, so they no longer show above. A note "
+"is changed in the settings tabs."
+msgstr "所有发现均已澄清、因而不再显示在上方的 Mains。备注在设置的选项卡中修改。"
+
+#: templates/eos_spy_network/corporation.html:115
+msgid "Search main, finding or note"
+msgstr "搜索 Main、发现或备注"
+
+#: templates/eos_spy_network/corporation.html:131
+#: templates/eos_spy_network/settings.html:295
+msgid "Marker"
+msgstr "标记"
+
+#: templates/eos_spy_network/corporation.html:132
+#: templates/eos_spy_network/partials/kills.html:7
+#: templates/eos_spy_network/settings.html:183
+#: templates/eos_spy_network/settings.html:293
+msgid "Date"
+msgstr "日期"
+
+#: templates/eos_spy_network/corporation.html:133
+#: templates/eos_spy_network/settings.html:297
+msgid "Finding"
+msgstr "发现"
+
+#: templates/eos_spy_network/corporation.html:135
+#: templates/eos_spy_network/partials/contacts.html:15
+#: templates/eos_spy_network/partials/kill-note-button.html:35
+#: templates/eos_spy_network/partials/kill-note-modal.html:20
+#: templates/eos_spy_network/partials/kill-note-modal.html:33
+#: templates/eos_spy_network/partials/kills.html:16
+#: templates/eos_spy_network/settings.html:192
+#: templates/eos_spy_network/settings.html:252
+#: templates/eos_spy_network/settings.html:300
+msgid "Note"
+msgstr "备注"
+
+#: templates/eos_spy_network/corporation.html:173
 msgctxt "eos-spy-network"
 msgid "Contracts"
 msgstr "合同"
 
-#: templates/eos_spy_network/corporation.html:110
+#: templates/eos_spy_network/corporation.html:174
 #: templates/eos_spy_network/partials/kill-note-modal.html:22
 msgid "Close"
 msgstr "关闭"
 
-#: templates/eos_spy_network/corporation.html:112
+#: templates/eos_spy_network/corporation.html:176
 msgid "Loading ..."
 msgstr "加载中 ..."
 
-#: templates/eos_spy_network/corporation.html:112
+#: templates/eos_spy_network/corporation.html:176
 msgid "The contracts could not be loaded."
 msgstr "无法加载合同。"
 
@@ -470,17 +514,6 @@ msgstr "联系人"
 msgctxt "eos-spy-network"
 msgid "Cleared"
 msgstr "已澄清"
-
-#: templates/eos_spy_network/partials/contacts.html:15
-#: templates/eos_spy_network/partials/kill-note-button.html:35
-#: templates/eos_spy_network/partials/kill-note-modal.html:20
-#: templates/eos_spy_network/partials/kill-note-modal.html:33
-#: templates/eos_spy_network/partials/kills.html:16
-#: templates/eos_spy_network/settings.html:192
-#: templates/eos_spy_network/settings.html:252
-#: templates/eos_spy_network/settings.html:300
-msgid "Note"
-msgstr "备注"
 
 #: templates/eos_spy_network/partials/contract-details.html:7
 msgid "Contract"
@@ -610,12 +643,6 @@ msgstr "取消"
 msgctxt "eos-spy-network"
 msgid "Save"
 msgstr "保存"
-
-#: templates/eos_spy_network/partials/kills.html:7
-#: templates/eos_spy_network/settings.html:183
-#: templates/eos_spy_network/settings.html:293
-msgid "Date"
-msgstr "日期"
 
 #: templates/eos_spy_network/partials/kills.html:9
 #: templates/eos_spy_network/settings.html:185
@@ -882,14 +909,6 @@ msgstr "每次保存备注或“已澄清”勾选，最新的在前。日志启
 #: templates/eos_spy_network/settings.html:294
 msgid "Changed by"
 msgstr "修改人"
-
-#: templates/eos_spy_network/settings.html:295
-msgid "Marker"
-msgstr "标记"
-
-#: templates/eos_spy_network/settings.html:297
-msgid "Finding"
-msgstr "发现"
 
 #: templates/eos_spy_network/settings.html:299
 msgid "Note before"

@@ -508,6 +508,18 @@ TRANSLATIONS = {
         "есть только в последнем состоянии. Изменение на этой странице появится здесь после перезагрузки.",
         "每次保存备注或“已澄清”勾选，最新的在前。日志启用前的审核只保留最后状态。在本页所做的更改需重新加载后显示。",
     ),
+    "Cleared findings": ("Geklärte Funde", "Улаженные находки", "已澄清的发现"),
+    "Mains whose every finding is cleared, so they no longer show above. A note is changed in the settings tabs.": (
+        "Mains, deren Funde alle geklärt sind und die deshalb oben nicht mehr stehen. Eine Notiz wird in den "
+        "Tabs der Einstellungen geändert.",
+        "Mains, у которых все находки улажены, поэтому их больше нет выше. Заметка меняется во вкладках настроек.",
+        "所有发现均已澄清、因而不再显示在上方的 Mains。备注在设置的选项卡中修改。",
+    ),
+    "Search main, finding or note": (
+        "Main, Fund oder Notiz suchen",
+        "Поиск по Main, находке или заметке",
+        "搜索 Main、发现或备注",
+    ),
 }
 
 PLURALS = {}
