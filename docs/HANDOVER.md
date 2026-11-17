@@ -4,11 +4,23 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-17 (0.0.29).
+Last updated 2026-11-17 (0.0.30).
 
 ## State
 
-- Version: `0.0.29`, 2026-11-17 (see `CHANGELOG.md`):
+- Version: `0.0.30`, 2026-11-17 (see `CHANGELOG.md`):
+  `api.character_markers(*, corporation_id=None)` (keyword-only, user's
+  choice). With it only the snapshot `corporations` entry whose `id`
+  matches - the Corporation page's own `Report.tile` lookup, not the
+  suspects' `corporation_id` - i.e. what a CEO with `view_own_corporation`
+  sees, alts in other Corporations included; `{}` for a Corporation
+  without a page. Without it unchanged. eos-auth-monitor will call
+  `character_markers(corporation_id=...)` for CEOs with the main's
+  Corporation and checks the permission itself (mirroring
+  `permissions.sees_corporation`); an eos-spy-network before 0.0.30 raises
+  `TypeError` on the keyword. 2 tests in `test_api.py`, both red with the
+  filter taken out.
+- Before (0.0.29):
   - Permission `view_own_corporation` for CEOs (migration 0013, only the
     permission). `permissions.py`: `own_corporation_id(user)` (the main's
     Corporation, `None` without the permission or a main),
@@ -59,7 +71,7 @@ Last updated 2026-11-17 (0.0.29).
   those reviews.
 - Earlier versions (0.0.4 - 0.0.22): see `CHANGELOG.md`. Still relevant
   from them: `api.py` (0.0.10) is a stable contract with eos-auth-monitor -
-  `character_markers() -> dict[int, list[str]]`, `label`, `description`,
+  `character_markers(*, corporation_id=None) -> dict[int, list[str]]`, `label`, `description`,
   `KINDS`; change it only together with eos-auth-monitor. Colours
   (0.0.21/0.0.22): spy markers Bootstrap info, `text-info-emphasis` for
   text, legend from Bootstrap classes, only the hostile Alliance keeps
@@ -73,8 +85,9 @@ Last updated 2026-11-17 (0.0.29).
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 358 without translation tests plus 3 translation tests, all green
-  in the dev instance at 0.0.29 (fresh test database); every new test
+- Tests: 360 without translation tests plus 3 translation tests, all green
+  in the dev instance at 0.0.30 (fresh test database; translation tests
+  last run at 0.0.29, 0.0.30 added no text); every new test
   checked against the unfixed code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
@@ -99,6 +112,10 @@ Last updated 2026-11-17 (0.0.29).
 
 ## Open
 
+- 0.0.30 on prod: no migration, no static file. The eos-auth-monitor side
+  (CEO sees the spy markers of the own Corporation through
+  `character_markers(corporation_id=...)`) is built in that repo's own
+  session, not here; it needs eos-spy-network >= 0.0.30 there.
 - 0.0.29 on prod: run migration 0013, then give `view_own_corporation` to
   the CEO group or state (the app assigns it to nobody). Not seen in a
   browser: the CEO's page, the progress bar without the button, the
@@ -354,6 +371,10 @@ Last updated 2026-11-17 (0.0.29).
   Corporation; it shows the Corporation page and its evidence only - no
   network pages, no notes or *Cleared*, no *Recalculate*, no settings; the
   menu badge counts the own Corporation's mains.
+- CEO in eos-auth-monitor (user, 2026-11-17): eos-auth-monitor honours
+  `view_own_corporation` and shows a CEO the markers of the own
+  Corporation only, exactly by this app's rule; hence the API argument
+  (0.0.30), the permission check stays in eos-auth-monitor.
 
 ## Dev instance
 
@@ -439,7 +460,10 @@ Last updated 2026-11-17 (0.0.29).
   `Client(HTTP_HOST="127.0.0.1:8000")` and a user with
   `profile.main_character`.
 - `wsl.exe ... bash -lc '... | grep ...'` from the PowerShell tool breaks
-  the pipes; run such lines through the Bash tool.
+  the pipes; put such lines into a script and run it with
+  `wsl.exe -d Ubuntu-22.04 -e bash -l /home/allianceserver/<script>` from
+  the PowerShell tool - the Bash tool (Git Bash) rewrites that path to
+  `C:/Program Files/Git/home/...`.
 - Restoring a file with `shutil.copy2` from a backup on `/mnt/c` carries
   the Windows mode along (100644 -> 100755, shows in `git diff
   --summary`); `chmod 644` afterwards, or write the text back instead.
