@@ -3,14 +3,16 @@
 eos-auth-monitor shows the markers per character. It imports this module
 inside an ``apps.is_installed("eos_spy_network")`` guard and checks the
 permissions ``eos_spy_network.view_suspects`` and
-``eos_spy_network.view_evidence`` itself; nothing here checks a permission.
+``eos_spy_network.view_evidence`` (whole Alliance) or
+``eos_spy_network.view_own_corporation`` (the main's Corporation, through
+``corporation_id``) itself; nothing here checks a permission.
 
 Everything comes from the stored snapshot, as on this app's own pages: no
 calculation, no query beyond the configuration, the one snapshot row and,
 when the snapshot holds blue kills or friendly hostile contacts, the
 reviewed ones (a query each).
 
-- ``character_markers() -> dict[int, list[str]]``
+- ``character_markers(*, corporation_id=None) -> dict[int, list[str]]``
 - ``label(kind) -> str`` and ``description(kind) -> str``: the texts this app
   shows for a marker kind, translated lazily
 - ``KINDS``: every marker kind, in the order the pages show them
@@ -23,12 +25,16 @@ from .snapshot import current, finding_reviews, kill_reviews, reviewed_contacts,
 __all__ = ["KINDS", "character_markers", "description", "label"]
 
 
-def character_markers() -> dict[int, list[str]]:
+def character_markers(*, corporation_id: int | None = None) -> dict[int, list[str]]:
     """EVE character ID -> marker kinds found for it, in ``KINDS`` order.
 
     Only the account's own characters behind a finding appear, each under its
-    own ID (not its main's). Markers switched off in the settings are left
-    out, as on this app's pages, and so are the blue kills and contacts marked cleared. Empty without a snapshot, and when the
+    own ID (not its main's). With ``corporation_id``, only what that
+    Corporation's page shows: the mains of that Corporation with all their
+    characters, an alt in another Corporation included - what a CEO with
+    ``view_own_corporation`` sees (the caller checks that permission, see
+    ``permissions.sees_corporation``); empty for a Corporation without a page.
+    Markers switched off in the settings are left out, as on this app's pages, and so are the blue kills and contacts marked cleared. Empty without a snapshot, and when the
     stored snapshot is of another Alliance than the configured one: after a
     change of the Alliance it is stale until recalculated. A snapshot built
     before 0.0.10 names no characters and gives nothing until the next run.
@@ -51,6 +57,9 @@ def character_markers() -> dict[int, list[str]]:
     # read once, and only when there is a marker to apply them to
     reviews = findings = None
     for corporation in snapshot.data["corporations"]:
+        # the page's own lookup (Report.tile): the entry's id, not the suspects' corporation_id
+        if corporation_id is not None and corporation["id"] != corporation_id:
+            continue
         for suspect in corporation["suspects"]:
             for marker in suspect["markers"]:
                 if marker["kind"] in disabled:

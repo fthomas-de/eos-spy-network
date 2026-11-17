@@ -71,6 +71,25 @@ class TestCharacterMarkers(SpyTestCase):
 
         self.assertEqual(api.character_markers(), {501: [markers.MEMBERSHIP]})
 
+    def test_should_give_only_the_markers_of_the_corporation_page_asked_for(self):
+        snapshot = store([marker(markers.MEMBERSHIP, 501, 502)], [marker(markers.CONTRACTS, 601)])
+        # the second account onto a page of its own, as a CEO of Corp 2002 sees it
+        moved = snapshot.data["corporations"][0]["suspects"].pop()
+        snapshot.data["corporations"].append(
+            {"id": 2002, "name": "Corp 2002", "ticker": "C2002", "mains": 1, "suspects": [moved]}
+        )
+        snapshot.save()
+
+        self.assertEqual(api.character_markers(corporation_id=2002), {601: [markers.CONTRACTS]})
+        self.assertEqual(
+            api.character_markers(corporation_id=2001), {501: [markers.MEMBERSHIP], 502: [markers.MEMBERSHIP]}
+        )
+
+    def test_should_give_nothing_for_a_corporation_without_a_page(self):
+        store([marker(markers.MEMBERSHIP, 501)])
+
+        self.assertEqual(api.character_markers(corporation_id=2099), {})
+
     def test_should_read_an_older_snapshot_without_characters(self):
         stored = marker(markers.MEMBERSHIP)
         del stored["character_ids"]

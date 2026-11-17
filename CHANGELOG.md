@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.30] - 2026-11-17
+
+### Added
+
+- `api.character_markers()` takes an optional keyword `corporation_id`.
+  The API gave only the whole Alliance, so eos-auth-monitor could not
+  show a CEO with `view_own_corporation` the markers of their own
+  Corporation without showing all the others. With the argument it gives
+  exactly what that Corporation's page shows - the snapshot entry with
+  that id, its mains with all their characters - and nothing for a
+  Corporation without a page. Without it nothing changes.
+
 ## [0.0.29] - 2026-11-17
 
 ### Added
