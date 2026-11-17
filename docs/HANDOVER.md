@@ -4,56 +4,38 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-13 (0.0.28).
+Last updated 2026-11-17 (0.0.29).
 
 ## State
 
-- Version: `0.0.28`, 2026-11-13 (see `CHANGELOG.md`): two table changes.
-  - *Friendly to hostiles*, both tables (`partials/contacts.html`,
-    settings tab): new column *Reference standing* before the member's
-    own, now headed *Suspect standing*. `snapshot._reference_rows` (called
-    right after `_affiliate_rows` for the contact rows) stores per row
-    `reference = {"standing", "sources": [[name, standing]]}` or `None`:
-    the hostile entry of the contact itself, else of its Corporation, else
-    of its Alliance. The cell shows the lowest standing, the sources as a
-    `title` tooltip, `data-order` for DataTables; a row without
-    `reference` (snapshot of 0.0.27 or older) shows "–". The review key
-    (`contact_key`: contact + the member's standing), *Cleared findings*
-    and `api.py` are unchanged. 5 new tests in `test_finding_reviews`.
-  - Blue kill tables (`partials/kills.html`, settings tab): the columns
-    after *Victim* are headed *Victim Corporation* and *Victim Alliance*
-    (plain msgids, no context). 2 new tests.
-- Before (0.0.27): card *Cleared
-  findings* at the foot of the Corporation page. `Report._tile` collects a
-  main whose every visible finding is cleared (`reviewed_kills` /
-  `reviewed_contacts` gave `None`) into `CorporationTile.cleared`
-  (`{"main", "rows"}`, by name) through `snapshot.cleared_rows`; the row
-  logic now lives in `kill_rows` / `contact_rows`, the two `reviewed_*`
-  keep their `None` contract (`api.py` unchanged). A main marked only by
-  switched-off markers stays out. Template: a Bootstrap collapse per main
-  inside a `list-group`, one read-only table (Marker, Date, Finding with
-  zKB link, Characters, Note); `cleared.js` filters rows and unfolds
-  matching groups. 6 new tests, 5 failed against the old code (the 6th is
-  a negative one). The JS was checked only on a static copy of the markup
-  (search, unfold, fold back); the real page not seen with data.
-- Before (0.0.26):
-  - Note buttons: `SpyConfiguration.note_presets` (free text, default
-    `default_note_presets()` -> "bomb", "sb ratting"; migration 0012), tab
-    *Alliance*, Tom Select with `create` (`searchable.js` reads
-    `data-eos-spy-network-create`). The form makes the stored plus the
-    posted texts the choices and `clean_note_presets` normalises them like
-    a note (whitespace, max `KILL_NOTE_LENGTH`, no duplicates/empties).
-    Not part of `snapshot._inputs()` (changes no calculation). The popup
-    (`kill-note-modal.html`) gets a button per text; `kills.js` hides them
-    for a contacts finding; a click sets text + Cleared and saves.
-  - Clearing a day: `reviewed_kills` adds `day_open` to each row,
-    `kills.html` heads each date (`ifchanged`) with a row (count badge,
-    tick, pen) through `kill-note-button.html` (`day`, `main_id`,
-    `locked` once nothing is open). `views.kill_day_note`
-    (`kills/day/`, `main_id` + `date`) takes only the open rows of that
-    main and date from `_report` (404 otherwise), skips a group cleared
-    meanwhile under `select_for_update`, writes a `ReviewLog` per
-    killmail. Corporation page only; the settings tab stays flat.
+- Version: `0.0.29`, 2026-11-17 (see `CHANGELOG.md`):
+  - Permission `view_own_corporation` for CEOs (migration 0013, only the
+    permission). `permissions.py`: `own_corporation_id(user)` (the main's
+    Corporation, `None` without the permission or a main),
+    `sees_corporation(user, id)` (`view_suspects` or own),
+    `sees_evidence(user, id)` (sees it and `view_evidence` or own). Used by
+    `views.index` (CEO -> own Corporation page), `views.corporation` (404
+    for any other; context flag `evidence` replaces
+    `perms.view_evidence` in `corporation.html`), `views.contracts` (pairs
+    of tiles the viewer sees evidence of; decorator lets in
+    `view_suspects`+`view_evidence` or `view_own_corporation`),
+    `views.rebuild_progress` (the CEO page polls it), the menu badge
+    (`open_mains(corporation_id)`). Templates: *Markers* nav for a CEO
+    points at the index, *Back* and *Recalculate* only with
+    `view_suspects`; note/tick controls were already gated on
+    `view_suspects`, so a CEO sees them read-only. 12 tests in
+    `test_own_corporation.py`, 10 failed against the old code (the other
+    two are negative ones).
+  - *Reason* heading of both blue kill tables now has the
+    `eos-spy-network` context: eos-tax's plain "Reason" (zh_Hans left
+    English) hid ours.
+- Before (0.0.28): column *Reference standing* (stored per contact row by
+  `snapshot._reference_rows`, "–" for an older snapshot) and the headings
+  *Victim Corporation* / *Victim Alliance*.
+- Before (0.0.27): card *Cleared findings* at the foot of the Corporation
+  page (`CorporationTile.cleared`, `cleared.js`).
+- Before (0.0.26): note buttons (`note_presets`, migration 0012) and
+  clearing a day (`views.kill_day_note`).
 - Before (0.0.25): *Ignored ships* (migration 0011), choices from
   killtracker's private `_require_victim_ship_types_query` plus the stored
   names, filtered in `markers.worth_counting` like the minimum value.
@@ -91,12 +73,9 @@ Last updated 2026-11-13 (0.0.28).
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 346 without translation tests plus 3 translation tests, all green
-  in the dev instance at 0.0.28 (fresh test database); every new test
-  checked against the unfixed code - except
-  `test_should_show_a_dash_for_a_snapshot_without_the_reference_standing`,
-  which failed there only on a `KeyError` of its own, fixed afterwards and
-  not run against the old code again. `tests.base.SpyTestCase` patches
+- Tests: 358 without translation tests plus 3 translation tests, all green
+  in the dev instance at 0.0.29 (fresh test database); every new test
+  checked against the unfixed code. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
@@ -115,10 +94,17 @@ Last updated 2026-11-13 (0.0.28).
 | Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links, note and Cleared tick, grouped by date with a row to clear the day's open kills; at the foot *Cleared findings*: mains with everything cleared, folded per main, searchable, read only |
 | Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
+| Corporation (CEO) | `view_own_corporation` | only the main's own Corporation, with its evidence and the contract popup; notes and ticks read-only; no Back, no Recalculate; any other Corporation 404 |
 | Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles, Log) | tabs: Alliance (hostile and blue threshold, minimum kill value, ignored ships, note buttons, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
 
 ## Open
 
+- 0.0.29 on prod: run migration 0013, then give `view_own_corporation` to
+  the CEO group or state (the app assigns it to nobody). Not seen in a
+  browser: the CEO's page, the progress bar without the button, the
+  *Markers* nav pointing at the index. A CEO whose Corporation is not in
+  the configured Alliance lands on a 404 from the start page (no notice;
+  left as is).
 - 0.0.28 on prod: no migration, no new static file. *Reference standing*
   shows "–" until the next calculation (button, saving the settings or the
   periodic task). Neither change was seen in a browser: `aa_dev` has no
@@ -363,11 +349,16 @@ Last updated 2026-11-13 (0.0.28).
 - Scope: one Alliance, as in eos-auth-monitor.
 - Permissions `view_suspects`, `view_evidence`, `manage_settings`; no
   `basic_access`, it would have opened nothing.
+- CEO permission (user, 2026-11-17): `view_own_corporation`, assigned by
+  the admin (no automatic CEO detection by `ceo_id`); own = the main's
+  Corporation; it shows the Corporation page and its evidence only - no
+  network pages, no notes or *Cleared*, no *Recalculate*, no settings; the
+  menu badge counts the own Corporation's mains.
 
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0012
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0013
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
@@ -382,10 +373,19 @@ Last updated 2026-11-13 (0.0.28).
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
   code since 0.0.7 - check `pgrep -af celery` and start it again before
-  testing the button. `collectstatic` ran with the 0.0.27 static files (`cleared.js`; 0.0.28 adds none). `aa_dev` is at 0012 (0.0.27 and 0.0.28 add none); its snapshot was not rebuilt with 0.0.28.
+  testing the button. `collectstatic` ran with the 0.0.27 static files (`cleared.js`; 0.0.28 adds none). `aa_dev` is at 0013 (applied 2026-11-17); its snapshot was not rebuilt since 0.0.28.
 
 ## Traps
 
+- A test class borrowing another class's `setUp` (`setUp =
+  Other.setUp`) fails on the zero-argument `super()` inside it: move the
+  fixture part into a method (`add_donation`, `add_audit` in
+  `test_views`) and borrow that. Importing a TestCase class into another
+  test module runs its tests a second time: reach it through the module
+  (`test_views.TestEvidence.add_donation`).
+- Another AA app of this machine adding a plain short msgid (eos-tax's
+  "Reason") can turn a translation test red without a change here: give
+  ours the `eos-spy-network` context, the glossary stays keyed by msgid.
 - The Edit tool refuses a file under `\\wsl.localhost\...` that was only
   seen through Grep: Read it (the lines are enough) first.
 - A new test is cheapest checked against the old code by writing it
