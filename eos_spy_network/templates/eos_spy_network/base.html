@@ -7,8 +7,13 @@
 
 {% block header_nav_collapse_left %}
     {# `nav` names the current tab #}
-    {% if perms.eos_spy_network.view_suspects %}
-        {% url "eos_spy_network:corporations" as markers_url %}
+    {% if perms.eos_spy_network.view_suspects or perms.eos_spy_network.view_own_corporation %}
+        {# the index sends a CEO to their own Corporation: the tiles of the Alliance are not theirs #}
+        {% if perms.eos_spy_network.view_suspects %}
+            {% url "eos_spy_network:corporations" as markers_url %}
+        {% else %}
+            {% url "eos_spy_network:index" as markers_url %}
+        {% endif %}
         {% translate "Markers" as markers_title %}
         {% include "eos_spy_network/partials/nav-item.html" with nav_url=markers_url nav_title=markers_title nav_key="markers" %}
     {% endif %}

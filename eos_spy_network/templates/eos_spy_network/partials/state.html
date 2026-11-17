@@ -24,7 +24,7 @@
                     <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{ progress.percent }}%" data-eos-spy-network-progress-bar>{{ progress.percent }} %</div>
                 </div>
             </div>
-        {% else %}
+        {% elif perms.eos_spy_network.view_suspects %}
             <form method="post" action="{% url 'eos_spy_network:rebuild' %}" class="d-inline ms-auto">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">

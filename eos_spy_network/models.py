@@ -33,6 +33,7 @@ class General(models.Model):
             ("view_suspects", "Can view the suspects per Corporation"),
             ("view_evidence", "Can view the evidence: mail headers and subjects, wallet and contracts"),
             ("manage_settings", "Can change the Alliance, the contact sources and the thresholds"),
+            ("view_own_corporation", "Can view the suspects and evidence of their main's own Corporation"),
         )
 
 

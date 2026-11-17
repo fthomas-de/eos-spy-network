@@ -306,6 +306,9 @@ class TestEvidence(SuspectPageTestCase):
 
     def setUp(self):
         super().setUp()
+        self.add_donation()
+
+    def add_donation(self):
         from corptools.models import CharacterAudit, CharacterWalletJournalEntry
 
         main = EveCharacter.objects.get(pk=self.suspect_main.pk)
@@ -688,6 +691,9 @@ class TestContractDetails(SuspectPageTestCase):
 
     def setUp(self):
         super().setUp()
+        self.add_audit()
+
+    def add_audit(self):
         from corptools.models import CharacterAudit
 
         from .test_markers import eve_name

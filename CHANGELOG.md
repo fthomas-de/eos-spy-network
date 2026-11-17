@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.29] - 2026-11-17
+
+### Added
+
+- Permission `view_own_corporation` for Corporation CEOs (migration 0013,
+  which only adds the permission). Every other permission showed the whole
+  Alliance, so a CEO could only be given all Corporations or none. It
+  opens the Corporation page of the user's main's Corporation - with its
+  evidence (mail, ISK and contract counterparts, the contract popup) - and
+  nothing else: another Corporation's page answers 404, and the tiles of
+  the Alliance, the network pages, *Recalculate*, the settings and the
+  note and *Cleared* controls stay closed. The start page and the
+  *Markers* menu lead straight to that Corporation, the menu badge counts
+  its mains only. Held together with `view_suspects`, it only adds the
+  evidence of the own Corporation. The app assigns it to nobody: the admin
+  gives it to a CEO group or state.
+
+### Fixed
+
+- The *Reason* column of the blue kill tables read "Reason" in Chinese
+  instead of ours: eos-tax now ships a plain "Reason" left in English, and
+  being earlier in `INSTALLED_APPS` its catalogue won. The heading carries
+  the `eos-spy-network` context, like the other short words another app
+  translates differently.
+
 ## [0.0.28] - 2026-11-13
 
 ### Added

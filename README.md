@@ -227,9 +227,10 @@ know yet is shown by its ID.
 | `eos_spy_network.view_suspects` | the Corporations and their mains with markers; the *Recalculate* button |
 | `eos_spy_network.view_evidence` | the counterparts behind the mail, ISK and contract markers; together with `view_suspects` the network pages (later: mail headers and subjects, wallet entries, contracts) |
 | `eos_spy_network.manage_settings` | the settings page; its tabs *Blue kills*, *Friendly to hostiles* and *Log* only together with `view_suspects` |
+| `eos_spy_network.view_own_corporation` | for CEOs: the Corporation page of the user's main's Corporation with its evidence (mail, ISK and contract counterparts); no other Corporation, no network pages, no *Recalculate*, no notes or *Cleared* ticks. Together with `view_suspects` it adds the evidence of the own Corporation |
 
-The menu entry shows for anyone holding `view_suspects` or
-`manage_settings`; `view_evidence` alone opens no page.
+The menu entry shows for anyone holding `view_suspects`, `manage_settings`
+or `view_own_corporation`; `view_evidence` alone opens no page.
 
 ## Installation
 

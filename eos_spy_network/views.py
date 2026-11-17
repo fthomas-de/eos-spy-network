@@ -4,6 +4,7 @@ from datetime import date
 from kombu.exceptions import OperationalError
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect, render
@@ -26,9 +27,13 @@ from .permissions import (
     APP_PERMISSIONS,
     MANAGE_SETTINGS,
     VIEW_EVIDENCE,
+    VIEW_OWN_CORPORATION,
     VIEW_SUSPECTS,
     all_permissions_required,
     any_permission_required,
+    own_corporation_id,
+    sees_corporation,
+    sees_evidence,
 )
 from .tasks import update_snapshot
 
@@ -74,9 +79,12 @@ def _render(request, template, context=None, nav=None, started=None):
 @any_permission_required(*APP_PERMISSIONS)
 def index(request):
     # the first page the viewer may open
-    if not request.user.has_perm(VIEW_SUSPECTS) and request.user.has_perm(MANAGE_SETTINGS):
-        return redirect("eos_spy_network:settings")
-    return redirect("eos_spy_network:corporations")
+    if request.user.has_perm(VIEW_SUSPECTS):
+        return redirect("eos_spy_network:corporations")
+    corporation_id = own_corporation_id(request.user)
+    if corporation_id is not None:
+        return redirect("eos_spy_network:corporation", corporation_id)
+    return redirect("eos_spy_network:settings")
 
 
 def _notices(config) -> dict:
@@ -119,10 +127,15 @@ def _report(config) -> snapshots.Report | None:
     return snapshots.Report(current, disabled, reviews, findings)
 
 
-def open_mains() -> int:
-    """Mains with a marker not switched off nor cleared, as the Corporation pages list them; the menu badge."""
+def open_mains(corporation_id=None) -> int:
+    """Mains with a marker not switched off nor cleared, as the Corporation pages list them; the menu badge.
+
+    ``corporation_id`` counts that Corporation only, for a CEO who sees no other.
+    """
     report = _report(SpyConfiguration.get_solo())
-    return sum(len(tile.suspects) for tile in report.tiles) if report else 0
+    if report is None:
+        return 0
+    return sum(len(tile.suspects) for tile in report.tiles if corporation_id in (None, tile.id))
 
 
 def _victim_mains(victim_ids) -> dict:
@@ -461,9 +474,11 @@ def corporations(request):
     )
 
 
-@any_permission_required(VIEW_SUSPECTS)
+@any_permission_required(VIEW_SUSPECTS, VIEW_OWN_CORPORATION)
 def corporation(request, corporation_id):
     started = time.perf_counter()
+    if not sees_corporation(request.user, corporation_id):
+        raise Http404
     config = SpyConfiguration.get_solo()
     report = _report(config)
     # a Corporation outside the configured Alliance has no page
@@ -488,6 +503,7 @@ def corporation(request, corporation_id):
             "note_presets": config.note_presets,
             "switched_off": _switched_off(config),
             "killmails_missing": _killmails_missing(config),
+            "evidence": sees_evidence(request.user, corporation_id),
         },
         NAV_MARKERS,
         started,
@@ -526,7 +542,8 @@ def network_corporation(request, corporation_id):
     )
 
 
-@all_permissions_required(VIEW_SUSPECTS, VIEW_EVIDENCE)
+@login_required
+@user_passes_test(lambda user: user.has_perms((VIEW_SUSPECTS, VIEW_EVIDENCE)) or user.has_perm(VIEW_OWN_CORPORATION))
 def contracts(request, character_id, counterpart_id):
     """The popup of a contract payment: the contracts of one own character with one counterpart, as HTML."""
     if not corptools_installed():
@@ -538,6 +555,7 @@ def contracts(request, character_id, counterpart_id):
         (row.get("character_id"), row.get("counterpart_id")) == (character_id, counterpart_id)
         and row.get("contract_payments")
         for tile in report.tiles
+        if sees_evidence(request.user, tile.id)
         for suspect in tile.suspects
         if WALLET in suspect.markers
         for row in suspect.markers[WALLET].rows
@@ -584,7 +602,8 @@ def rebuild(request):
     return redirect(target or "eos_spy_network:index")
 
 
-@any_permission_required(VIEW_SUSPECTS)
+# the CEO's Corporation page shows the bar too, without the button that starts a run
+@any_permission_required(VIEW_SUSPECTS, VIEW_OWN_CORPORATION)
 def rebuild_progress(request):
     """The running step for progress.js; ``running`` false once the task is done."""
     state = progress.current()

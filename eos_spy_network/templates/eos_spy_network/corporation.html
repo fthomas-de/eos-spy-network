@@ -28,9 +28,11 @@
                         {% translate "Mains with markers" %}: {{ tile.suspects|length }}
                     </div>
                 </div>
-                <a href="{% url 'eos_spy_network:corporations' %}" class="btn btn-sm btn-secondary flex-shrink-0">
-                    {% translate "Back" %}
-                </a>
+                {% if perms.eos_spy_network.view_suspects %}
+                    <a href="{% url 'eos_spy_network:corporations' %}" class="btn btn-sm btn-secondary flex-shrink-0">
+                        {% translate "Back" %}
+                    </a>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -69,7 +71,7 @@
                                         {% for marker in suspect.marker_list %}
                                             <div class="mb-1">
                                                 <span class="badge text-bg-info text-wrap" title="{{ marker.description }}">{{ marker.label }}{% if marker.count > 1 %} ({{ marker.count }}){% endif %}</span>
-                                                {# mails, ISK and contracts are evidence: their counterparts only with view_evidence #}
+                                                {# mails, ISK and contracts are evidence: their counterparts only with view_evidence or in the CEO's own Corporation #}
                                                 {% if marker.joins %}
                                                     {# the Corporations joined, one per line in the tooltip #}
                                                     <span class="small text-break">
@@ -81,10 +83,10 @@
                                                 {% elif marker.contacts %}
                                                     {% include "eos_spy_network/partials/contacts.html" %}
                                                 {% elif marker.dealings %}
-                                                    {% if perms.eos_spy_network.view_evidence %}
+                                                    {% if evidence %}
                                                         {% include "eos_spy_network/partials/dealings.html" %}
                                                     {% endif %}
-                                                {% elif not marker.is_evidence or perms.eos_spy_network.view_evidence %}
+                                                {% elif not marker.is_evidence or evidence %}
                                                     <span class="small text-break">{{ marker.sorted_details|join:", " }}</span>
                                                 {% endif %}
                                             </div>
@@ -164,7 +166,7 @@
         </div>
     {% endif %}
 
-    {% if perms.eos_spy_network.view_evidence %}
+    {% if evidence %}
         {# one popup for every contract payment; contracts.js fills it #}
         <div class="modal fade" tabindex="-1" aria-hidden="true" data-eos-spy-network-contracts-modal>
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
