@@ -4,11 +4,13 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-19 (0.0.32).
+Last updated 2026-11-19 (0.0.33).
 
 ## State
 
-- Version: `0.0.32`, 2026-11-19 (see `CHANGELOG.md`): marker *Capital in
+- Version: `0.0.33`, 2026-11-19: *View details* button in the capital contracts
+  table (see the first point under Open; no migration, no static file, no new
+  message). 0.0.32 (see `CHANGELOG.md`): marker *Capital in
   contract* (`markers._check_capital_contracts`, kind `capital_contracts`,
   `partials/capital-contracts.html`), setting `capital_ship_groups`
   (migration 0015, applied to `aa_dev`; group names from eve_sde's
@@ -156,7 +158,7 @@ Last updated 2026-11-19 (0.0.32).
 
 ## Open
 
-- Capital contract popup (unreleased, user's plan): `views.capital_contract`
+- Capital contract popup (0.0.33, user's plan): `views.capital_contract`
   (`capital-contract/<id>/`) renders `contract_details.contract(id)` through the
   ISK popup's template and `contracts.js`; guarded by the capital marker rows
   of the viewer's tiles. 7 tests in `test_views.TestCapitalContractDetails`
