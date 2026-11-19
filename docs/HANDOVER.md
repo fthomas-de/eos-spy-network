@@ -4,11 +4,28 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-19 (0.0.31).
+Last updated 2026-11-19 (0.0.32).
 
 ## State
 
-- Version: `0.0.31`, 2026-11-19 (see `CHANGELOG.md`), both parts from the
+- Version: `0.0.32`, 2026-11-19 (see `CHANGELOG.md`): marker *Capital in
+  contract* (`markers._check_capital_contracts`, kind `capital_contracts`,
+  `partials/capital-contracts.html`), setting `capital_ship_groups`
+  (migration 0015, applied to `aa_dev`; group names from eve_sde's
+  `ItemGroup`, category 6, default the 8 groups below), and blue kill days
+  with every kill cleared folded on the Corporation page (Bootstrap
+  collapse on the date button, `kills.html`). Rules (user): `outstanding`
+  and `date_expired` in the future, `public`, only offered ships
+  (`is_included`), issuer on the same account, `for_corporation` counts,
+  no hostile, no time frame, no note/Cleared. Default groups: Dreadnought,
+  Lancer Dreadnought, Carrier, Command Carrier, Force Auxiliary,
+  Supercarrier, Titan, Capital Industrial Ship (Freighter/Jump Freighter
+  selectable, not preset). eos-auth-monitor shows the marker via `api.py`
+  untouched. Messages "Location" and "Alts of mains in other Corporations"
+  got the `eos-spy-network` context (clash with another app). Tests: 394
+  without translation tests, all green; each new test was checked red
+  (conditions removed one by one, old `kills.html`/`forms.py`).
+- 0.0.31 (earlier today), both parts from the
   permission review of all eos-* apps (coordination session; its notes in
   the side-session notes folder).
 - 0.0.31, part 1: permission `view_evidence` removed (user: on prod nobody holds
@@ -41,7 +58,7 @@ Last updated 2026-11-19 (0.0.31).
   twice now (the subquery). Glossary: 5 new messages, translated with
   `tools/translate.py` at the commit (not reviewed by the user).
   README: the group-not-state hint for `view_own_corporation`.
-- Tests: 372 without translation tests plus 3 translation tests, all green
+- Tests (0.0.31): 372 without translation tests plus 3 translation tests, all green
   in the dev instance at 0.0.31 (fresh test database).
 - Before (0.0.30): `api.character_markers(*, corporation_id=None)`
   (keyword-only): only the snapshot entry whose `id` matches, the page's
@@ -104,7 +121,7 @@ Last updated 2026-11-19 (0.0.31).
   text, legend from Bootstrap classes, only the hostile Alliance keeps
   `#8b1a1a` in `network.css`.
 - What the app does today: settings (Alliance, hostile threshold, blue
-  threshold, minimum kill value, ignored ships, note buttons, Corporation changes per year, time frame,
+  threshold, minimum kill value, ignored ships, capital ship groups, note buttons, Corporation changes per year, time frame,
   ignored wallet entry types; contact sources; marker switches; every
   stored blue kill and every friendly hostile contact with note and Cleared
   tick, an admin clears without a note); Markers: the Corporations as
@@ -135,10 +152,18 @@ Last updated 2026-11-19 (0.0.31).
 | Network | `view_suspects` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
 | Corporation (CEO) | `view_own_corporation` | only the main's own Corporation, with its evidence, its visitors' whole accounts (no link to their mains' pages) and the contract popup; notes and ticks read-only; no Back, no Recalculate; any other Corporation 404 |
-| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles, Log) | tabs: Alliance (hostile and blue threshold, minimum kill value, ignored ships, note buttons, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
+| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles, Log) | tabs: Alliance (hostile and blue threshold, minimum kill value, ignored ships, capital ship groups, note buttons, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
 
 ## Open
 
+- 0.0.32 on prod: run migration 0015, recalculate once. Not seen in a
+  browser: `aa_dev` has no open public contract, so the capital table was
+  only rendered in tests; the folded `<tr>` rows (collapse animation on
+  table rows, light and dark) are unseen - fallback would be class toggling
+  in `kills.js` (ask the user first). The group choices need eve_sde
+  installed (else only stored names). A contract with two item rows of the
+  same ship type shows the last quantity only (left as is). A tick reloads
+  the page, so a day just completed shows folded afterwards.
 - 0.0.31 on prod: run migration 0014, then recalculate once (an older
   snapshot has no visitors; the pages then show none, without an error).
   Release together with eos-auth-monitor dropping `view_evidence` from its
@@ -443,7 +468,7 @@ Last updated 2026-11-19 (0.0.31).
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0014
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0015
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
