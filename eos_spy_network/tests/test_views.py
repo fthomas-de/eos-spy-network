@@ -841,7 +841,6 @@ class TestCapitalContractDetails(SuspectPageTestCase):
     """The popup behind a row of the capital marker."""
 
     GROUPS = test_markers.TestCapitalContracts.GROUPS
-    add_audit = TestContractDetails.add_audit
     ship = test_markers.TestCapitalContracts.ship
     add_offer = test_markers.TestCapitalContracts.add_offer
 
@@ -850,7 +849,7 @@ class TestCapitalContractDetails(SuspectPageTestCase):
         from eve_sde.models import ItemCategory
 
         ItemCategory.objects.create(id=6, name="Ship", published=True)
-        self.add_audit()
+        self.main = EveCharacter.objects.get(pk=self.suspect_main.pk)
         self.client.force_login(make_user("lead", VIEW_SUSPECTS))
 
     def popup(self, contract_id):
@@ -889,17 +888,27 @@ class TestCapitalContractDetails(SuspectPageTestCase):
 
         self.assertContains(self.client.get(self.popup(5)), "Contract 5")
 
-    def test_should_say_when_corptools_no_longer_holds_the_contract(self):
-        from corptools.models import Contract
+    def test_should_say_when_the_sweep_no_longer_holds_the_contract(self):
+        from eos_spy_network.models import CapitalContract
 
         self.add_offer(5)
         snapshot.update()
-        Contract.objects.all().delete()
+        CapitalContract.objects.all().delete()
 
         response = self.client.get(self.popup(5))
 
         self.assertContains(response, "Contract 5")
         self.assertContains(response, "has not stored this contract")
+
+    def test_should_show_issuer_corporation_and_place(self):
+        self.add_offer(5, location="Delve, Station 7")
+        snapshot.update()
+
+        response = self.client.get(self.popup(5))
+
+        self.assertContains(response, self.main.character_name)
+        self.assertContains(response, "Corp 2001")
+        self.assertContains(response, "Delve, Station 7")
 
     def test_should_offer_the_button_on_the_corporation_page(self):
         self.add_offer(5)

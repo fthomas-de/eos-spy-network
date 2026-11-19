@@ -74,11 +74,15 @@ every one with a standing below a configurable value.
   - *Contracts with hostiles*: a hostile issued, was assigned or accepted the
     contract, or its issuer is in a hostile Corporation (`Contract`)
   - *Capital in contract*: a character of the account offers a ship of one
-    of the chosen capital groups in a contract that is `outstanding`, not
-    yet expired (ESI leaves an expired one on `outstanding`) and public
-    (`Contract` and `ContractItem`). Only ships the contract offers count,
-    not those a want-to-buy asks for; a contract made in the name of the
-    Corporation counts too. It counts once per account and needs no
+    of the chosen capital groups in an open public contract. ESI lists these
+    per region; the daily sweep (`tasks.sweep_capital_contracts`) keeps those
+    issued by a Corporation of the Alliance, with their items, and drops one
+    that is no longer listed or has expired. It needs neither corptools nor a
+    token, so the data is up to one day old; the expiry is checked on every
+    calculation. Only ships the contract offers count, not those a
+    want-to-buy asks for. The location is the region and the station; a
+    structure's name needs a token, so it shows as its ID. A contract of a
+    character no account owns has no main and is not marked. It needs no
     hostile and no time frame
   - *Blue kills*: a character was among the attackers of a killmail whose
     victim is in the Alliance (awox), or whose victim, its Corporation or
@@ -293,6 +297,16 @@ admin, assigned but without effect, until an admin deletes it.
    CELERYBEAT_SCHEDULE["eos_spy_network_update_snapshot"] = {
        "task": "eos_spy_network.tasks.update_snapshot",
        "schedule": crontab(minute="30", hour="*/4"),
+   }
+   ```
+
+   *Capital in contract* reads its own table, which a daily sweep of ESI's
+   public contracts fills (about 150 to 400 requests, no token):
+
+   ```python
+   CELERYBEAT_SCHEDULE["eos_spy_network_sweep_capital_contracts"] = {
+       "task": "eos_spy_network.tasks.sweep_capital_contracts",
+       "schedule": crontab(minute="15", hour="3"),
    }
    ```
 

@@ -8,6 +8,24 @@ Last updated 2026-11-19 (0.0.33).
 
 ## State
 
+- Unreleased (user, 2026-11-19): *Capital in contract* no longer reads
+  corptools. `capital_sweep.sweep()` (task `sweep_capital_contracts`, daily
+  beat entry in the README, not yet added to the dev instance's
+  `local.py`) walks `/contracts/public/{region}/` for every region below
+  11000000, keeps `item_exchange`/`auction` contracts of the Alliance's
+  Corporations (`issuer_corporation_id`, from Auth's `EveCorporationInfo`)
+  and fetches the items once into `CapitalContract`/`CapitalContractItem`
+  (migration 0016, applied to `aa_dev`). The marker joins the table with the
+  account's characters; the popup (`contract_details.contract`) renders it
+  through the ISK popup's template with nested dicts. Own `ESIClientProvider`
+  in `capital_sweep.py` (Alliance Auth's lists a fixed set of operations).
+  Run once against the real ESI on `aa_dev`: 24.6 s, 7 contracts of the
+  Alliance, none a capital. Location is region + station name (eve_sde
+  `NPCStation`), a structure shows as its ID (user). Tests: new
+  `test_capital_sweep`, the capital tests in `test_markers`/`test_views`
+  rewritten; not yet checked red one by one. Not run: the whole suite, the
+  page in a browser. No new `gettext` string. Version stays 0.0.33 until
+  `/commit`.
 - Version: `0.0.33`, 2026-11-19: *View details* button in the capital contracts
   table (see the first point under Open; no migration, no static file, no new
   message). 0.0.32 (see `CHANGELOG.md`): marker *Capital in
@@ -339,7 +357,9 @@ Last updated 2026-11-19 (0.0.33).
 - Recalculation: stored in the database by a Celery task (not a cache, not
   live), started by the button, by saving the settings, or by a
   `CELERYBEAT_SCHEDULE` entry the admin adds (README).
-- ESI (changed 2026-10-09): the markers make no ESI call - a counterpart
+- ESI (changed 2026-10-09; the exception since 2026-11-19: the capital sweep
+  asks ESI's public contracts once a day, the marker itself still does not):
+  the markers make no ESI call - a counterpart
   there is hostile only as a hostile contact itself or a member Auth knows.
   The network task looks up each counterpart's Corporation and Alliance:
   Auth and corptools first, ESI's public endpoints only for the rest

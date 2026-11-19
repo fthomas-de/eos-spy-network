@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.34] - 2026-11-19
+
+### Changed
+
+- *Capital in contract* no longer reads corptools. A daily sweep
+  (`tasks.sweep_capital_contracts`, `capital_sweep.py`) asks ESI's public
+  contracts of every region of known space, keeps those issued by a
+  Corporation of the Alliance and fetches the items of each once, into the
+  new tables `CapitalContract` and `CapitalContractItem` (migration 0016).
+  The marker reads them, so it also finds contracts of members without a
+  token or a Character Audit. The sweep needs no token; the admin adds the
+  beat entry from the README. The data is up to a day old, the expiry is
+  checked on every calculation, and a contract no longer listed is dropped
+  when every region answered. The popup behind *View details* reads the
+  same table. The place is the region and the station; a structure shows as
+  its ID.
+- The capital ship groups setting and the marker's rules are unchanged;
+  `for_corporation` no longer matters, the issuer's Corporation does.
+
 ## [0.0.33] - 2026-11-19
 
 ### Added

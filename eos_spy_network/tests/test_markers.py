@@ -20,7 +20,7 @@ from allianceauth.eveonline.models import EveCorporationInfo
 
 from eos_spy_network import markers, snapshot
 from eos_spy_network.hostiles import hostile_index
-from eos_spy_network.models import ContactSource
+from eos_spy_network.models import CapitalContract, CapitalContractItem, ContactSource
 
 from .base import ALLIANCE_ID, SpyTestCase, add_contact, add_token, configure, make_alliance, make_character, make_corporation, make_user
 
@@ -635,28 +635,17 @@ class TestCapitalContracts(MarkerTestCase):
         return ItemType.objects.get_or_create(id=group.id * 100, defaults={"name": name, "group": group})[0]
 
     def add_offer(
-        self, contract_id=1, ship="Naglfar", group="Dreadnought", issuer_id=None, audit=None, days=3,
-        included=True, quantity=1, **fields
+        self, contract_id=1, ship="Naglfar", group="Dreadnought", issuer_id=None, days=3, included=True, quantity=1,
+        **fields
     ):
-        from corptools.models import ContractItem
-
-        audit = audit or self.audit
-        issuer_id = issuer_id or self.main.character_id
         now = timezone.now()
-        defaults = {
-            "for_corporation": False, "status": "outstanding", "availability": "public",
-            "contract_type": "item_exchange", "title": "", "price": 5_000_000_000,
-        }
-        contract = Contract.objects.create(
-            id=f"{audit.pk}-{contract_id}", contract_id=contract_id, character=audit,
-            issuer_id=issuer_id, issuer_name=eve_name(issuer_id),
-            issuer_corporation_id=2001, issuer_corporation_name=eve_name(2001, "corporation"),
-            assignee_id=0, assignee_name=eve_name(0), acceptor_id=0, acceptor_name=eve_name(0),
+        defaults = {"contract_type": "item_exchange", "title": "", "price": 5_000_000_000, "location": ""}
+        contract = CapitalContract.objects.create(
+            contract_id=contract_id, issuer_id=issuer_id or self.main.character_id, issuer_corporation_id=2001,
             date_expired=now + timedelta(days=days), date_issued=now - timedelta(days=1), **{**defaults, **fields},
         )
-        ContractItem.objects.create(
-            contract=contract, is_included=included, is_singleton=True, quantity=quantity,
-            record_id=contract_id, type_name=self.ship(ship, group),
+        CapitalContractItem.objects.create(
+            contract=contract, type=self.ship(ship, group), quantity=quantity, is_included=included
         )
         return contract
 
@@ -695,19 +684,8 @@ class TestCapitalContracts(MarkerTestCase):
 
         self.assertEqual([row["contract_id"] for row in self.rows()], [2, 1])
 
-    def test_should_not_mark_a_finished_contract(self):
-        self.add_offer(status="finished")
-
-        self.assertEqual(self.kinds(), set())
-
-    def test_should_not_mark_an_expired_contract_esi_left_outstanding(self):
+    def test_should_not_mark_a_contract_that_expired_since_the_sweep(self):
         self.add_offer(days=-1)
-
-        self.assertEqual(self.kinds(), set())
-
-    def test_should_not_mark_a_contract_that_is_not_public(self):
-        for number, availability in enumerate(("personal", "corporation", "alliance"), start=1):
-            self.add_offer(number, availability=availability)
 
         self.assertEqual(self.kinds(), set())
 
@@ -734,42 +712,36 @@ class TestCapitalContracts(MarkerTestCase):
 
         self.assertEqual(self.kinds(), set())
 
-    def test_should_mark_nothing_without_corptools(self):
+    def test_should_mark_without_corptools(self):
         self.add_offer()
 
         with patch(NOT_INSTALLED, return_value=False):
-            self.assertEqual(self.kinds(), set())
+            self.assertEqual(self.kinds(), {markers.CAPITAL_CONTRACTS})
 
-    def test_should_mark_a_contract_in_the_name_of_the_corporation(self):
-        self.add_offer(for_corporation=True)
-
-        self.assertEqual(self.kinds(), {markers.CAPITAL_CONTRACTS})
-
-    def test_should_not_mark_a_contract_of_a_stranger_seen_by_an_own_character(self):
+    def test_should_not_mark_a_contract_of_a_stranger(self):
         self.add_offer(issuer_id=OUTSIDER)
 
         self.assertEqual(self.kinds(), set())
 
-    def test_should_not_mark_the_account_that_only_sees_the_contract_of_another_account(self):
+    def test_should_mark_the_account_of_the_issuer_only(self):
         other = make_user("other")
         self.add_offer(issuer_id=other.profile.main_character.character_id)
 
         (tile,) = markers.corporation_tiles(corporation_id=2001)
 
-        # the issuer's account has no audit holding it, ours is not the issuer's
-        self.assertEqual([suspect.user_id for suspect in tile.suspects], [])
+        self.assertEqual([suspect.user_id for suspect in tile.suspects], [other.pk])
 
-    def test_should_count_a_contract_once_however_many_own_characters_hold_it(self):
-        alt = self.add_alt(5001)
-        self.add_offer(1)
-        self.add_offer(1, audit=CharacterAudit.objects.create(character=alt))
+    def test_should_add_up_two_item_rows_of_one_ship_in_a_contract(self):
+        contract = self.add_offer(quantity=1)
+        CapitalContractItem.objects.create(contract=contract, type=self.ship("Naglfar", "Dreadnought"), quantity=2, is_included=True)
 
-        self.assertEqual(len(self.rows()), 1)
-        self.assertEqual(self.suspect().markers[markers.CAPITAL_CONTRACTS].count, 1)
+        (row,) = self.rows()
+
+        self.assertEqual(row["ships"], ["3x Naglfar"])
 
     def test_should_mark_a_contract_of_an_alt(self):
         alt = self.add_alt(5001)
-        self.add_offer(issuer_id=alt.character_id, audit=CharacterAudit.objects.create(character=alt))
+        self.add_offer(issuer_id=alt.character_id)
 
         (row,) = self.rows()
 

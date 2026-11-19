@@ -8,7 +8,10 @@ live from corptools, once per click, never stored in the snapshot.
 
 from django.db.models import Q
 
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
+
 from .markers import CONTRACT_REF_TYPES, character_audits
+from .models import CapitalContract
 
 
 def _with_details(queryset):
@@ -23,15 +26,37 @@ def _with_details(queryset):
 
 
 def contract(contract_id: int) -> list[dict]:
-    """One contract by ID, in the shape of ``details()`` so the popup template renders it unchanged.
+    """One capital contract by ID, in the shape of ``details()`` so the popup template renders it unchanged.
 
-    The same contract lies at every character that can see it; any copy will do. A contract corptools
-    no longer holds comes back with ``contract`` None.
+    It comes from the sweep's own table, not from corptools. The template only looks attributes up, and a
+    dict answers the same lookups. A contract the sweep dropped since comes back with ``contract`` None.
     """
-    from corptools.models import Contract
-
-    stored = _with_details(Contract.objects.filter(contract_id=contract_id)).first()
-    return [{"contract_id": contract_id, "contract": stored, "payments": []}]
+    stored = CapitalContract.objects.filter(contract_id=contract_id).first()
+    if stored is None:
+        return [{"contract_id": contract_id, "contract": None, "payments": []}]
+    issuer = EveCharacter.objects.filter(character_id=stored.issuer_id).values_list("character_name", flat=True).first()
+    corporation = (
+        EveCorporationInfo.objects.filter(corporation_id=stored.issuer_corporation_id)
+        .values_list("corporation_name", flat=True)
+        .first()
+    )
+    shown = {
+        "contract_type": stored.contract_type,
+        "status": "outstanding",
+        "title": stored.title,
+        "issuer_name": {"name": issuer},
+        "issuer_corporation_name": {"name": corporation},
+        "date_issued": stored.date_issued,
+        "price": stored.price,
+        "start_location_name": {"location_name": stored.location} if stored.location else None,
+        "contractitem_set": {
+            "all": [
+                {"type_name": {"name": item.type.name}, "quantity": item.quantity, "is_included": item.is_included}
+                for item in stored.items.select_related("type")
+            ]
+        },
+    }
+    return [{"contract_id": contract_id, "contract": shown, "payments": []}]
 
 
 def details(character_id: int, counterpart_id: int, since=None, ignored=()) -> list[dict]:

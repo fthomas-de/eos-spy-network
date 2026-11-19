@@ -587,8 +587,6 @@ def contracts(request, character_id, counterpart_id):
 @any_permission_required(VIEW_SUSPECTS, VIEW_OWN_CORPORATION)
 def capital_contract(request, contract_id):
     """The popup of one contract of the capital marker, as HTML."""
-    if not corptools_installed():
-        raise Http404
     report = _report(SpyConfiguration.get_solo())
     # only a contract the marker lists on a tile the viewer sees: any other contract is not ours to show
     offered = report is not None and any(

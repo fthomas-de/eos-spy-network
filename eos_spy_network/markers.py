@@ -27,7 +27,7 @@ from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from . import killmails
 from .hostiles import HostileIndex, blue_entities, hostile_index
-from .models import BlueKill, SpyConfiguration
+from .models import BlueKill, CapitalContractItem, SpyConfiguration
 
 MEMBERSHIP = "membership"
 CORP_CHANGES = "corp_changes"
@@ -333,7 +333,7 @@ def corporation_tiles(
         step("kills")
         _check_kills(accounts, config, members.characters)
     # like the kills, no hostile needed: the contract itself is the finding
-    if accounts and corptools_installed():
+    if accounts:
         step("capitals")
         _check_capital_contracts(accounts, config, members.characters)
 
@@ -679,27 +679,19 @@ def _check_kills(accounts, config, characters):
 def _check_capital_contracts(accounts, config, characters):
     """Open public contracts in which an own character offers a ship of a chosen capital group.
 
-    Open is ``outstanding`` and not yet expired: ESI leaves an expired contract on ``outstanding``. Only
-    offered ships count (``is_included``), not those a want-to-buy asks for, and only the issuer's own
-    account: the same contract lies at every character that can see it. ``for_corporation`` makes no
-    difference. A contract counts once per account.
+    The contracts come from ``capital_sweep``, which stores only open public ones; one that expired since
+    is left out here. Only offered ships count (``is_included``), not those a want-to-buy asks for, and
+    only a contract of a character of an account (a contract has one issuer, so it counts once).
     """
-    from corptools.models import ContractItem
-
     owner = {character_id: user_id for user_id, character_id, *_rest in characters}
     names = {character_id: name for _user_id, character_id, name, *_rest in characters}
-    audits = character_audits(list(owner))
-    items = ContractItem.objects.filter(
-        contract__character_id__in=list(audits),
+    items = CapitalContractItem.objects.filter(
         contract__issuer_id__in=list(owner),
-        contract__status="outstanding",
-        contract__availability="public",
         contract__date_expired__gt=timezone.now(),
         is_included=True,
-        type_name__group__name__in=config.capital_ship_groups,
+        type__group__name__in=config.capital_ship_groups,
     ).values_list(
-        "contract__contract_id",
-        "contract__character_id",
+        "contract_id",
         "contract__issuer_id",
         "contract__contract_type",
         "contract__price",
@@ -707,16 +699,13 @@ def _check_capital_contracts(accounts, config, characters):
         "contract__date_issued",
         "contract__date_expired",
         "contract__title",
-        "contract__start_location_name__location_name",
-        "type_name__name",
+        "contract__location",
+        "type__name",
         "quantity",
     )
     contracts = {}  # (account, contract ID) -> the row, its ships still to be sorted
-    for contract_id, audit_id, issuer_id, kind, price, buyout, issued, expires, title, location, ship, quantity in items:
+    for contract_id, issuer_id, kind, price, buyout, issued, expires, title, location, ship, quantity in items:
         user_id = owner[issuer_id]
-        # the contract lies at a character of another account: only its issuer's account offers it
-        if owner[audits[audit_id]] != user_id:
-            continue
         row = contracts.setdefault(
             (user_id, contract_id),
             {
@@ -733,8 +722,8 @@ def _check_capital_contracts(accounts, config, characters):
                 "location": location or "",
             },
         )
-        # the same item row of one contract at two own characters adds up only once
-        row["ships"][ship] = quantity
+        # two item rows of one ship type in a contract add up
+        row["ships"][ship] = row["ships"].get(ship, 0) + quantity
     for (user_id, _contract_id), row in sorted(contracts.items(), key=lambda item: item[1]["expires"]):
         marker = accounts[user_id].markers.setdefault(CAPITAL_CONTRACTS, Marker(CAPITAL_CONTRACTS))
         ships = row["ships"]

@@ -320,3 +320,40 @@ class ContactSource(models.Model):
 
     def __str__(self):
         return f"{self.get_kind_display()} {self.name or self.entity_id}"
+
+
+class CapitalContract(models.Model):
+    """An open public contract of an Alliance Corporation, found by the daily sweep of the public contracts.
+
+    A row stays only while the contract is listed and not expired; its items never change, so they are
+    fetched once.
+    """
+
+    contract_id = models.PositiveBigIntegerField(primary_key=True)
+    issuer_id = models.PositiveBigIntegerField(db_index=True)
+    issuer_corporation_id = models.PositiveBigIntegerField()
+    contract_type = models.CharField(max_length=16)
+    title = models.CharField(max_length=254, blank=True)
+    price = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
+    buyout = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
+    date_issued = models.DateTimeField()
+    date_expired = models.DateTimeField()
+    # region and station name; a structure has no public name, it shows as its ID
+    location = models.CharField(max_length=254, blank=True)
+
+    class Meta:
+        default_permissions = ()
+
+    def __str__(self):
+        return f"Contract {self.contract_id} of {self.issuer_id}"
+
+
+class CapitalContractItem(models.Model):
+    contract = models.ForeignKey(CapitalContract, on_delete=models.CASCADE, related_name="items")
+    # no database constraint: an SDE that lacks a new type must not stop the sweep, the row only never matches
+    type = models.ForeignKey("eve_sde.ItemType", on_delete=models.DO_NOTHING, db_constraint=False, related_name="+")
+    quantity = models.PositiveIntegerField()
+    is_included = models.BooleanField()
+
+    class Meta:
+        default_permissions = ()
