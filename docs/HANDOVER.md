@@ -4,47 +4,40 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-19 (0.0.33).
+Last updated 2026-11-19 (0.0.34).
 
 ## State
 
-- Unreleased (user, 2026-11-19): *Capital in contract* no longer reads
-  corptools. `capital_sweep.sweep()` (task `sweep_capital_contracts`, daily
-  beat entry in the README, not yet added to the dev instance's
-  `local.py`) walks `/contracts/public/{region}/` for every region below
-  11000000, keeps `item_exchange`/`auction` contracts of the Alliance's
-  Corporations (`issuer_corporation_id`, from Auth's `EveCorporationInfo`)
-  and fetches the items once into `CapitalContract`/`CapitalContractItem`
-  (migration 0016, applied to `aa_dev`). The marker joins the table with the
-  account's characters; the popup (`contract_details.contract`) renders it
+- Version: `0.0.34`, 2026-11-19 (see `CHANGELOG.md`): *Capital in contract*
+  no longer reads corptools. `capital_sweep.sweep()` (task
+  `tasks.sweep_capital_contracts`, daily 03:15 UTC) walks
+  `/contracts/public/{region}/` for every region below 11000000, keeps
+  `item_exchange`/`auction` contracts of the Alliance's Corporations
+  (`issuer_corporation_id` against Auth's `EveCorporationInfo`) and fetches
+  the items once into `CapitalContract`/`CapitalContractItem` (migration
+  0016). Rows leave when no longer listed (only if every region answered) or
+  expired. `markers._check_capital_contracts` joins the table with the
+  accounts' characters (a contract of a character no account owns has no main
+  and is not marked); the popup `contract_details.contract` renders a row
   through the ISK popup's template with nested dicts. Own `ESIClientProvider`
-  in `capital_sweep.py` (Alliance Auth's lists a fixed set of operations).
-  Run once against the real ESI on `aa_dev`: 24.6 s, 7 contracts of the
-  Alliance, none a capital. Location is region + station name (eve_sde
-  `NPCStation`), a structure shows as its ID (user). Tests: new
-  `test_capital_sweep`, the capital tests in `test_markers`/`test_views`
-  rewritten; not yet checked red one by one. Not run: the whole suite, the
-  page in a browser. No new `gettext` string. Version stays 0.0.33 until
-  `/commit`.
-- Version: `0.0.33`, 2026-11-19: *View details* button in the capital contracts
-  table (see the first point under Open; no migration, no static file, no new
-  message). 0.0.32 (see `CHANGELOG.md`): marker *Capital in
-  contract* (`markers._check_capital_contracts`, kind `capital_contracts`,
-  `partials/capital-contracts.html`), setting `capital_ship_groups`
-  (migration 0015, applied to `aa_dev`; group names from eve_sde's
-  `ItemGroup`, category 6, default the 8 groups below), and blue kill days
-  with every kill cleared folded on the Corporation page (Bootstrap
-  collapse on the date button, `kills.html`). Rules (user): `outstanding`
-  and `date_expired` in the future, `public`, only offered ships
-  (`is_included`), issuer on the same account, `for_corporation` counts,
-  no hostile, no time frame, no note/Cleared. Default groups: Dreadnought,
-  Lancer Dreadnought, Carrier, Command Carrier, Force Auxiliary,
-  Supercarrier, Titan, Capital Industrial Ship (Freighter/Jump Freighter
-  selectable, not preset). eos-auth-monitor shows the marker via `api.py`
-  untouched. Messages "Location" and "Alts of mains in other Corporations"
-  got the `eos-spy-network` context (clash with another app). Tests: 394
-  without translation tests, all green; each new test was checked red
-  (conditions removed one by one, old `kills.html`/`forms.py`).
+  in `capital_sweep.py`: Alliance Auth's `open_api_provider` loads a fixed
+  list of operations without the public contracts.
+- Rules of the marker (0.0.32, user), still: only offered ships
+  (`is_included`), no hostile, no time frame, no note/Cleared; the group
+  setting `capital_ship_groups` (migration 0015, default Dreadnought, Lancer
+  Dreadnought, Carrier, Command Carrier, Force Auxiliary, Supercarrier,
+  Titan, Capital Industrial Ship; Freighters selectable) is unchanged.
+  Changed in 0.0.34: no `outstanding`/`public` columns (ESI lists only open
+  public ones), `for_corporation` is not read - the issuer's Corporation
+  decides. Two item rows of one ship type in a contract add up now.
+- Tests (0.0.34): 409 without translation tests plus 3 translation tests,
+  all green (fresh test database). New `tests/test_capital_sweep.py` (10);
+  the capital tests in `test_markers` and `test_views.TestCapitalContractDetails`
+  rewritten for the table. Not checked red one by one, and nothing seen in a
+  browser.
+- Real ESI, once on `aa_dev` (2026-11-19): a full sweep took 24.6 s, found 7
+  contracts of Invidia Gloriae Comes (an Ishtar fit in a structure in
+  Esoteria), none with a capital - so a hit has only been seen in tests.
 - 0.0.31 (earlier today), both parts from the
   permission review of all eos-* apps (coordination session; its notes in
   the side-session notes folder).
@@ -176,19 +169,24 @@ Last updated 2026-11-19 (0.0.33).
 
 ## Open
 
-- Capital contract popup (0.0.33, user's plan): `views.capital_contract`
-  (`capital-contract/<id>/`) renders `contract_details.contract(id)` through the
-  ISK popup's template and `contracts.js`; guarded by the capital marker rows
-  of the viewer's tiles. 7 tests in `test_views.TestCapitalContractDetails`
-  (test_views + test_own_corporation + test_markers: 144 -> 151). No new
-  message. Not seen in a browser: `aa_dev` has no open public capital contract.
-- 0.0.32 on prod: run migration 0015, recalculate once. Not seen in a
-  browser: `aa_dev` has no open public contract, so the capital table was
-  only rendered in tests; the folded `<tr>` rows (collapse animation on
+- 0.0.34 on prod: run migration 0016, add the beat entry from the README
+  (`eos_spy_network_sweep_capital_contracts`), restart Celery (worker and
+  beat), then run the task once by hand and recalculate - until the first
+  sweep the marker finds nothing. The sweep needs eve_sde (regions, stations).
+- Capital popup (`views.capital_contract`, `capital-contract/<id>/`) and the
+  table are only rendered in tests: `aa_dev` has no open public capital
+  contract of the Alliance. The popup shows "corptools has not stored this
+  contract." when the sweep dropped the row since the last calculation (the
+  text is the ISK popup's; left as is). Reward and Collateral show 0 ISK for
+  a capital contract (shared template).
+- Next steps the user may want: the capital groups default to the eight
+  above, not "classic only" (asked in the session, the user kept the
+  setting); structure names would need a token with docking rights; a
+  contract of a character no account owns is not shown at all.
+- 0.0.32 on prod: the folded `<tr>` rows (collapse animation on
   table rows, light and dark) are unseen - fallback would be class toggling
   in `kills.js` (ask the user first). The group choices need eve_sde
-  installed (else only stored names). A contract with two item rows of the
-  same ship type shows the last quantity only (left as is). A tick reloads
+  installed (else only stored names). A tick reloads
   the page, so a day just completed shows folded afterwards.
 - 0.0.31 on prod: run migration 0014, then recalculate once (an older
   snapshot has no visitors; the pages then show none, without an error).
@@ -496,8 +494,12 @@ Last updated 2026-11-19 (0.0.33).
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0015
-  applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0016
+  applied to `aa_dev`, `collectstatic` run. `local.py` has a `## eos spy
+  network` block with the sweep's beat entry (2026-11-19); no Celery
+  process runs, so it fires only once worker and beat are started. The
+  tables `CapitalContract`/`CapitalContractItem` hold the 7 contracts of the
+  hand run. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
   `local.py`.
@@ -515,6 +517,14 @@ Last updated 2026-11-19 (0.0.33).
 
 ## Traps
 
+- Git Bash rewrites a `/mnt/c/...` path handed to `wsl.exe`: run a script
+  from the scratchpad through the PowerShell tool, not the Bash tool.
+- A test that fakes ESI for the sweep patches `capital_sweep._region_contracts`
+  and `_contract_items`, never the provider; `esi.client` would try to load
+  the OpenAPI spec over the network.
+- The `corptools`-based `TestCapitalContracts` fixtures are gone: its
+  `add_offer` writes `CapitalContract`/`CapitalContractItem`; the popup tests
+  borrow it and need `self.main` (set in their own `setUp`).
 - `test_network.TestQueries` counts queries per table with a `FROM <table>`
   regex: a subquery inside another query counts as one more (since
   0.0.31 `authentication_characterownership` counts 2: the subquery in the
