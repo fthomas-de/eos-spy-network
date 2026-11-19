@@ -1,6 +1,7 @@
 from decimal import Decimal
 from unittest.mock import patch
 
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
@@ -10,6 +11,7 @@ from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from eos_spy_network import snapshot
 from eos_spy_network.models import BlueKill, ContactSource, SpyConfiguration
 
+from . import test_markers
 from .base import (
     ALLIANCE_ID,
     SpyTestCase,
@@ -833,3 +835,85 @@ class TestContractDetails(SuspectPageTestCase):
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
         self.assertNotContains(response, 'data-eos-spy-network-contracts="')
+
+
+class TestCapitalContractDetails(SuspectPageTestCase):
+    """The popup behind a row of the capital marker."""
+
+    GROUPS = test_markers.TestCapitalContracts.GROUPS
+    add_audit = TestContractDetails.add_audit
+    ship = test_markers.TestCapitalContracts.ship
+    add_offer = test_markers.TestCapitalContracts.add_offer
+
+    def setUp(self):
+        super().setUp()
+        from eve_sde.models import ItemCategory
+
+        ItemCategory.objects.create(id=6, name="Ship", published=True)
+        self.add_audit()
+        self.client.force_login(make_user("lead", VIEW_SUSPECTS))
+
+    def popup(self, contract_id):
+        return reverse("eos_spy_network:capital_contract", args=[contract_id])
+
+    def test_should_show_the_capital_contract_with_its_items(self):
+        self.add_offer(5, title="Dread for sale")
+        snapshot.update()
+
+        response = self.client.get(self.popup(5))
+
+        self.assertContains(response, "Contract 5")
+        self.assertContains(response, "Dread for sale")
+        self.assertContains(response, "Naglfar")
+
+    def test_should_not_show_a_contract_the_marker_does_not_list(self):
+        self.add_offer(5)
+        self.add_offer(6, ship="Badger", group="Frigate")
+        snapshot.update()
+
+        self.assertEqual(self.client.get(self.popup(6)).status_code, 404)
+        self.assertEqual(self.client.get(self.popup(99)).status_code, 404)
+
+    def test_should_not_show_a_contract_of_a_corporation_the_viewer_does_not_see(self):
+        self.add_offer(5)
+        snapshot.update()
+        make_corporation(2002)
+        self.client.force_login(make_user("ceo", "eos_spy_network.view_own_corporation", corporation_id=2002))
+
+        self.assertEqual(self.client.get(self.popup(5)).status_code, 404)
+
+    def test_should_show_the_contract_to_the_ceo_of_its_corporation(self):
+        self.add_offer(5)
+        snapshot.update()
+        self.client.force_login(make_user("ceo", "eos_spy_network.view_own_corporation"))
+
+        self.assertContains(self.client.get(self.popup(5)), "Contract 5")
+
+    def test_should_say_when_corptools_no_longer_holds_the_contract(self):
+        from corptools.models import Contract
+
+        self.add_offer(5)
+        snapshot.update()
+        Contract.objects.all().delete()
+
+        response = self.client.get(self.popup(5))
+
+        self.assertContains(response, "Contract 5")
+        self.assertContains(response, "has not stored this contract")
+
+    def test_should_offer_the_button_on_the_corporation_page(self):
+        self.add_offer(5)
+        snapshot.update()
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, f'data-eos-spy-network-contracts="{self.popup(5)}"')
+
+    def test_should_show_an_icon_instead_of_the_button_for_a_row_without_contract_id(self):
+        # a snapshot of an earlier version has no contract ID in its rows
+        marker = type("Marker", (), {"rows": [{"character": "Old", "ships": ["Naglfar"]}]})
+        html = render_to_string("eos_spy_network/partials/capital-contracts.html", {"marker": marker})
+
+        self.assertNotIn("data-eos-spy-network-contracts", html)
+        self.assertIn("fa-eye-slash", html)
+        self.assertIn("corptools has not stored this contract.", html)

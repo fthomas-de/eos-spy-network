@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.33] - 2026-11-19
+
+### Added
+
+- The *Capital in contract* table has a *Contract* column with a *View
+  details* button. A row only named the ship and the price, so the reviewer
+  could not see what else the contract holds or who it is made out to
+  without opening EVE. The button reuses the ISK marker's popup
+  (`contracts.js`, `partials/contract-details.html`) through a view of its
+  own, `capital_contract`: the ISK popup is keyed by character and
+  counterpart and a capital contract has no counterpart. The view serves
+  only an ID that a capital row on a tile the viewer sees lists, so it opens
+  no other contract of corptools. No live check on page load: a contract
+  corptools no longer holds shows the popup's "has not stored" hint; a row
+  of an older snapshot without `contract_id` shows a muted icon instead of
+  the button.
+
 ## [0.0.32] - 2026-11-19
 
 ### Added

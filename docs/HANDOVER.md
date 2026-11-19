@@ -156,6 +156,12 @@ Last updated 2026-11-19 (0.0.32).
 
 ## Open
 
+- Capital contract popup (unreleased, user's plan): `views.capital_contract`
+  (`capital-contract/<id>/`) renders `contract_details.contract(id)` through the
+  ISK popup's template and `contracts.js`; guarded by the capital marker rows
+  of the viewer's tiles. 7 tests in `test_views.TestCapitalContractDetails`
+  (test_views + test_own_corporation + test_markers: 144 -> 151). No new
+  message. Not seen in a browser: `aa_dev` has no open public capital contract.
 - 0.0.32 on prod: run migration 0015, recalculate once. Not seen in a
   browser: `aa_dev` has no open public contract, so the capital table was
   only rendered in tests; the folded `<tr>` rows (collapse animation on

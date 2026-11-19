@@ -11,6 +11,29 @@ from django.db.models import Q
 from .markers import CONTRACT_REF_TYPES, character_audits
 
 
+def _with_details(queryset):
+    return queryset.select_related(
+        "issuer_name",
+        "issuer_corporation_name",
+        "assignee_name",
+        "acceptor_name",
+        "start_location_name",
+        "end_location_name",
+    ).prefetch_related("contractitem_set__type_name")
+
+
+def contract(contract_id: int) -> list[dict]:
+    """One contract by ID, in the shape of ``details()`` so the popup template renders it unchanged.
+
+    The same contract lies at every character that can see it; any copy will do. A contract corptools
+    no longer holds comes back with ``contract`` None.
+    """
+    from corptools.models import Contract
+
+    stored = _with_details(Contract.objects.filter(contract_id=contract_id)).first()
+    return [{"contract_id": contract_id, "contract": stored, "payments": []}]
+
+
 def details(character_id: int, counterpart_id: int, since=None, ignored=()) -> list[dict]:
     """The contracts of the character's payments with the counterpart, the latest first.
 
@@ -44,16 +67,9 @@ def details(character_id: int, counterpart_id: int, since=None, ignored=()) -> l
 
     stored = {
         contract.contract_id: contract
-        for contract in Contract.objects.filter(character_id__in=list(audits), contract_id__in=list(payments))
-        .select_related(
-            "issuer_name",
-            "issuer_corporation_name",
-            "assignee_name",
-            "acceptor_name",
-            "start_location_name",
-            "end_location_name",
+        for contract in _with_details(
+            Contract.objects.filter(character_id__in=list(audits), contract_id__in=list(payments))
         )
-        .prefetch_related("contractitem_set__type_name")
     }
     # entries came newest first and dicts keep that order
     return [

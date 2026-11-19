@@ -20,7 +20,7 @@ from . import __version__, contacts, contract_details, killmails, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
-from .markers import BLUE_KILLS, CONTACTS, KINDS, LABELS, WALLET, corptools_installed, million, own_kill, worth_counting
+from .markers import BLUE_KILLS, CAPITAL_CONTRACTS, CONTACTS, KINDS, LABELS, WALLET, corptools_installed, million, own_kill, worth_counting
 from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, ReviewLog, SpyConfiguration
 from .permissions import (
     APP_PERMISSIONS,
@@ -581,6 +581,28 @@ def contracts(request, character_id, counterpart_id):
                 character_id, counterpart_id, config.since(), config.ignored_ref_types or ()
             )
         },
+    )
+
+
+@any_permission_required(VIEW_SUSPECTS, VIEW_OWN_CORPORATION)
+def capital_contract(request, contract_id):
+    """The popup of one contract of the capital marker, as HTML."""
+    if not corptools_installed():
+        raise Http404
+    report = _report(SpyConfiguration.get_solo())
+    # only a contract the marker lists on a tile the viewer sees: any other contract is not ours to show
+    offered = report is not None and any(
+        row.get("contract_id") == contract_id
+        for tile in report.tiles
+        if sees_corporation(request.user, tile.id)
+        for suspect in _accounts(tile)
+        if CAPITAL_CONTRACTS in suspect.markers
+        for row in suspect.markers[CAPITAL_CONTRACTS].rows
+    )
+    if not offered:
+        raise Http404
+    return render(
+        request, "eos_spy_network/partials/contract-details.html", {"contracts": contract_details.contract(contract_id)}
     )
 
 

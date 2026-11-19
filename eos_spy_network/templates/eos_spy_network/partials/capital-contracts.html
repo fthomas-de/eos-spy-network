@@ -13,6 +13,7 @@
                 <th>{% translate "Issued" %}</th>
                 <th>{% translate "Expires" %}</th>
                 <th>{% translate "Title" context "eos-spy-network" %}</th>
+                <th>{% translate "Contract" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -27,6 +28,13 @@
                     <td class="text-nowrap">{{ row.issued }}</td>
                     <td class="text-nowrap">{{ row.expires }}</td>
                     <td class="text-break">{{ row.title }}</td>
+                    <td class="text-nowrap">
+                        {% if row.contract_id %}
+                            <button type="button" class="btn btn-sm btn-secondary" data-eos-spy-network-contracts="{% url 'eos_spy_network:capital_contract' row.contract_id %}">{% translate "View details" %}</button>
+                        {% else %}
+                            <i class="fa-solid fa-eye-slash text-body-secondary" title="{% translate 'corptools has not stored this contract.' %}"></i>
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
