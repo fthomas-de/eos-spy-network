@@ -4,12 +4,14 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-19 (unreleased after 0.0.30).
+Last updated 2026-11-19 (0.0.31).
 
 ## State
 
-- Unreleased (2026-11-19, from the permission review of all eos-* apps):
-  permission `view_evidence` removed (user: on prod nobody holds
+- Version: `0.0.31`, 2026-11-19 (see `CHANGELOG.md`), both parts from the
+  permission review of all eos-* apps (coordination session; its notes in
+  the side-session notes folder).
+- 0.0.31, part 1: permission `view_evidence` removed (user: on prod nobody holds
   `view_suspects` without it). `view_suspects` now sees the counterparts,
   the contract popup and the network pages; `sees_evidence`,
   `all_permissions_required`, `markers.EVIDENCE`/`Marker.is_evidence` and
@@ -20,7 +22,7 @@ Last updated 2026-11-19 (unreleased after 0.0.30).
   admin's back. Tests: the `view_evidence` ones dropped (4), the rest log
   in with `view_suspects` alone; run against the old code they failed
   (network pages, counterparts, contract popup and its button).
-- Unreleased, same day: visitors (decisions below). `markers.roster` takes
+- 0.0.31, part 2: visitors (decisions below). `markers.roster` takes
   every account with its main or any character in a Corporation of the
   Alliance (`UserProfile` filter with a `CharacterOwnership` subquery);
   `corporation_tiles` gives each tile `visitors` (`markers.Visitor`:
@@ -36,31 +38,26 @@ Last updated 2026-11-19 (unreleased after 0.0.30).
   block, head and tile lines, `readonly` in `kill-note-button.html`.
   `test_visitors.py` (16 tests, 14 red against the old code; the two
   green ones pin what stays). `test_network` counts the ownership table
-  twice now (the subquery). Glossary: 5 new messages, catalogues not run.
+  twice now (the subquery). Glossary: 5 new messages, translated with
+  `tools/translate.py` at the commit (not reviewed by the user).
   README: the group-not-state hint for `view_own_corporation`.
-- Version: `0.0.30`, 2026-11-17 (see `CHANGELOG.md`):
-  `api.character_markers(*, corporation_id=None)` (keyword-only, user's
-  choice). With it only the snapshot `corporations` entry whose `id`
-  matches - the Corporation page's own `Report.tile` lookup, not the
-  suspects' `corporation_id` - i.e. what a CEO with `view_own_corporation`
-  sees, alts in other Corporations included; `{}` for a Corporation
-  without a page. Without it unchanged. eos-auth-monitor will call
-  `character_markers(corporation_id=...)` for CEOs with the main's
-  Corporation and checks the permission itself (mirroring
-  `permissions.sees_corporation`); an eos-spy-network before 0.0.30 raises
-  `TypeError` on the keyword. 2 tests in `test_api.py`, both red with the
-  filter taken out.
+- Tests: 372 without translation tests plus 3 translation tests, all green
+  in the dev instance at 0.0.31 (fresh test database).
+- Before (0.0.30): `api.character_markers(*, corporation_id=None)`
+  (keyword-only): only the snapshot entry whose `id` matches, the page's
+  own `Report.tile` lookup - what a CEO with `view_own_corporation` sees;
+  since 0.0.31 its visitors' whole accounts too. eos-auth-monitor calls it
+  for CEOs and checks the permission itself; an eos-spy-network before
+  0.0.30 raises `TypeError` on the keyword.
 - Before (0.0.29):
   - Permission `view_own_corporation` for CEOs (migration 0013, only the
     permission). `permissions.py`: `own_corporation_id(user)` (the main's
     Corporation, `None` without the permission or a main),
     `sees_corporation(user, id)` (`view_suspects` or own),
-    `sees_evidence(user, id)` (sees it and `view_evidence` or own). Used by
+    (`sees_evidence` and the `evidence` flag of that version went with
+    `view_evidence` in 0.0.31). Used by
     `views.index` (CEO -> own Corporation page), `views.corporation` (404
-    for any other; context flag `evidence` replaces
-    `perms.view_evidence` in `corporation.html`), `views.contracts` (pairs
-    of tiles the viewer sees evidence of; decorator lets in
-    `view_suspects`+`view_evidence` or `view_own_corporation`),
+    for any other), `views.contracts` (pairs of tiles the viewer sees),
     `views.rebuild_progress` (the CEO page polls it), the menu badge
     (`open_mains(corporation_id)`). Templates: *Markers* nav for a CEO
     points at the index, *Back* and *Recalculate* only with
@@ -142,15 +139,14 @@ Last updated 2026-11-19 (unreleased after 0.0.30).
 
 ## Open
 
-- Unreleased on prod: run migration 0014. Release together with
-  eos-auth-monitor dropping `view_evidence` from its
+- 0.0.31 on prod: run migration 0014, then recalculate once (an older
+  snapshot has no visitors; the pages then show none, without an error).
+  Release together with eos-auth-monitor dropping `view_evidence` from its
   `sources/spy_network.py` `PERMISSIONS` (that repo's own session) - until
   then eos-auth-monitor shows the spy markers to nobody who lacks the
   stale permission. The stale `view_evidence` row may be deleted by the
   admin afterwards. Not seen in a browser: the *Network* nav and the
-  counterparts for a `view_suspects`-only user (rendered in tests).
-- Visitors on prod: recalculate after the update (an older snapshot has
-  no visitors; the pages then show none, without an error). Not seen in a
+  counterparts for a `view_suspects`-only user (rendered in tests). Not seen in a
   browser: the block, the head and tile lines, the read-only controls -
   only the tests rendered them, and the `aa_dev` snapshot was not
   recalculated with this code. Expect more accounts on prod than before:
@@ -168,7 +164,8 @@ Last updated 2026-11-19 (unreleased after 0.0.30).
   `character_markers(corporation_id=...)`) is built in that repo's own
   session, not here; it needs eos-spy-network >= 0.0.30 there.
 - 0.0.29 on prod: run migration 0013, then give `view_own_corporation` to
-  the CEO group or state (the app assigns it to nobody). Not seen in a
+  the CEO group, never a state (the app assigns it to nobody and checks
+  no CEO role). Not seen in a
   browser: the CEO's page, the progress bar without the button, the
   *Markers* nav pointing at the index. A CEO whose Corporation is not in
   the configured Alliance lands on a 404 from the start page (no notice;
@@ -446,7 +443,7 @@ Last updated 2026-11-19 (unreleased after 0.0.30).
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0013
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0014
   applied to `aa_dev`, `collectstatic` run. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
@@ -461,9 +458,17 @@ Last updated 2026-11-19 (unreleased after 0.0.30).
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
   code since 0.0.7 - check `pgrep -af celery` and start it again before
-  testing the button. `collectstatic` ran with the 0.0.27 static files (`cleared.js`; 0.0.28 adds none). `aa_dev` is at 0013 (applied 2026-11-17); its snapshot was not rebuilt since 0.0.28.
+  testing the button. `collectstatic` ran with the 0.0.27 static files (`cleared.js`; 0.0.28 adds none). `aa_dev` is at 0014 (applied 2026-11-19); its snapshot was not rebuilt since 0.0.28, so it holds no visitors. Its `auth_permission` still has the stale `view_evidence` row (Django keeps it), untouched.
 
 ## Traps
+
+- `test_network.TestQueries` counts queries per table with a `FROM <table>`
+  regex: a subquery inside another query counts as one more (since
+  0.0.31 `authentication_characterownership` counts 2: the subquery in the
+  mains' query and the characters' query - still one read per run).
+- The dev venv has no `flake8`; line length (120) is checked by eye.
+- `aa-test` takes several test labels in one run
+  (`aa-test eos_spy_network.tests.test_views eos_spy_network.tests.test_menu`).
 
 - A test class borrowing another class's `setUp` (`setUp =
   Other.setUp`) fails on the zero-argument `super()` inside it: move the
