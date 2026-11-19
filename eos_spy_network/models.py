@@ -23,6 +23,21 @@ def default_note_presets() -> list[str]:
     return ["bomb", "sb ratting"]
 
 
+def default_capital_ship_groups() -> list[str]:
+    # group names, not type IDs: a new capital hull of a group counts without a change here; Freighters
+    # and Jump Freighters are left out (user) but can be picked
+    return [
+        "Dreadnought",
+        "Lancer Dreadnought",
+        "Carrier",
+        "Command Carrier",
+        "Force Auxiliary",
+        "Supercarrier",
+        "Titan",
+        "Capital Industrial Ship",
+    ]
+
+
 class General(models.Model):
     """Meta model for app permissions"""
 
@@ -83,6 +98,12 @@ class SpyConfiguration(SingletonModel):
         blank=True,
         verbose_name=_("Ignored ships"),
         help_text=_("A blue kill whose victim flew one of these does not count."),
+    )
+    capital_ship_groups = models.JSONField(
+        default=default_capital_ship_groups,
+        blank=True,
+        verbose_name=_("Capital ship groups"),
+        help_text=_("An open public contract offering a ship of these groups marks its issuer."),
     )
     note_presets = models.JSONField(
         default=default_note_presets,

@@ -13,6 +13,8 @@
             {% include "eos_spy_network/partials/kills.html" %}
         {% elif marker.contacts %}
             {% include "eos_spy_network/partials/contacts.html" %}
+        {% elif marker.capitals %}
+            {% include "eos_spy_network/partials/capital-contracts.html" %}
         {% elif marker.dealings %}
             {% include "eos_spy_network/partials/dealings.html" %}
         {% else %}

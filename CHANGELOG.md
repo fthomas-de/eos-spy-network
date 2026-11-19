@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.32] - 2026-11-19
+
+### Added
+
+- Marker *Capital in contract*: a character of the account offers a ship of
+  a chosen capital group in an open, public contract. Open means
+  `outstanding` **and** `date_expired` in the future - ESI leaves an expired
+  contract on `outstanding`, so the status alone would mark it for ever.
+  Only ships the contract offers count (`is_included`), not those a
+  want-to-buy asks for; a contract made in the name of the Corporation
+  counts; a contract lying at several characters of the account counts once
+  and only for its issuer's account. It needs no hostile list and has no
+  time frame: an open contract is always current. The Corporation page shows
+  a table per contract (ships, type, price, buyout, location, dates, title).
+  eos-auth-monitor shows the marker through `api.py` without a change.
+- Setting *Capital ship groups* (migration 0015), chosen like *Ignored ships*
+  from the ship groups of eve_sde; default Dreadnought, Lancer Dreadnought,
+  Carrier, Command Carrier, Force Auxiliary, Supercarrier, Titan and Capital
+  Industrial Ship. Groups, not types: a new hull of a group counts without
+  a change here. Freighters and Jump Freighters can be added.
+
+### Changed
+
+- Blue kills on the Corporation page: a day whose kills are all cleared is
+  folded to its day row, a click on the date unfolds it. A long list of
+  cleared days pushed the open kills out of sight; a day with an open kill
+  stays open.
+
 ## [0.0.31] - 2026-11-19
 
 ### Added

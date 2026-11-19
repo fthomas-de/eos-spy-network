@@ -540,7 +540,7 @@ class TestSettingsPage(SpyTestCase):
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
-                "markers": ["membership", "corp_changes", "mails", "wallet", "contracts", "blue_kills"],
+                "markers": ["membership", "corp_changes", "mails", "wallet", "contracts", "capital_contracts", "blue_kills"],
                 "tab": "markers",
             },
         )
@@ -647,6 +647,49 @@ class TestSettingsPage(SpyTestCase):
 
         self.assertRedirects(response, reverse("eos_spy_network:settings"))
         self.assertEqual(SpyConfiguration.get_solo().ignored_ships, ["Capsule"])
+
+    def test_should_offer_the_ship_groups_of_eve_sde(self):
+        from eve_sde.models import ItemCategory, ItemGroup
+
+        configure(capital_ship_groups=["Retired Group"])
+        ship = ItemCategory.objects.create(id=6, name="Ship", published=True)
+        ItemGroup.objects.create(id=485, name="Dreadnought", category=ship, published=True)
+        ItemGroup.objects.create(id=18, name="Mineral", category=ItemCategory.objects.create(id=4, name="Material"), published=True)
+
+        response = self.client.get(reverse("eos_spy_network:settings"))
+
+        self.assertContains(response, '<option value="Dreadnought">Dreadnought</option>', html=True)
+        self.assertNotContains(response, "Mineral")
+        # a stored name eve_sde no longer offers stays selectable
+        self.assertContains(response, '<option value="Retired Group" selected>Retired Group</option>', html=True)
+
+    def test_should_save_the_capital_ship_groups(self):
+        configure()
+
+        response = self.client.post(
+            reverse("eos_spy_network:settings"),
+            {
+                "alliance": make_alliance().pk,
+                "hostile_below": "0",
+                "blue_from": "5",
+                "min_kill_value": "0",
+                "capital_ship_groups": ["Titan"],
+                "corp_changes_per_year": "4",
+                "lookback_days": "365",
+            },
+        )
+
+        self.assertRedirects(response, reverse("eos_spy_network:settings"))
+        self.assertEqual(SpyConfiguration.get_solo().capital_ship_groups, ["Titan"])
+
+    def test_should_start_with_the_eight_capital_groups(self):
+        self.assertEqual(
+            SpyConfiguration.get_solo().capital_ship_groups,
+            [
+                "Dreadnought", "Lancer Dreadnought", "Carrier", "Command Carrier", "Force Auxiliary",
+                "Supercarrier", "Titan", "Capital Industrial Ship",
+            ],
+        )
 
     def test_should_reject_a_threshold_out_of_range(self):
         configure()

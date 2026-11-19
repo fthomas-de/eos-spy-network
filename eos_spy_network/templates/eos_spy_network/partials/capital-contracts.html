@@ -1,0 +1,34 @@
+{% load i18n %}
+{# Capital in contract: one row per open public contract, the one that expires first on top #}
+<div class="table-responsive mt-1">
+    <table class="table table-sm table-borderless small mb-0 w-auto">
+        <thead>
+            <tr>
+                <th>{% translate "Character" context "EVE jargon" %}</th>
+                <th>{% translate "Ships" %}</th>
+                <th>{% translate "Type" context "eos-spy-network" %}</th>
+                <th>{% translate "Price" %}</th>
+                <th>{% translate "Buyout" %}</th>
+                <th>{% translate "Location" context "eos-spy-network" %}</th>
+                <th>{% translate "Issued" %}</th>
+                <th>{% translate "Expires" %}</th>
+                <th>{% translate "Title" context "eos-spy-network" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in marker.rows %}
+                <tr>
+                    <td class="text-break">{{ row.character }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=row.character_id %}</td>
+                    <td class="text-break">{{ row.ships|join:", " }}</td>
+                    <td class="text-nowrap">{{ row.type }}</td>
+                    <td class="text-nowrap">{% if row.million is not None %}{{ row.million|floatformat:"1g" }} M{% else %}–{% endif %}</td>
+                    <td class="text-nowrap">{% if row.buyout_million is not None %}{{ row.buyout_million|floatformat:"1g" }} M{% else %}–{% endif %}</td>
+                    <td class="text-break">{{ row.location }}</td>
+                    <td class="text-nowrap">{{ row.issued }}</td>
+                    <td class="text-nowrap">{{ row.expires }}</td>
+                    <td class="text-break">{{ row.title }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

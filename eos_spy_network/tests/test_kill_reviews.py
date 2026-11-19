@@ -184,7 +184,7 @@ class TestKillNote(ReviewTestCase):
 
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
-        self.assertContains(response, 'class="opacity-50"', count=1)
+        self.assertContains(response, 'class="opacity-50 collapse eos-spy-network-day-', count=1)
         self.assertContains(response, "Fleet fight")
         self.assertContains(response, 'data-eos-spy-network-kill-reload')
 
@@ -549,6 +549,17 @@ class TestDayNote(ReviewTestCase):
 
         self.assertNotContains(response, f'data-eos-spy-network-kill-day="{self.day_before}"')
         self.assertRegex(response.content.decode(), r"checked\s+disabled>")
+    def test_should_fold_a_day_whose_kills_are_all_cleared(self):
+        self.review(1, note="Agreed")
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        # kill 1's day: its row is folded and the date in the day row unfolds it; kill 2's day stays open
+        self.assertContains(response, 'data-bs-target=".eos-spy-network-day-', count=1)
+        self.assertContains(response, 'class="opacity-50 collapse eos-spy-network-day-', count=1)
+        self.assertContains(response, f'data-bs-target=".eos-spy-network-day-{self.main.character_id}-{self.day_before}"')
+        self.assertContains(response, f'<tr class="opacity-50 collapse eos-spy-network-day-{self.main.character_id}-{self.day_before}">')
+        self.assertContains(response, f"eos-spy-network-day-{self.main.character_id}-{self.day}", count=0)
 
 
 class TestNotePresets(ReviewTestCase):

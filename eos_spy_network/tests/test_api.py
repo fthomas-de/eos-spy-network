@@ -117,6 +117,7 @@ class TestKinds(SpyTestCase):
                 markers.MAILS,
                 markers.WALLET,
                 markers.CONTRACTS,
+                markers.CAPITAL_CONTRACTS,
                 markers.BLUE_KILLS,
             ),
         )

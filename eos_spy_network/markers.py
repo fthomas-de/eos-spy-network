@@ -35,10 +35,11 @@ CONTACTS = "contacts"
 MAILS = "mails"
 WALLET = "wallet"
 CONTRACTS = "contracts"
+CAPITAL_CONTRACTS = "capital_contracts"
 BLUE_KILLS = "blue_kills"
 
 # in this order on the pages
-KINDS = (MEMBERSHIP, CORP_CHANGES, CONTACTS, MAILS, WALLET, CONTRACTS, BLUE_KILLS)
+KINDS = (MEMBERSHIP, CORP_CHANGES, CONTACTS, MAILS, WALLET, CONTRACTS, CAPITAL_CONTRACTS, BLUE_KILLS)
 
 LABELS = {
     MEMBERSHIP: _("Hostile membership"),
@@ -47,6 +48,7 @@ LABELS = {
     MAILS: _("Mails with hostiles"),
     WALLET: _("ISK with hostiles"),
     CONTRACTS: _("Contracts with hostiles"),
+    CAPITAL_CONTRACTS: _("Capital in contract"),
     BLUE_KILLS: _("Blue kills"),
 }
 
@@ -59,6 +61,7 @@ DESCRIPTIONS = {
     MAILS: _("Mails from or to hostiles."),
     WALLET: _("Wallet journal entries with hostiles."),
     CONTRACTS: _("Contracts with hostiles."),
+    CAPITAL_CONTRACTS: _("A character offers a capital ship in an open public contract."),
     BLUE_KILLS: _("A character was on a killmail whose victim is in the Alliance (awox) or blue to it."),
 }
 
@@ -118,6 +121,11 @@ class Marker:
     def kills(self) -> bool:
         """Blue kills show their killmails as a table."""
         return self.kind == BLUE_KILLS and bool(self.rows)
+
+    @property
+    def capitals(self) -> bool:
+        """Capital contracts show one row per contract."""
+        return self.kind == CAPITAL_CONTRACTS and bool(self.rows)
 
     @property
     def contacts(self) -> bool:
@@ -324,6 +332,10 @@ def corporation_tiles(
     if accounts:
         step("kills")
         _check_kills(accounts, config, members.characters)
+    # like the kills, no hostile needed: the contract itself is the finding
+    if accounts and corptools_installed():
+        step("capitals")
+        _check_capital_contracts(accounts, config, members.characters)
 
     for suspect in accounts.values():
         if suspect.markers and suspect.main.corporation_id in tiles:
@@ -662,6 +674,75 @@ def _check_kills(accounts, config, characters):
                 "standing": None if kill.standing is None else f"{kill.standing.normalize():f}",
             }
         )
+
+
+def _check_capital_contracts(accounts, config, characters):
+    """Open public contracts in which an own character offers a ship of a chosen capital group.
+
+    Open is ``outstanding`` and not yet expired: ESI leaves an expired contract on ``outstanding``. Only
+    offered ships count (``is_included``), not those a want-to-buy asks for, and only the issuer's own
+    account: the same contract lies at every character that can see it. ``for_corporation`` makes no
+    difference. A contract counts once per account.
+    """
+    from corptools.models import ContractItem
+
+    owner = {character_id: user_id for user_id, character_id, *_rest in characters}
+    names = {character_id: name for _user_id, character_id, name, *_rest in characters}
+    audits = character_audits(list(owner))
+    items = ContractItem.objects.filter(
+        contract__character_id__in=list(audits),
+        contract__issuer_id__in=list(owner),
+        contract__status="outstanding",
+        contract__availability="public",
+        contract__date_expired__gt=timezone.now(),
+        is_included=True,
+        type_name__group__name__in=config.capital_ship_groups,
+    ).values_list(
+        "contract__contract_id",
+        "contract__character_id",
+        "contract__issuer_id",
+        "contract__contract_type",
+        "contract__price",
+        "contract__buyout",
+        "contract__date_issued",
+        "contract__date_expired",
+        "contract__title",
+        "contract__start_location_name__location_name",
+        "type_name__name",
+        "quantity",
+    )
+    contracts = {}  # (account, contract ID) -> the row, its ships still to be sorted
+    for contract_id, audit_id, issuer_id, kind, price, buyout, issued, expires, title, location, ship, quantity in items:
+        user_id = owner[issuer_id]
+        # the contract lies at a character of another account: only its issuer's account offers it
+        if owner[audits[audit_id]] != user_id:
+            continue
+        row = contracts.setdefault(
+            (user_id, contract_id),
+            {
+                "character": names[issuer_id],
+                "character_id": issuer_id,
+                "contract_id": contract_id,
+                "type": kind.replace("_", " "),
+                "ships": {},
+                "million": million(price),
+                "buyout_million": million(buyout) if kind == "auction" else None,
+                "issued": issued.date().isoformat(),
+                "expires": expires.date().isoformat(),
+                "title": title or "",
+                "location": location or "",
+            },
+        )
+        # the same item row of one contract at two own characters adds up only once
+        row["ships"][ship] = quantity
+    for (user_id, _contract_id), row in sorted(contracts.items(), key=lambda item: item[1]["expires"]):
+        marker = accounts[user_id].markers.setdefault(CAPITAL_CONTRACTS, Marker(CAPITAL_CONTRACTS))
+        ships = row["ships"]
+        row["ships"] = [f"{quantity}x {ship}" if quantity > 1 else ship for ship, quantity in sorted(ships.items())]
+        marker.count += 1
+        marker.details.update(ships)
+        marker.character_ids.add(row["character_id"])
+        marker.rows.append(row)
 
 
 def own_kill(owner: dict, attacker_id: int, victim_id: int | None) -> bool:

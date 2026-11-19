@@ -48,7 +48,11 @@ every one with a standing below a configurable value.
   settings tab without one. A cleared kill
   stays in the table, greyed, but no longer counts - at once, without a
   recalculation, on these pages and for eos-auth-monitor; a main whose kills
-  are all cleared and who has no other marker counts as clean.
+  are all cleared and who has no other marker counts as clean. A day whose
+  kills are all cleared is folded to its day row; a click on the date
+  unfolds it. *Capital in contract* shows a row per contract: the
+  character, the ships, the type, price and buyout in million ISK, the
+  location, the dates and the title.
   Below, *Alts of mains in other Corporations*: every marked account with
   an alt in this Corporation whose main is elsewhere, with its main, the
   main's Corporation, its alts here and all its markers with everything
@@ -69,6 +73,13 @@ every one with a standing below a configurable value.
     except the ignored entry types (`CharacterWalletJournalEntry`)
   - *Contracts with hostiles*: a hostile issued, was assigned or accepted the
     contract, or its issuer is in a hostile Corporation (`Contract`)
+  - *Capital in contract*: a character of the account offers a ship of one
+    of the chosen capital groups in a contract that is `outstanding`, not
+    yet expired (ESI leaves an expired one on `outstanding`) and public
+    (`Contract` and `ContractItem`). Only ships the contract offers count,
+    not those a want-to-buy asks for; a contract made in the name of the
+    Corporation counts too. It counts once per account and needs no
+    hostile and no time frame
   - *Blue kills*: a character was among the attackers of a killmail whose
     victim is in the Alliance (awox), or whose victim, its Corporation or
     Alliance has at least the blue standing with the Alliance (default 5).
@@ -134,7 +145,11 @@ every one with a standing below a configurable value.
   standing from which a contact of the Alliance is blue for the blue kills
   (default 5); the minimum value of a blue kill in million ISK (default 0:
   every kill); the ignored ships of a blue kill's victim, chosen from the
-  types killtracker offers as a victim's ship (default none); the number
+  types killtracker offers as a victim's ship (default none); the capital
+  ship groups of *Capital in contract*, chosen from the ship groups eve_sde
+  holds (default Dreadnought, Lancer Dreadnought, Carrier, Command Carrier,
+  Force Auxiliary, Supercarrier, Titan and Capital Industrial Ship;
+  Freighters and Jump Freighters can be added); the number
   of Corporation changes per year that sets a marker; the time frame in days
   (default 365, 0 takes everything): the hostile list is today's, and the
   further back a payment, mail, contract or former Corporation, the likelier

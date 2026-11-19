@@ -22,7 +22,14 @@
                 {% ifchanged row.date %}
                     <tr class="table-active">
                         <th colspan="8" class="text-nowrap">
-                            {{ row.date }}
+                            {% if row.day_open %}
+                                {{ row.date }}
+                            {% else %}
+                                {# a day with nothing open is folded; the button, not the row, unfolds it so a click on note or tick does not #}
+                                <button type="button" class="btn btn-link btn-sm p-0 align-baseline text-decoration-none" data-bs-toggle="collapse" data-bs-target=".eos-spy-network-day-{{ suspect.main.character_id }}-{{ row.date }}" aria-expanded="false">
+                                    <i class="fas fa-chevron-right me-1" aria-hidden="true"></i>{{ row.date }}
+                                </button>
+                            {% endif %}
                             <span class="badge text-bg-info ms-1" title="{% translate 'Open blue kills of this day' %}">{{ row.day_open }}</span>
                         </th>
                         {% with day_name=suspect.main.character_name|add:" "|add:row.date %}
@@ -32,7 +39,7 @@
                         {% endwith %}
                     </tr>
                 {% endifchanged %}
-                <tr{% if row.cleared %} class="opacity-50"{% endif %}>
+                <tr{% if row.cleared %} class="opacity-50{% if not row.day_open %} collapse eos-spy-network-day-{{ suspect.main.character_id }}-{{ row.date }}{% endif %}"{% endif %}>
                     <td class="text-nowrap">
                         <a href="https://zkillboard.com/kill/{{ row.killmail_id }}/" target="_blank" rel="noopener noreferrer">{{ row.date }}</a>
                     </td>

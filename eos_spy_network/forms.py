@@ -39,6 +39,20 @@ def ship_choices(stored=()) -> list[tuple[str, str]]:
     return [(ship, ship) for ship in sorted(ships)]
 
 
+# eve_sde's ItemCategory of ships
+SHIP_CATEGORY = 6
+
+
+def capital_group_choices(stored=()) -> list[tuple[str, str]]:
+    """Every ship group eve_sde holds and whatever is stored already."""
+    groups = set(stored or ())
+    if apps.is_installed("eve_sde"):
+        from eve_sde.models import ItemGroup
+
+        groups |= set(ItemGroup.objects.filter(category_id=SHIP_CATEGORY, published=True).values_list("name", flat=True))
+    return [(group, group) for group in sorted(groups)]
+
+
 class SpyConfigurationForm(forms.ModelForm):
     alliance = forms.ModelChoiceField(
         label=pgettext_lazy("EVE jargon", "Alliance"),
@@ -57,6 +71,12 @@ class SpyConfigurationForm(forms.ModelForm):
         label=SpyConfiguration._meta.get_field("ignored_ships").verbose_name,
         required=False,
         help_text=SpyConfiguration._meta.get_field("ignored_ships").help_text,
+        widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
+    )
+    capital_ship_groups = forms.MultipleChoiceField(
+        label=SpyConfiguration._meta.get_field("capital_ship_groups").verbose_name,
+        required=False,
+        help_text=SpyConfiguration._meta.get_field("capital_ship_groups").help_text,
         widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
     )
     # free text: the choices are only what is stored, a typed text is added as an option (Tom Select's create)
@@ -82,6 +102,7 @@ class SpyConfigurationForm(forms.ModelForm):
             "blue_from",
             "min_kill_value",
             "ignored_ships",
+            "capital_ship_groups",
             "note_presets",
             "corp_changes_per_year",
             "lookback_days",
@@ -98,6 +119,7 @@ class SpyConfigurationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["ignored_ref_types"].choices = ref_type_choices(self.instance.ignored_ref_types)
         self.fields["ignored_ships"].choices = ship_choices(self.instance.ignored_ships)
+        self.fields["capital_ship_groups"].choices = capital_group_choices(self.instance.capital_ship_groups)
         # the posted texts are valid choices too: clean_note_presets checks them instead
         posted = self.data.getlist("note_presets") if hasattr(self.data, "getlist") else []
         presets = dict.fromkeys([*(self.instance.note_presets or ()), *posted])
