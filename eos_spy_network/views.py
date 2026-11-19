@@ -4,7 +4,6 @@ from datetime import date
 from kombu.exceptions import OperationalError
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect, render
@@ -26,14 +25,11 @@ from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, Re
 from .permissions import (
     APP_PERMISSIONS,
     MANAGE_SETTINGS,
-    VIEW_EVIDENCE,
     VIEW_OWN_CORPORATION,
     VIEW_SUSPECTS,
-    all_permissions_required,
     any_permission_required,
     own_corporation_id,
     sees_corporation,
-    sees_evidence,
 )
 from .tasks import update_snapshot
 
@@ -135,7 +131,20 @@ def open_mains(corporation_id=None) -> int:
     report = _report(SpyConfiguration.get_solo())
     if report is None:
         return 0
-    return sum(len(tile.suspects) for tile in report.tiles if corporation_id in (None, tile.id))
+    # an account shows on its main's page and on every page one of its alts visits: count it once
+    return len(
+        {
+            suspect.user_id
+            for tile in report.tiles
+            if corporation_id in (None, tile.id)
+            for suspect in _accounts(tile)
+        }
+    )
+
+
+def _accounts(tile) -> list:
+    """The marked accounts a Corporation page shows: its mains' and its visitors'."""
+    return [*tile.suspects, *(visitor.suspect for visitor in tile.visitors)]
 
 
 def _victim_mains(victim_ids) -> dict:
@@ -207,8 +216,13 @@ def _contact_rows(config) -> list:
         ).select_related("reviewed_by__profile__main_character")
     }
     rows = []
+    # a visitor whose main is in the Alliance is a suspect of its main's Corporation as well: list it once
+    seen = set()
     for corporation in current.data["corporations"]:
-        for suspect in corporation["suspects"]:
+        for suspect in [*corporation["suspects"], *corporation.get("visitors", [])]:
+            if suspect["main_id"] in seen:
+                continue
+            seen.add(suspect["main_id"])
             for marker in (marker for marker in suspect["markers"] if marker["kind"] == CONTACTS):
                 # a snapshot of 0.0.15 or older has no rows to review until the next run
                 for row in marker.get("rows", []):
@@ -486,7 +500,7 @@ def corporation(request, corporation_id):
     if tile is None:
         raise Http404
     kill_rows = [
-        row for suspect in tile.suspects if BLUE_KILLS in suspect.markers for row in suspect.markers[BLUE_KILLS].rows
+        row for suspect in _accounts(tile) if BLUE_KILLS in suspect.markers for row in suspect.markers[BLUE_KILLS].rows
     ]
     # a snapshot of 0.0.17 or older has no victim IDs until the next run
     mains = _victim_mains({row["victim_id"] for row in kill_rows if row.get("victim_id")})
@@ -503,15 +517,13 @@ def corporation(request, corporation_id):
             "note_presets": config.note_presets,
             "switched_off": _switched_off(config),
             "killmails_missing": _killmails_missing(config),
-            "evidence": sees_evidence(request.user, corporation_id),
         },
         NAV_MARKERS,
         started,
     )
 
 
-# the connections are counterparts of wallet entries: evidence, as on the marker pages
-@all_permissions_required(VIEW_SUSPECTS, VIEW_EVIDENCE)
+@any_permission_required(VIEW_SUSPECTS)
 def network(request):
     started = time.perf_counter()
     config = SpyConfiguration.get_solo()
@@ -525,7 +537,7 @@ def network(request):
     )
 
 
-@all_permissions_required(VIEW_SUSPECTS, VIEW_EVIDENCE)
+@any_permission_required(VIEW_SUSPECTS)
 def network_corporation(request, corporation_id):
     started = time.perf_counter()
     config = SpyConfiguration.get_solo()
@@ -542,8 +554,7 @@ def network_corporation(request, corporation_id):
     )
 
 
-@login_required
-@user_passes_test(lambda user: user.has_perms((VIEW_SUSPECTS, VIEW_EVIDENCE)) or user.has_perm(VIEW_OWN_CORPORATION))
+@any_permission_required(VIEW_SUSPECTS, VIEW_OWN_CORPORATION)
 def contracts(request, character_id, counterpart_id):
     """The popup of a contract payment: the contracts of one own character with one counterpart, as HTML."""
     if not corptools_installed():
@@ -555,8 +566,8 @@ def contracts(request, character_id, counterpart_id):
         (row.get("character_id"), row.get("counterpart_id")) == (character_id, counterpart_id)
         and row.get("contract_payments")
         for tile in report.tiles
-        if sees_evidence(request.user, tile.id)
-        for suspect in tile.suspects
+        if sees_corporation(request.user, tile.id)
+        for suspect in _accounts(tile)
         if WALLET in suspect.markers
         for row in suspect.markers[WALLET].rows
     )

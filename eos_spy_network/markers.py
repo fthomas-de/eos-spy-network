@@ -62,9 +62,6 @@ DESCRIPTIONS = {
     BLUE_KILLS: _("A character was on a killmail whose victim is in the Alliance (awox) or blue to it."),
 }
 
-# whose details are evidence: only shown with view_evidence
-EVIDENCE = {MAILS, WALLET, CONTRACTS}
-
 CORPTOOLS = "corptools"
 
 # wallet entries that pay for a contract: corptools' journal names the contract in context_id
@@ -97,10 +94,6 @@ class Marker:
     @property
     def description(self):
         return DESCRIPTIONS[self.kind]
-
-    @property
-    def is_evidence(self) -> bool:
-        return self.kind in EVIDENCE
 
     @property
     def sorted_details(self) -> list[str]:
@@ -203,6 +196,8 @@ class CorporationTile:
     suspects: list = field(default_factory=list)
     # mains whose every finding is cleared, by name: {"main": ..., "rows": [...]}; filled by snapshot.Report
     cleared: list = field(default_factory=list)
+    # marked accounts whose main is elsewhere, with an alt here: the most marked first
+    visitors: list = field(default_factory=list)
 
     def counts(self) -> list[tuple]:
         """(marker label, description, number of suspects with it) for every marker found."""
@@ -211,6 +206,17 @@ class CorporationTile:
             for kind in suspect.markers:
                 found[kind] += 1
         return [(LABELS[kind], DESCRIPTIONS[kind], found[kind]) for kind in KINDS if kind in found]
+
+
+@dataclass
+class Visitor:
+    """A marked account seen from a Corporation it has an alt in, its main being elsewhere (user, 2026-11-19):
+    its CEO is answerable for that alt, so the whole account shows there too, read only."""
+
+    suspect: Suspect
+    alts: list  # (EVE ID, name) of the account's characters in this Corporation
+    # the main's Corporation has a page of this app; snapshot.Report sets it
+    page: bool = False
 
 
 def by_markers(suspect: Suspect) -> tuple:
@@ -241,10 +247,14 @@ def roster(config: SpyConfiguration, corporation_id: int | None = None) -> Roste
     if corporation_id is not None:
         corporations = corporations.filter(corporation_id=corporation_id)
     corporations = list(corporations)
+    corporation_ids = [corporation.corporation_id for corporation in corporations]
+    # a player is all of his characters: one with only an alt here, the main outside the Alliance, counts too
+    visiting = CharacterOwnership.objects.filter(character__corporation_id__in=corporation_ids).values("user_id")
     mains = {
         profile.user_id: profile.main_character
         for profile in UserProfile.objects.filter(
-            main_character__corporation_id__in=[corporation.corporation_id for corporation in corporations]
+            Q(main_character__corporation_id__in=corporation_ids) | Q(user_id__in=visiting),
+            main_character__isnull=False,
         ).select_related("main_character")
     }
     characters = list(
@@ -302,7 +312,9 @@ def corporation_tiles(
     accounts = {}
     for user_id, main in members.mains.items():
         accounts[user_id] = Suspect(user_id, main, 0)
-        tiles[main.corporation_id].mains += 1
+        # a main outside the Alliance (or the one Corporation asked for) has no tile, only its alts' visits
+        if main.corporation_id in tiles:
+            tiles[main.corporation_id].mains += 1
 
     step("hostiles")
     index = hostile_index(config, hostiles)
@@ -314,10 +326,19 @@ def corporation_tiles(
         _check_kills(accounts, config, members.characters)
 
     for suspect in accounts.values():
-        if suspect.markers:
+        if suspect.markers and suspect.main.corporation_id in tiles:
             tiles[suspect.main.corporation_id].suspects.append(suspect)
+    alts = defaultdict(list)  # (Corporation, user) -> the account's characters there
+    for user_id, character_id, name, corporation_id, _alliance_id in members.characters:
+        if corporation_id in tiles and corporation_id != accounts[user_id].main.corporation_id:
+            alts[(corporation_id, user_id)].append((character_id, name))
+    for (corporation_id, user_id), named in alts.items():
+        if accounts[user_id].markers:
+            named.sort(key=lambda alt: alt[1].lower())
+            tiles[corporation_id].visitors.append(Visitor(accounts[user_id], named))
     for tile in tiles.values():
         tile.suspects.sort(key=by_markers)
+        tile.visitors.sort(key=lambda visitor: by_markers(visitor.suspect))
     return list(tiles.values())
 
 

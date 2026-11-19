@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.31] - 2026-11-19
+
+### Added
+
+- Visitors: a marked account with an alt in a Corporation whose main is
+  elsewhere now shows on that Corporation's page as well, in its own block
+  *Alts of mains in other Corporations* below the mains - its main, the
+  main's Corporation, its alts there and all its markers with everything
+  found. The page listed only the mains of the Corporation, so its CEO
+  never learnt of a marked alt in it, though he answers for it. Read only
+  there; for `view_suspects` the main's Corporation is linked. The head of
+  the page and each tile count the visitors, a tile with one is no longer
+  *clean*, the menu badge counts them for the CEO and every account once
+  for `view_suspects`, the contract popup opens for them, and
+  `api.character_markers(corporation_id=...)` gives their characters too.
+- Accounts whose main is outside the Alliance are checked when one of
+  their characters is in a Corporation of the Alliance: the calculation
+  took only accounts with the main inside, so such a player was never
+  checked at all. They show as visitors, on the network pages at their
+  alts' Corporations, and are reviewed in the settings tabs. Needs a
+  recalculation after the update.
+- README: give `view_own_corporation` to a group, never to a state.
+
+### Removed
+
+- Permission `view_evidence`. It held the counterparts of mails, ISK and
+  contracts, the contract popup and the network pages back from
+  `view_suspects`, but nobody held `view_suspects` without it, and
+  eos-auth-monitor demanded it too for marker labels that carry no
+  evidence. `view_suspects` now opens all of it; `view_own_corporation`
+  is unchanged. Migration 0014 only drops the permission from the model:
+  Django keeps the existing row with its assignments, without effect,
+  until an admin deletes it. Release together with eos-auth-monitor
+  dropping it from its spy check.
+
 ## [0.0.30] - 2026-11-17
 
 ### Added

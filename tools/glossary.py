@@ -524,6 +524,24 @@ TRANSLATIONS = {
     "Victim Alliance": ("Opfer-Alliance", "Alliance жертвы", "受害者 Alliance"),
     "Reference standing": ("Referenz-Standing", "Опорный Standing", "参考 Standing"),
     "Suspect standing": ("Standing des Verdächtigen", "Standing подозреваемого", "嫌疑人 Standing"),
+    # visitors: alts of mains elsewhere (2026-11-19)
+    "Alts of other mains with markers": (
+        "Alts fremder Mains mit Markern",
+        "Alts чужих Mains с маркерами",
+        "其他 Mains 的带标记 Alts",
+    ),
+    "Alts of mains in other Corporations": (
+        "Alts von Mains anderer Corporations",
+        "Alts от Mains других Corporations",
+        "其他 Corporations 的 Mains 的 Alts",
+    ),
+    "Characters of this Corporation whose main is in another Corporation or outside the Alliance, with their whole account. A note is changed on the page of the main's Corporation, for a main outside the Alliance in the settings tabs.": (
+        "Characters dieser Corporation, deren Main in einer anderen Corporation oder außerhalb der Alliance ist, mit ihrem ganzen Konto. Eine Notiz wird auf der Seite der Corporation des Mains geändert, bei einem Main außerhalb der Alliance in den Einstellungs-Tabs.",
+        "Characters этой Corporation, чей Main состоит в другой Corporation или вне Alliance, со всем их аккаунтом. Заметка меняется на странице Corporation этого Main, для Main вне Alliance - во вкладках настроек.",
+        "本 Corporation 中其 Main 在其他 Corporation 或 Alliance 之外的 Characters，连同其整个账户。备注在 Main 所在 Corporation 的页面上修改；Main 在 Alliance 之外时，在设置选项卡中修改。",
+    ),
+    "Main's Corporation": ("Corporation des Mains", "Corporation этого Main", "Main 的 Corporation"),
+    "Alts here": ("Alts hier", "Alts здесь", "此处的 Alts"),
 }
 
 PLURALS = {}

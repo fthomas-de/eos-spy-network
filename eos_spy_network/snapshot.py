@@ -8,7 +8,7 @@ pages, and stores the result as JSON in one row. A page reads that row only.
 
 import json
 import time
-from collections import Counter
+from collections import Counter, defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -31,6 +31,7 @@ from .markers import (
     CorporationTile,
     Marker,
     Suspect,
+    Visitor,
     by_markers,
     corporation_tiles,
     roster,
@@ -57,6 +58,9 @@ class MainCharacter:
     character_id: int
     character_name: str
     corporation_id: int
+    # stored for a visitor only, whose main's Corporation may have no tile to take them from
+    corporation_name: str = ""
+    corporation_ticker: str = ""
 
 
 @dataclass
@@ -134,10 +138,11 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
     with measurement.phase(AFFILIATIONS):
         hostiles = {hostile.id: Standing(hostile.standing, hostile.sources) for hostile in hostile_list}
         def rows(*kinds):
+            # a visitor whose main is in the Alliance is a suspect too: its rows come twice, affiliated alike
             return [
                 row
                 for tile in tiles
-                for suspect in tile.suspects
+                for suspect in [*tile.suspects, *(visitor.suspect for visitor in tile.visitors)]
                 for kind in kinds
                 if kind in suspect.markers
                 for row in suspect.markers[kind].rows
@@ -154,9 +159,17 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
         _reference_rows(contact_rows, entities, hostiles)
         found = hostile_only(found)
 
+    tile_ids = {tile.id for tile in tiles}
+    visited = defaultdict(set)  # user -> the Corporations of the Alliance its characters are in
+    for user_id, _character_id, _name, corporation_id, _alliance_id in members.characters:
+        if corporation_id in tile_ids:
+            visited[user_id].add(corporation_id)
     by_corporation = {}
     for account in found.values():
-        by_corporation.setdefault(account.corporation_id, []).append(account)
+        # a main outside the Alliance has no tile: the account shows where its alts are (user, 2026-11-19)
+        homes = [account.corporation_id] if account.corporation_id in tile_ids else visited[account.user_id]
+        for corporation_id in homes:
+            by_corporation.setdefault(corporation_id, []).append(account)
     data = {
         "alliance_id": config.alliance.alliance_id,
         "alliance_name": config.alliance.alliance_name,
@@ -167,6 +180,7 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
                 "ticker": tile.ticker,
                 "mains": tile.mains,
                 "suspects": [_suspect_data(suspect) for suspect in tile.suspects],
+                "visitors": [_visitor_data(visitor) for visitor in tile.visitors],
                 "connections": [
                     _connections_data(account)
                     for account in sorted(
@@ -261,6 +275,16 @@ def _suspect_data(suspect: Suspect) -> dict:
             }
             for marker in suspect.marker_list
         ],
+    }
+
+
+def _visitor_data(visitor: Visitor) -> dict:
+    main = visitor.suspect.main
+    return {
+        **_suspect_data(visitor.suspect),
+        "main_corporation_name": main.corporation_name,
+        "main_corporation_ticker": main.corporation_ticker,
+        "alts": [[character_id, name] for character_id, name in visitor.alts],
     }
 
 
@@ -488,51 +512,73 @@ class Report:
             for eve_id, standing, sources in data.get("hostiles", [])
         }
         self.tiles = [self._tile(row, set(disabled), reviews or {}, findings or {}) for row in rows]
+        tile_ids = {tile.id for tile in self.tiles}
+        for tile in self.tiles:
+            for visitor in tile.visitors:
+                visitor.page = visitor.suspect.main.corporation_id in tile_ids
         self.network_tiles = [self._network_tile(row) for row in rows]
         self.metrics = self._metrics(data.get("metrics"))
 
     @staticmethod
-    def _tile(row, disabled=frozenset(), reviews=None, findings=None) -> CorporationTile:
+    def _suspect(stored, disabled, reviews, findings) -> tuple:
+        """(the stored account with its open markers, the stored markers every finding of which is cleared)."""
+        suspect = Suspect(
+            stored["user_id"],
+            MainCharacter(
+                stored["main_id"],
+                stored["main_name"],
+                stored["corporation_id"],
+                stored.get("main_corporation_name", ""),
+                stored.get("main_corporation_ticker", ""),
+            ),
+            stored["character_count"],
+        )
+        done = []
+        for stored_marker in stored["markers"]:
+            if stored_marker["kind"] in disabled:
+                continue
+            marker = stored_marker
+            if marker["kind"] == BLUE_KILLS:
+                marker = reviewed_kills(marker, reviews)
+            elif marker["kind"] == CONTACTS:
+                marker = reviewed_contacts(marker, stored["main_id"], findings)
+            if marker is None:
+                done.append(stored_marker)
+                continue
+            suspect.markers[marker["kind"]] = Marker(
+                marker["kind"],
+                marker["count"],
+                set(marker["details"]),
+                # a snapshot of 0.0.4 or older has no rows, one of 0.0.9 or older no characters,
+                # until the next run
+                marker.get("rows", []),
+                set(marker.get("character_ids", [])),
+            )
+        return suspect, done
+
+    @classmethod
+    def _tile(cls, row, disabled=frozenset(), reviews=None, findings=None) -> CorporationTile:
+        reviews, findings = reviews or {}, findings or {}
         tile = CorporationTile(row["id"], row["name"], row["ticker"], row["mains"])
         for stored in row["suspects"]:
-            suspect = Suspect(
-                stored["user_id"],
-                MainCharacter(stored["main_id"], stored["main_name"], stored["corporation_id"]),
-                stored["character_count"],
-            )
-            # the markers every finding of which is cleared
-            done = []
-            for stored_marker in stored["markers"]:
-                if stored_marker["kind"] in disabled:
-                    continue
-                marker = stored_marker
-                if marker["kind"] == BLUE_KILLS:
-                    marker = reviewed_kills(marker, reviews or {})
-                elif marker["kind"] == CONTACTS:
-                    marker = reviewed_contacts(marker, stored["main_id"], findings or {})
-                if marker is None:
-                    done.append(stored_marker)
-                    continue
-                suspect.markers[marker["kind"]] = Marker(
-                    marker["kind"],
-                    marker["count"],
-                    set(marker["details"]),
-                    # a snapshot of 0.0.4 or older has no rows, one of 0.0.9 or older no characters,
-                    # until the next run
-                    marker.get("rows", []),
-                    set(marker.get("character_ids", [])),
-                )
+            suspect, done = cls._suspect(stored, disabled, reviews, findings)
             # a main marked only by switched-off markers or cleared findings is clean
             if suspect.markers:
                 tile.suspects.append(suspect)
             elif done:
                 # gone from the list above, its cleared findings would be nowhere on the page
-                rows = cleared_rows(done, stored["main_id"], reviews or {}, findings or {})
+                rows = cleared_rows(done, stored["main_id"], reviews, findings)
                 tile.cleared.append({"main": suspect.main, "rows": rows})
+        # a snapshot older than the visitors has none until the next run; a cleared visitor leaves the page
+        for stored in row.get("visitors", []):
+            suspect, _done = cls._suspect(stored, disabled, reviews, findings)
+            if suspect.markers:
+                tile.visitors.append(Visitor(suspect, [tuple(alt) for alt in stored["alts"]]))
         tile.cleared.sort(key=lambda cleared: cleared["main"].character_name.lower())
         if disabled or reviews or findings:
             # the stored order counted the switched-off markers and the cleared findings too
             tile.suspects.sort(key=by_markers)
+            tile.visitors.sort(key=lambda visitor: by_markers(visitor.suspect))
         return tile
 
     def _network_tile(self, row) -> NetworkTile:

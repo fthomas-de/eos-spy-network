@@ -4,10 +4,40 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-17 (0.0.30).
+Last updated 2026-11-19 (unreleased after 0.0.30).
 
 ## State
 
+- Unreleased (2026-11-19, from the permission review of all eos-* apps):
+  permission `view_evidence` removed (user: on prod nobody holds
+  `view_suspects` without it). `view_suspects` now sees the counterparts,
+  the contract popup and the network pages; `sees_evidence`,
+  `all_permissions_required`, `markers.EVIDENCE`/`Marker.is_evidence` and
+  the template flag `evidence` are gone (`sees_corporation` covers it).
+  Migration 0014 only changes `General`'s Meta (applied to `aa_dev`); the
+  permission row stays in `auth_permission` - Django never deletes one,
+  and a migration deleting it would take its group assignments behind the
+  admin's back. Tests: the `view_evidence` ones dropped (4), the rest log
+  in with `view_suspects` alone; run against the old code they failed
+  (network pages, counterparts, contract popup and its button).
+- Unreleased, same day: visitors (decisions below). `markers.roster` takes
+  every account with its main or any character in a Corporation of the
+  Alliance (`UserProfile` filter with a `CharacterOwnership` subquery);
+  `corporation_tiles` gives each tile `visitors` (`markers.Visitor`:
+  suspect, alts there, `page`), a main outside the Alliance gets no tile
+  and no `mains` count. Snapshot: per Corporation `visitors` (suspect data
+  plus `main_corporation_name/_ticker` and `alts`); network accounts of a
+  main outside go to their alts' Corporations. `Report._suspect` is the
+  old per-suspect part of `_tile`, shared by both lists; `views._accounts`
+  (suspects + visitors) feeds `open_mains` (distinct accounts),
+  `contracts` and the victim links; `_contact_rows` and `api` read the
+  visitors too, `_contact_rows` once per main. Templates:
+  `partials/markers-cell.html` (moved out of `corporation.html`), the
+  block, head and tile lines, `readonly` in `kill-note-button.html`.
+  `test_visitors.py` (16 tests, 14 red against the old code; the two
+  green ones pin what stays). `test_network` counts the ownership table
+  twice now (the subquery). Glossary: 5 new messages, catalogues not run.
+  README: the group-not-state hint for `view_own_corporation`.
 - Version: `0.0.30`, 2026-11-17 (see `CHANGELOG.md`):
   `api.character_markers(*, corporation_id=None)` (keyword-only, user's
   choice). With it only the snapshot `corporations` entry whose `id`
@@ -103,15 +133,36 @@ Last updated 2026-11-17 (0.0.30).
 
 | Page | Permission | What |
 |---|---|---|
-| Markers | `view_suspects` | a tile per Corporation: mains, mains with markers, count per marker; switch to hide clean ones |
-| Corporation | `view_suspects` (+ `view_evidence` for the counterparts of mails/ISK/contracts) | mains with markers and what was found; blue kills as a table with zKB links, note and Cleared tick, grouped by date with a row to clear the day's open kills; at the foot *Cleared findings*: mains with everything cleared, folded per main, searchable, read only |
-| Network | `view_suspects` + `view_evidence` | a tile per Corporation: mains with connections to hostile partners |
-| Network Corporation | `view_suspects` + `view_evidence` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
-| Corporation (CEO) | `view_own_corporation` | only the main's own Corporation, with its evidence and the contract popup; notes and ticks read-only; no Back, no Recalculate; any other Corporation 404 |
+| Markers | `view_suspects` | a tile per Corporation: mains, mains with markers, alts of other mains with markers, count per marker; switch to hide clean ones (a marked visitor makes a tile not clean) |
+| Corporation | `view_suspects` | mains with markers and what was found, the counterparts of mails/ISK/contracts and the contract popup; below it *Alts of mains in other Corporations* (visitors' whole accounts, read only, main's Corporation linked when it has a page); blue kills as a table with zKB links, note and Cleared tick, grouped by date with a row to clear the day's open kills; at the foot *Cleared findings*: mains with everything cleared, folded per main, searchable, read only |
+| Network | `view_suspects` | a tile per Corporation: mains with connections to hostile partners |
+| Network Corporation | `view_suspects` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
+| Corporation (CEO) | `view_own_corporation` | only the main's own Corporation, with its evidence, its visitors' whole accounts (no link to their mains' pages) and the contract popup; notes and ticks read-only; no Back, no Recalculate; any other Corporation 404 |
 | Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles, Log) | tabs: Alliance (hostile and blue threshold, minimum kill value, ignored ships, note buttons, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
 
 ## Open
 
+- Unreleased on prod: run migration 0014. Release together with
+  eos-auth-monitor dropping `view_evidence` from its
+  `sources/spy_network.py` `PERMISSIONS` (that repo's own session) - until
+  then eos-auth-monitor shows the spy markers to nobody who lacks the
+  stale permission. The stale `view_evidence` row may be deleted by the
+  admin afterwards. Not seen in a browser: the *Network* nav and the
+  counterparts for a `view_suspects`-only user (rendered in tests).
+- Visitors on prod: recalculate after the update (an older snapshot has
+  no visitors; the pages then show none, without an error). Not seen in a
+  browser: the block, the head and tile lines, the read-only controls -
+  only the tests rendered them, and the `aa_dev` snapshot was not
+  recalculated with this code. Expect more accounts on prod than before:
+  every player with a main outside the Alliance and an alt inside is
+  checked now. eos-auth-monitor's side (spy badge on its visiting cards,
+  its "Spy network" link pointing at the CEO's Corporation instead of the
+  visitor's main's) is that repo's session.
+- Permission review (user, 2026-11-19), decided to leave: a CEO sees the
+  own account's markers (cannot clear them), settings changes stay
+  unlogged, the CEO's side channels (footer counts, standing tooltip,
+  victim audit link). Full review: side-session notes of the coordination
+  session.
 - 0.0.30 on prod: no migration, no static file. The eos-auth-monitor side
   (CEO sees the spy markers of the own Corporation through
   `character_markers(corporation_id=...)`) is built in that repo's own
@@ -170,7 +221,7 @@ Last updated 2026-11-17 (0.0.30).
   standing, new payment/mail/join) is **always a separate row** (option
   (a), not reopening) - for the dated markers the calculation has to split
   the rows at the review time. Next markers: Membership, Corporation
-  changes, Mails/ISK/Contracts (mails need rows; with `view_evidence`).
+  changes, Mails/ISK/Contracts (mails need rows).
 - Not clicked in the browser yet: the 0.0.19 admin tick in both settings
   tabs (row tick without popup, Save without note), the contacts tab, the
   minimum value field, the 0.0.20 *Value* columns (`aa_dev` has no
@@ -211,8 +262,8 @@ Last updated 2026-11-17 (0.0.30).
 - `aa_dev` has no hostile network partner and no ISK/contract marker, so the network pages
   there are empty since 0.0.5 (fenriscw1 is not hostile); rendered
   server-side without errors.
-- Markers weighted, a score; account page with evidence
-  (`view_evidence`: mail headers and subjects, wallet entries, contracts).
+- Markers weighted, a score; account page with evidence (mail headers
+  and subjects, wallet entries, contracts).
 - More markers: clones/assets in staging systems (needs a setting for the
   systems), owner changes, audit gaps as data gap.
 - Measure the calculation on prod-sized wallet journals (footer shows it).
@@ -247,7 +298,7 @@ Last updated 2026-11-17 (0.0.30).
   contract payments; one payment per character is enough, it is the overlap
   of two own characters that counts; player trading shows on its own. A
   counterpart Auth does not know counts as outside; NPCs never. The graph
-  is vis-network from cdnjs. The pages need `view_evidence` as well.
+  is vis-network from cdnjs.
 - Shared partner (user, 2026-10-09): any two own characters, two alts
   without the main are enough; the graph always draws the main with them.
   The payment count stands on the lines again (user: overlap does not
@@ -359,18 +410,34 @@ Last updated 2026-11-17 (0.0.30).
   every character of the Alliance. A save during a running calculation
   makes that run repeat itself once, rather than a message to the admin.
 - Menu badge (user, 2026-11-07): counts the mains with open markers (not
-  markers or findings), only for `view_suspects`.
+  markers or findings), only for `view_suspects`; since 2026-11-19 the
+  accounts, each once, and for a CEO the visitors too.
 - Own kills (user, 2026-11-07): a blue kill whose victim belongs to the
   attacker's account is never stored; old copies are hidden, not deleted.
 - Mails: headers and subject, never the body.
 - Scope: one Alliance, as in eos-auth-monitor.
-- Permissions `view_suspects`, `view_evidence`, `manage_settings`; no
-  `basic_access`, it would have opened nothing.
+- Permissions `view_suspects`, `manage_settings`, `view_own_corporation`;
+  no `basic_access`, it would have opened nothing. `view_evidence` removed
+  (user, 2026-11-19): nobody held `view_suspects` without it, and
+  eos-auth-monitor demanded it for labels that carry no evidence.
 - CEO permission (user, 2026-11-17): `view_own_corporation`, assigned by
   the admin (no automatic CEO detection by `ceo_id`); own = the main's
   Corporation; it shows the Corporation page and its evidence only - no
   network pages, no notes or *Cleared*, no *Recalculate*, no settings; the
   menu badge counts the own Corporation's mains.
+- Visitors (user, 2026-11-19): an account with an alt in a Corporation
+  and its main elsewhere is that Corporation's CEO's problem too. Its
+  whole account shows there - main, main's Corporation, all alts, every
+  marker with everything found, mails/ISK/contracts of all its characters
+  included - in an own block below the mains, to the CEO and to
+  `view_suspects` alike, read only (notes on the main's page; a main
+  outside the Alliance only in the settings tabs). A player is all of his
+  characters: a main outside the Alliance is checked through an alt
+  inside. Head and tile count the visitors, a tile with one is not clean,
+  the CEO's menu badge counts them, `view_suspects` counts every account
+  once. Levels (user): member (none in this app - he would see his own
+  suspicion), CEO (the main's Corporation plus its visitors; an own alt
+  elsewhere opens nothing), leadership (everything).
 - CEO in eos-auth-monitor (user, 2026-11-17): eos-auth-monitor honours
   `view_own_corporation` and shows a CEO the markers of the own
   Corporation only, exactly by this app's rule; hence the API argument

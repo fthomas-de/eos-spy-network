@@ -23,7 +23,6 @@ from .base import (
 )
 
 VIEW_SUSPECTS = "eos_spy_network.view_suspects"
-VIEW_EVIDENCE = "eos_spy_network.view_evidence"
 MANAGE_SETTINGS = "eos_spy_network.manage_settings"
 # user_passes_test sends a user without the permission to the login page
 LOGIN = "/account/login/"
@@ -48,14 +47,6 @@ class TestAccess(SpyTestCase):
                 response = self.client.get(url)
                 self.assertTrue(response.url.startswith(LOGIN))
 
-    def test_should_turn_away_view_evidence_alone(self):
-        # it only adds to view_suspects: no page opens with it
-        self.client.force_login(make_user("reader", VIEW_EVIDENCE))
-
-        response = self.client.get(reverse("eos_spy_network:index"))
-
-        self.assertTrue(response.url.startswith(LOGIN))
-
     def test_should_keep_settings_from_viewers(self):
         self.client.force_login(make_user("viewer", VIEW_SUSPECTS))
 
@@ -63,13 +54,13 @@ class TestAccess(SpyTestCase):
 
         self.assertTrue(response.url.startswith(LOGIN))
 
-    def test_should_keep_the_network_from_viewers_without_view_evidence(self):
+    def test_should_open_the_network_to_viewers(self):
+        # view_evidence is gone (user, 2026-11-19): view_suspects alone opens the network
         self.client.force_login(make_user("viewer", VIEW_SUSPECTS))
 
-        for url in (reverse("eos_spy_network:network"), reverse("eos_spy_network:network_corporation", args=[2001])):
-            with self.subTest(url):
-                response = self.client.get(url)
-                self.assertTrue(response.url.startswith(LOGIN))
+        response = self.client.get(reverse("eos_spy_network:network"))
+
+        self.assertEqual(response.status_code, 200)
 
     def test_should_keep_the_corporations_from_settings_managers(self):
         self.client.force_login(make_user("admin", MANAGE_SETTINGS))
@@ -325,16 +316,8 @@ class TestEvidence(SuspectPageTestCase):
         )
         snapshot.update()
 
-    def test_should_hide_the_counterparts_without_view_evidence(self):
-        self.client.force_login(make_user("viewer", VIEW_SUSPECTS))
-
-        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
-
-        self.assertContains(response, "ISK with hostiles")
-        self.assertNotContains(response, self.COUNTERPART)
-
-    def test_should_show_the_counterparts_with_view_evidence(self):
-        self.client.force_login(make_user("lead", VIEW_SUSPECTS, VIEW_EVIDENCE))
+    def test_should_show_the_counterparts(self):
+        self.client.force_login(make_user("lead", VIEW_SUSPECTS))
 
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
@@ -425,7 +408,7 @@ class TestNetworkPages(SuspectPageTestCase):
         # only a hostile partner makes the account show up
         add_contact(ContactSource.ALLIANCE, ALLIANCE_ID, self.OUTSIDER, -10, contact_type="character")
         snapshot.update()
-        self.client.force_login(make_user("lead", VIEW_SUSPECTS, VIEW_EVIDENCE))
+        self.client.force_login(make_user("lead", VIEW_SUSPECTS))
 
     def test_should_show_a_tile_per_corporation(self):
         response = self.client.get(reverse("eos_spy_network:network"))
@@ -733,7 +716,7 @@ class TestContractDetails(SuspectPageTestCase):
         self.add_contract(77, "Spy gear")
         self.pay(1, "contract_price", context_id=77)
         snapshot.update()
-        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+        self.login(VIEW_SUSPECTS)
 
         response = self.client.get(self.url)
 
@@ -744,7 +727,7 @@ class TestContractDetails(SuspectPageTestCase):
     def test_should_say_when_corptools_never_stored_the_contract(self):
         self.pay(1, "contract_price", context_id=78)
         snapshot.update()
-        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+        self.login(VIEW_SUSPECTS)
 
         response = self.client.get(self.url)
 
@@ -758,7 +741,7 @@ class TestContractDetails(SuspectPageTestCase):
         # the payment that makes the marker offer this pair
         self.pay(3, "contract_price", context_id=81)
         snapshot.update()
-        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+        self.login(VIEW_SUSPECTS)
 
         response = self.client.get(self.url)
 
@@ -769,7 +752,7 @@ class TestContractDetails(SuspectPageTestCase):
         # corptools holds the contract, but no calculation put the pair on a page
         self.add_contract(77, "Spy gear")
         self.pay(1, "contract_price", context_id=77)
-        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+        self.login(VIEW_SUSPECTS)
 
         self.assertEqual(self.client.get(self.url).status_code, 404)
 
@@ -777,14 +760,14 @@ class TestContractDetails(SuspectPageTestCase):
         self.pay(1, "contract_price", context_id=80)
         self.pay(2, "contract_price", context_id=82, party_id=5001)
         snapshot.update()
-        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+        self.login(VIEW_SUSPECTS)
 
         response = self.client.get(reverse("eos_spy_network:contracts", args=[self.main.character_id, 5001]))
 
         self.assertEqual(response.status_code, 404)
 
-    def test_should_need_view_evidence(self):
-        self.login(VIEW_SUSPECTS)
+    def test_should_need_view_suspects(self):
+        self.login(MANAGE_SETTINGS)
 
         response = self.client.get(self.url)
 
@@ -793,7 +776,7 @@ class TestContractDetails(SuspectPageTestCase):
     def test_should_offer_the_button_for_a_contract_payment_only(self):
         self.pay(1, "contract_price", context_id=80)
         snapshot.update()
-        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+        self.login(VIEW_SUSPECTS)
 
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
@@ -802,7 +785,7 @@ class TestContractDetails(SuspectPageTestCase):
     def test_should_not_offer_the_button_for_a_donation(self):
         self.pay(1, "player_donation")
         snapshot.update()
-        self.login(VIEW_SUSPECTS, VIEW_EVIDENCE)
+        self.login(VIEW_SUSPECTS)
 
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 

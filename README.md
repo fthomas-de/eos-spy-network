@@ -16,18 +16,23 @@ every one with a standing below a configurable value.
 
 ## Features
 
-- **Menu badge**: the menu item shows how many mains have open markers
-  (switched-off markers and cleared findings left out), for users with
-  `view_suspects`
+- **Menu badge**: the menu item shows how many accounts have open markers
+  (switched-off markers and cleared findings left out), each counted once:
+  for `view_suspects` all of them, for `view_own_corporation` those its
+  Corporation page shows, visitors included
 - **Markers**: a tile per Corporation of the Alliance with its number
-  of mains, how many of them have markers, and per marker how many mains
-  have it. A switch hides the Corporations without markers; the browser
-  remembers it
+  of mains, how many of them have markers, how many alts of other mains
+  with markers it holds (visitors, see below), and per marker how many mains
+  have it. A switch hides the Corporations without markers or marked
+  visitors; the browser remembers it
+- **Accounts checked**: every account whose main is in a Corporation of the
+  Alliance, and every account with an alt in one, its main elsewhere or
+  outside the Alliance - a player is all of his characters, inside the
+  Alliance or not
 - **Corporation page**: every main of the Corporation with at least one
   marker, the most marked first, with the number of characters on the
-  account and per marker what was found. The counterparts of mails, ISK and
-  contracts are evidence and only shown with `view_evidence`; without it
-  the marker and its count are. ISK and contracts show a row per own
+  account and per marker what was found, with the counterparts of mails,
+  ISK and contracts. ISK and contracts show a row per own
   character and hostile: the hostile's Corporation and Alliance (red with
   the standing when hostile themselves), how many entries or contracts, the
   ISK moved (for the wallet), the period from the first to the last one and
@@ -36,14 +41,20 @@ every one with a standing below a configurable value.
   tooltip per character. Blue kills show a row per own character and
   killmail: the day (linked to zKillboard), the victim, its Corporation and
   Alliance, the ship and the reason - *Awox* or *Blue* with the standing.
-  Killmails are public, so they need no `view_evidence`. Each row has a
+  Each row has a
   note (up to 160 characters) and a tick *Cleared*, editable with
   `view_suspects` here and in the settings tab *Blue kills*; clearing needs
   a note here, while an admin with `manage_settings` ticks a row off in the
   settings tab without one. A cleared kill
   stays in the table, greyed, but no longer counts - at once, without a
   recalculation, on these pages and for eos-auth-monitor; a main whose kills
-  are all cleared and who has no other marker counts as clean
+  are all cleared and who has no other marker counts as clean.
+  Below, *Alts of mains in other Corporations*: every marked account with
+  an alt in this Corporation whose main is elsewhere, with its main, the
+  main's Corporation, its alts here and all its markers with everything
+  found - the CEO answers for the alt. Read only: notes and ticks are set on
+  the page of the main's Corporation (linked for `view_suspects`), for a
+  main outside the Alliance in the settings tabs
 - **Markers** per account, over the main and all its alts:
   - *Hostile membership*: a character is in a hostile Corporation or
     Alliance, or was in a hostile Corporation within the time frame
@@ -101,8 +112,9 @@ every one with a standing below a configurable value.
   "Outside" is everything Auth does not know as part of the Alliance, so a
   character Auth has never seen counts as outside. NPCs (agents, NPC
   Corporations, factions) never count. Only payments within the time frame
-  count, and none of the ignored entry types. The page needs `view_suspects` and
-  `view_evidence`: the connections are wallet counterparts
+  count, and none of the ignored entry types. An account whose main is
+  outside the Alliance shows at the Corporations of its alts. The page
+  needs `view_suspects`
 - **Recalculate**: the markers and connections are calculated by a task and
   stored; the pages read the stored result and show when it was calculated.
   The button *Recalculate* on the pages, saving the settings and the
@@ -224,13 +236,21 @@ know yet is shown by its ID.
 
 | Permission | What it allows |
 |---|---|
-| `eos_spy_network.view_suspects` | the Corporations and their mains with markers; the *Recalculate* button |
-| `eos_spy_network.view_evidence` | the counterparts behind the mail, ISK and contract markers; together with `view_suspects` the network pages (later: mail headers and subjects, wallet entries, contracts) |
+| `eos_spy_network.view_suspects` | the Corporations and their mains with markers and evidence (mail, ISK and contract counterparts, the contract popup); the network pages; notes and *Cleared* ticks; the *Recalculate* button |
 | `eos_spy_network.manage_settings` | the settings page; its tabs *Blue kills*, *Friendly to hostiles* and *Log* only together with `view_suspects` |
-| `eos_spy_network.view_own_corporation` | for CEOs: the Corporation page of the user's main's Corporation with its evidence (mail, ISK and contract counterparts); no other Corporation, no network pages, no *Recalculate*, no notes or *Cleared* ticks. Together with `view_suspects` it adds the evidence of the own Corporation |
+| `eos_spy_network.view_own_corporation` | for CEOs: the Corporation page of the user's main's Corporation with its evidence (mail, ISK and contract counterparts) and its visitors' whole accounts; no other Corporation (an own alt elsewhere opens none), no network pages, no *Recalculate*, no notes or *Cleared* ticks |
 
-The menu entry shows for anyone holding `view_suspects`, `manage_settings`
-or `view_own_corporation`; `view_evidence` alone opens no page.
+The menu entry shows for anyone holding one of them.
+
+Give `view_own_corporation` to a group of the CEOs, never to a state: the
+app does not check who is CEO, and every holder sees the suspects of the
+own main's Corporation - on a state, every member would see whether they
+are suspected themselves.
+
+Up to 0.0.30 a fourth permission, `view_evidence`, held the counterparts
+and the network pages back from `view_suspects`. It is gone; Django does
+not delete a permission it no longer defines, so the row stays in the
+admin, assigned but without effect, until an admin deletes it.
 
 ## Installation
 

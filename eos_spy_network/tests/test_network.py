@@ -392,4 +392,5 @@ class TestQueries(NetworkTestCase):
         # once for the hostiles, once for the blues of the blue kills
         self.assertEqual(count("aa_contacts_alliancecontact"), 2)
         self.assertEqual(count("authentication_userprofile"), 1)
-        self.assertEqual(count("authentication_characterownership"), 1)
+        # the characters, and inside the mains' query the accounts with an alt in the Alliance
+        self.assertEqual(count("authentication_characterownership"), 2)

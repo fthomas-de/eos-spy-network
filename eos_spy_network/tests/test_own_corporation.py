@@ -8,7 +8,7 @@ from eos_spy_network.auth_hooks import SpyNetworkMenuItem
 
 from . import test_views
 from .base import make_corporation, make_user
-from .test_views import LOGIN, VIEW_SUSPECTS, SuspectPageTestCase
+from .test_views import LOGIN, SuspectPageTestCase
 
 
 VIEW_OWN_CORPORATION = "eos_spy_network.view_own_corporation"
@@ -99,15 +99,6 @@ class TestOwnCorporationEvidence(SuspectPageTestCase):
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
         self.assertContains(response, self.COUNTERPART)
-
-    def test_should_show_viewers_the_evidence_of_their_own_corporation_only(self):
-        make_corporation(2002)
-        self.client.force_login(make_user("ceo", VIEW_SUSPECTS, VIEW_OWN_CORPORATION, corporation_id=2002))
-
-        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
-
-        self.assertContains(response, "ISK with hostiles")
-        self.assertNotContains(response, self.COUNTERPART)
 
 
 class TestOwnCorporationContracts(SuspectPageTestCase):

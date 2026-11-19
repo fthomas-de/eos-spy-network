@@ -2,8 +2,7 @@
 
 eos-auth-monitor shows the markers per character. It imports this module
 inside an ``apps.is_installed("eos_spy_network")`` guard and checks the
-permissions ``eos_spy_network.view_suspects`` and
-``eos_spy_network.view_evidence`` (whole Alliance) or
+permission ``eos_spy_network.view_suspects`` (whole Alliance) or
 ``eos_spy_network.view_own_corporation`` (the main's Corporation, through
 ``corporation_id``) itself; nothing here checks a permission.
 
@@ -31,7 +30,8 @@ def character_markers(*, corporation_id: int | None = None) -> dict[int, list[st
     Only the account's own characters behind a finding appear, each under its
     own ID (not its main's). With ``corporation_id``, only what that
     Corporation's page shows: the mains of that Corporation with all their
-    characters, an alt in another Corporation included - what a CEO with
+    characters, an alt in another Corporation included, and the whole
+    accounts of its visitors (an alt there, the main elsewhere) - what a CEO with
     ``view_own_corporation`` sees (the caller checks that permission, see
     ``permissions.sees_corporation``); empty for a Corporation without a page.
     Markers switched off in the settings are left out, as on this app's pages, and so are the blue kills and contacts marked cleared. Empty without a snapshot, and when the
@@ -60,7 +60,8 @@ def character_markers(*, corporation_id: int | None = None) -> dict[int, list[st
         # the page's own lookup (Report.tile): the entry's id, not the suspects' corporation_id
         if corporation_id is not None and corporation["id"] != corporation_id:
             continue
-        for suspect in corporation["suspects"]:
+        # the visitors' whole accounts too: that page shows them, and a main outside the Alliance is only there
+        for suspect in [*corporation["suspects"], *corporation.get("visitors", [])]:
             for marker in suspect["markers"]:
                 if marker["kind"] in disabled:
                     continue

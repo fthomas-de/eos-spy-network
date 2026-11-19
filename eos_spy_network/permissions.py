@@ -5,11 +5,9 @@ from functools import wraps
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 VIEW_SUSPECTS = "eos_spy_network.view_suspects"
-VIEW_EVIDENCE = "eos_spy_network.view_evidence"
 MANAGE_SETTINGS = "eos_spy_network.manage_settings"
 VIEW_OWN_CORPORATION = "eos_spy_network.view_own_corporation"
 
-# what opens a page; view_evidence only adds to view_suspects and opens none on its own
 APP_PERMISSIONS = (VIEW_SUSPECTS, MANAGE_SETTINGS, VIEW_OWN_CORPORATION)
 
 
@@ -25,14 +23,8 @@ def own_corporation_id(user) -> int | None:
 
 
 def sees_corporation(user, corporation_id) -> bool:
+    # whoever sees a Corporation sees its evidence too: view_evidence is gone (user, 2026-11-19)
     return user.has_perm(VIEW_SUSPECTS) or corporation_id == own_corporation_id(user)
-
-
-def sees_evidence(user, corporation_id) -> bool:
-    # view_evidence only adds to what the viewer sees; in the own Corporation the CEO's right brings it along
-    return sees_corporation(user, corporation_id) and (
-        user.has_perm(VIEW_EVIDENCE) or corporation_id == own_corporation_id(user)
-    )
 
 
 def any_permission_required(*perms):
@@ -41,21 +33,6 @@ def any_permission_required(*perms):
     def decorator(view):
         @login_required
         @user_passes_test(lambda user: any(user.has_perm(perm) for perm in perms))
-        @wraps(view)
-        def wrapper(request, *args, **kwargs):
-            return view(request, *args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-def all_permissions_required(*perms):
-    """login_required plus every one of ``perms``."""
-
-    def decorator(view):
-        @login_required
-        @user_passes_test(lambda user: all(user.has_perm(perm) for perm in perms))
         @wraps(view)
         def wrapper(request, *args, **kwargs):
             return view(request, *args, **kwargs)

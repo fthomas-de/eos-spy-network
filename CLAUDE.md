@@ -96,8 +96,7 @@ is no binary log and there are no dumps.
 - Nothing is created behind the admin's back: no groups, states, permission
   assignments or periodic tasks in code or migrations. A periodic task goes
   into the README as a `CELERYBEAT_SCHEDULE` block for `local.py`.
-- Mail bodies are never shown: headers and subjects only, and only with
-  `view_evidence`.
+- Mail bodies are never shown: headers and subjects only.
 - Keep the README true: the checklist compares every claim with the code.
 
 Comments say **why**, not what. A comment that restates the line is noise; a

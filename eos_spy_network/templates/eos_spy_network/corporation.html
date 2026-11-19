@@ -25,7 +25,8 @@
                     </h5>
                     <div class="small">
                         {% translate "Mains" context "eos-spy-network" %}: {{ tile.mains }} ·
-                        {% translate "Mains with markers" %}: {{ tile.suspects|length }}
+                        {% translate "Mains with markers" %}: {{ tile.suspects|length }} ·
+                        {% translate "Alts of other mains with markers" %}: {{ tile.visitors|length }}
                     </div>
                 </div>
                 {% if perms.eos_spy_network.view_suspects %}
@@ -68,29 +69,7 @@
                                     </td>
                                     <td>{{ suspect.character_count }}</td>
                                     <td data-order="{{ suspect.markers|length }}">
-                                        {% for marker in suspect.marker_list %}
-                                            <div class="mb-1">
-                                                <span class="badge text-bg-info text-wrap" title="{{ marker.description }}">{{ marker.label }}{% if marker.count > 1 %} ({{ marker.count }}){% endif %}</span>
-                                                {# mails, ISK and contracts are evidence: their counterparts only with view_evidence or in the CEO's own Corporation #}
-                                                {% if marker.joins %}
-                                                    {# the Corporations joined, one per line in the tooltip #}
-                                                    <span class="small text-break">
-                                                        {% for row in marker.rows %}<abbr title="{% for start, name in row.corporations %}{{ start }} {{ name }}{% if not forloop.last %}&#10;{% endif %}{% endfor %}">{{ row.character }}: {{ row.count }}</abbr>{% if not forloop.last %}, {% endif %}{% endfor %}
-                                                    </span>
-                                                {% elif marker.kills %}
-                                                    {# killmails are public on zKillboard: no evidence #}
-                                                    {% include "eos_spy_network/partials/kills.html" %}
-                                                {% elif marker.contacts %}
-                                                    {% include "eos_spy_network/partials/contacts.html" %}
-                                                {% elif marker.dealings %}
-                                                    {% if evidence %}
-                                                        {% include "eos_spy_network/partials/dealings.html" %}
-                                                    {% endif %}
-                                                {% elif not marker.is_evidence or evidence %}
-                                                    <span class="small text-break">{{ marker.sorted_details|join:", " }}</span>
-                                                {% endif %}
-                                            </div>
-                                        {% endfor %}
+                                        {% include "eos_spy_network/partials/markers-cell.html" %}
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -102,6 +81,61 @@
             {% endif %}
         </div>
     </div>
+
+    {% if tile.visitors %}
+        {# the whole account of each alt here whose main is elsewhere (user, 2026-11-19); read only: notes and ticks belong to the main's page or the settings tabs #}
+        <div class="card mt-3">
+            <div class="card-header">
+                <div class="card-title mb-0">{% translate "Alts of mains in other Corporations" %}</div>
+            </div>
+            <div class="card-body">
+                <p class="small text-body-secondary">
+                    {% translate "Characters of this Corporation whose main is in another Corporation or outside the Alliance, with their whole account. A note is changed on the page of the main's Corporation, for a main outside the Alliance in the settings tabs." %}
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped table-hover w-100 align-middle eos-spy-network-sortable">
+                        <thead>
+                            <tr>
+                                <th>{% translate "Main" context "EVE jargon" %}</th>
+                                <th>{% translate "Main's Corporation" %}</th>
+                                <th>{% translate "Alts here" %}</th>
+                                <th>{% translate "Markers" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for visitor in tile.visitors %}
+                                {% with suspect=visitor.suspect readonly=True %}
+                                    <tr>
+                                        <td data-order="{{ suspect.main.character_name|lower }}">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img src="{{ suspect.main.character_id|character_portrait_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
+                                                <span class="text-break">{{ suspect.main.character_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-break">
+                                            {# the CEO's right ends at the own Corporation: the link would lead to a 404 #}
+                                            {% if visitor.page and perms.eos_spy_network.view_suspects %}
+                                                <a href="{% url 'eos_spy_network:corporation' suspect.main.corporation_id %}">{{ suspect.main.corporation_name }}</a>
+                                            {% else %}
+                                                {{ suspect.main.corporation_name }}
+                                            {% endif %}
+                                            <span class="text-body-secondary small">[{{ suspect.main.corporation_ticker }}]</span>
+                                        </td>
+                                        <td class="text-break">
+                                            {% for character_id, name in visitor.alts %}{{ name }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=character_id %}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                        </td>
+                                        <td data-order="{{ suspect.markers|length }}">
+                                            {% include "eos_spy_network/partials/markers-cell.html" %}
+                                        </td>
+                                    </tr>
+                                {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
     {% if tile.cleared %}
         {# mains gone from the table above: their cleared findings, read only; cleared.js searches and folds #}
@@ -166,20 +200,18 @@
         </div>
     {% endif %}
 
-    {% if evidence %}
-        {# one popup for every contract payment; contracts.js fills it #}
-        <div class="modal fade" tabindex="-1" aria-hidden="true" data-eos-spy-network-contracts-modal>
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">{% translate "Contracts" context "eos-spy-network" %}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
-                    </div>
-                    <div class="modal-body" data-eos-spy-network-contracts-body data-loading="{% translate 'Loading ...' %}" data-failed="{% translate 'The contracts could not be loaded.' %}"></div>
+    {# one popup for every contract payment; contracts.js fills it #}
+    <div class="modal fade" tabindex="-1" aria-hidden="true" data-eos-spy-network-contracts-modal>
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{% translate "Contracts" context "eos-spy-network" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
                 </div>
+                <div class="modal-body" data-eos-spy-network-contracts-body data-loading="{% translate 'Loading ...' %}" data-failed="{% translate 'The contracts could not be loaded.' %}"></div>
             </div>
         </div>
-    {% endif %}
+    </div>
 
     {% include "eos_spy_network/partials/kill-note-modal.html" with reload=True %}
 {% endblock %}
