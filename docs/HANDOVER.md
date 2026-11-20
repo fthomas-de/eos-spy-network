@@ -4,11 +4,29 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-20 (0.0.35).
+Last updated 2026-11-21 (0.0.36).
 
 ## State
 
-- Version: `0.0.35`, 2026-11-20 (see `CHANGELOG.md`): three fixes of the
+- Version: `0.0.36`, 2026-11-21 (see `CHANGELOG.md`): page *Statistics*
+  and *Log* as its own page.
+  - `capital_sweep.sweep()` stores the numbers of its last run in
+    `SweepStats` (one row, pk=1, `update_or_create`; migration 0017):
+    regions asked/failed, public contracts listed, Alliance contracts,
+    issuers, Corporations, added, items failed, removed, plus JSON
+    `per_region` (name -> count) and `per_corporation` (ID as string ->
+    count). No extra ESI call. `_delete()` returns only the
+    `CapitalContract` count from `delete()[1]` - the total would add the
+    cascaded items.
+  - `views.statistics` (`statistics/`) and `views.log` (`log/`, the former
+    settings tab *Log*) both need `manage_settings` **and** `view_suspects`
+    (new `permissions.all_permissions_required`); the nav shows them only
+    then, order Markers | Network | Statistics | Log | Settings. The
+    settings keep five tabs. Templates `statistics.html`, `log.html`,
+    `partials/stat-tile.html`.
+  - Tests: `TestSweepStats` (3), `TestStatisticsPage` (5), the log tests
+    on the new URL; all new ones were red against 0.0.35.
+- Before (0.0.35), 2026-11-20: three fixes of the
   capital sweep after an ESI review (user asked for the token use, buckets,
   timeouts and duplicate requests).
   - Both public contract calls run `results(use_etag=False,
@@ -48,14 +66,18 @@ Last updated 2026-11-20 (0.0.35).
   Changed in 0.0.34: no `outstanding`/`public` columns (ESI lists only open
   public ones), `for_corporation` is not read - the issuer's Corporation
   decides. Two item rows of one ship type in a contract add up now.
-- Tests (0.0.35): 415 without translation tests plus 3 translation tests,
-  all green (fresh test database). The 10 sweep tests of 0.0.34 and the
+- Tests (0.0.36): 424 without translation tests plus the translation tests
+  of `tools/translate.py`, all green (fresh test database). The 10 sweep
+  tests of 0.0.34 and the
   capital tests in `test_markers` and `test_views.TestCapitalContractDetails`
   were not checked red one by one; nothing of the capital marker seen in a
   browser.
-- Real ESI, once on `aa_dev` (2026-11-19): a full sweep took 24.6 s, found 7
-  contracts of Invidia Gloriae Comes (an Ishtar fit in a structure in
-  Esoteria), none with a capital - so a hit has only been seen in tests.
+- Real ESI on `aa_dev`: 2026-11-19 (0.0.34) 24.6 s, 7 contracts of
+  Invidia Gloriae Comes (an Ishtar fit in a structure in Esoteria), none
+  with a capital - a hit has only been seen in tests. 2026-11-20 with the
+  0.0.36 code: 26.8 s, 70 regions, 0 failed, 50989 public contracts, 7 of
+  the Alliance (2 issuers, Ether Element [3THEL], all in Esoteria), 1 added,
+  1 removed - no "failed" warnings, so the 0.0.35 fixes work for real.
 - 0.0.31 (earlier today), both parts from the
   permission review of all eos-* apps (coordination session; its notes in
   the side-session notes folder).
@@ -133,8 +155,7 @@ Last updated 2026-11-20 (0.0.35).
 - Before (0.0.23): settings tab *Log*, model `ReviewLog` written by
   `kill_note` and `finding_note` inside `transaction.atomic` with
   `select_for_update`; migration 0010 seeded the earlier reviews (0 in
-  `aa_dev`). The tab is rendered once with the page: a tick in another tab
-  shows in the log only after a reload.
+  `aa_dev`). Since 0.0.36 the log is its own page `log/`.
 - Prod question (user, 2026-11-11): 5 blue kills ticked, the settings tab
   *Blue kills* showed only one. The code groups only per main and killmail
   (what the user wants), so 5 different killmails give 5 rows. Suspects: a
@@ -160,7 +181,7 @@ Last updated 2026-11-20 (0.0.35).
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: count and state in the 0.0.35 bullets above. `tests.base.SpyTestCase` patches
+- Tests: count and state in the 0.0.36 bullets above. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
@@ -180,7 +201,9 @@ Last updated 2026-11-20 (0.0.35).
 | Network | `view_suspects` | a tile per Corporation: mains with connections to hostile partners |
 | Network Corporation | `view_suspects` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
 | Corporation (CEO) | `view_own_corporation` | only the main's own Corporation, with its evidence, its visitors' whole accounts (no link to their mains' pages) and the contract popup; notes and ticks read-only; no Back, no Recalculate; any other Corporation 404 |
-| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles, Log) | tabs: Alliance (hostile and blue threshold, minimum kill value, ignored ships, capital ship groups, note buttons, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note; Log (every save of both) |
+| Statistics | `manage_settings` + `view_suspects` | the last contract sweep: tiles (regions, failed, public contracts, Alliance contracts, characters, Corporations, new, gone), a warning for items not fetched, Alliance contracts per region and per Corporation |
+| Log | `manage_settings` + `view_suspects` | every save of a note or tick of both review tabs |
+| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles) | tabs: Alliance (hostile and blue threshold, minimum kill value, ignored ships, capital ship groups, note buttons, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note |
 
 ## Open
 
@@ -190,9 +213,10 @@ Last updated 2026-11-20 (0.0.35).
   `bind=True` in 0.0.35), then run the task once by hand and recalculate -
   until the first sweep the marker finds nothing. The sweep needs eve_sde
   (regions, stations).
-- 0.0.35 was only run in tests: no real sweep with the new code yet. Worth
-  one hand run on `aa_dev` (`capital_sweep.sweep()` in the shell): expect no
-  "failed" warnings and the 7 rows updated, not kept by a 304.
+- 0.0.36 on prod: run migration 0017; *Statistics* shows "No contract
+  sweep has run yet." until the first sweep with the new code. Neither page
+  was seen in a browser (SSO) - only rendered through the test client;
+  the tiles in light and dark theme are unseen.
 - Not done, possible next steps: `affiliations.py` (network task) has the
   same django-esi weakness - its timeouts are not retried either; not
   reviewed. The django-esi retry bug (its check tests httpx2's exception
@@ -477,8 +501,12 @@ Last updated 2026-11-20 (0.0.35).
   only the hostile Alliance keeps its own `#8b1a1a`, because
   `text-danger-emphasis` turns lighter in the dark theme (user,
   2026-11-10).
+- Statistics (user, 2026-11-20): an own nav page, not a settings tab; only
+  numbers the sweep has anyway, simple counts, computed by the sweep, only
+  the last run kept, plus counts per region and per Corporation; needs
+  `manage_settings` + `view_suspects`. The log moved next to it (user).
 - Review log (user, 2026-11-11): every save of a note or tick is kept,
-  shown in an own settings tab (not a popup per row); the reviews made
+  shown on its own (since 0.0.36 its own page, not a popup per row); the reviews made
   before the log are seeded once with their last state. Blue kills stay
   grouped per main and killmail in both tables, nothing more (user).
 - Audit (user, 2026-11-12): `manage_settings` alone does not see the
@@ -524,12 +552,13 @@ Last updated 2026-11-20 (0.0.35).
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0016
-  applied to `aa_dev`, `collectstatic` run. `local.py` has a `## eos spy
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0017
+  applied to `aa_dev`, `collectstatic` run (0.0.36). `SweepStats` holds
+  the row of the 2026-11-20 hand run. `local.py` has a `## eos spy
   network` block with the sweep's beat entry (2026-11-19); no Celery
   process runs, so it fires only once worker and beat are started. The
   tables `CapitalContract`/`CapitalContractItem` hold the 7 contracts of the
-  hand run (0.0.34). Redis still holds that run's 120 ETag keys
+  2026-11-20 hand run. Redis still holds that run's 120 ETag keys
   (`eos-spy-network_etag_*`); 0.0.35 no longer reads them, they expire
   about 2026-11-26. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
