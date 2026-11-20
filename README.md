@@ -301,7 +301,8 @@ admin, assigned but without effect, until an admin deletes it.
    ```
 
    *Capital in contract* reads its own table, which a daily sweep of ESI's
-   public contracts fills (about 150 to 400 requests, no token):
+   public contracts fills (about 120 requests, no token, no ESI rate-limit
+   bucket):
 
    ```python
    CELERYBEAT_SCHEDULE["eos_spy_network_sweep_capital_contracts"] = {

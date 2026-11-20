@@ -2,11 +2,12 @@ from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from esi.exceptions import ESIErrorLimitException
 from eve_sde.models import ItemCategory, ItemGroup, ItemType, NPCStation, Region
 
 from django.utils import timezone
 
-from eos_spy_network import capital_sweep
+from eos_spy_network import capital_sweep, tasks
 from eos_spy_network.models import CapitalContract
 
 from .base import SpyTestCase, configure, make_corporation
@@ -51,9 +52,13 @@ class TestSweep(SpyTestCase):
         self.items = {1: [item()]}
         self.asked_regions = []
         self.asked_items = []
+        self.timeouts = {}  # region ID -> how many times it fails before it answers
 
         def regions(region_id):
             self.asked_regions.append(region_id)
+            if self.timeouts.get(region_id):
+                self.timeouts[region_id] -= 1
+                raise RuntimeError("timeout")
             answer = self.listed[region_id]
             if isinstance(answer, Exception):
                 raise answer
@@ -147,3 +152,56 @@ class TestSweep(SpyTestCase):
 
         self.assertEqual(capital_sweep.sweep(), 0)
         self.assertEqual(self.asked_regions, [])
+
+    def test_should_ask_a_failed_region_again_in_the_same_sweep(self):
+        capital_sweep.sweep()
+        self.listed[DERELIK] = []
+        self.listed[FORGE] = [public(2)]
+        self.items[2] = [item()]
+        self.timeouts[FORGE] = 1
+
+        capital_sweep.sweep()
+
+        # the second answer counts in full: the new contract is stored, the gone one forgotten
+        self.assertEqual(list(CapitalContract.objects.values_list("pk", flat=True)), [2])
+
+    def test_should_ask_a_failed_region_twice_at_most(self):
+        self.timeouts[FORGE] = 5
+
+        capital_sweep.sweep()
+
+        self.assertEqual(self.asked_regions.count(FORGE), 2)
+
+    def test_should_stop_at_the_error_limit_of_a_region(self):
+        self.listed[DERELIK] = ESIErrorLimitException(reset=30)
+
+        with self.assertRaises(ESIErrorLimitException):
+            capital_sweep.sweep()
+
+    def test_should_stop_at_the_error_limit_of_the_items(self):
+        self.items[1] = ESIErrorLimitException(reset=30)
+
+        with self.assertRaises(ESIErrorLimitException):
+            capital_sweep.sweep()
+
+
+class TestEsiCalls(SpyTestCase):
+    def test_should_ask_esi_without_etag_and_cache(self):
+        with patch.object(capital_sweep, "esi") as esi:
+            capital_sweep._region_contracts(FORGE)
+            capital_sweep._contract_items(1)
+
+        contracts = esi.client.Contracts
+        for operation in (contracts.GetContractsPublicRegionId, contracts.GetContractsPublicItemsContractId):
+            operation.return_value.results.assert_called_once_with(use_etag=False, store_cache=False)
+
+
+class TestSweepTask(SpyTestCase):
+    def test_should_retry_after_the_error_limit_resets(self):
+        with (
+            patch.object(capital_sweep, "sweep", side_effect=ESIErrorLimitException(reset=30)),
+            patch.object(tasks.sweep_capital_contracts, "retry") as retry,
+        ):
+            tasks.sweep_capital_contracts()
+
+        retry.assert_called_once_with(countdown=30)

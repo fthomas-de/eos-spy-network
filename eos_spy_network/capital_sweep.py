@@ -6,6 +6,7 @@ of each of those once: a contract's items never change. It needs no token and no
 public endpoints; the marker reads what it stores.
 """
 
+from esi.exceptions import ESIErrorLimitException
 from esi.openapi_clients import ESIClientProvider
 from eve_sde.models import NPCStation, Region
 
@@ -36,12 +37,19 @@ KNOWN_SPACE_BELOW = 11_000_000
 SHIP_CONTRACTS = ("item_exchange", "auction")
 
 
+# No ETag: a 304 carries no list, and without the list the sweep cannot tell which contracts are gone; a
+# contract listed again after its row went would get a 304 for its items and never be stored. No cache
+# either: nobody reads a page again before it expires.
 def _region_contracts(region_id: int) -> list:
-    return esi.client.Contracts.GetContractsPublicRegionId(region_id=region_id).results()
+    return esi.client.Contracts.GetContractsPublicRegionId(region_id=region_id).results(
+        use_etag=False, store_cache=False
+    )
 
 
 def _contract_items(contract_id: int) -> list:
-    return esi.client.Contracts.GetContractsPublicItemsContractId(contract_id=contract_id).results()
+    return esi.client.Contracts.GetContractsPublicItemsContractId(contract_id=contract_id).results(
+        use_etag=False, store_cache=False
+    )
 
 
 def sweep() -> int:
@@ -49,6 +57,8 @@ def sweep() -> int:
 
     A contract no longer listed is gone (accepted, withdrawn), but only when every region answered:
     a region that failed must not make its contracts vanish. An expired one goes in any case.
+    ESI's error limit stops the sweep with ``ESIErrorLimitException``: every further call would fail at
+    once, the task tries again after the reset.
     """
     config = SpyConfiguration.get_solo()
     if not config.alliance:
@@ -58,18 +68,24 @@ def sweep() -> int:
     )
     now = timezone.now()
     seen = {}  # contract ID -> (the row, its region's name)
-    failed = False
-    for region in Region.objects.filter(id__lt=KNOWN_SPACE_BELOW).order_by("id"):
-        try:
-            listed = _region_contracts(region.id)
-        # any error - HTTP, timeout, ESI down - only costs this region until the next sweep
-        except Exception as error:  # noqa: BLE001
-            logger.warning("ESI public contracts of region %s failed: %s", region.id, error)
-            failed = True
-            continue
-        for row in listed:
-            if row.issuer_corporation_id in corporations and row.type in SHIP_CONTRACTS and row.date_expired > now:
-                seen[row.contract_id] = (row, region.name)
+    regions = list(Region.objects.filter(id__lt=KNOWN_SPACE_BELOW).order_by("id").values_list("id", "name"))
+    # django-esi 10 retries no timeout (aiopenapi3 wraps it), so a failed region gets a second try at the end
+    for _attempt in range(2):
+        failed = []
+        for region_id, region_name in regions:
+            try:
+                listed = _region_contracts(region_id)
+            except ESIErrorLimitException:
+                raise
+            # any other error - HTTP, timeout, ESI down - only costs this region until the next sweep
+            except Exception as error:  # noqa: BLE001
+                logger.warning("ESI public contracts of region %s failed: %s", region_id, error)
+                failed.append((region_id, region_name))
+                continue
+            for row in listed:
+                if row.issuer_corporation_id in corporations and row.type in SHIP_CONTRACTS and row.date_expired > now:
+                    seen[row.contract_id] = (row, region_name)
+        regions = failed
 
     known = set(CapitalContract.objects.filter(pk__in=list(seen)).values_list("pk", flat=True))
     new = {contract_id: found for contract_id, found in seen.items() if contract_id not in known}
@@ -82,6 +98,8 @@ def sweep() -> int:
     for contract_id, (row, region_name) in new.items():
         try:
             items = _contract_items(contract_id)
+        except ESIErrorLimitException:
+            raise
         except Exception as error:  # noqa: BLE001
             logger.warning("ESI items of public contract %s failed: %s", contract_id, error)
             continue

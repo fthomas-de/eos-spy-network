@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.35] - 2026-11-20
+
+### Fixed
+
+- The capital sweep no longer keeps contracts that were accepted or
+  withdrawn until they expire. django-esi sends the ETag of the last answer
+  and keeps it for seven days, so from the second sweep on every region
+  whose list had not changed answered 304; the sweep took that as a failed
+  region and then never dropped a contract that was no longer listed. Both
+  calls now ask without ETag and without storing the answer in the cache:
+  the sweep needs the full list to see what is gone, and a contract listed
+  again after its row went would otherwise get a 304 for its items and
+  never be stored.
+- A region that fails is asked once more at the end of the same sweep
+  instead of waiting a day. django-esi 10 retries no timeout and no 5xx:
+  aiopenapi3 wraps both in its own exceptions, which django-esi's retry
+  check does not recognise.
+- ESI's error limit (420) no longer turns the rest of the sweep into failed
+  regions: the sweep stops, and the task (now `bind=True` with django-esi's
+  `rate_limit_retry_task`, as Alliance Auth's own ESI tasks) runs again after
+  the reset.
+- README: a sweep takes about 120 requests (measured on `aa_dev`), not 150
+  to 400; the public contract endpoints have no ESI rate-limit bucket.
+
 ## [0.0.34] - 2026-11-19
 
 ### Changed

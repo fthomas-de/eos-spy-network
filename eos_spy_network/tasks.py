@@ -1,4 +1,5 @@
 from celery import shared_task
+from esi.decorators import rate_limit_retry_task
 
 from allianceauth.services.tasks import QueueOnce
 
@@ -17,8 +18,10 @@ def update_snapshot():
         progress.finished()
 
 
-# once: a sweep walks every region and takes minutes; a second one would only ask ESI the same again
-@shared_task(base=QueueOnce, once={"graceful": True})
-def sweep_capital_contracts():
+# once: a sweep walks every region and takes minutes; a second one would only ask ESI the same again.
+# ESI's error limit: retried after the reset, as Alliance Auth's own ESI tasks do (a retry skips the lock)
+@shared_task(bind=True, base=QueueOnce, once={"graceful": True})
+@rate_limit_retry_task
+def sweep_capital_contracts(self):
     """Look up the open public contracts of the Alliance's Corporations for the marker *Capital in contract*."""
     capital_sweep.sweep()
