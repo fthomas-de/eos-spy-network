@@ -4,11 +4,29 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-19 (0.0.34).
+Last updated 2026-11-20 (0.0.35).
 
 ## State
 
-- Version: `0.0.34`, 2026-11-19 (see `CHANGELOG.md`): *Capital in contract*
+- Version: `0.0.35`, 2026-11-20 (see `CHANGELOG.md`): three fixes of the
+  capital sweep after an ESI review (user asked for the token use, buckets,
+  timeouts and duplicate requests).
+  - Both public contract calls run `results(use_etag=False,
+    store_cache=False)`. Before, django-esi's stored ETags (7 days) made
+    every unchanged region answer 304 from the second sweep on; the sweep
+    counted that as failed and never dropped accepted or withdrawn
+    contracts.
+  - A region that fails gets one more try at the end of the same sweep
+    (`for _attempt in range(2)`, `failed` is a list of (id, name)).
+  - `ESIErrorLimitException` is re-raised by the sweep; the task is
+    `bind=True` with `esi.decorators.rate_limit_retry_task` (Alliance Auth's
+    own pattern) and retries after the reset.
+  - Budget: the public contract endpoints have no ESI rate-limit group, so
+    no bucket applies, only the error limit shared per IP with every other
+    app. One sweep is about 113 region pages plus the items of new
+    contracts (counted from the ETag keys of the hand run).
+  - 6 new tests in `test_capital_sweep.py`, all red against 0.0.34.
+- Before (0.0.34), 2026-11-19: *Capital in contract*
   no longer reads corptools. `capital_sweep.sweep()` (task
   `tasks.sweep_capital_contracts`, daily 03:15 UTC) walks
   `/contracts/public/{region}/` for every region below 11000000, keeps
@@ -30,10 +48,10 @@ Last updated 2026-11-19 (0.0.34).
   Changed in 0.0.34: no `outstanding`/`public` columns (ESI lists only open
   public ones), `for_corporation` is not read - the issuer's Corporation
   decides. Two item rows of one ship type in a contract add up now.
-- Tests (0.0.34): 409 without translation tests plus 3 translation tests,
-  all green (fresh test database). New `tests/test_capital_sweep.py` (10);
-  the capital tests in `test_markers` and `test_views.TestCapitalContractDetails`
-  rewritten for the table. Not checked red one by one, and nothing seen in a
+- Tests (0.0.35): 415 without translation tests plus 3 translation tests,
+  all green (fresh test database). The 10 sweep tests of 0.0.34 and the
+  capital tests in `test_markers` and `test_views.TestCapitalContractDetails`
+  were not checked red one by one; nothing of the capital marker seen in a
   browser.
 - Real ESI, once on `aa_dev` (2026-11-19): a full sweep took 24.6 s, found 7
   contracts of Invidia Gloriae Comes (an Ishtar fit in a structure in
@@ -142,10 +160,7 @@ Last updated 2026-11-19 (0.0.34).
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: 360 without translation tests plus 3 translation tests, all green
-  in the dev instance at 0.0.30 (fresh test database; translation tests
-  last run at 0.0.29, 0.0.30 added no text); every new test
-  checked against the unfixed code. `tests.base.SpyTestCase` patches
+- Tests: count and state in the 0.0.35 bullets above. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
@@ -169,10 +184,20 @@ Last updated 2026-11-19 (0.0.34).
 
 ## Open
 
-- 0.0.34 on prod: run migration 0016, add the beat entry from the README
-  (`eos_spy_network_sweep_capital_contracts`), restart Celery (worker and
-  beat), then run the task once by hand and recalculate - until the first
-  sweep the marker finds nothing. The sweep needs eve_sde (regions, stations).
+- 0.0.34/0.0.35 on prod: run migration 0016 (0.0.35 adds none), add the
+  beat entry from the README (`eos_spy_network_sweep_capital_contracts`),
+  restart Celery (worker and beat - the task's signature changed to
+  `bind=True` in 0.0.35), then run the task once by hand and recalculate -
+  until the first sweep the marker finds nothing. The sweep needs eve_sde
+  (regions, stations).
+- 0.0.35 was only run in tests: no real sweep with the new code yet. Worth
+  one hand run on `aa_dev` (`capital_sweep.sweep()` in the shell): expect no
+  "failed" warnings and the 7 rows updated, not kept by a 304.
+- Not done, possible next steps: `affiliations.py` (network task) has the
+  same django-esi weakness - its timeouts are not retried either; not
+  reviewed. The django-esi retry bug (its check tests httpx2's exception
+  classes, aiopenapi3 raises its own) could be reported upstream - only
+  with the user's yes, it is a public post.
 - Capital popup (`views.capital_contract`, `capital-contract/<id>/`) and the
   table are only rendered in tests: `aa_dev` has no open public capital
   contract of the Alliance. The popup shows "corptools has not stored this
@@ -355,6 +380,11 @@ Last updated 2026-11-19 (0.0.34).
 - Recalculation: stored in the database by a Celery task (not a cache, not
   live), started by the button, by saving the settings, or by a
   `CELERYBEAT_SCHEDULE` entry the admin adds (README).
+- Capital sweep and ESI (user, 2026-11-20): no ETag and no response cache
+  for its calls, one more try per failed region in the same sweep, the
+  error limit retried as Alliance Auth's own tasks do. A failed region still
+  keeps every row (no deletion that day); deletion per region would need a
+  region column and was not asked for.
 - ESI (changed 2026-10-09; the exception since 2026-11-19: the capital sweep
   asks ESI's public contracts once a day, the marker itself still does not):
   the markers make no ESI call - a counterpart
@@ -499,7 +529,9 @@ Last updated 2026-11-19 (0.0.34).
   network` block with the sweep's beat entry (2026-11-19); no Celery
   process runs, so it fires only once worker and beat are started. The
   tables `CapitalContract`/`CapitalContractItem` hold the 7 contracts of the
-  hand run. The snapshot was rebuilt by
+  hand run (0.0.34). Redis still holds that run's 120 ETag keys
+  (`eos-spy-network_etag_*`); 0.0.35 no longer reads them, they expire
+  about 2026-11-26. The snapshot was rebuilt by
   hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
   `local.py`.
@@ -517,6 +549,17 @@ Last updated 2026-11-19 (0.0.34).
 
 ## Traps
 
+- django-esi 10: `.results()` uses ETags by default and raises
+  `HTTPNotModified` when every page answered 304 - a caller that needs the
+  data must pass `use_etag=False` or catch it. Its built-in retry
+  (`_httpx_exceptions`) never fires for timeouts or 5xx: aiopenapi3 wraps
+  them in its own `RequestError`/`HTTPServerError`. Buckets exist only for
+  operations with an `x-rate-limit` group in the spec and only with a
+  token; check the group in `https://esi.evetech.net/meta/openapi.json`.
+- Asserting the arguments of an ESI call: `patch.object(capital_sweep,
+  "esi")` replaces the provider without touching `esi.client`. A bound task
+  runs in a test by calling it directly with `retry` patched
+  (`TestSweepTask`).
 - Git Bash rewrites a `/mnt/c/...` path handed to `wsl.exe`: run a script
   from the scratchpad through the PowerShell tool, not the Bash tool.
 - A test that fakes ESI for the sweep patches `capital_sweep._region_contracts`
