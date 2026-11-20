@@ -29,10 +29,18 @@ def sees_corporation(user, corporation_id) -> bool:
 
 def any_permission_required(*perms):
     """login_required plus at least one of ``perms``."""
+    return _required(lambda user: any(user.has_perm(perm) for perm in perms))
 
+
+def all_permissions_required(*perms):
+    """login_required plus every one of ``perms``."""
+    return _required(lambda user: all(user.has_perm(perm) for perm in perms))
+
+
+def _required(test):
     def decorator(view):
         @login_required
-        @user_passes_test(lambda user: any(user.has_perm(perm) for perm in perms))
+        @user_passes_test(test)
         @wraps(view)
         def wrapper(request, *args, **kwargs):
             return view(request, *args, **kwargs)

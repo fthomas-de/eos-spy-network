@@ -8,7 +8,7 @@ from eve_sde.models import ItemCategory, ItemGroup, ItemType, NPCStation, Region
 from django.utils import timezone
 
 from eos_spy_network import capital_sweep, tasks
-from eos_spy_network.models import CapitalContract
+from eos_spy_network.models import CapitalContract, SweepStats
 
 from .base import SpyTestCase, configure, make_corporation
 
@@ -21,10 +21,10 @@ STATION = 60000001
 STRUCTURE = 1_000_000_000_001
 
 
-def public(contract_id, corporation_id=ALLIANCE_CORP, kind="item_exchange", days=3, location=STATION):
+def public(contract_id, corporation_id=ALLIANCE_CORP, kind="item_exchange", days=3, location=STATION, issuer=9001):
     now = timezone.now()
     return SimpleNamespace(
-        contract_id=contract_id, issuer_id=9001, issuer_corporation_id=corporation_id, type=kind,
+        contract_id=contract_id, issuer_id=issuer, issuer_corporation_id=corporation_id, type=kind,
         title="Dread", price=5e9, buyout=None, date_issued=now - timedelta(days=1),
         date_expired=now + timedelta(days=days), start_location_id=location,
     )
@@ -37,6 +37,9 @@ def item(type_id=NAGLFAR, quantity=1, included=True):
 class TestSweep(SpyTestCase):
     def setUp(self):
         super().setUp()
+        self.add_fixtures()
+
+    def add_fixtures(self):
         configure()
         make_corporation(ALLIANCE_CORP)
         make_corporation(FOREIGN_CORP, alliance_id=None)
@@ -183,6 +186,49 @@ class TestSweep(SpyTestCase):
 
         with self.assertRaises(ESIErrorLimitException):
             capital_sweep.sweep()
+
+
+class TestSweepStats(SpyTestCase):
+    def setUp(self):
+        super().setUp()
+        # the sweep's own fixtures, without running TestSweep's tests a second time
+        TestSweep.add_fixtures(self)
+
+    def test_should_store_the_counts_of_the_sweep(self):
+        make_corporation(2002)
+        self.listed[DERELIK] = [public(1), public(2, issuer=9002), public(3, corporation_id=2002, issuer=9003)]
+        self.listed[FORGE] = [public(4), public(5, corporation_id=FOREIGN_CORP), public(6, kind="courier")]
+        self.items.update({2: [item()], 3: RuntimeError("ESI down"), 4: [item()]})
+
+        capital_sweep.sweep()
+
+        stats = SweepStats.objects.get()
+        self.assertEqual(
+            (
+                stats.regions, stats.regions_failed, stats.public_contracts, stats.contracts, stats.issuers,
+                stats.corporations, stats.added, stats.items_failed, stats.removed,
+            ),
+            (2, 0, 6, 4, 3, 2, 3, 1, 0),
+        )
+        self.assertEqual(stats.per_region, {"Derelik": 3, "The Forge": 1})
+        self.assertEqual(stats.per_corporation, {str(ALLIANCE_CORP): 3, "2002": 1})
+
+    def test_should_count_a_failed_region_and_keep_one_row(self):
+        capital_sweep.sweep()
+        self.listed[FORGE] = RuntimeError("ESI down")
+
+        capital_sweep.sweep()
+
+        stats = SweepStats.objects.get()
+        self.assertEqual((stats.regions, stats.regions_failed, stats.public_contracts), (2, 1, 1))
+
+    def test_should_count_the_contracts_gone_not_their_items(self):
+        capital_sweep.sweep()
+        self.listed[DERELIK] = []
+
+        capital_sweep.sweep()
+
+        self.assertEqual(SweepStats.objects.get().removed, 1)
 
 
 class TestEsiCalls(SpyTestCase):

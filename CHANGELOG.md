@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.36] - 2026-11-21
+
+### Added
+
+- Page *Statistics* (`statistics/`): the numbers of the last contract sweep -
+  regions asked and failed, public contracts listed, contracts of the
+  Alliance, their issuing characters and Corporations, new and gone
+  contracts, new contracts whose items could not be fetched - and the
+  Alliance's contracts per region and per Corporation. The sweep counts what
+  it fetches anyway, no extra ESI call, and keeps only its last run
+  (`SweepStats`, migration 0017). The contracts gone are counted without
+  their items: `delete()`'s total would add those.
+
+### Changed
+
+- The review log moved from the settings tab *Log* to its own page *Log*
+  (`log/`) next to *Statistics*; the settings keep their review tabs *Blue
+  kills* and *Friendly to hostiles*. Both pages need `manage_settings` and
+  `view_suspects`, as the tab did; the menu shows them only then.
+
 ## [0.0.35] - 2026-11-20
 
 ### Fixed

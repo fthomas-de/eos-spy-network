@@ -14,19 +14,20 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from allianceauth.authentication.models import CharacterOwnership
-from allianceauth.eveonline.models import EveCharacter
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from . import __version__, contacts, contract_details, killmails, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
 from .markers import BLUE_KILLS, CAPITAL_CONTRACTS, CONTACTS, KINDS, LABELS, WALLET, corptools_installed, million, own_kill, worth_counting
-from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, ReviewLog, SpyConfiguration
+from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, ReviewLog, SpyConfiguration, SweepStats
 from .permissions import (
     APP_PERMISSIONS,
     MANAGE_SETTINGS,
     VIEW_OWN_CORPORATION,
     VIEW_SUSPECTS,
+    all_permissions_required,
     any_permission_required,
     own_corporation_id,
     sees_corporation,
@@ -40,11 +41,15 @@ LOCATIONS = {
     "eos_spy_network/network.html": _("Network"),
     "eos_spy_network/network_corporation.html": _("Network"),
     "eos_spy_network/settings.html": _("Settings"),
+    "eos_spy_network/statistics.html": _("Statistics"),
+    "eos_spy_network/log.html": _("Log"),
 }
 
 NAV_MARKERS = "markers"
 NAV_NETWORK = "network"
 NAV_SETTINGS = "settings"
+NAV_STATISTICS = "statistics"
+NAV_LOG = "log"
 
 # the sub-tabs of the settings page; the first opens unless another is asked for
 TAB_ALLIANCE = "alliance"
@@ -52,8 +57,7 @@ TAB_SOURCES = "sources"
 TAB_MARKERS = "markers"
 TAB_KILLS = "kills"
 TAB_CONTACTS = "contacts"
-TAB_LOG = "log"
-SETTINGS_TABS = (TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS, TAB_KILLS, TAB_CONTACTS, TAB_LOG)
+SETTINGS_TABS = (TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS, TAB_KILLS, TAB_CONTACTS)
 
 
 def _render(request, template, context=None, nav=None, started=None):
@@ -667,9 +671,8 @@ def settings(request):
     if form.errors:
         # the tab with the error, or it hides behind another
         tab = TAB_MARKERS if set(form.errors) == {"markers"} else TAB_ALLIANCE
-    # the findings and their log are suspicion data: manage_settings alone does not open them
+    # the findings are suspicion data: manage_settings alone does not open them
     reviewer = request.user.has_perm(VIEW_SUSPECTS)
-    contact_rows = _contact_rows(config) if reviewer else []
     tabs = SETTINGS_TABS if reviewer else SETTINGS_TABS[:3]
     return _render(
         request,
@@ -678,11 +681,37 @@ def settings(request):
             "form": form,
             "rows": rows,
             "kills": _kill_rows(config) if reviewer else [],
-            "contacts": contact_rows,
-            "log": _log_rows(config, contact_rows) if reviewer else [],
+            "contacts": _contact_rows(config) if reviewer else [],
             "note_length": KILL_NOTE_LENGTH,
             "note_presets": config.note_presets,
             "tab": tab if tab in tabs else TAB_ALLIANCE,
         },
         NAV_SETTINGS,
     )
+
+
+# the log names the reviewed mains and findings: suspicion data, as the review tabs of the settings
+@all_permissions_required(MANAGE_SETTINGS, VIEW_SUSPECTS)
+def log(request):
+    config = SpyConfiguration.get_solo()
+    return _render(request, "eos_spy_network/log.html", {"log": _log_rows(config, _contact_rows(config))}, NAV_LOG)
+
+
+@all_permissions_required(MANAGE_SETTINGS, VIEW_SUSPECTS)
+def statistics(request):
+    stats = SweepStats.objects.first()
+    context = {"stats": stats}
+    if stats:
+        names = {
+            str(corporation_id): (name, ticker)
+            for corporation_id, name, ticker in EveCorporationInfo.objects.filter(
+                corporation_id__in=[int(key) for key in stats.per_corporation]
+            ).values_list("corporation_id", "corporation_name", "corporation_ticker")
+        }
+        context["regions"] = sorted(stats.per_region.items(), key=lambda item: (-item[1], item[0]))
+        # a Corporation that left Auth since the sweep keeps its ID
+        context["corporations"] = sorted(
+            ((key, *names.get(key, (key, "")), count) for key, count in stats.per_corporation.items()),
+            key=lambda row: (-row[3], row[1]),
+        )
+    return _render(request, "eos_spy_network/statistics.html", context, NAV_STATISTICS)

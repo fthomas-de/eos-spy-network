@@ -1,4 +1,4 @@
-"""The log of every saved note and Cleared tick, and its settings tab."""
+"""The log of every saved note and Cleared tick, and its page."""
 
 from importlib import import_module
 
@@ -85,7 +85,7 @@ class TestLogTab(FindingTestCase):
         self.client.force_login(make_user("admin", MANAGE_SETTINGS, VIEW_SUSPECTS))
 
     def get(self):
-        return self.client.get(reverse("eos_spy_network:settings") + "?tab=log")
+        return self.client.get(reverse("eos_spy_network:log"))
 
     def test_should_list_a_save_with_its_main_contact_and_who(self):
         self.client.post(
@@ -95,7 +95,6 @@ class TestLogTab(FindingTestCase):
 
         response = self.get()
 
-        self.assertEqual(response.context["tab"], "log")
         [entry] = response.context["log"]
         self.assertEqual((entry.main_name, entry.finding, entry.label), (self.main.character_name, "Bad Corp", "Friendly to hostiles"))
         self.assertContains(response, "Spai check")
@@ -124,14 +123,23 @@ class TestLogTab(FindingTestCase):
         self.assertContains(response, "Logged note")
         self.assertNotContains(response, "Own account")
 
-    def test_should_keep_the_log_from_a_viewer_without_view_suspects(self):
+    def test_should_keep_the_log_from_a_viewer_without_both_permissions(self):
         self.log(self.main.character_id, None)
-        self.client.force_login(make_user("settings", MANAGE_SETTINGS))
+        for name, perm in (("settings", MANAGE_SETTINGS), ("suspects", VIEW_SUSPECTS)):
+            with self.subTest(perm):
+                self.client.force_login(make_user(name, perm))
 
-        response = self.get()
+                response = self.get()
 
-        self.assertNotContains(response, "Logged note")
-        self.assertEqual(response.context["log"], [])
+                # user_passes_test sends them to the login page
+                self.assertTrue(response.url.startswith("/account/login/"))
+
+    def test_should_be_gone_from_the_settings(self):
+        response = self.client.get(reverse("eos_spy_network:settings"))
+
+        self.assertNotIn("log", response.context)
+        self.assertNotContains(response, "eos-spy-network-settings-log")
+        self.assertContains(response, f'href="{reverse("eos_spy_network:log")}"')
 
     def test_should_leave_out_another_alliance(self):
         ReviewLog.objects.create(
@@ -147,12 +155,11 @@ class TestKillLogTab(ReviewTestCase):
         self.client.force_login(make_user("admin", MANAGE_SETTINGS, VIEW_SUSPECTS))
         self.client.post(reverse("eos_spy_network:kill_note"), {"killmail_id": 1, "character_id": ALT, "note": "Ok"})
 
-        response = self.client.get(reverse("eos_spy_network:settings") + "?tab=log")
+        response = self.client.get(reverse("eos_spy_network:log"))
 
         [entry] = response.context["log"]
         self.assertEqual((entry.main_id, entry.main_name, entry.finding), (self.main.character_id, self.main.character_name, "Name 90000001"))
-        # one in the Blue kills tab, one in the log
-        self.assertContains(response, 'href="https://zkillboard.com/kill/1/"', count=2)
+        self.assertContains(response, 'href="https://zkillboard.com/kill/1/"', count=1)
 
 
 class TestSeed(ReviewTestCase):

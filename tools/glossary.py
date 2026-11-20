@@ -518,13 +518,12 @@ TRANSLATIONS = {
     "Own account": ("Eigener Account", "Свой аккаунт", "本人账号"),
     "Nothing saved yet.": ("Noch nichts gespeichert.", "Пока ничего не сохранено.", "尚未保存任何内容。"),
     "Every save of a note or a Cleared tick, the latest first. The reviews made before the log came with their "
-    "last state only. A change made on this page shows here after a reload.": (
+    "last state only.": (
         "Jedes Speichern einer Notiz oder eines Geklärt-Hakens, das neueste zuerst. Die Prüfungen von vor dem "
-        "Protokoll stehen nur mit ihrem letzten Stand hier. Eine Änderung auf dieser Seite erscheint hier nach "
-        "dem Neuladen.",
+        "Protokoll stehen nur mit ihrem letzten Stand hier.",
         "Каждое сохранение заметки или отметки «Улажено», новые сверху. Проверки, сделанные до появления журнала, "
-        "есть только в последнем состоянии. Изменение на этой странице появится здесь после перезагрузки.",
-        "每次保存备注或“已澄清”勾选，最新的在前。日志启用前的审核只保留最后状态。在本页所做的更改需重新加载后显示。",
+        "есть только в последнем состоянии.",
+        "每次保存备注或“已澄清”勾选，最新的在前。日志启用前的审核只保留最后状态。",
     ),
     "Cleared findings": ("Geklärte Funde", "Улаженные находки", "已澄清的发现"),
     "Mains whose every finding is cleared, so they no longer show above. A note is changed in the settings tabs.": (
@@ -560,6 +559,38 @@ TRANSLATIONS = {
     ),
     "Main's Corporation": ("Corporation des Mains", "Corporation этого Main", "Main 的 Corporation"),
     "Alts here": ("Alts hier", "Alts здесь", "此处的 Alts"),
+    # Statistics page: the numbers of the contract sweep (2026-11-20)
+    "Statistics": ("Statistik", "Статистика", "统计"),
+    "The numbers of the last contract sweep, %(at)s, %(seconds)s s. Only the open public item exchanges and "
+    "auctions count.": (
+        "Die Zahlen des letzten Contract-Durchlaufs, %(at)s, %(seconds)s s. Es zählen nur die offenen "
+        "öffentlichen Tausch-Contracts und Auktionen.",
+        "Данные последнего обхода контрактов, %(at)s, %(seconds)s с. Учитываются только открытые публичные "
+        "обмены предметами и аукционы.",
+        "上次合同扫描的数据，%(at)s，%(seconds)s 秒。只统计公开的未完成物品交换和拍卖。",
+    ),
+    "Regions": ("Regionen", "Регионы", "星域"),
+    "Regions failed": ("Regionen fehlgeschlagen", "Регионы с ошибкой", "失败的星域"),
+    "Public contracts": ("Öffentliche Contracts", "Публичные контракты", "公开合同"),
+    "Contracts of the Alliance": ("Contracts der Alliance", "Контракты Alliance", "Alliance 的合同"),
+    "Corporations": ("Corporations", "Corporations", "Corporations"),
+    "New contracts": ("Neue Contracts", "Новые контракты", "新合同"),
+    "Contracts gone": ("Weggefallene Contracts", "Исчезнувшие контракты", "已消失的合同"),
+    "New contracts whose items could not be fetched: %(count)s. The next sweep tries again.": (
+        "Neue Contracts, deren Items nicht geladen werden konnten: %(count)s. Der nächste Durchlauf versucht es "
+        "erneut.",
+        "Новые контракты, предметы которых не удалось загрузить: %(count)s. Следующий обход попробует снова.",
+        "无法获取物品的新合同：%(count)s。下次扫描将重试。",
+    ),
+    "Contracts per region": ("Contracts je Region", "Контракты по регионам", "各星域的合同"),
+    "Contracts per Corporation": ("Contracts je Corporation", "Контракты по Corporation", "各 Corporation 的合同"),
+    "Region": ("Region", "Регион", "星域"),
+    "No contract of the Alliance.": ("Kein Contract der Alliance.", "Нет контрактов Alliance.", "没有 Alliance 的合同。"),
+    "No contract sweep has run yet.": (
+        "Es ist noch kein Contract-Durchlauf gelaufen.",
+        "Обход контрактов ещё не выполнялся.",
+        "尚未运行过合同扫描。",
+    ),
 }
 
 PLURALS = {}

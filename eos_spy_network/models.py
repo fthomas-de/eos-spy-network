@@ -357,3 +357,33 @@ class CapitalContractItem(models.Model):
 
     class Meta:
         default_permissions = ()
+
+
+class SweepStats(models.Model):
+    """The counts of the last contract sweep, for the Statistics page; one row, overwritten each run.
+
+    Not a solo model, as Snapshot: SOLO_CACHE would keep a stale copy in the cache.
+    """
+
+    finished_at = models.DateTimeField()
+    seconds = models.FloatField()
+    regions = models.PositiveIntegerField()
+    regions_failed = models.PositiveIntegerField()
+    # every open public contract ESI listed, of anyone
+    public_contracts = models.PositiveIntegerField()
+    # those of the Alliance's Corporations the sweep keeps
+    contracts = models.PositiveIntegerField()
+    issuers = models.PositiveIntegerField()
+    corporations = models.PositiveIntegerField()
+    added = models.PositiveIntegerField()
+    items_failed = models.PositiveIntegerField()
+    removed = models.PositiveIntegerField()
+    # region name -> contracts of the Alliance; Corporation ID (a string, as JSON keys are) -> contracts
+    per_region = models.JSONField(default=dict)
+    per_corporation = models.JSONField(default=dict)
+
+    class Meta:
+        default_permissions = ()
+
+    def __str__(self):
+        return f"Sweep {self.finished_at:%Y-%m-%d %H:%M}"

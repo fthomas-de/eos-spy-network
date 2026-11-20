@@ -1,0 +1,9 @@
+{# One number of the Statistics page; `warn` turns a non-zero value yellow. #}
+<div class="col">
+    <div class="card h-100{% if warn %} border-warning{% endif %}">
+        <div class="card-body text-center">
+            <div class="fs-3 fw-semibold{% if warn %} text-warning-emphasis{% endif %}">{{ value }}</div>
+            <div class="small text-body-secondary">{{ label }}</div>
+        </div>
+    </div>
+</div>

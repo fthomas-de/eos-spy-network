@@ -1,0 +1,90 @@
+{% extends "eos_spy_network/base.html" %}
+{% load i18n %}
+
+{% block details %}
+    {% if stats %}
+        <p class="small text-body-secondary">
+            {% blocktranslate with at=stats.finished_at|date:"Y-m-d H:i" seconds=stats.seconds|floatformat:1 %}The numbers of the last contract sweep, {{ at }}, {{ seconds }} s. Only the open public item exchanges and auctions count.{% endblocktranslate %}
+        </p>
+
+        <div class="row row-cols-2 row-cols-md-4 g-3 mb-3">
+            {% translate "Regions" as label %}
+            {% include "eos_spy_network/partials/stat-tile.html" with label=label value=stats.regions %}
+            {% translate "Regions failed" as label %}
+            {% include "eos_spy_network/partials/stat-tile.html" with label=label value=stats.regions_failed warn=stats.regions_failed %}
+            {% translate "Public contracts" as label %}
+            {% include "eos_spy_network/partials/stat-tile.html" with label=label value=stats.public_contracts %}
+            {% translate "Contracts of the Alliance" as label %}
+            {% include "eos_spy_network/partials/stat-tile.html" with label=label value=stats.contracts %}
+            {% translate "Characters" context "eos-spy-network" as label %}
+            {% include "eos_spy_network/partials/stat-tile.html" with label=label value=stats.issuers %}
+            {% translate "Corporations" context "eos-spy-network" as label %}
+            {% include "eos_spy_network/partials/stat-tile.html" with label=label value=stats.corporations %}
+            {% translate "New contracts" as label %}
+            {% include "eos_spy_network/partials/stat-tile.html" with label=label value=stats.added %}
+            {% translate "Contracts gone" as label %}
+            {% include "eos_spy_network/partials/stat-tile.html" with label=label value=stats.removed %}
+        </div>
+        {% if stats.items_failed %}
+            <div class="alert alert-warning">
+                {% blocktranslate with count=stats.items_failed %}New contracts whose items could not be fetched: {{ count }}. The next sweep tries again.{% endblocktranslate %}
+            </div>
+        {% endif %}
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">{% translate "Contracts per region" %}</div>
+                    <div class="card-body">
+                        {% if regions %}
+                            <table class="table table-sm table-striped table-hover w-100 eos-spy-network-sortable">
+                                <thead>
+                                    <tr>
+                                        <th>{% translate "Region" context "eos-spy-network" %}</th>
+                                        <th>{% translate "Contracts" context "eos-spy-network" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for name, count in regions %}
+                                        <tr><td>{{ name }}</td><td>{{ count }}</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p class="mb-0 text-body-secondary">{% translate "No contract of the Alliance." %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">{% translate "Contracts per Corporation" %}</div>
+                    <div class="card-body">
+                        {% if corporations %}
+                            <table class="table table-sm table-striped table-hover w-100 eos-spy-network-sortable">
+                                <thead>
+                                    <tr>
+                                        <th>{% translate "Corporation" context "EVE jargon" %}</th>
+                                        <th>{% translate "Contracts" context "eos-spy-network" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for corporation_id, name, ticker, count in corporations %}
+                                        <tr>
+                                            <td class="text-break">{{ name }}{% if ticker %} [{{ ticker }}]{% endif %}{% include "eos_spy_network/partials/evewho-link.html" with category="corporation" eve_id=corporation_id %}</td>
+                                            <td>{{ count }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p class="mb-0 text-body-secondary">{% translate "No contract of the Alliance." %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <p class="text-body-secondary">{% translate "No contract sweep has run yet." %}</p>
+    {% endif %}
+{% endblock %}

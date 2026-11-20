@@ -18,4 +18,6 @@ urlpatterns = [
     path("rebuild/", views.rebuild, name="rebuild"),
     path("rebuild/progress/", views.rebuild_progress, name="rebuild_progress"),
     path("settings/", views.settings, name="settings"),
+    path("statistics/", views.statistics, name="statistics"),
+    path("log/", views.log, name="log"),
 ]

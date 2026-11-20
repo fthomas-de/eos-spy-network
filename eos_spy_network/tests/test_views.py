@@ -9,7 +9,7 @@ from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from eos_spy_network import snapshot
-from eos_spy_network.models import BlueKill, ContactSource, SpyConfiguration
+from eos_spy_network.models import BlueKill, ContactSource, SpyConfiguration, SweepStats
 
 from . import test_markers
 from .base import (
@@ -926,3 +926,62 @@ class TestCapitalContractDetails(SuspectPageTestCase):
         self.assertNotIn("data-eos-spy-network-contracts", html)
         self.assertIn("fa-eye-slash", html)
         self.assertIn("corptools has not stored this contract.", html)
+
+
+class TestStatisticsPage(SpyTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(make_user("admin", MANAGE_SETTINGS, VIEW_SUSPECTS))
+
+    def get(self):
+        return self.client.get(reverse("eos_spy_network:statistics"))
+
+    def add_stats(self, **fields):
+        SweepStats.objects.create(
+            **{
+                "finished_at": timezone.now(), "seconds": 24.6, "regions": 68, "regions_failed": 0,
+                "public_contracts": 51234, "contracts": 7, "issuers": 3, "corporations": 2, "added": 1,
+                "items_failed": 0, "removed": 2, "per_region": {"Esoteria": 5, "Delve": 2},
+                "per_corporation": {"2001": 2, "2002": 5}, **fields,
+            }
+        )
+
+    def test_should_say_so_before_the_first_sweep(self):
+        self.assertContains(self.get(), "No contract sweep has run yet.")
+
+    def test_should_show_the_numbers_and_the_counts_largest_first(self):
+        make_corporation(2001)
+        self.add_stats()
+
+        response = self.get()
+
+        self.assertContains(response, "51234")
+        self.assertEqual(response.context["regions"], [("Esoteria", 5), ("Delve", 2)])
+        # a Corporation Auth no longer knows keeps its ID as its name
+        self.assertEqual(
+            [(row[1], row[3]) for row in response.context["corporations"]], [("2002", 5), ("Corp 2001", 2)]
+        )
+        self.assertNotContains(response, "could not be fetched")
+
+    def test_should_warn_about_items_not_fetched(self):
+        self.add_stats(items_failed=3, per_region={}, per_corporation={})
+
+        response = self.get()
+
+        self.assertContains(response, "could not be fetched: 3.")
+        self.assertContains(response, "No contract of the Alliance.", count=2)
+
+    def test_should_be_open_only_to_holders_of_both_permissions(self):
+        for name, perm in (("settings", MANAGE_SETTINGS), ("suspects", VIEW_SUSPECTS)):
+            with self.subTest(perm):
+                self.client.force_login(make_user(name, perm))
+
+                self.assertTrue(self.get().url.startswith(LOGIN))
+
+    def test_should_show_the_tab_to_holders_of_both_permissions_only(self):
+        url = f'href="{reverse("eos_spy_network:statistics")}"'
+        self.assertContains(self.client.get(reverse("eos_spy_network:settings")), url)
+
+        self.client.force_login(make_user("settings", MANAGE_SETTINGS))
+
+        self.assertNotContains(self.client.get(reverse("eos_spy_network:settings")), url)

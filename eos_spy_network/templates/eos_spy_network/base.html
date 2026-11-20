@@ -24,6 +24,15 @@
         {% include "eos_spy_network/partials/nav-item.html" with nav_url=network_url nav_title=network_title nav_key="network" %}
     {% endif %}
 
+    {% if perms.eos_spy_network.manage_settings and perms.eos_spy_network.view_suspects %}
+        {% url "eos_spy_network:statistics" as statistics_url %}
+        {% translate "Statistics" as statistics_title %}
+        {% include "eos_spy_network/partials/nav-item.html" with nav_url=statistics_url nav_title=statistics_title nav_key="statistics" %}
+        {% url "eos_spy_network:log" as log_url %}
+        {% translate "Log" as log_title %}
+        {% include "eos_spy_network/partials/nav-item.html" with nav_url=log_url nav_title=log_title nav_key="log" %}
+    {% endif %}
+
     {% if perms.eos_spy_network.manage_settings %}
         {% url "eos_spy_network:settings" as settings_url %}
         {% translate "Settings" as settings_title %}
