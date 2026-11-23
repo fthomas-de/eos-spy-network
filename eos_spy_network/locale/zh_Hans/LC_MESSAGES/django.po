@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 22:58+0000\n"
-"PO-Revision-Date: 2026-11-20 22:58+0000\n"
+"POT-Creation-Date: 2026-11-23 11:04+0000\n"
+"PO-Revision-Date: 2026-11-23 11:04+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: zh_Hans\n"
 "Language: zh_Hans\n"
@@ -58,8 +58,8 @@ msgid "Faction"
 msgstr "Faction"
 
 #: forms.py:91 snapshot.py:47 templates/eos_spy_network/base.html:17
-#: templates/eos_spy_network/corporation.html:53
-#: templates/eos_spy_network/corporation.html:102
+#: templates/eos_spy_network/corporation.html:55
+#: templates/eos_spy_network/corporation.html:104
 #: templates/eos_spy_network/settings.html:33 views.py:39
 msgid "Markers"
 msgstr "标记"
@@ -322,7 +322,7 @@ msgstr "日志"
 msgid "Settings"
 msgstr "设置"
 
-#: templates/eos_spy_network/corporation.html:27
+#: templates/eos_spy_network/corporation.html:29
 #: templates/eos_spy_network/corporations.html:30
 #: templates/eos_spy_network/corporations.html:40
 #: templates/eos_spy_network/network.html:29
@@ -334,24 +334,24 @@ msgctxt "eos-spy-network"
 msgid "Mains"
 msgstr "Mains"
 
-#: templates/eos_spy_network/corporation.html:28
-#: templates/eos_spy_network/corporation.html:43
+#: templates/eos_spy_network/corporation.html:30
+#: templates/eos_spy_network/corporation.html:45
 #: templates/eos_spy_network/corporations.html:31
 msgid "Mains with markers"
 msgstr "有标记的 Mains"
 
-#: templates/eos_spy_network/corporation.html:29
+#: templates/eos_spy_network/corporation.html:31
 #: templates/eos_spy_network/corporations.html:32
 msgid "Alts of other mains with markers"
 msgstr "其他 Mains 的带标记 Alts"
 
-#: templates/eos_spy_network/corporation.html:34
+#: templates/eos_spy_network/corporation.html:36
 #: templates/eos_spy_network/network_corporation.html:25
 msgid "Back"
 msgstr "返回"
 
-#: templates/eos_spy_network/corporation.html:51
-#: templates/eos_spy_network/corporation.html:99
+#: templates/eos_spy_network/corporation.html:53
+#: templates/eos_spy_network/corporation.html:101
 #: templates/eos_spy_network/log.html:18
 #: templates/eos_spy_network/partials/network-legend.html:4
 #: templates/eos_spy_network/settings.html:238
@@ -359,8 +359,8 @@ msgctxt "EVE jargon"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_spy_network/corporation.html:52
-#: templates/eos_spy_network/corporation.html:170
+#: templates/eos_spy_network/corporation.html:54
+#: templates/eos_spy_network/corporation.html:172
 #: templates/eos_spy_network/partials/contacts.html:7
 #: templates/eos_spy_network/settings.html:239
 #: templates/eos_spy_network/statistics.html:19
@@ -368,17 +368,17 @@ msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
 
-#: templates/eos_spy_network/corporation.html:80
+#: templates/eos_spy_network/corporation.html:82
 #: templates/eos_spy_network/corporations.html:47
 msgid "No markers."
 msgstr "没有标记。"
 
-#: templates/eos_spy_network/corporation.html:89
+#: templates/eos_spy_network/corporation.html:91
 msgctxt "eos-spy-network"
 msgid "Alts of mains in other Corporations"
 msgstr "其他 Corporations 的 Mains 的 Alts"
 
-#: templates/eos_spy_network/corporation.html:93
+#: templates/eos_spy_network/corporation.html:95
 msgid ""
 "Characters of this Corporation whose main is in another Corporation or "
 "outside the Alliance, with their whole account. A note is changed on the "
@@ -388,46 +388,46 @@ msgstr ""
 "本 Corporation 中其 Main 在其他 Corporation 或 Alliance 之外的 Characters，连同其整个账户。备注在 "
 "Main 所在 Corporation 的页面上修改；Main 在 Alliance 之外时，在设置选项卡中修改。"
 
-#: templates/eos_spy_network/corporation.html:100
+#: templates/eos_spy_network/corporation.html:102
 msgid "Main's Corporation"
 msgstr "Main 的 Corporation"
 
-#: templates/eos_spy_network/corporation.html:101
+#: templates/eos_spy_network/corporation.html:103
 msgid "Alts here"
 msgstr "此处的 Alts"
 
-#: templates/eos_spy_network/corporation.html:144
+#: templates/eos_spy_network/corporation.html:146
 msgid "Cleared findings"
 msgstr "已澄清的发现"
 
-#: templates/eos_spy_network/corporation.html:148
+#: templates/eos_spy_network/corporation.html:150
 msgid ""
 "Mains whose every finding is cleared, so they no longer show above. A note "
 "is changed in the settings tabs."
 msgstr "所有发现均已澄清、因而不再显示在上方的 Mains。备注在设置的选项卡中修改。"
 
-#: templates/eos_spy_network/corporation.html:151
+#: templates/eos_spy_network/corporation.html:153
 msgid "Search main, finding or note"
 msgstr "搜索 Main、发现或备注"
 
-#: templates/eos_spy_network/corporation.html:167
+#: templates/eos_spy_network/corporation.html:169
 #: templates/eos_spy_network/log.html:17
 msgid "Marker"
 msgstr "标记"
 
-#: templates/eos_spy_network/corporation.html:168
+#: templates/eos_spy_network/corporation.html:170
 #: templates/eos_spy_network/log.html:15
 #: templates/eos_spy_network/partials/kills.html:7
 #: templates/eos_spy_network/settings.html:176
 msgid "Date"
 msgstr "日期"
 
-#: templates/eos_spy_network/corporation.html:169
+#: templates/eos_spy_network/corporation.html:171
 #: templates/eos_spy_network/log.html:19
 msgid "Finding"
 msgstr "发现"
 
-#: templates/eos_spy_network/corporation.html:171
+#: templates/eos_spy_network/corporation.html:173
 #: templates/eos_spy_network/log.html:22
 #: templates/eos_spy_network/partials/contacts.html:16
 #: templates/eos_spy_network/partials/kill-note-button.html:35
@@ -439,23 +439,23 @@ msgstr "发现"
 msgid "Note"
 msgstr "备注"
 
-#: templates/eos_spy_network/corporation.html:208
+#: templates/eos_spy_network/corporation.html:210
 #: templates/eos_spy_network/statistics.html:44
 #: templates/eos_spy_network/statistics.html:68
 msgctxt "eos-spy-network"
 msgid "Contracts"
 msgstr "合同"
 
-#: templates/eos_spy_network/corporation.html:209
+#: templates/eos_spy_network/corporation.html:211
 #: templates/eos_spy_network/partials/kill-note-modal.html:22
 msgid "Close"
 msgstr "关闭"
 
-#: templates/eos_spy_network/corporation.html:211
+#: templates/eos_spy_network/corporation.html:213
 msgid "Loading ..."
 msgstr "加载中 ..."
 
-#: templates/eos_spy_network/corporation.html:211
+#: templates/eos_spy_network/corporation.html:213
 msgid "The contracts could not be loaded."
 msgstr "无法加载合同。"
 
@@ -613,7 +613,7 @@ msgid "Type"
 msgstr "类型"
 
 #: templates/eos_spy_network/partials/capital-contracts.html:10
-#: templates/eos_spy_network/partials/contract-details.html:33
+#: templates/eos_spy_network/partials/contract-details.html:37
 msgid "Price"
 msgstr "价格"
 
@@ -627,7 +627,7 @@ msgid "Location"
 msgstr "地点"
 
 #: templates/eos_spy_network/partials/capital-contracts.html:13
-#: templates/eos_spy_network/partials/contract-details.html:27
+#: templates/eos_spy_network/partials/contract-details.html:31
 msgid "Issued"
 msgstr "发布时间"
 
@@ -636,7 +636,7 @@ msgid "Expires"
 msgstr "到期时间"
 
 #: templates/eos_spy_network/partials/capital-contracts.html:15
-#: templates/eos_spy_network/partials/contract-details.html:18
+#: templates/eos_spy_network/partials/contract-details.html:22
 msgctxt "eos-spy-network"
 msgid "Title"
 msgstr "标题"
@@ -646,8 +646,8 @@ msgstr "标题"
 msgid "Contract"
 msgstr "合同"
 
-#: templates/eos_spy_network/partials/capital-contracts.html:35
-#: templates/eos_spy_network/partials/contract-details.html:71
+#: templates/eos_spy_network/partials/capital-contracts.html:36
+#: templates/eos_spy_network/partials/contract-details.html:75
 msgid "corptools has not stored this contract."
 msgstr "corptools 未保存此合同。"
 
@@ -667,63 +667,63 @@ msgstr "参考 Standing"
 msgid "Suspect standing"
 msgstr "嫌疑人 Standing"
 
-#: templates/eos_spy_network/partials/contract-details.html:21
+#: templates/eos_spy_network/partials/contract-details.html:25
 msgid "Issuer"
 msgstr "发布者"
 
-#: templates/eos_spy_network/partials/contract-details.html:23
+#: templates/eos_spy_network/partials/contract-details.html:27
 msgid "Assignee"
 msgstr "受让人"
 
-#: templates/eos_spy_network/partials/contract-details.html:25
+#: templates/eos_spy_network/partials/contract-details.html:29
 msgid "Acceptor"
 msgstr "接受者"
 
-#: templates/eos_spy_network/partials/contract-details.html:30
+#: templates/eos_spy_network/partials/contract-details.html:34
 msgctxt "eos-spy-network"
 msgid "Completed"
 msgstr "完成时间"
 
-#: templates/eos_spy_network/partials/contract-details.html:35
+#: templates/eos_spy_network/partials/contract-details.html:39
 msgid "Reward"
 msgstr "报酬"
 
-#: templates/eos_spy_network/partials/contract-details.html:37
+#: templates/eos_spy_network/partials/contract-details.html:41
 msgid "Collateral"
 msgstr "抵押"
 
-#: templates/eos_spy_network/partials/contract-details.html:40
+#: templates/eos_spy_network/partials/contract-details.html:44
 msgctxt "eos-spy-network"
 msgid "From"
 msgstr "起点"
 
-#: templates/eos_spy_network/partials/contract-details.html:44
+#: templates/eos_spy_network/partials/contract-details.html:48
 msgctxt "eos-spy-network"
 msgid "To"
 msgstr "终点"
 
-#: templates/eos_spy_network/partials/contract-details.html:53
+#: templates/eos_spy_network/partials/contract-details.html:57
 msgctxt "eos-spy-network"
 msgid "Item"
 msgstr "物品"
 
-#: templates/eos_spy_network/partials/contract-details.html:54
+#: templates/eos_spy_network/partials/contract-details.html:58
 msgid "Quantity"
 msgstr "数量"
 
-#: templates/eos_spy_network/partials/contract-details.html:55
+#: templates/eos_spy_network/partials/contract-details.html:59
 msgid "Direction"
 msgstr "方向"
 
-#: templates/eos_spy_network/partials/contract-details.html:63
+#: templates/eos_spy_network/partials/contract-details.html:67
 msgid "offered"
 msgstr "提供"
 
-#: templates/eos_spy_network/partials/contract-details.html:63
+#: templates/eos_spy_network/partials/contract-details.html:67
 msgid "requested"
 msgstr "索取"
 
-#: templates/eos_spy_network/partials/contract-details.html:82
+#: templates/eos_spy_network/partials/contract-details.html:86
 msgid "No contracts found for these payments."
 msgstr "未找到这些付款对应的合同。"
 
@@ -740,6 +740,10 @@ msgstr "价值"
 #: templates/eos_spy_network/partials/dealings.html:16
 msgid "Kind"
 msgstr "类别"
+
+#: templates/eos_spy_network/partials/ingame-link-button.html:3
+msgid "Copy in-game link"
+msgstr "复制游戏内链接"
 
 #: templates/eos_spy_network/partials/kill-note-button.html:33
 #: templates/eos_spy_network/partials/kill-note-modal.html:11
@@ -1089,20 +1093,20 @@ msgstr "尚未运行过合同扫描。"
 msgid "Suspects"
 msgstr "嫌疑人"
 
-#: views.py:627
+#: views.py:633
 msgid "The markers and connections are being recalculated."
 msgstr "正在重新计算标记和关联。"
 
-#: views.py:629
+#: views.py:635
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr "无法开始重新计算：任务队列不可达。"
 
-#: views.py:660
+#: views.py:666
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr "设置已保存。正在重新计算标记和关联。"
 
-#: views.py:664
+#: views.py:670
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

@@ -5,6 +5,8 @@
 
 {% block extra_javascript %}
     {{ block.super }}
+    {% include "bundles/clipboard-js.html" %}
+    {% sri_static "eos_spy_network/js/copy.js" %}
     {% sri_static "eos_spy_network/js/contracts.js" %}
     {% sri_static "eos_spy_network/js/kills.js" %}
     {% sri_static "eos_spy_network/js/cleared.js" %}

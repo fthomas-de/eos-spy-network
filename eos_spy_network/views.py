@@ -593,18 +593,24 @@ def capital_contract(request, contract_id):
     """The popup of one contract of the capital marker, as HTML."""
     report = _report(SpyConfiguration.get_solo())
     # only a contract the marker lists on a tile the viewer sees: any other contract is not ours to show
-    offered = report is not None and any(
-        row.get("contract_id") == contract_id
-        for tile in report.tiles
-        if sees_corporation(request.user, tile.id)
-        for suspect in _accounts(tile)
-        if CAPITAL_CONTRACTS in suspect.markers
-        for row in suspect.markers[CAPITAL_CONTRACTS].rows
+    offered = report is not None and next(
+        (
+            row
+            for tile in report.tiles
+            if sees_corporation(request.user, tile.id)
+            for suspect in _accounts(tile)
+            if CAPITAL_CONTRACTS in suspect.markers
+            for row in suspect.markers[CAPITAL_CONTRACTS].rows
+            if row.get("contract_id") == contract_id
+        ),
+        None,
     )
     if not offered:
         raise Http404
     return render(
-        request, "eos_spy_network/partials/contract-details.html", {"contracts": contract_details.contract(contract_id)}
+        request,
+        "eos_spy_network/partials/contract-details.html",
+        {"contracts": contract_details.contract(contract_id), "ingame_ships": offered["ships"]},
     )
 
 

@@ -1,0 +1,7 @@
+{% load i18n %}
+{# Copies the in-game link of a public contract, wired up by static/eos_spy_network/js/copy.js; the client ignores the solar system (tried in game), and a structure's is unknown #}
+{% translate "Copy in-game link" as label %}
+<button type="button" class="btn btn-sm btn-secondary eos-spy-network-copy" title="{{ label }}" aria-label="{{ label }}"
+        data-clipboard-text="&lt;url=contract:0//{{ contract_id }}&gt;{{ ships|join:', ' }}&lt;/url&gt;">
+    <i class="far fa-copy"></i>
+</button>

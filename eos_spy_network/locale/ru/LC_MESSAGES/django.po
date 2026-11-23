@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 22:58+0000\n"
-"PO-Revision-Date: 2026-11-20 22:58+0000\n"
+"POT-Creation-Date: 2026-11-23 11:04+0000\n"
+"PO-Revision-Date: 2026-11-23 11:04+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: ru\n"
 "Language: ru\n"
@@ -58,8 +58,8 @@ msgid "Faction"
 msgstr "Faction"
 
 #: forms.py:91 snapshot.py:47 templates/eos_spy_network/base.html:17
-#: templates/eos_spy_network/corporation.html:53
-#: templates/eos_spy_network/corporation.html:102
+#: templates/eos_spy_network/corporation.html:55
+#: templates/eos_spy_network/corporation.html:104
 #: templates/eos_spy_network/settings.html:33 views.py:39
 msgid "Markers"
 msgstr "Маркеры"
@@ -341,7 +341,7 @@ msgstr "Журнал"
 msgid "Settings"
 msgstr "Настройки"
 
-#: templates/eos_spy_network/corporation.html:27
+#: templates/eos_spy_network/corporation.html:29
 #: templates/eos_spy_network/corporations.html:30
 #: templates/eos_spy_network/corporations.html:40
 #: templates/eos_spy_network/network.html:29
@@ -353,24 +353,24 @@ msgctxt "eos-spy-network"
 msgid "Mains"
 msgstr "Mains"
 
-#: templates/eos_spy_network/corporation.html:28
-#: templates/eos_spy_network/corporation.html:43
+#: templates/eos_spy_network/corporation.html:30
+#: templates/eos_spy_network/corporation.html:45
 #: templates/eos_spy_network/corporations.html:31
 msgid "Mains with markers"
 msgstr "Mains с маркерами"
 
-#: templates/eos_spy_network/corporation.html:29
+#: templates/eos_spy_network/corporation.html:31
 #: templates/eos_spy_network/corporations.html:32
 msgid "Alts of other mains with markers"
 msgstr "Alts чужих Mains с маркерами"
 
-#: templates/eos_spy_network/corporation.html:34
+#: templates/eos_spy_network/corporation.html:36
 #: templates/eos_spy_network/network_corporation.html:25
 msgid "Back"
 msgstr "Назад"
 
-#: templates/eos_spy_network/corporation.html:51
-#: templates/eos_spy_network/corporation.html:99
+#: templates/eos_spy_network/corporation.html:53
+#: templates/eos_spy_network/corporation.html:101
 #: templates/eos_spy_network/log.html:18
 #: templates/eos_spy_network/partials/network-legend.html:4
 #: templates/eos_spy_network/settings.html:238
@@ -378,8 +378,8 @@ msgctxt "EVE jargon"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_spy_network/corporation.html:52
-#: templates/eos_spy_network/corporation.html:170
+#: templates/eos_spy_network/corporation.html:54
+#: templates/eos_spy_network/corporation.html:172
 #: templates/eos_spy_network/partials/contacts.html:7
 #: templates/eos_spy_network/settings.html:239
 #: templates/eos_spy_network/statistics.html:19
@@ -387,17 +387,17 @@ msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
 
-#: templates/eos_spy_network/corporation.html:80
+#: templates/eos_spy_network/corporation.html:82
 #: templates/eos_spy_network/corporations.html:47
 msgid "No markers."
 msgstr "Нет маркеров."
 
-#: templates/eos_spy_network/corporation.html:89
+#: templates/eos_spy_network/corporation.html:91
 msgctxt "eos-spy-network"
 msgid "Alts of mains in other Corporations"
 msgstr "Alts от Mains других Corporations"
 
-#: templates/eos_spy_network/corporation.html:93
+#: templates/eos_spy_network/corporation.html:95
 msgid ""
 "Characters of this Corporation whose main is in another Corporation or "
 "outside the Alliance, with their whole account. A note is changed on the "
@@ -408,19 +408,19 @@ msgstr ""
 "Alliance, со всем их аккаунтом. Заметка меняется на странице Corporation "
 "этого Main, для Main вне Alliance - во вкладках настроек."
 
-#: templates/eos_spy_network/corporation.html:100
+#: templates/eos_spy_network/corporation.html:102
 msgid "Main's Corporation"
 msgstr "Corporation этого Main"
 
-#: templates/eos_spy_network/corporation.html:101
+#: templates/eos_spy_network/corporation.html:103
 msgid "Alts here"
 msgstr "Alts здесь"
 
-#: templates/eos_spy_network/corporation.html:144
+#: templates/eos_spy_network/corporation.html:146
 msgid "Cleared findings"
 msgstr "Улаженные находки"
 
-#: templates/eos_spy_network/corporation.html:148
+#: templates/eos_spy_network/corporation.html:150
 msgid ""
 "Mains whose every finding is cleared, so they no longer show above. A note "
 "is changed in the settings tabs."
@@ -428,28 +428,28 @@ msgstr ""
 "Mains, у которых все находки улажены, поэтому их больше нет выше. Заметка "
 "меняется во вкладках настроек."
 
-#: templates/eos_spy_network/corporation.html:151
+#: templates/eos_spy_network/corporation.html:153
 msgid "Search main, finding or note"
 msgstr "Поиск по Main, находке или заметке"
 
-#: templates/eos_spy_network/corporation.html:167
+#: templates/eos_spy_network/corporation.html:169
 #: templates/eos_spy_network/log.html:17
 msgid "Marker"
 msgstr "Маркер"
 
-#: templates/eos_spy_network/corporation.html:168
+#: templates/eos_spy_network/corporation.html:170
 #: templates/eos_spy_network/log.html:15
 #: templates/eos_spy_network/partials/kills.html:7
 #: templates/eos_spy_network/settings.html:176
 msgid "Date"
 msgstr "Дата"
 
-#: templates/eos_spy_network/corporation.html:169
+#: templates/eos_spy_network/corporation.html:171
 #: templates/eos_spy_network/log.html:19
 msgid "Finding"
 msgstr "Находка"
 
-#: templates/eos_spy_network/corporation.html:171
+#: templates/eos_spy_network/corporation.html:173
 #: templates/eos_spy_network/log.html:22
 #: templates/eos_spy_network/partials/contacts.html:16
 #: templates/eos_spy_network/partials/kill-note-button.html:35
@@ -461,23 +461,23 @@ msgstr "Находка"
 msgid "Note"
 msgstr "Заметка"
 
-#: templates/eos_spy_network/corporation.html:208
+#: templates/eos_spy_network/corporation.html:210
 #: templates/eos_spy_network/statistics.html:44
 #: templates/eos_spy_network/statistics.html:68
 msgctxt "eos-spy-network"
 msgid "Contracts"
 msgstr "Контракты"
 
-#: templates/eos_spy_network/corporation.html:209
+#: templates/eos_spy_network/corporation.html:211
 #: templates/eos_spy_network/partials/kill-note-modal.html:22
 msgid "Close"
 msgstr "Закрыть"
 
-#: templates/eos_spy_network/corporation.html:211
+#: templates/eos_spy_network/corporation.html:213
 msgid "Loading ..."
 msgstr "Загрузка ..."
 
-#: templates/eos_spy_network/corporation.html:211
+#: templates/eos_spy_network/corporation.html:213
 msgid "The contracts could not be loaded."
 msgstr "Не удалось загрузить контракты."
 
@@ -639,7 +639,7 @@ msgid "Type"
 msgstr "Тип"
 
 #: templates/eos_spy_network/partials/capital-contracts.html:10
-#: templates/eos_spy_network/partials/contract-details.html:33
+#: templates/eos_spy_network/partials/contract-details.html:37
 msgid "Price"
 msgstr "Цена"
 
@@ -653,7 +653,7 @@ msgid "Location"
 msgstr "Местоположение"
 
 #: templates/eos_spy_network/partials/capital-contracts.html:13
-#: templates/eos_spy_network/partials/contract-details.html:27
+#: templates/eos_spy_network/partials/contract-details.html:31
 msgid "Issued"
 msgstr "Создан"
 
@@ -662,7 +662,7 @@ msgid "Expires"
 msgstr "Истекает"
 
 #: templates/eos_spy_network/partials/capital-contracts.html:15
-#: templates/eos_spy_network/partials/contract-details.html:18
+#: templates/eos_spy_network/partials/contract-details.html:22
 msgctxt "eos-spy-network"
 msgid "Title"
 msgstr "Название"
@@ -672,8 +672,8 @@ msgstr "Название"
 msgid "Contract"
 msgstr "Контракт"
 
-#: templates/eos_spy_network/partials/capital-contracts.html:35
-#: templates/eos_spy_network/partials/contract-details.html:71
+#: templates/eos_spy_network/partials/capital-contracts.html:36
+#: templates/eos_spy_network/partials/contract-details.html:75
 msgid "corptools has not stored this contract."
 msgstr "corptools не сохранил этот контракт."
 
@@ -693,63 +693,63 @@ msgstr "Опорный Standing"
 msgid "Suspect standing"
 msgstr "Standing подозреваемого"
 
-#: templates/eos_spy_network/partials/contract-details.html:21
+#: templates/eos_spy_network/partials/contract-details.html:25
 msgid "Issuer"
 msgstr "Создатель"
 
-#: templates/eos_spy_network/partials/contract-details.html:23
+#: templates/eos_spy_network/partials/contract-details.html:27
 msgid "Assignee"
 msgstr "Получатель"
 
-#: templates/eos_spy_network/partials/contract-details.html:25
+#: templates/eos_spy_network/partials/contract-details.html:29
 msgid "Acceptor"
 msgstr "Принявший"
 
-#: templates/eos_spy_network/partials/contract-details.html:30
+#: templates/eos_spy_network/partials/contract-details.html:34
 msgctxt "eos-spy-network"
 msgid "Completed"
 msgstr "Завершён"
 
-#: templates/eos_spy_network/partials/contract-details.html:35
+#: templates/eos_spy_network/partials/contract-details.html:39
 msgid "Reward"
 msgstr "Награда"
 
-#: templates/eos_spy_network/partials/contract-details.html:37
+#: templates/eos_spy_network/partials/contract-details.html:41
 msgid "Collateral"
 msgstr "Залог"
 
-#: templates/eos_spy_network/partials/contract-details.html:40
+#: templates/eos_spy_network/partials/contract-details.html:44
 msgctxt "eos-spy-network"
 msgid "From"
 msgstr "Откуда"
 
-#: templates/eos_spy_network/partials/contract-details.html:44
+#: templates/eos_spy_network/partials/contract-details.html:48
 msgctxt "eos-spy-network"
 msgid "To"
 msgstr "Куда"
 
-#: templates/eos_spy_network/partials/contract-details.html:53
+#: templates/eos_spy_network/partials/contract-details.html:57
 msgctxt "eos-spy-network"
 msgid "Item"
 msgstr "Предмет"
 
-#: templates/eos_spy_network/partials/contract-details.html:54
+#: templates/eos_spy_network/partials/contract-details.html:58
 msgid "Quantity"
 msgstr "Количество"
 
-#: templates/eos_spy_network/partials/contract-details.html:55
+#: templates/eos_spy_network/partials/contract-details.html:59
 msgid "Direction"
 msgstr "Направление"
 
-#: templates/eos_spy_network/partials/contract-details.html:63
+#: templates/eos_spy_network/partials/contract-details.html:67
 msgid "offered"
 msgstr "предлагается"
 
-#: templates/eos_spy_network/partials/contract-details.html:63
+#: templates/eos_spy_network/partials/contract-details.html:67
 msgid "requested"
 msgstr "запрашивается"
 
-#: templates/eos_spy_network/partials/contract-details.html:82
+#: templates/eos_spy_network/partials/contract-details.html:86
 msgid "No contracts found for these payments."
 msgstr "Для этих платежей контракты не найдены."
 
@@ -766,6 +766,10 @@ msgstr "Стоимость"
 #: templates/eos_spy_network/partials/dealings.html:16
 msgid "Kind"
 msgstr "Вид"
+
+#: templates/eos_spy_network/partials/ingame-link-button.html:3
+msgid "Copy in-game link"
+msgstr "Копировать ссылку для игры"
 
 #: templates/eos_spy_network/partials/kill-note-button.html:33
 #: templates/eos_spy_network/partials/kill-note-modal.html:11
@@ -1142,20 +1146,20 @@ msgstr "Обход контрактов ещё не выполнялся."
 msgid "Suspects"
 msgstr "Подозреваемые"
 
-#: views.py:627
+#: views.py:633
 msgid "The markers and connections are being recalculated."
 msgstr "Маркеры и связи пересчитываются."
 
-#: views.py:629
+#: views.py:635
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr "Не удалось запустить пересчёт: очередь задач недоступна."
 
-#: views.py:660
+#: views.py:666
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr "Настройки сохранены. Маркеры и связи пересчитываются."
 
-#: views.py:664
+#: views.py:670
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

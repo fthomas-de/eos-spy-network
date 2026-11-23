@@ -52,7 +52,9 @@ every one with a standing below a configurable value.
   kills are all cleared is folded to its day row; a click on the date
   unfolds it. *Capital in contract* shows a row per contract: the
   character, the ships, the type, price and buyout in million ISK, the
-  location, the dates and the title.
+  location, the dates and the title; a button next to *View details* and
+  one in its popup copy the contract's in-game link with the ships as its
+  text, to paste into EVE's chat or a mail.
   Below, *Alts of mains in other Corporations*: every marked account with
   an alt in this Corporation whose main is elsewhere, with its main, the
   main's Corporation, its alts here and all its markers with everything

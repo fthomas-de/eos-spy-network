@@ -236,6 +236,7 @@ TRANSLATIONS = {
     "Count": ("Anzahl", "Количество", "数量"),
     "Contracts": ("Contracts", "Контракты", "合同"),
     "Contract": ("Contract", "Контракт", "合同"),
+    "Copy in-game link": ("Ingame-Link kopieren", "Копировать ссылку для игры", "复制游戏内链接"),
     "Close": ("Schließen", "Закрыть", "关闭"),
     "Loading ...": ("Lade ...", "Загрузка ...", "加载中 ..."),
     "The contracts could not be loaded.": (

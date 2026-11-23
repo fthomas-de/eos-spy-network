@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.37] - 2026-11-23
+
+### Added
+
+- *Capital in contract*: a copy button next to *View details* and in the
+  contract's popup puts the in-game link on the clipboard
+  (`<url=contract:0//ID>ships</url>`), to paste into EVE's chat or a mail
+  and open the contract with a click. The solar system is `0`: the client
+  ignores it (tried in game with a wrong one and with 0), and a structure's
+  system is unknown without a token. The link text is the ships of the
+  *Ships* column, never empty unlike the title. The ISK marker's contract
+  popup gets no button: corptools' contracts are private, nobody else could
+  open them. The copying is Alliance Auth's clipboard.js bundle, as in
+  eos-invoices (`copy.js`).
+
 ## [0.0.36] - 2026-11-21
 
 ### Added

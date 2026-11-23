@@ -836,6 +836,14 @@ class TestContractDetails(SuspectPageTestCase):
 
         self.assertNotContains(response, 'data-eos-spy-network-contracts="')
 
+    def test_should_not_offer_an_in_game_link_for_a_private_contract(self):
+        # corptools' contracts are not public: nobody else could open them in game
+        self.pay(1, "contract_price", context_id=81)
+        snapshot.update()
+        self.login(VIEW_SUSPECTS)
+
+        self.assertNotContains(self.client.get(self.url), "data-clipboard-text")
+
 
 class TestCapitalContractDetails(SuspectPageTestCase):
     """The popup behind a row of the capital marker."""
@@ -917,6 +925,25 @@ class TestCapitalContractDetails(SuspectPageTestCase):
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
         self.assertContains(response, f'data-eos-spy-network-contracts="{self.popup(5)}"')
+
+    # the solar system does not matter to the client (tried in game); a structure's is unknown anyway
+    IN_GAME_LINK = 'data-clipboard-text="&lt;url=contract:0//5&gt;2x Naglfar&lt;/url&gt;"'
+
+    def test_should_offer_the_in_game_link_in_the_table(self):
+        self.add_offer(5, quantity=2)
+        snapshot.update()
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, self.IN_GAME_LINK)
+        # sri_static names the hashed file: copy.<hash>.js
+        self.assertContains(response, "eos_spy_network/js/copy.")
+
+    def test_should_offer_the_in_game_link_in_the_popup(self):
+        self.add_offer(5, quantity=2)
+        snapshot.update()
+
+        self.assertContains(self.client.get(self.popup(5)), self.IN_GAME_LINK)
 
     def test_should_show_an_icon_instead_of_the_button_for_a_row_without_contract_id(self):
         # a snapshot of an earlier version has no contract ID in its rows

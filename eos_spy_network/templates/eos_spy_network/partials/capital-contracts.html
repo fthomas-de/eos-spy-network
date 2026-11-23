@@ -31,6 +31,7 @@
                     <td class="text-nowrap">
                         {% if row.contract_id %}
                             <button type="button" class="btn btn-sm btn-secondary" data-eos-spy-network-contracts="{% url 'eos_spy_network:capital_contract' row.contract_id %}">{% translate "View details" %}</button>
+                            {% include "eos_spy_network/partials/ingame-link-button.html" with contract_id=row.contract_id ships=row.ships %}
                         {% else %}
                             <i class="fa-solid fa-eye-slash text-body-secondary" title="{% translate 'corptools has not stored this contract.' %}"></i>
                         {% endif %}

@@ -10,6 +10,10 @@
                         · {{ contract.contract_type|cut:"_" }} · {{ contract.status }}
                     </span>
                 {% endif %}
+                {# capital popup only: the ISK popup's contracts are private, nobody else could open them in game #}
+                {% if ingame_ships %}
+                    {% include "eos_spy_network/partials/ingame-link-button.html" with contract_id=entry.contract_id ships=ingame_ships %}
+                {% endif %}
             </div>
             <div class="card-body small">
                 {% if contract %}
