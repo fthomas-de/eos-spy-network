@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-23 14:58+0000\n"
-"PO-Revision-Date: 2026-11-23 14:58+0000\n"
+"POT-Creation-Date: 2026-11-23 15:30+0000\n"
+"PO-Revision-Date: 2026-11-23 15:30+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: de\n"
 "Language: de\n"
@@ -538,7 +538,7 @@ msgid "Contracts"
 msgstr "Contracts"
 
 #: templates/eos_spy_network/corporation.html:211
-#: templates/eos_spy_network/network_corporation.html:153
+#: templates/eos_spy_network/network_corporation.html:158
 #: templates/eos_spy_network/partials/kill-note-modal.html:22
 msgid "Close"
 msgstr "Schließen"
@@ -664,7 +664,7 @@ msgid "Player trading"
 msgstr "Player Trading"
 
 #: templates/eos_spy_network/network.html:57
-#: templates/eos_spy_network/network_corporation.html:141
+#: templates/eos_spy_network/network_corporation.html:146
 msgid "No connections outside the Alliance."
 msgstr "Keine Verbindungen außerhalb der Alliance."
 
@@ -679,7 +679,7 @@ msgid "Payments"
 msgstr "Zahlungen"
 
 #: templates/eos_spy_network/network_corporation.html:65
-#: templates/eos_spy_network/partials/group-cell.html:7
+#: templates/eos_spy_network/partials/group-cell.html:13
 msgctxt "eos-spy-network"
 msgid "Standing"
 msgstr "Standing"
@@ -695,17 +695,24 @@ msgstr "Zeitraum"
 msgid "Counterpart"
 msgstr "Gegenüber"
 
-#: templates/eos_spy_network/network_corporation.html:118
-#: templates/eos_spy_network/network_corporation.html:119
-#: templates/eos_spy_network/network_corporation.html:152
+#: templates/eos_spy_network/network_corporation.html:114
+#: templates/eos_spy_network/network_corporation.html:116
+#: templates/eos_spy_network/partials/group-cell.html:8
+#: templates/eos_spy_network/partials/group-cell.html:10
+msgid "Standing held by the Alliance"
+msgstr "Standing der Alliance"
+
+#: templates/eos_spy_network/network_corporation.html:123
+#: templates/eos_spy_network/network_corporation.html:124
+#: templates/eos_spy_network/network_corporation.html:157
 msgid "Ignore this counterpart"
 msgstr "Dieses Gegenüber ignorieren"
 
-#: templates/eos_spy_network/network_corporation.html:156
+#: templates/eos_spy_network/network_corporation.html:161
 msgid "Ignore this counterpart in the Network?"
 msgstr "Dieses Gegenüber im Network ignorieren?"
 
-#: templates/eos_spy_network/network_corporation.html:158
+#: templates/eos_spy_network/network_corporation.html:163
 msgid ""
 "Payments and contracts with it no longer count and the Network is "
 "recalculated. You can take it back in the settings."
@@ -713,18 +720,18 @@ msgstr ""
 "Zahlungen und Contracts mit ihm zählen nicht mehr und das Network wird neu "
 "berechnet. Du kannst es in den Einstellungen zurücknehmen."
 
-#: templates/eos_spy_network/network_corporation.html:161
+#: templates/eos_spy_network/network_corporation.html:166
 #: templates/eos_spy_network/partials/kill-note-modal.html:50
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: templates/eos_spy_network/network_corporation.html:162
+#: templates/eos_spy_network/network_corporation.html:167
 msgctxt "eos-spy-network"
 msgid "Ignore"
 msgstr "Ignorieren"
 
 #: templates/eos_spy_network/partials/affiliation-cells.html:13
-#: templates/eos_spy_network/partials/group-cell.html:13
+#: templates/eos_spy_network/partials/group-cell.html:17
 msgid "unknown"
 msgstr "unbekannt"
 

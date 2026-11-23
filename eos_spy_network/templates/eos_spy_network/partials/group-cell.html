@@ -1,14 +1,18 @@
 {% load i18n %}
-{# A Corporation or Alliance cell of the network table; red with its standing when it is a hostile contact. #}
+{# A Corporation or Alliance cell of a table; red when it is a hostile contact. With with_held the badge is the standing the Alliance itself holds (a dash when none), else the hostile standing. #}
 {% if group %}
-    {% if group.standing is not None %}
-        <td class="text-break text-danger fw-semibold" data-order="{{ group.name }}">
-            {{ group.name }}
+    <td class="text-break{% if group.standing is not None %} text-danger fw-semibold{% endif %}"{% if group.standing is not None %} data-order="{{ group.name }}"{% endif %}>
+        {{ group.name }}
+        {% if with_held %}
+            {% if group.held is None %}
+                <span class="text-body-secondary" title="{% translate 'Standing held by the Alliance' %}">–</span>
+            {% else %}
+                <span class="badge {% if group.held >= 5 %}text-bg-primary{% elif group.held > 0 %}text-bg-info{% elif group.held == 0 %}text-bg-secondary{% elif group.held > -10 %}text-bg-warning{% else %}text-bg-danger{% endif %}" title="{% translate 'Standing held by the Alliance' %}">{{ group.held|floatformat:"-1" }}</span>
+            {% endif %}
+        {% elif group.standing is not None %}
             <span class="badge text-bg-danger" title="{% translate 'Standing' context 'eos-spy-network' %}">{{ group.standing|floatformat:"-1" }}</span>
-        </td>
-    {% else %}
-        <td class="text-break">{{ group.name }}</td>
-    {% endif %}
+        {% endif %}
+    </td>
 {% else %}
     <td class="text-body-secondary">{% translate "unknown" %}</td>
 {% endif %}

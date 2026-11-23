@@ -74,6 +74,18 @@ def blue_entities(config: SpyConfiguration) -> dict[int, Contact]:
     return {row.contact_id: row for row in contacts.contacts([source], at_least=config.blue_from)}
 
 
+def alliance_standings(config: SpyConfiguration) -> dict[int, Decimal]:
+    """The standing the Alliance itself holds for each contact, by EVE ID.
+
+    The Alliance's own contacts only, whatever the standing: the Network table
+    shows what the Alliance holds against or for a party, not the hostile list.
+    """
+    if not config.alliance:
+        return {}
+    source = ContactSource(kind=ContactSource.ALLIANCE, entity_id=config.alliance.alliance_id)
+    return {row.contact_id: row.standing for row in contacts.contacts([source])}
+
+
 def network_blue_ids(config: SpyConfiguration) -> set[int]:
     """Every contact a ticked source holds above the Network's blue standing.
 

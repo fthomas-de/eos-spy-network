@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.42] - 2026-11-23
+
+### Added
+
+- Network table: next to the *Counterpart*, its *Corporation* and its *Alliance*
+  a badge shows the standing the Alliance itself holds for that party - or a
+  dash when it holds none - coloured by EVE's bands (blue from +5, light blue
+  above 0, grey at 0, orange above -10, red at -10). Until now only a hostile
+  Corporation or Alliance showed a standing at all, and that was the lowest of
+  every ticked source, so a neutral or friendly party showed none. It is the
+  Alliance's own contact list only: a Corporation source's private standing is
+  not what the Alliance holds. The snapshot stores the standings of the parties
+  of the table (`standings`, no migration); one stored by 0.0.41 or older shows
+  dashes until the next recalculation. The other tables keep their red badge
+  with the hostile standing.
+
 ## [0.0.41] - 2026-11-23
 
 ### Added

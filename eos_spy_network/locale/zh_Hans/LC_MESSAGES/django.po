@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-23 14:58+0000\n"
-"PO-Revision-Date: 2026-11-23 14:58+0000\n"
+"POT-Creation-Date: 2026-11-23 15:30+0000\n"
+"PO-Revision-Date: 2026-11-23 15:30+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: zh_Hans\n"
 "Language: zh_Hans\n"
@@ -499,7 +499,7 @@ msgid "Contracts"
 msgstr "合同"
 
 #: templates/eos_spy_network/corporation.html:211
-#: templates/eos_spy_network/network_corporation.html:153
+#: templates/eos_spy_network/network_corporation.html:158
 #: templates/eos_spy_network/partials/kill-note-modal.html:22
 msgid "Close"
 msgstr "关闭"
@@ -619,7 +619,7 @@ msgid "Player trading"
 msgstr "Player trading"
 
 #: templates/eos_spy_network/network.html:57
-#: templates/eos_spy_network/network_corporation.html:141
+#: templates/eos_spy_network/network_corporation.html:146
 msgid "No connections outside the Alliance."
 msgstr "没有与 Alliance 外的关联。"
 
@@ -634,7 +634,7 @@ msgid "Payments"
 msgstr "付款"
 
 #: templates/eos_spy_network/network_corporation.html:65
-#: templates/eos_spy_network/partials/group-cell.html:7
+#: templates/eos_spy_network/partials/group-cell.html:13
 msgctxt "eos-spy-network"
 msgid "Standing"
 msgstr "Standing"
@@ -650,34 +650,41 @@ msgstr "时间段"
 msgid "Counterpart"
 msgstr "对方"
 
-#: templates/eos_spy_network/network_corporation.html:118
-#: templates/eos_spy_network/network_corporation.html:119
-#: templates/eos_spy_network/network_corporation.html:152
+#: templates/eos_spy_network/network_corporation.html:114
+#: templates/eos_spy_network/network_corporation.html:116
+#: templates/eos_spy_network/partials/group-cell.html:8
+#: templates/eos_spy_network/partials/group-cell.html:10
+msgid "Standing held by the Alliance"
+msgstr "Alliance 持有的 Standing"
+
+#: templates/eos_spy_network/network_corporation.html:123
+#: templates/eos_spy_network/network_corporation.html:124
+#: templates/eos_spy_network/network_corporation.html:157
 msgid "Ignore this counterpart"
 msgstr "忽略此对方"
 
-#: templates/eos_spy_network/network_corporation.html:156
+#: templates/eos_spy_network/network_corporation.html:161
 msgid "Ignore this counterpart in the Network?"
 msgstr "在关系网中忽略此对方？"
 
-#: templates/eos_spy_network/network_corporation.html:158
+#: templates/eos_spy_network/network_corporation.html:163
 msgid ""
 "Payments and contracts with it no longer count and the Network is "
 "recalculated. You can take it back in the settings."
 msgstr "与其的付款和合同将不再计入，关系网会重新计算。可在设置中撤销。"
 
-#: templates/eos_spy_network/network_corporation.html:161
+#: templates/eos_spy_network/network_corporation.html:166
 #: templates/eos_spy_network/partials/kill-note-modal.html:50
 msgid "Cancel"
 msgstr "取消"
 
-#: templates/eos_spy_network/network_corporation.html:162
+#: templates/eos_spy_network/network_corporation.html:167
 msgctxt "eos-spy-network"
 msgid "Ignore"
 msgstr "忽略"
 
 #: templates/eos_spy_network/partials/affiliation-cells.html:13
-#: templates/eos_spy_network/partials/group-cell.html:13
+#: templates/eos_spy_network/partials/group-cell.html:17
 msgid "unknown"
 msgstr "未知"
 

@@ -441,6 +441,13 @@ class TestNetworkPages(SuspectPageTestCase):
         self.assertContains(response, "vis-network.min.js")
         self.assertContains(response, f'<td data-order="{timezone.now().date().isoformat()}" class="text-nowrap">')
 
+    def test_should_show_the_standing_the_alliance_holds_for_the_counterpart(self):
+        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+
+        self.assertContains(response, 'text-bg-danger" title="Standing held by the Alliance">-10</span>')
+        # the stranger has no Corporation or Alliance Auth or ESI knows: their cells stay "unknown"
+        self.assertNotContains(response, 'title="Standing held by the Alliance">–</span>')
+
     def test_should_colour_the_legend_with_bootstrap_classes(self):
         # network.js reads the graph colours from these icons; the hook class stays for it
         response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))

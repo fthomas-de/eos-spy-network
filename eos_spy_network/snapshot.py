@@ -21,7 +21,7 @@ from django.utils.translation import gettext_lazy as _
 from allianceauth.services.hooks import get_extension_logger
 
 from .affiliations import ALLIANCE, CORPORATION, Entity
-from .hostiles import hostile_entities, network_blue_ids
+from .hostiles import alliance_standings, hostile_entities, network_blue_ids
 from .markers import (
     BLUE_KILLS,
     CONTACTS,
@@ -159,6 +159,7 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
         _affiliate_rows(dealing_rows, entities, hostiles)
         _affiliate_rows(contact_rows, entities, hostiles, "contact_id")
         _reference_rows(contact_rows, entities, hostiles)
+        standings = {eve_id: standing for eve_id, standing in alliance_standings(config).items() if eve_id in entities}
         found = kept_partners(found, network_blue_ids(config) if config.network_neutral else None)
 
     tile_ids = {tile.id for tile in tiles}
@@ -204,6 +205,8 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
             # only what a graph can show; the full hostile list would bloat the row
             if eve_id in entities
         ],
+        # what the Alliance itself holds for them, hostile or not: the Network table shows it for every party
+        "standings": [[eve_id, str(standing)] for eve_id, standing in standings.items()],
     }
     data["metrics"] = {
         "seconds": round(measurement.seconds, 2),
@@ -518,6 +521,8 @@ class Report:
             eve_id: Standing(Decimal(standing), [(name, Decimal(value)) for name, value in sources])
             for eve_id, standing, sources in data.get("hostiles", [])
         }
+        # a snapshot of 0.0.41 or older stores none: the Network table shows a dash until the next run
+        self.standings = {eve_id: Decimal(standing) for eve_id, standing in data.get("standings", [])}
         self.tiles = [self._tile(row, set(disabled), reviews or {}, findings or {}) for row in rows]
         tile_ids = {tile.id for tile in self.tiles}
         for tile in self.tiles:
@@ -601,6 +606,7 @@ class Report:
             ]
             account.entities = self.entities
             account.hostiles = self.hostiles
+            account.standings = self.standings
             tile.accounts.append(account)
         return tile
 

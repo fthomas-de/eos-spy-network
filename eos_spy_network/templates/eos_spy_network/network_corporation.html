@@ -110,6 +110,11 @@
                                                 <td class="text-break">{{ row.character }}</td>
                                                 <td class="text-break{% if row.hostile %} text-danger fw-semibold{% endif %}">
                                                     {{ row.counterpart }}
+                                                    {% if row.counterpart_held is None %}
+                                                        <span class="text-body-secondary" title="{% translate 'Standing held by the Alliance' %}">–</span>
+                                                    {% else %}
+                                                        <span class="badge {% if row.counterpart_held >= 5 %}text-bg-primary{% elif row.counterpart_held > 0 %}text-bg-info{% elif row.counterpart_held == 0 %}text-bg-secondary{% elif row.counterpart_held > -10 %}text-bg-warning{% else %}text-bg-danger{% endif %}" title="{% translate 'Standing held by the Alliance' %}">{{ row.counterpart_held|floatformat:"-1" }}</span>
+                                                    {% endif %}
                                                     {% if perms.eos_spy_network.manage_settings %}
                                                         <button type="button" class="btn btn-sm btn-link p-0 ms-1 text-body-secondary"
                                                                 data-bs-toggle="modal" data-bs-target="#eos-spy-network-ignore"
@@ -121,8 +126,8 @@
                                                         </button>
                                                     {% endif %}
                                                 </td>
-                                                {% include "eos_spy_network/partials/group-cell.html" with group=row.corporation %}
-                                                {% include "eos_spy_network/partials/group-cell.html" with group=row.alliance %}
+                                                {% include "eos_spy_network/partials/group-cell.html" with group=row.corporation with_held=True %}
+                                                {% include "eos_spy_network/partials/group-cell.html" with group=row.alliance with_held=True %}
                                                 <td>{{ row.payments }}</td>
                                                 <td>{{ row.trades }}</td>
                                                 <td data-order="{{ row.isk }}" class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>

@@ -101,6 +101,8 @@ class Connections:
     entities: dict = field(default_factory=dict)
     # EVE ID -> Standing of every hostile contact; shared as well
     hostiles: dict = field(default_factory=dict)
+    # EVE ID -> the standing the Alliance itself holds, hostile or not; shared as well
+    standings: dict = field(default_factory=dict)
 
     @property
     def shared(self) -> set:
@@ -142,7 +144,11 @@ class Connections:
         if not eve_id:
             return None
         hostile = self.hostiles.get(eve_id)
-        return {"name": self._name(eve_id), "standing": hostile.standing if hostile else None}
+        return {
+            "name": self._name(eve_id),
+            "standing": hostile.standing if hostile else None,
+            "held": self.standings.get(eve_id),
+        }
 
     @property
     def rows(self) -> list[dict]:
@@ -157,7 +163,8 @@ class Connections:
                     "character": self.characters.get(link.character_id, str(link.character_id)),
                     "counterpart": self._name(link.counterpart_id),
                     "counterpart_id": link.counterpart_id,
-                    "hostile": self.reason(link.counterpart_id) is not None,
+                    "counterpart_held": self.standings.get(link.counterpart_id),
+                    "hostile":self.reason(link.counterpart_id) is not None,
                     "corporation": self._group(corporation_id),
                     "alliance": self._group(alliance_id),
                     "payments": link.payments,

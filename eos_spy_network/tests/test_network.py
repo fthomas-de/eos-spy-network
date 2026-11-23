@@ -434,6 +434,41 @@ class TestHostileChain(NetworkTestCase):
         self.assertEqual(str(row["corporation"]["standing"]), "-10.0")
         self.assertIsNone(row["alliance"]["standing"])
 
+    def test_should_hold_the_standing_of_the_alliance_for_every_party_of_the_row(self):
+        # neither is hostile: the table shows them all the same
+        add_contact(ContactSource.ALLIANCE, ALLIANCE_ID, OTHER_ALLIANCE_ID, 5, contact_type="alliance")
+        add_contact(ContactSource.ALLIANCE, ALLIANCE_ID, OUTSIDER, 2, contact_type="character")
+
+        (row,) = self.account().rows
+
+        self.assertEqual(str(row["counterpart_held"]), "2.0")
+        self.assertEqual(str(row["corporation"]["held"]), "-10.0")
+        self.assertEqual(str(row["alliance"]["held"]), "5.0")
+
+    def test_should_hold_none_for_a_party_the_alliance_has_no_contact_with(self):
+        (row,) = self.account().rows
+
+        self.assertIsNone(row["counterpart_held"])
+        self.assertIsNone(row["alliance"]["held"])
+
+    def test_should_leave_the_standings_of_a_corporation_source_out(self):
+        # a Corporation's private contact is not what the Alliance holds
+        ContactSource.objects.create(kind=ContactSource.CORPORATION, entity_id=2001, name="Corp")
+        add_token(ContactSource.CORPORATION, 2001)
+        add_contact(ContactSource.CORPORATION, 2001, OUTSIDER, -5, contact_type="character")
+
+        (row,) = self.account().rows
+
+        self.assertIsNone(row["counterpart_held"])
+
+    def test_should_show_none_for_a_snapshot_without_standings(self):
+        stored = snapshot.update()
+        del stored.data["standings"]
+
+        (account,) = snapshot.Report(stored).network_tile(2001).accounts
+
+        self.assertIsNone(account.rows[0]["corporation"]["held"])
+
     def test_should_count_the_hostile_partner_on_the_tile(self):
         tile = snapshot.Report(snapshot.update()).network_tile(2001)
 
@@ -591,8 +626,8 @@ class TestQueries(NetworkTestCase):
         def count(table):
             return sum(1 for query in queries if _from(table).search(query["sql"]))
 
-        # once for the hostiles, once for the blues of the blue kills
-        self.assertEqual(count("aa_contacts_alliancecontact"), 2)
+        # once for the hostiles, once for the blues of the blue kills, once for the Network's standings
+        self.assertEqual(count("aa_contacts_alliancecontact"), 3)
         self.assertEqual(count("authentication_userprofile"), 1)
         # the characters, and inside the mains' query the accounts with an alt in the Alliance
         self.assertEqual(count("authentication_characterownership"), 2)

@@ -526,6 +526,11 @@ TRANSLATIONS = {
         "与这些对方的付款和合同不计入关系网。移除某一项即可重新计入。",
     ),
     "Ignore this counterpart": ("Dieses Gegenüber ignorieren", "Игнорировать этого контрагента", "忽略此对方"),
+    "Standing held by the Alliance": (
+        "Standing der Alliance",
+        "Standing, установленный Alliance",
+        "Alliance 持有的 Standing",
+    ),
     "Ignore this counterpart in the Network?": (
         "Dieses Gegenüber im Network ignorieren?",
         "Игнорировать этого контрагента в сети?",
