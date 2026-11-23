@@ -4,11 +4,34 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-23 (0.0.41).
+Last updated 2026-11-23 (0.0.42).
 
 ## State
 
-- Version: `0.0.41`, 2026-11-23 (see `CHANGELOG.md`): button *Ignore this
+- Version: `0.0.42`, 2026-11-23 (see `CHANGELOG.md`): the Network table shows
+  the standing the Alliance itself holds for each party.
+  - `hostiles.alliance_standings(config)`: the Alliance's own contacts
+    (`ContactSource` of kind alliance, unsaved, as `blue_entities`), every
+    standing, by EVE ID. Corporation sources never count (test red against
+    `ContactSource.objects.all()`). `snapshot.build` keeps only the IDs in
+    `entities` and stores them as `data["standings"]` (`[[id, "-10.0"]]`);
+    `Report.standings` reads them with `data.get`, so an older snapshot shows
+    dashes until the next run. `Connections.standings` is set in
+    `Report._network_tile` only; `rows` gains `counterpart_held`, `_group`
+    gains `held` (next to the hostile `standing`, which stays).
+  - Templates: `group-cell.html` has the parameter `with_held`; only
+    `network_corporation.html` sets it. The badge (EVE bands: >=5 primary,
+    >0 info, 0 secondary, >-10 warning, else danger; dash when none) is
+    written out twice (counterpart cell, group cell) because the user wants
+    no new files without asking. Red text still marks a hostile party; a
+    party hostile only through a Corporation source gets a dash.
+  - Tests: four in `TestHostileChain` (`test_network`), one in
+    `TestNetworkPages` (`test_views`); `TestQueries` now expects 3 reads of
+    the Alliance contacts. Suite at the commit: 469 without translation
+    tests, green (fresh test database). 1 new glossary text ("Standing held
+    by the Alliance"), machine-translated, not reviewed by the user. Not seen
+    in a browser (SSO).
+- Before (0.0.41), 2026-11-23: button *Ignore this
   counterpart* on the Network Corporation page.
   - `network_corporation.html`: next to each row's *Counterpart* a button
     (`perms.eos_spy_network.manage_settings`; the page itself needs
@@ -291,6 +314,12 @@ Last updated 2026-11-23 (0.0.41).
 
 ## Open
 
+- 0.0.42 on prod: no migration, no static file. Recalculate once: the table
+  shows dashes until a snapshot holds `standings`. Not seen in a browser: the
+  badges in the Network table, the dash for a party the Alliance has no contact
+  with, the tooltip. The *Dealings* and *Friendly to hostiles* tables are
+  unchanged (no `with_held`). Possible next step the user may want: the same
+  badges there.
 - 0.0.41 on prod: run migration 0020 (one JSON field, default empty) and
   `collectstatic` (new `ignore.js`); nothing changes until an admin ignores a
   counterpart, which recalculates at once. Not seen in a browser: the button
@@ -711,7 +740,7 @@ Last updated 2026-11-23 (0.0.41).
   2026-11-20 hand run. Redis still holds that run's 120 ETag keys
   (`eos-spy-network_etag_*`); 0.0.35 no longer reads them, they expire
   about 2026-11-26. The snapshot was rebuilt by
-  hand with 0.0.10, not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
+  hand with 0.0.10 (so it has no `standings` of 0.0.42), not since the 0.0.11 contacts change (`snapshot.update()` in the shell; time frame 365,
   ignored `market_transaction`); no `CELERYBEAT_SCHEDULE` entry for it in
   `local.py`.
 - aa-contacts holds tokens for Invidia Gloriae Comes (99003995) and Ether
