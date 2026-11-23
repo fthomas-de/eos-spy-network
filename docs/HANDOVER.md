@@ -4,11 +4,11 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-23 (0.0.43).
+Last updated 2026-11-23 (0.0.44).
 
 ## State
 
-- Unreleased (after 0.0.43, 2026-11-23, nothing committed): Network, three requests of the user.
+- Version `0.0.44`, 2026-11-23 (see `CHANGELOG.md`): Network, three requests of the user.
   - *Private contract* as a third kind of link (`network.PRIVATE = "personal"`, `Link.contracts`,
     `Connections.contracting`): a corptools `Contract` with availability personal and at least one
     `ContractItem` (`Exists` annotation), any type/status, with or without ISK; it counts alone
@@ -29,10 +29,12 @@ Last updated 2026-11-23 (0.0.43).
     of `EveCharacter.birthday`, date as tooltip, `data-order` in days, dash when Auth has none.
   - Tests: `TestPrivateContracts`, `TestDirection`, `TestAge` (`test_network`), eight in
     `TestNetworkPages`; seven mutations checked red (not the new permission guard of the popup).
-    Affected modules 219 green, whole suite not run. `collectstatic` run. Not seen in a browser
-    (SSO): arrowheads, the contract line colour, the popup, the column. New texts for the glossary
-    (to do at `/commit`): Private contract, Private contracts with items with characters outside
-    the Alliance., Arrow: from the giver to the receiver, Age; machine translation not reviewed.
+    Suite at the commit: 515 without translation tests, green (fresh test database); `collectstatic`
+    run. Not seen in a browser (SSO): arrowheads, the contract line colour, the popup, the column.
+    4 new glossary texts (Private contract, Private contracts with items with characters outside
+    the Alliance., Arrow: from the giver to the receiver, Age), machine-translated, not reviewed by
+    the user. *Age* carries the `eos-spy-network` context in the template (Alliance Auth's "Age"
+    differs in zh_Hans and turned the catalogue test red).
     Prod: no migration, `collectstatic`, recalculate once (arrowheads and the contract kind need a
     new snapshot); expect more accounts, one private contract now suffices.
 - Version `0.0.43`, 2026-11-23: *Network search* and *Highlights*.
@@ -362,7 +364,7 @@ Last updated 2026-11-23 (0.0.43).
 | Markers | `view_suspects` | a tile per Corporation: mains, mains with markers, alts of other mains with markers, count per marker; switch to hide clean ones (a marked visitor makes a tile not clean) |
 | Corporation | `view_suspects` | mains with markers and what was found, the counterparts of mails/ISK/contracts and the contract popup; below it *Alts of mains in other Corporations* (visitors' whole accounts, read only, main's Corporation linked when it has a page); blue kills as a table with zKB links, note and Cleared tick, grouped by date with a row to clear the day's open kills; at the foot *Cleared findings*: mains with everything cleared, folded per main, searchable, read only |
 | Network | `view_suspects` | a tile per Corporation: mains with connections to hostile partners |
-| Network Corporation | `view_suspects` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods; with `manage_settings` too a button next to each counterpart ignores it (popup first) |
+| Network Corporation | `view_suspects` | the mains; on click a graph (partner, up to the reason, arrowheads show the flow) and a table of the connections with the own character's age, periods and, for private contracts, a button with the contract popup; with `manage_settings` too a button next to each counterpart ignores it (popup first) |
 | Corporation (CEO) | `view_own_corporation` | only the main's own Corporation, with its evidence, its visitors' whole accounts (no link to their mains' pages) and the contract popup; notes and ticks read-only; no Back, no Recalculate; any other Corporation 404 |
 | Statistics | `manage_settings` + `view_suspects` | the last contract sweep: tiles (regions, failed, public contracts, Alliance contracts, characters, Corporations, new, gone), a warning for items not fetched, Alliance contracts per region and per Corporation |
 | Log | `manage_settings` + `view_suspects` | every save of a note or tick of both review tabs |
@@ -370,6 +372,14 @@ Last updated 2026-11-23 (0.0.43).
 
 ## Open
 
+- 0.0.44 on prod: no migration; `collectstatic` (`network.js` changed, `contracts.js` is used on
+  the Network Corporation page); recalculate once - an older snapshot reads (no arrowheads, no
+  contract links) but shows neither until then. Not seen in a browser: the arrowheads (direction
+  of the flow; a link with both letters has a head on each end), the contract line colour, the
+  popup (`contracts.js` on the Network page), the Age column. No JS syntax check was possible (no
+  node in the dev WSL). Possible next steps the user may want: age on the search page rows (they
+  carry `birthday` None on purpose, `fill_birthdays` runs on the Corporation page only); the
+  popup for contracts without items.
 - 0.0.43 on prod: run migration 0021 (one JSON field, default empty); no static file. Nothing
   changes until an admin picks highlights (Settings, tab *Alliance*, section *Highlights*;
   the list offers only parties of the stored Network, so recalculate first if it is empty).
@@ -594,6 +604,10 @@ Last updated 2026-11-23 (0.0.43).
 
 ## Decisions
 
+- Network contracts, arrows, age (user, 2026-11-23): a private contract with items is an own kind
+  that counts alone (not a 0-ISK payment); the arrows show the direction of the flow (from the
+  giver to the receiver); the age of the source character is a new column *Age* in the table
+  under the graph.
 - Network search and highlights (user, 2026-11-23): own page *Network search* with its own menu
   entry; searched are the counterpart, its Corporation and its Alliance, not the own characters;
   the suggestions are Tom Select with a free text allowed; the result table has the columns of
@@ -805,7 +819,7 @@ Last updated 2026-11-23 (0.0.43).
 
 - Installed editable (`pip install --no-deps -e`), listed in
   `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0021
-  applied to `aa_dev` (0021 on 2026-11-23), `collectstatic` run (0.0.41, `ignore.js`). `SweepStats` holds
+  applied to `aa_dev` (0021 on 2026-11-23), `collectstatic` run (0.0.44; 0.0.41 added `ignore.js`). `SweepStats` holds
   the row of the 2026-11-20 hand run. `local.py` has a `## eos spy
   network` block with the sweep's beat entry (2026-11-19); no Celery
   process runs, so it fires only once worker and beat are started. The
