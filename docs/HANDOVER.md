@@ -343,6 +343,15 @@ Last updated 2026-11-23 (0.0.43).
 
 ## Open
 
+- 0.0.43 on prod: run migration 0021 (one JSON field, default empty); no static file. Nothing
+  changes until an admin picks highlights (Settings, tab *Alliance*, section *Highlights*;
+  the list offers only parties of the stored Network, so recalculate first if it is empty).
+  Not seen in a browser: the Tom Select search box (does Enter on a typed partial text keep the
+  text, or pick the first suggestion?), the tiles, the new nav entry. Possible next steps the
+  user may want: highlights beyond the Network (ISK/contract marker counterparts, or a neutral
+  party kept in the snapshot on purpose - decided against for now); an exact-ID search link
+  from a tile instead of the name substring; using `partials/standing-badge.html` in the three
+  older copies of the badge (`group-cell.html`, `network_corporation.html`).
 - 0.0.42 on prod: no migration, no static file. Recalculate once: the table
   shows dashes until a snapshot holds `standings`. Not seen in a browser: the
   badges in the Network table, the dash for a party the Alliance has no contact
@@ -558,6 +567,14 @@ Last updated 2026-11-23 (0.0.43).
 
 ## Decisions
 
+- Network search and highlights (user, 2026-11-23): own page *Network search* with its own menu
+  entry; searched are the counterpart, its Corporation and its Alliance, not the own characters;
+  the suggestions are Tom Select with a free text allowed; the result table has the columns of
+  the Network table plus main and its Corporation, the main links to the Network Corporation page
+  with that main opened. Highlights: tiles above the Corporations on the Markers page, chosen in
+  the settings from the Network's parties (no free names), counted in mains, Network data only;
+  a click opens the search with the name filled in.
+
 - Ignored characters (user, 2026-11-23): for *Friendly to hostiles* and for
   the Network, one list each; single characters, not whole accounts; picked
   from a searchable list of every character of the checked accounts. Other
@@ -760,8 +777,8 @@ Last updated 2026-11-23 (0.0.43).
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0020
-  applied to `aa_dev` (0020 on 2026-11-23), `collectstatic` run (0.0.41, `ignore.js`). `SweepStats` holds
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0021
+  applied to `aa_dev` (0021 on 2026-11-23), `collectstatic` run (0.0.41, `ignore.js`). `SweepStats` holds
   the row of the 2026-11-20 hand run. `local.py` has a `## eos spy
   network` block with the sweep's beat entry (2026-11-19); no Celery
   process runs, so it fires only once worker and beat are started. The
@@ -785,6 +802,14 @@ Last updated 2026-11-23 (0.0.43).
   testing the button. `collectstatic` ran with the 0.0.27 static files (`cleared.js`; 0.0.28 adds none). Its snapshot was not rebuilt since 0.0.28, so it holds no visitors. Its `auth_permission` still has the stale `view_evidence` row (Django keeps it), untouched.
 
 ## Traps
+
+- A test fixture that wants a counterpart's name in the Network needs a corptools `EveName`:
+  `_fill_names` falls back to the ID, the name ESI gave the entity is not used.
+- A mutation check by script: `mutate.py`-style (replace one line asserting it occurs once, run,
+  restore in `finally`) run with the venv Python by its full path from the PowerShell tool
+  (`wsl.exe -d Ubuntu-22.04 -e /home/allianceserver/aa-dev/venv/bin/python <script>` - `~` is not
+  expanded there). A mutation that comments a template line with `{# ... #}` must close it on
+  the same line, or it breaks nothing.
 
 - From the PowerShell tool, double quotes inside `wsl.exe ... bash -lc '...'`
   are dropped: `grep -E "^FAIL|^OK"` dies with "command not found". Use a
