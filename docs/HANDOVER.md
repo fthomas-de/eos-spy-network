@@ -4,11 +4,46 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-23 (0.0.40).
+Last updated 2026-11-23 (0.0.41).
 
 ## State
 
-- Version: `0.0.40`, 2026-11-23 (see `CHANGELOG.md`): the two lists of
+- Version: `0.0.41`, 2026-11-23 (see `CHANGELOG.md`): button *Ignore this
+  counterpart* on the Network Corporation page.
+  - `network_corporation.html`: next to each row's *Counterpart* a button
+    (`perms.eos_spy_network.manage_settings`; the page itself needs
+    `view_suspects`) opens one Bootstrap modal that names the counterpart and
+    asks; `static/.../js/ignore.js` fills it (`show.bs.modal`,
+    `event.relatedTarget`, `textContent`). The row dict has `counterpart_id`
+    now (`network.Connections.rows`).
+  - `views.ignore_counterpart` (`network/ignore/`, POST,
+    `all_permissions_required(MANAGE_SETTINGS, VIEW_SUSPECTS)`): the ID must be
+    a counterpart of a stored Network account (404 otherwise, 400 for a bad
+    number), the name is the stored one, never the posted one. It writes
+    `SpyConfiguration.ignored_network_counterparts` (JSON dict `{"<EVE id>":
+    "<name>"}`, migration 0020, default `{}`), starts the rebuild
+    (`_start_rebuild`) and redirects to the Network overview - the
+    Corporation's own page would be a 404 once its last connection is gone.
+  - `network.connections(..., ignored_counterparts=)` skips the party in
+    `add()`, so the counterpart counts for neither the shared-partner rule nor
+    player trading. `snapshot.build` passes the int IDs, `_inputs()` has the
+    field. The ISK marker (`markers._check_wallet`) is untouched.
+  - Settings, section *Network*: `forms.ignored_network_counterparts` is a
+    multi-select of the stored entries (names as labels, all selected), shown
+    only when one is stored; removing and saving takes it back
+    (`clean_ignored_network_counterparts` keeps a subset of the stored dict;
+    an ID that was never ignored is refused). A POST without the field clears
+    the list, like every multi-select here.
+  - Tests: `TestIgnoredCounterparts` (4, `test_network`), seven in
+    `TestNetworkPages` (button for managers, none for viewers, ignore +
+    rebuild, viewer refused, manager without `view_suspects` refused, unknown
+    ID, GET 405) and three in `TestSettingsPage`. The four calculation tests
+    are red without the one filter line (checked). The permission guards were
+    **not** checked red: auto mode refused to weaken the decorator for a
+    moment. Suite at the commit: 464 without translation tests, green (fresh
+    test database); 8 new glossary texts, machine-translated, not reviewed by
+    the user. Not seen in a browser (SSO).
+- Before (0.0.40), 2026-11-23: the two lists of
   ignored characters offer only characters with a finding.
   `forms.marked_characters(config, contacts)` reads the stored snapshot
   (the `character_ids` of the `contacts` marker of every suspect and visitor;
@@ -248,14 +283,22 @@ Last updated 2026-11-23 (0.0.40).
 | Markers | `view_suspects` | a tile per Corporation: mains, mains with markers, alts of other mains with markers, count per marker; switch to hide clean ones (a marked visitor makes a tile not clean) |
 | Corporation | `view_suspects` | mains with markers and what was found, the counterparts of mails/ISK/contracts and the contract popup; below it *Alts of mains in other Corporations* (visitors' whole accounts, read only, main's Corporation linked when it has a page); blue kills as a table with zKB links, note and Cleared tick, grouped by date with a row to clear the day's open kills; at the foot *Cleared findings*: mains with everything cleared, folded per main, searchable, read only |
 | Network | `view_suspects` | a tile per Corporation: mains with connections to hostile partners |
-| Network Corporation | `view_suspects` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods |
+| Network Corporation | `view_suspects` | the mains; on click a graph (partner, up to the reason) and a table of the connections with periods; with `manage_settings` too a button next to each counterpart ignores it (popup first) |
 | Corporation (CEO) | `view_own_corporation` | only the main's own Corporation, with its evidence, its visitors' whole accounts (no link to their mains' pages) and the contract popup; notes and ticks read-only; no Back, no Recalculate; any other Corporation 404 |
 | Statistics | `manage_settings` + `view_suspects` | the last contract sweep: tiles (regions, failed, public contracts, Alliance contracts, characters, Corporations, new, gone), a warning for items not fetched, Alliance contracts per region and per Corporation |
 | Log | `manage_settings` + `view_suspects` | every save of a note or tick of both review tabs |
-| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles) | tabs: Alliance (sections Alliance; Hostile and data basis: hostile threshold, time frame, ignored wallet types; Markers: blue threshold, minimum kill value, ignored ships, note buttons, capital ship groups, Corporation changes per year, ignored characters; Network: neutral partners, blue threshold, ignored characters), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note |
+| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles) | tabs: Alliance (sections Alliance; Hostile and data basis: hostile threshold, time frame, ignored wallet types; Markers: blue threshold, minimum kill value, ignored ships, note buttons, capital ship groups, Corporation changes per year, ignored characters; Network: neutral partners, blue threshold, ignored characters, ignored counterparts once one is ignored), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note |
 
 ## Open
 
+- 0.0.41 on prod: run migration 0020 (one JSON field, default empty) and
+  `collectstatic` (new `ignore.js`); nothing changes until an admin ignores a
+  counterpart, which recalculates at once. Not seen in a browser: the button
+  in the table (DataTables re-draws rows; the modal opens through Bootstrap's
+  delegated `data-bs-toggle`), the popup, the settings list. An ignored
+  counterpart still counts in the ISK marker (user's scope: Network only).
+  Possible next steps the user may want: the same button for the ISK marker's
+  counterparts; a note on why it was ignored.
 - 0.0.40 on prod: no migration, no static file. Recalculate once so the
   snapshot is of the current code; an older snapshot has the needed keys
   (`character_ids`, `links`) since 0.0.10/0.0.4. If the user wants a lasting
@@ -467,6 +510,12 @@ Last updated 2026-11-23 (0.0.40).
   friendly hostile contact / a Network link, `forms.marked_characters`) plus
   the IDs already stored; no history is kept, so a finding that went away on
   its own drops the character from the list.
+- Ignored counterparts (user, 2026-11-23): a button in the Network table,
+  with a confirmation naming the counterpart; kept by EVE ID, the name only
+  for display; Network only (the ISK marker keeps it); the counterpart falls
+  out completely (rows, graph, counts, shared-partner rule); taken back by a
+  list in the settings' Network section; the recalculation starts at once;
+  only `manage_settings` sees the button.
 - Settings layout (user, 2026-11-23): one tab *Alliance* in sections with a
   heading - Alliance, then what Markers and Network share (hostile
   threshold, time frame, ignored wallet types), then Markers per marker,
@@ -653,8 +702,8 @@ Last updated 2026-11-23 (0.0.40).
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0019
-  applied to `aa_dev` (0019 on 2026-11-23), `collectstatic` run (0.0.37, `copy.js`). `SweepStats` holds
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0020
+  applied to `aa_dev` (0020 on 2026-11-23), `collectstatic` run (0.0.41, `ignore.js`). `SweepStats` holds
   the row of the 2026-11-20 hand run. `local.py` has a `## eos spy
   network` block with the sweep's beat entry (2026-11-19); no Celery
   process runs, so it fires only once worker and beat are started. The
@@ -675,10 +724,19 @@ Last updated 2026-11-23 (0.0.40).
   background shell of an earlier Claude session (`celery -A myauth worker
   -l info -P solo`); it stops with that session and does not know the
   code since 0.0.7 - check `pgrep -af celery` and start it again before
-  testing the button. `collectstatic` ran with the 0.0.27 static files (`cleared.js`; 0.0.28 adds none). `aa_dev` is at 0014 (applied 2026-11-19); its snapshot was not rebuilt since 0.0.28, so it holds no visitors. Its `auth_permission` still has the stale `view_evidence` row (Django keeps it), untouched.
+  testing the button. `collectstatic` ran with the 0.0.27 static files (`cleared.js`; 0.0.28 adds none). Its snapshot was not rebuilt since 0.0.28, so it holds no visitors. Its `auth_permission` still has the stale `view_evidence` row (Django keeps it), untouched.
 
 ## Traps
 
+- From the PowerShell tool, double quotes inside `wsl.exe ... bash -lc '...'`
+  are dropped: `grep -E "^FAIL|^OK"` dies with "command not found". Use a
+  pattern without quotes or a script file; `| tail -n 8` needs no quotes.
+- Auto mode refuses a mutation check that weakens a permission decorator (even
+  briefly, even restored at once); mutate calculation code instead, or leave
+  the guard test unchecked and say so.
+- A `ModelForm` field whose model field is a JSON dict needs
+  `self.initial[name] = list(keys)` for a `MultipleChoiceField`, or the
+  initial value is the dict itself (`forms.ignored_network_counterparts`).
 - `sri_static` renders the hashed file name (`copy.<hash>.js`): a test that
   a page loads a script asserts on `eos_spy_network/js/copy.`, not on
   `copy.js`.
