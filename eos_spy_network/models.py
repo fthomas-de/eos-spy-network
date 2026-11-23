@@ -179,6 +179,17 @@ class SpyConfiguration(SingletonModel):
         verbose_name=_("Ignored counterparts"),
         help_text=_("Payments and contracts with these counterparts do not count for the Network. Remove one to count it again."),
     )
+    # EVE ID (a string: JSON keys are) -> name, like ignored_network_counterparts: a highlight that left the
+    # snapshot keeps its tile, and the settings can still name it
+    highlight_counterparts = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name=_("Highlighted counterparts"),
+        help_text=_(
+            "Characters, Corporations and Alliances that get a tile on the Markers page, with the number of "
+            "accounts that deal with them in the Network."
+        ),
+    )
     # the switched-off ones, not the switched-on: a marker added in a later version starts on
     disabled_markers = models.JSONField(
         default=list,

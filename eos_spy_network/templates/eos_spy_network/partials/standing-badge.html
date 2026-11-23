@@ -1,0 +1,7 @@
+{% load i18n %}
+{# The standing the Alliance itself holds for a party, in EVE's bands (>=5 primary, >0 info, 0 secondary, >-10 warning, else danger); a dash when it holds none. #}
+{% if held is None %}
+    <span class="text-body-secondary" title="{% translate 'Standing held by the Alliance' %}">–</span>
+{% else %}
+    <span class="badge {% if held >= 5 %}text-bg-primary{% elif held > 0 %}text-bg-info{% elif held == 0 %}text-bg-secondary{% elif held > -10 %}text-bg-warning{% else %}text-bg-danger{% endif %}" title="{% translate 'Standing held by the Alliance' %}">{{ held|floatformat:"-1" }}</span>
+{% endif %}

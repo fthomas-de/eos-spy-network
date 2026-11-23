@@ -40,6 +40,7 @@ LOCATIONS = {
     "eos_spy_network/corporation.html": _("Suspects"),
     "eos_spy_network/network.html": _("Network"),
     "eos_spy_network/network_corporation.html": _("Network"),
+    "eos_spy_network/network_search.html": _("Network search"),
     "eos_spy_network/settings.html": _("Settings"),
     "eos_spy_network/statistics.html": _("Statistics"),
     "eos_spy_network/log.html": _("Log"),
@@ -47,6 +48,7 @@ LOCATIONS = {
 
 NAV_MARKERS = "markers"
 NAV_NETWORK = "network"
+NAV_NETWORK_SEARCH = "network_search"
 NAV_SETTINGS = "settings"
 NAV_STATISTICS = "statistics"
 NAV_LOG = "log"
@@ -484,6 +486,7 @@ def corporations(request):
             **_notices(config),
             "report": report,
             "tiles": report.tiles if report else [],
+            "highlights": report.highlight_tiles(config.highlight_counterparts or {}) if report else [],
             "switched_off": _switched_off(config),
             "killmails_missing": _killmails_missing(config),
         },
@@ -537,6 +540,30 @@ def network(request):
         "eos_spy_network/network.html",
         {**_notices(config), "report": report, "tiles": report.network_tiles if report else []},
         NAV_NETWORK,
+        started,
+    )
+
+
+@any_permission_required(VIEW_SUSPECTS)
+def network_search(request):
+    started = time.perf_counter()
+    config = SpyConfiguration.get_solo()
+    report = _report(config)
+    query = request.GET.get("q", "").strip()
+    suggestions = report.suggestions() if report else []
+    return _render(
+        request,
+        "eos_spy_network/network_search.html",
+        {
+            **_notices(config),
+            "report": report,
+            "query": query,
+            "suggestions": suggestions,
+            # a typed text no party carries is added as an option, or the box would come back empty
+            "query_listed": any(query in names for _label, names in suggestions),
+            "rows": report.search(query) if report else [],
+        },
+        NAV_NETWORK_SEARCH,
         started,
     )
 

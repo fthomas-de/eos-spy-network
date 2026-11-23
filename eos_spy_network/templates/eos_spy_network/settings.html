@@ -99,6 +99,12 @@
                         {% endif %}
                     </div>
                 </div>
+                <div class="card mb-3">
+                    <div class="card-header"><h5 class="mb-0">{% translate "Highlights" %}</h5></div>
+                    <div class="card-body">
+                        {% bootstrap_field form.highlight_counterparts %}
+                    </div>
+                </div>
                 <button type="submit" class="btn btn-primary" name="tab" value="alliance">{% translate "Save" context "eos-spy-network" %}</button>
             </div>
             <div class="tab-pane fade{% if tab == 'sources' %} show active{% endif %}" id="eos-spy-network-settings-sources" role="tabpanel">

@@ -9,6 +9,7 @@ urlpatterns = [
     path("corporations/", views.corporations, name="corporations"),
     path("corporations/<int:corporation_id>/", views.corporation, name="corporation"),
     path("network/", views.network, name="network"),
+    path("network/search/", views.network_search, name="network_search"),
     path("network/<int:corporation_id>/", views.network_corporation, name="network_corporation"),
     path("contracts/<int:character_id>/<int:counterpart_id>/", views.contracts, name="contracts"),
     path("capital-contract/<int:contract_id>/", views.capital_contract, name="capital_contract"),

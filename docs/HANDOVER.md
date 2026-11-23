@@ -4,10 +4,39 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-23 (0.0.42).
+Last updated 2026-11-23 (0.0.43).
 
 ## State
 
+- Version `0.0.43`, 2026-11-23: *Network search* and *Highlights*.
+  - `views.network_search` (`network/search/`, nav key `network_search`, `view_suspects`) and
+    `templates/.../network_search.html`: a GET form with one `<select name="q">` that
+    `searchable.js` turns into Tom Select (no new JS file; `data-eos-spy-network-create` keeps a
+    typed text). `Report.search(q)` (counterpart, Corporation, Alliance names, casefolded
+    substring; own characters not searched), `Report.suggestions()` (names grouped Character /
+    Corporation / Alliance), `Report.parties` (cached: ID -> name, category of every counterpart
+    and its chain). Rows link to `network_corporation/<tile>#main-<id>`.
+  - `SpyConfiguration.highlight_counterparts` (JSON dict `{"<EVE id>": "<name>"}`, migration 0021,
+    applied to `aa_dev`), form field with Tom Select, choices from `forms.network_parties(config)`
+    (the stored Network) plus the stored ones; the stored name wins. `Report.highlight_tiles(dict)`
+    gives per party: standing held, hostile standing, `groups` (its Corporation/Alliance with
+    theirs), `accounts` (distinct users whose counterparts have it in their chain). Markers page:
+    section *Highlights* above the Corporations (headings only when a highlight exists),
+    `partials/highlight-tile.html`; tile link = search with `?q=<name>` (a substring search, so a
+    short name may list more rows than the tile counts mains). New partial
+    `partials/standing-badge.html` (the three older copies of that badge were left alone).
+  - Decided (user, 2026-11-23): Network data only - a neutral or blue party the Network does not
+    hold shows 0; no free names in the settings; count = mains; own page for the search.
+  - Tests: `test_network_search.py` (22; six mutations checked red, the permission guards not).
+    Affected modules 198 green; whole suite not run. Not seen in a browser (SSO): the Tom Select
+    box (Enter on a typed partial text picks the first suggestion, "Add ..." keeps the text),
+    the tiles. 9 new glossary texts (Network search, Highlights, Highlighted counterparts + help
+    text, Counterpart, Corporation or Alliance, Search, Corporation of the main, Nothing in the
+    Network matches., the search hint), machine-translated, not reviewed by the user. Suite at
+    the commit: 491 without translation tests, green (fresh test database). On prod: run
+    migration 0021, no static file; nothing shows until a highlight is picked. A counterpart's name that only ESI knows shows as its ID in the
+    Network (`_fill_names` falls back to the ID, the entity's ESI name is unused) - so the
+    search cannot find it by name; left as is.
 - Version: `0.0.42`, 2026-11-23 (see `CHANGELOG.md`): the Network table shows
   the standing the Alliance itself holds for each party.
   - `hostiles.alliance_standings(config)`: the Alliance's own contacts

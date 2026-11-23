@@ -8,7 +8,7 @@ from allianceauth.eveonline.models import EveAllianceInfo
 from .markers import CONTACTS, DESCRIPTIONS, KINDS, LABELS, roster
 from .models import KILL_NOTE_LENGTH, BlueKill, SpyConfiguration
 from .network import PAYMENT_REF_TYPES
-from .snapshot import current
+from .snapshot import Report, category_label, current
 
 
 def ref_type_choices(stored=()) -> list[tuple[str, str]]:
@@ -88,6 +88,14 @@ def character_choices(config: SpyConfiguration, marked: set[int], stored=()) -> 
     return [(str(character_id), label) for character_id, label in sorted(labels.items(), key=lambda row: row[1].lower())]
 
 
+def network_parties(config: SpyConfiguration) -> dict:
+    """EVE ID -> (name, category) of the parties of the last Network calculation; none for another Alliance's."""
+    stored = current()
+    if stored is None or not config.alliance or stored.data.get("alliance_id") != config.alliance.alliance_id:
+        return {}
+    return Report(stored).parties
+
+
 class SpyConfigurationForm(forms.ModelForm):
     alliance = forms.ModelChoiceField(
         label=pgettext_lazy("EVE jargon", "Alliance"),
@@ -140,6 +148,13 @@ class SpyConfigurationForm(forms.ModelForm):
         help_text=SpyConfiguration._meta.get_field("ignored_network_counterparts").help_text,
         widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
     )
+    # the parties of the stored Network (Tom Select), and the ones already stored
+    highlight_counterparts = forms.MultipleChoiceField(
+        label=SpyConfiguration._meta.get_field("highlight_counterparts").verbose_name,
+        required=False,
+        help_text=SpyConfiguration._meta.get_field("highlight_counterparts").help_text,
+        widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
+    )
     # the switched-on markers; stored the other way round, as disabled_markers
     markers = forms.MultipleChoiceField(
         label=_("Markers"),
@@ -166,6 +181,7 @@ class SpyConfigurationForm(forms.ModelForm):
             "ignored_contact_characters",
             "ignored_network_characters",
             "ignored_network_counterparts",
+            "highlight_counterparts",
         ]
         widgets = {
             "network_blue_above": forms.NumberInput(attrs={"step": "0.1", "min": "-10", "max": "10"}),
@@ -190,6 +206,16 @@ class SpyConfigurationForm(forms.ModelForm):
             (eve_id, name) for eve_id, name in sorted(counterparts.items(), key=lambda row: row[1].lower())
         ]
         self.initial["ignored_network_counterparts"] = list(counterparts)
+        # the stored names win: a highlight keeps the name it was saved with, as an ignored counterpart does
+        parties = network_parties(self.instance)
+        stored = self.instance.highlight_counterparts or {}
+        self.highlight_names = {**{str(eve_id): name for eve_id, (name, _category) in parties.items()}, **stored}
+        labels = {str(eve_id): f"{name} ({category_label(category)})" for eve_id, (name, category) in parties.items()}
+        self.fields["highlight_counterparts"].choices = sorted(
+            ((eve_id, labels.get(eve_id, name)) for eve_id, name in self.highlight_names.items()),
+            key=lambda row: row[1].lower(),
+        )
+        self.initial["highlight_counterparts"] = list(stored)
         # the posted texts are valid choices too: clean_note_presets checks them instead
         posted = self.data.getlist("note_presets") if hasattr(self.data, "getlist") else []
         presets = dict.fromkeys([*(self.instance.note_presets or ()), *posted])
@@ -217,6 +243,10 @@ class SpyConfigurationForm(forms.ModelForm):
         # the choices are the stored IDs: what stays is a subset of the stored table, names included
         stored = self.instance.ignored_network_counterparts or {}
         return {eve_id: stored[eve_id] for eve_id in self.cleaned_data["ignored_network_counterparts"]}
+
+    def clean_highlight_counterparts(self) -> dict:
+        # the choices are the stored IDs and the Network's parties: the names come from there, never from the post
+        return {eve_id: self.highlight_names[eve_id] for eve_id in self.cleaned_data["highlight_counterparts"]}
 
     def marker_switches(self) -> list[tuple]:
         """Each marker's checkbox with its description, for the switches of the Markers tab."""

@@ -7,6 +7,17 @@
     {% include "eos_spy_network/partials/notices.html" %}
     {% include "eos_spy_network/partials/state.html" %}
 
+    {# the highlighted counterparts of the settings: only when there are any, the Corporations then get a heading of their own #}
+    {% if highlights %}
+        <h5 class="mb-3">{% translate "Highlights" %}</h5>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3 mb-4">
+            {% for tile in highlights %}
+                <div class="col">{% include "eos_spy_network/partials/highlight-tile.html" %}</div>
+            {% endfor %}
+        </div>
+        <h5 class="mb-3">{% translate "Corporations" context "eos-spy-network" %}</h5>
+    {% endif %}
+
     {% if tiles %}
         {# tiles.js hides the tiles marked clean while the switch is on, and remembers it per browser #}
         <div class="form-check form-switch mb-3">

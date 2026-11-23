@@ -139,6 +139,20 @@ every one with a standing below a configurable value.
   count (a contract by its issue date), and none of the ignored entry types. An account whose main is
   outside the Alliance shows at the Corporations of its alts. The page
   needs `view_suspects`
+- **Network search** (menu entry of its own, `view_suspects`): one search box
+  over the Network tables of every Corporation. Rows whose counterpart, its
+  Corporation or its Alliance has the typed text in its name are listed with
+  the main (linked to its Corporation's Network page, the main opened) and
+  its Corporation; the own characters are not searched. The box suggests the
+  parties of the stored Network; a typed text works as well.
+- **Highlights**: the Markers page shows a section above the Corporations
+  with a tile per highlighted counterpart (Character, Corporation or
+  Alliance, chosen in the settings): the standing the Alliance holds for it,
+  its hostile standing if any, its Corporation and Alliance with theirs, and
+  the number of mains that deal with it in the Network - itself or through a
+  counterpart it is the Corporation or Alliance of. A tile links to the
+  Network search. Only what the Network holds is found: a party it leaves
+  out (a neutral one while *Network: neutral partners too* is off) counts 0
 - **Recalculate**: the markers and connections are calculated by a task and
   stored; the pages read the stored result and show when it was calculated.
   The button *Recalculate* on the pages, saving the settings and the
@@ -154,7 +168,7 @@ every one with a standing below a configurable value.
   Corporations never count as hostile. A hostile Corporation or Alliance
   also makes its members hostile - as far as Auth knows them (see below)
 - **Settings page**, in five tabs; the first three saved together. *Alliance*,
-  in four sections. *Alliance*: the Alliance, chosen from a searchable
+  in five sections. *Alliance*: the Alliance, chosen from a searchable
   dropdown. *Hostile and data basis*, shared by Markers and Network: the
   standing below which a contact is hostile (default: below 0); the time
   frame in days (default 365, 0 takes everything): the hostile list is
@@ -182,7 +196,9 @@ every one with a standing below a configurable value.
   next to *Counterpart* on a Network Corporation page (needs
   `manage_settings` as well as `view_suspects`, asks first): it is then no
   connection at all and shows in the Network list of ignored counterparts,
-  where removing it takes it back. *Contact sources*: a
+  where removing it takes it back. *Highlights*: the counterparts that get a
+  tile on the Markers page, chosen from the parties of the last Network
+  calculation and the ones already chosen (default none). *Contact sources*: a
   searchable table of the Alliance and its Corporations to tick the
   contact sources, each with whether aa-contacts has a token for it, the
   time of the contacts aa-contacts holds, the number of contacts and of

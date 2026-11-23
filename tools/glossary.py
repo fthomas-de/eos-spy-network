@@ -674,6 +674,28 @@ TRANSLATIONS = {
         "Обход контрактов ещё не выполнялся.",
         "尚未运行过合同扫描。",
     ),
+    # Network search and highlights (2026-11-23)
+    "Network search": ("Network-Suche", "Поиск по сети", "关系网搜索"),
+    "Highlights": ("Highlights", "Выделенные", "重点关注"),
+    "Highlighted counterparts": ("Hervorgehobene Gegenüber", "Выделенные контрагенты", "重点关注的对方"),
+    "Characters, Corporations and Alliances that get a tile on the Markers page, with the number of accounts that deal with them in the Network.": (
+        "Characters, Corporations und Alliances, die auf der Marker-Seite eine Kachel bekommen, mit der Anzahl der Accounts, die im Network mit ihnen zu tun haben.",
+        "Characters, Corporations и Alliances, для которых на странице маркеров создаётся плитка с числом аккаунтов, имеющих с ними дело в сети.",
+        "在标记页面上获得磁贴的 Characters、Corporations 和 Alliances，并显示在关系网中与其有往来的账户数量。",
+    ),
+    "Counterpart, Corporation or Alliance": (
+        "Gegenüber, Corporation oder Alliance",
+        "Контрагент, Corporation или Alliance",
+        "对方、Corporation 或 Alliance",
+    ),
+    "Search": ("Suchen", "Поиск", "搜索"),
+    "Corporation of the main": ("Corporation des Mains", "Corporation этого Main", "Main 的 Corporation"),
+    "Nothing in the Network matches.": ("Im Network passt nichts.", "В сети ничего не найдено.", "关系网中没有匹配项。"),
+    "Pick a name or type part of one: every connection of the Network whose counterpart, Corporation or Alliance matches is listed here.": (
+        "Wählen Sie einen Namen oder tippen Sie einen Teil davon: Hier stehen alle Verbindungen des Network, deren Gegenüber, Corporation oder Alliance passt.",
+        "Выберите имя или введите его часть: здесь перечислены все связи сети, у которых совпадает контрагент, Corporation или Alliance.",
+        "选择一个名称或输入其一部分：此处列出关系网中对方、Corporation 或 Alliance 匹配的所有关联。",
+    ),
 }
 
 PLURALS = {}

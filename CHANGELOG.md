@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.43] - 2026-11-23
+
+### Added
+
+- Page *Network search* (`network/search/`, own menu entry, `view_suspects`):
+  one search box over the Network tables of every Corporation. It finds the
+  rows whose counterpart, its Corporation or its Alliance has the typed text
+  in its name; the own characters of an account are not searched, since the
+  other side is what makes an account stand out. The box is the app's Tom
+  Select, filled with every party of the stored Network grouped as Character,
+  Corporation and Alliance; a typed text is kept as it is, so part of a name
+  works too. The result table lists the same columns as the Network page plus
+  the main and its Corporation, and the main links to its Corporation's
+  Network page with that main already open (`#main-<id>`). It reads the
+  stored snapshot only.
+- Markers page: a section *Highlights* above the Corporations. The new
+  setting *Highlighted counterparts* (Settings, tab *Alliance*, section
+  *Highlights*; migration 0021, default empty) takes characters, Corporations
+  and Alliances out of the parties the stored Network holds. Each gets a tile
+  with the standing the Alliance holds for it (and the hostile standing, if
+  it has one), its Corporation and Alliance with theirs, and the number of
+  mains that deal with it - the party itself, or any counterpart it is the
+  Corporation or Alliance of. The tile links to the Network search with the
+  name filled in. Without a highlight the page is as before. It searches the
+  Network only: a party the Network does not hold (neutral and blue ones
+  unless *Network: neutral partners too* is on) shows 0 mains. A highlight
+  is kept by EVE ID with its name, so one that has left the snapshot keeps
+  its tile and stays selectable; the names offered come from the snapshot.
+
 ## [0.0.42] - 2026-11-23
 
 ### Added

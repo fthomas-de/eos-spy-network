@@ -1,0 +1,49 @@
+{% load i18n %}
+{% load evelinks %}
+{# One highlighted party on the Markers page: its standings, its Corporation and Alliance, the accounts that deal with it. #}
+<div class="card h-100 {% if tile.hostile is not None %}border-danger{% elif tile.accounts %}border-warning{% else %}border-secondary{% endif %}">
+    <div class="card-body d-flex flex-column">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            {% if tile.category == "corporation" %}
+                <img src="{{ tile.id|corporation_logo_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
+            {% elif tile.category == "alliance" %}
+                <img src="{{ tile.id|alliance_logo_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
+            {% else %}
+                <img src="{{ tile.id|character_portrait_url:32 }}" width="32" height="32" class="rounded flex-shrink-0" alt="">
+            {% endif %}
+            <span class="fw-bold text-truncate">{{ tile.name }}</span>
+            <span class="badge text-bg-secondary ms-auto">{{ tile.label }}</span>
+        </div>
+
+        <div class="small mb-2">
+            {% include "eos_spy_network/partials/standing-badge.html" with held=tile.held %}
+            {% if tile.hostile is not None %}
+                <span class="badge text-bg-danger" title="{% translate 'Standing' context 'eos-spy-network' %}">{{ tile.hostile|floatformat:"-1" }}</span>
+            {% endif %}
+        </div>
+
+        {% if tile.groups %}
+            <ul class="list-group list-group-flush mb-2">
+                {% for group in tile.groups %}
+                    <li class="list-group-item d-flex align-items-center gap-2 px-0">
+                        <span class="small text-body-secondary">{{ group.label }}</span>
+                        <span class="text-break{% if group.hostile is not None %} text-danger fw-semibold{% endif %}">{{ group.name }}</span>
+                        <span class="ms-auto text-nowrap">
+                            {% include "eos_spy_network/partials/standing-badge.html" with held=group.held %}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="small mb-2">
+            {% translate "Mains" context "eos-spy-network" %}: <span class="fw-semibold">{{ tile.accounts }}</span>
+        </div>
+
+        <div class="text-center mt-auto">
+            <a href="{% url 'eos_spy_network:network_search' %}?q={{ tile.name|urlencode }}" class="btn btn-sm btn-primary">
+                {% translate "View details" %}
+            </a>
+        </div>
+    </div>
+</div>

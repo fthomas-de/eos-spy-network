@@ -12,15 +12,17 @@ from collections import Counter, defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from decimal import Decimal
+from functools import cached_property
 
 from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext_lazy
 
 from allianceauth.services.hooks import get_extension_logger
 
-from .affiliations import ALLIANCE, CORPORATION, Entity
+from .affiliations import ALLIANCE, CHARACTER, CORPORATION, Entity
 from .hostiles import alliance_standings, hostile_entities, network_blue_ids
 from .markers import (
     BLUE_KILLS,
@@ -45,6 +47,17 @@ MARKERS = "markers"
 NETWORK = "network"
 AFFILIATIONS = "affiliations"
 PHASE_LABELS = {MARKERS: _("Markers"), NETWORK: _("Network"), AFFILIATIONS: _("Affiliations")}
+CATEGORY_LABELS = {
+    CHARACTER: pgettext_lazy("EVE jargon", "Character"),
+    CORPORATION: pgettext_lazy("EVE jargon", "Corporation"),
+    ALLIANCE: pgettext_lazy("EVE jargon", "Alliance"),
+}
+
+
+def category_label(category: str):
+    # shortcut: a counterpart nobody could resolve has no category and reads as a character, which the
+    # wallet's parties nearly always are; upgrade when a Corporation without a lookup shows up wrong
+    return CATEGORY_LABELS.get(category, CATEGORY_LABELS[CHARACTER])
 
 
 def _no_step(_name: str) -> None:
@@ -625,3 +638,84 @@ class Report:
 
     def network_tile(self, corporation_id: int) -> NetworkTile | None:
         return next((tile for tile in self.network_tiles if tile.id == corporation_id), None)
+
+    @cached_property
+    def parties(self) -> dict:
+        """EVE ID -> (name, category) of every counterpart of the Network and of its Corporation and Alliance."""
+        parties = {}
+        for tile in self.network_tiles:
+            for account in tile.accounts:
+                for counterpart_id in account.counterparts:
+                    for eve_id in account.chain(counterpart_id):
+                        entity = self.entities.get(eve_id)
+                        parties[eve_id] = (account._name(eve_id), entity.category if entity else "")
+        return parties
+
+    def suggestions(self) -> list[tuple]:
+        """(category label, names) for the search box: every party once, characters first."""
+        names = {}
+        for name, category in self.parties.values():
+            names.setdefault(name, category_label(category))
+        groups = {label: [] for label in CATEGORY_LABELS.values()}
+        for name, label in names.items():
+            groups[label].append(name)
+        return [(label, sorted(found, key=str.casefold)) for label, found in groups.items() if found]
+
+    def search(self, query: str) -> list[dict]:
+        """The Network rows whose counterpart, Corporation or Alliance has ``query`` in its name, of every account.
+
+        Each row is the table row of ``Connections.rows`` plus its ``tile`` (the main's Corporation) and the
+        account's ``main_id`` and ``main_name``, which the result table links on.
+        """
+        needle = query.strip().casefold()
+        if not needle:
+            return []
+        rows = []
+        for tile in self.network_tiles:
+            for account in tile.accounts:
+                for row in account.rows:
+                    groups = (row["corporation"] or {}, row["alliance"] or {})
+                    names = (row["counterpart"], *(group.get("name", "") for group in groups))
+                    if any(needle in name.casefold() for name in names):
+                        rows.append({**row, "tile": tile, "main_id": account.main_id, "main_name": account.main_name})
+        return rows
+
+    def _party(self, eve_id: int, fallback: str = "") -> dict:
+        name, category = self.parties.get(eve_id) or (
+            (self.entities[eve_id].name, self.entities[eve_id].category) if eve_id in self.entities else ("", "")
+        )
+        hostile = self.hostiles.get(eve_id)
+        return {
+            "id": eve_id,
+            "name": name or fallback or str(eve_id),
+            "category": category,
+            "label": category_label(category),
+            "held": self.standings.get(eve_id),
+            "hostile": hostile.standing if hostile else None,
+        }
+
+    def highlight_tiles(self, highlights: dict) -> list[dict]:
+        """One tile per highlighted party: its standings, its Corporation and Alliance, the accounts that deal with it.
+
+        ``highlights`` is ``SpyConfiguration.highlight_counterparts``. A party matches an account when it is a
+        counterpart of the account or the Corporation or Alliance of one - the chain the Network follows.
+        """
+        tiles = []
+        for key, stored_name in highlights.items():
+            eve_id = int(key)
+            entity = self.entities.get(eve_id)
+            groups = [group_id for group_id in (entity.corporation_id, entity.alliance_id) if group_id] if entity else []
+            users = {
+                account.user_id
+                for tile in self.network_tiles
+                for account in tile.accounts
+                if any(eve_id in account.chain(counterpart_id) for counterpart_id in account.counterparts)
+            }
+            tiles.append(
+                {
+                    **self._party(eve_id, stored_name),
+                    "groups": [self._party(group_id) for group_id in groups if group_id != eve_id],
+                    "accounts": len(users),
+                }
+            )
+        return tiles

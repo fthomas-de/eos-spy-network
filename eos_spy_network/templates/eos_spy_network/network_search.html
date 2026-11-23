@@ -1,0 +1,86 @@
+{% extends "eos_spy_network/base.html" %}
+{% load i18n %}
+{% load sri %}
+
+{% block details %}
+    {% include "eos_spy_network/partials/notices.html" %}
+    {% include "eos_spy_network/partials/state.html" %}
+
+    {# one box over every Corporation's Network table; searchable.js turns the select into a search box, a typed text is kept as it is #}
+    <form method="get" class="row g-2 align-items-end mb-3">
+        <div class="col-md-8 col-lg-6">
+            <label for="eos-spy-network-search-query" class="form-label">{% translate "Counterpart, Corporation or Alliance" %}</label>
+            <select id="eos-spy-network-search-query" name="q" class="form-select" data-eos-spy-network-search data-eos-spy-network-create>
+                <option value=""></option>
+                {% if query and not query_listed %}
+                    <option value="{{ query }}" selected>{{ query }}</option>
+                {% endif %}
+                {% for label, names in suggestions %}
+                    <optgroup label="{{ label }}">
+                        {% for name in names %}
+                            <option value="{{ name }}"{% if name == query %} selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">{% translate "Search" context "eos-spy-network" %}</button>
+        </div>
+    </form>
+
+    {% if rows %}
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover w-100 align-middle eos-spy-network-sortable">
+                <thead>
+                    <tr>
+                        <th>{% translate "Main" context "eos-spy-network" %}</th>
+                        <th>{% translate "Corporation of the main" %}</th>
+                        <th>{% translate "Character" context "EVE jargon" %}</th>
+                        <th>{% translate "Counterpart" %}</th>
+                        <th>{% translate "Corporation" context "EVE jargon" %}</th>
+                        <th>{% translate "Alliance" context "EVE jargon" %}</th>
+                        <th>{% translate "Payments" %}</th>
+                        <th>{% translate "Player trading" %}</th>
+                        <th>ISK</th>
+                        <th>{% translate "Period" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            {# the page of the main's Corporation with this main opened, as network.js reads #main- #}
+                            <td class="text-break"><a href="{% url 'eos_spy_network:network_corporation' row.tile.id %}#main-{{ row.main_id }}">{{ row.main_name }}</a></td>
+                            <td class="text-break">{{ row.tile.name }}</td>
+                            <td class="text-break">{{ row.character }}</td>
+                            <td class="text-break{% if row.hostile %} text-danger fw-semibold{% endif %}">
+                                {{ row.counterpart }}
+                                {% include "eos_spy_network/partials/standing-badge.html" with held=row.counterpart_held %}
+                            </td>
+                            {% include "eos_spy_network/partials/group-cell.html" with group=row.corporation with_held=True %}
+                            {% include "eos_spy_network/partials/group-cell.html" with group=row.alliance with_held=True %}
+                            <td>{{ row.payments }}</td>
+                            <td>{{ row.trades }}</td>
+                            <td data-order="{{ row.isk }}" class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>
+                            <td data-order="{{ row.last }}" class="text-nowrap">{% include "eos_spy_network/partials/period.html" with first=row.first last=row.last %}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% elif query %}
+        <p class="text-body-secondary">{% translate "Nothing in the Network matches." %}</p>
+    {% elif report %}
+        <p class="text-body-secondary">{% translate "Pick a name or type part of one: every connection of the Network whose counterpart, Corporation or Alliance matches is listed here." %}</p>
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    {% include "eos_spy_network/bundles/tom-select-css.html" %}
+{% endblock %}
+
+{% block extra_javascript %}
+    {{ block.super }}
+    {% include "eos_spy_network/bundles/tom-select-js.html" %}
+{% endblock %}
