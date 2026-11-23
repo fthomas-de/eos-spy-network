@@ -4,11 +4,26 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-23 (0.0.39).
+Last updated 2026-11-23 (0.0.40).
 
 ## State
 
-- Version: `0.0.39`, 2026-11-23 (see `CHANGELOG.md`): two lists of ignored
+- Version: `0.0.40`, 2026-11-23 (see `CHANGELOG.md`): the two lists of
+  ignored characters offer only characters with a finding.
+  `forms.marked_characters(config, contacts)` reads the stored snapshot
+  (the `character_ids` of the `contacts` marker of every suspect and visitor;
+  for the Network the first value of every `links` row), ignores a snapshot
+  of another Alliance; `character_choices(config, marked, stored)` adds the
+  IDs already stored (an ignored character leaves the findings and would
+  vanish on save) and labels them from `markers.roster`. No history is kept
+  (user's choice): a finding that went away on its own drops the character
+  from the list. Before the first calculation only the stored IDs show.
+  Tests: `TestSettingsPage` (`store_findings`, `choices` helpers; three new
+  tests red against the old `forms.py`, the save test seeds a snapshot - a
+  posted ID outside the choices is refused). Suite at the commit: 450
+  without translation tests, green (fresh test database); no new texts.
+  Not seen in a browser (SSO), `aa_dev` has no contacts marker.
+- Before (0.0.39), 2026-11-23: two lists of ignored
   characters and the settings tab *Alliance* in sections.
   - `SpyConfiguration.ignored_contact_characters` /
     `ignored_network_characters` (JSON lists of EVE IDs, migration 0019).
@@ -241,13 +256,17 @@ Last updated 2026-11-23 (0.0.39).
 
 ## Open
 
+- 0.0.40 on prod: no migration, no static file. Recalculate once so the
+  snapshot is of the current code; an older snapshot has the needed keys
+  (`character_ids`, `links`) since 0.0.10/0.0.4. If the user wants a lasting
+  history of who ever had a finding, it needs a stored set per list
+  (migration) - offered and declined for now.
 - 0.0.39 on prod: run migration 0019 (two JSON fields, default empty), no
   static file; nothing changes until an admin picks characters. Not seen in
   a browser: the sections of tab *Alliance* and the two searchable lists
   (Tom Select in a tab that is initially hidden, as the other lists there).
-  The lists hold every character of the checked accounts - on a big
-  Alliance the page grows; if it is slow, the choices would need a search
-  endpoint instead. A character that is only the counterpart of another
+  (Since 0.0.40 the lists hold only characters with a finding, so they stay
+  short.) A character that is only the counterpart of another
   account's payment is not ignored, only its own payments and contracts
   (the user's reading: ignore characters as actors).
 - 0.0.38 on prod: run migration 0018 (only the two fields), no static
