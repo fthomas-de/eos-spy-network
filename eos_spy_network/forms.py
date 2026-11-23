@@ -5,7 +5,7 @@ from django.utils.translation import pgettext_lazy
 
 from allianceauth.eveonline.models import EveAllianceInfo
 
-from .markers import DESCRIPTIONS, KINDS, LABELS
+from .markers import DESCRIPTIONS, KINDS, LABELS, roster
 from .models import KILL_NOTE_LENGTH, BlueKill, SpyConfiguration
 from .network import PAYMENT_REF_TYPES
 
@@ -53,6 +53,16 @@ def capital_group_choices(stored=()) -> list[tuple[str, str]]:
     return [(group, group) for group in sorted(groups)]
 
 
+def character_choices(config: SpyConfiguration, stored=()) -> list[tuple[str, str]]:
+    """Every character of the checked accounts, an alt with its main, and whatever is stored already."""
+    members = roster(config)
+    labels = {character_id: str(character_id) for character_id in stored or ()}
+    for user_id, character_id, name, *_rest in members.characters:
+        main = members.mains[user_id]
+        labels[character_id] = name if character_id == main.character_id else f"{name} ({main.character_name})"
+    return [(str(character_id), label) for character_id, label in sorted(labels.items(), key=lambda row: row[1].lower())]
+
+
 class SpyConfigurationForm(forms.ModelForm):
     alliance = forms.ModelChoiceField(
         label=pgettext_lazy("EVE jargon", "Alliance"),
@@ -86,6 +96,18 @@ class SpyConfigurationForm(forms.ModelForm):
         help_text=SpyConfiguration._meta.get_field("note_presets").help_text,
         widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": "", "data-eos-spy-network-create": ""}),
     )
+    ignored_contact_characters = forms.MultipleChoiceField(
+        label=SpyConfiguration._meta.get_field("ignored_contact_characters").verbose_name,
+        required=False,
+        help_text=SpyConfiguration._meta.get_field("ignored_contact_characters").help_text,
+        widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
+    )
+    ignored_network_characters = forms.MultipleChoiceField(
+        label=SpyConfiguration._meta.get_field("ignored_network_characters").verbose_name,
+        required=False,
+        help_text=SpyConfiguration._meta.get_field("ignored_network_characters").help_text,
+        widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
+    )
     # the switched-on markers; stored the other way round, as disabled_markers
     markers = forms.MultipleChoiceField(
         label=_("Markers"),
@@ -109,6 +131,8 @@ class SpyConfigurationForm(forms.ModelForm):
             "ignored_ref_types",
             "network_neutral",
             "network_blue_above",
+            "ignored_contact_characters",
+            "ignored_network_characters",
         ]
         widgets = {
             "network_blue_above": forms.NumberInput(attrs={"step": "0.1", "min": "-10", "max": "10"}),
@@ -123,6 +147,8 @@ class SpyConfigurationForm(forms.ModelForm):
         self.fields["ignored_ref_types"].choices = ref_type_choices(self.instance.ignored_ref_types)
         self.fields["ignored_ships"].choices = ship_choices(self.instance.ignored_ships)
         self.fields["capital_ship_groups"].choices = capital_group_choices(self.instance.capital_ship_groups)
+        for name in ("ignored_contact_characters", "ignored_network_characters"):
+            self.fields[name].choices = character_choices(self.instance, getattr(self.instance, name))
         # the posted texts are valid choices too: clean_note_presets checks them instead
         posted = self.data.getlist("note_presets") if hasattr(self.data, "getlist") else []
         presets = dict.fromkeys([*(self.instance.note_presets or ()), *posted])
@@ -138,6 +164,13 @@ class SpyConfigurationForm(forms.ModelForm):
                 _("A text may have at most %(length)s characters."), params={"length": KILL_NOTE_LENGTH}
             )
         return [text for text in dict.fromkeys(texts) if text]
+
+    # the choices are strings; EVE IDs are what the checks compare with
+    def clean_ignored_contact_characters(self) -> list[int]:
+        return sorted(map(int, self.cleaned_data["ignored_contact_characters"]))
+
+    def clean_ignored_network_characters(self) -> list[int]:
+        return sorted(map(int, self.cleaned_data["ignored_network_characters"]))
 
     def marker_switches(self) -> list[tuple]:
         """Each marker's checkbox with its description, for the switches of the Markers tab."""

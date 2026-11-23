@@ -56,20 +56,43 @@
 
         <div class="tab-content">
             <div class="tab-pane fade{% if tab == 'alliance' %} show active{% endif %}" id="eos-spy-network-settings-alliance" role="tabpanel">
+                {# in the order of the work: the Alliance, what both parts share, then each part #}
                 <div class="card mb-3">
+                    <div class="card-header"><h5 class="mb-0">{% translate "Alliance" context "EVE jargon" %}</h5></div>
                     <div class="card-body">
                         {% bootstrap_field form.alliance %}
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-header"><h5 class="mb-0">{% translate "Hostile and data basis" %}</h5></div>
+                    <div class="card-body">
                         {% bootstrap_field form.hostile_below %}
+                        {% bootstrap_field form.lookback_days %}
+                        {% bootstrap_field form.ignored_ref_types %}
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-header"><h5 class="mb-0">{% translate "Markers" %}</h5></div>
+                    <div class="card-body">
+                        <h6 class="border-bottom pb-1">{% translate "Blue kills" %}</h6>
                         {% bootstrap_field form.blue_from %}
                         {% bootstrap_field form.min_kill_value %}
                         {% bootstrap_field form.ignored_ships %}
-                        {% bootstrap_field form.capital_ship_groups %}
                         {% bootstrap_field form.note_presets %}
+                        <h6 class="border-bottom pb-1 mt-4">{% translate "Capital in contract" %}</h6>
+                        {% bootstrap_field form.capital_ship_groups %}
+                        <h6 class="border-bottom pb-1 mt-4">{% translate "Frequent Corporation changes" %}</h6>
                         {% bootstrap_field form.corp_changes_per_year %}
-                        {% bootstrap_field form.lookback_days %}
-                        {% bootstrap_field form.ignored_ref_types %}
+                        <h6 class="border-bottom pb-1 mt-4">{% translate "Friendly to hostiles" %}</h6>
+                        {% bootstrap_field form.ignored_contact_characters %}
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-header"><h5 class="mb-0">{% translate "Network" %}</h5></div>
+                    <div class="card-body">
                         {% bootstrap_field form.network_neutral %}
                         {% bootstrap_field form.network_blue_above %}
+                        {% bootstrap_field form.ignored_network_characters %}
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary" name="tab" value="alliance">{% translate "Save" context "eos-spy-network" %}</button>

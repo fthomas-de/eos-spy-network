@@ -263,6 +263,25 @@ class TestContacts(MarkerTestCase):
 
         self.assertEqual(marker.details, {f"{self.main.character_name}: Bad Corp (5)"})
 
+    def test_should_skip_the_contacts_of_an_ignored_character(self):
+        self.add_contact(HOSTILE_CORP, 5)
+        configure(ignored_contact_characters=[self.main.character_id])
+
+        self.assertIsNone(self.suspect())
+
+    def test_should_keep_checking_the_other_characters_of_the_account(self):
+        alt = self.add_alt(5001)
+        CharacterContact.objects.create(
+            id=2, character=CharacterAudit.objects.create(character=alt), contact_id=HOSTILE_CORP,
+            contact_type="corporation", contact_name=eve_name(HOSTILE_CORP, "corporation"), standing=5,
+        )
+        self.add_contact(HOSTILE_CORP, 5)
+        configure(ignored_contact_characters=[self.main.character_id])
+
+        marker = self.suspect().markers[markers.CONTACTS]
+
+        self.assertEqual(marker.details, {f"{alt.character_name}: Bad Corp (5)"})
+
     def test_should_ignore_a_watched_hostile_with_a_neutral_standing(self):
         self.add_contact(HOSTILE_CORP, 0, watched=True)
 

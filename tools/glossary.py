@@ -500,6 +500,23 @@ TRANSLATIONS = {
         "Blue-килл, жертва которого летела на одном из этих кораблей, не учитывается.",
         "受害者驾驶其中任一舰船的 blue 击杀不计入。",
     ),
+    "Hostile and data basis": ("Feinde und Datenbasis", "Враги и база данных", "敌对方与数据基础"),
+    "Ignored characters": ("Ignorierte Characters", "Игнорируемые Characters", "忽略的 Characters"),
+    "The contacts of these characters are not checked for friendly hostiles.": (
+        "Die Kontakte dieser Characters werden nicht auf freundliche Feinde geprüft.",
+        "Контакты этих Characters не проверяются на дружелюбие к врагам.",
+        "不检查这些 Characters 的联系人是否对敌对方友好。",
+    ),
+    (
+        "The payments and contracts of these characters do not count for the Network. A partner shared with "
+        "the account's other characters still counts."
+    ): (
+        "Die Zahlungen und Contracts dieser Characters zählen nicht für das Network. Ein Partner, den die "
+        "anderen Characters des Accounts teilen, zählt weiterhin.",
+        "Платежи и контракты этих Characters не учитываются в сети. Партнёр, общий для других Characters "
+        "аккаунта, по-прежнему учитывается.",
+        "这些 Characters 的付款和合同不计入关系网。与该账号其他 Characters 共有的合作方仍会计入。",
+    ),
     "Note buttons": ("Notiz-Buttons", "Кнопки заметок", "备注按钮"),
     (
         "A button each in the note popup of a blue kill: a click enters the text, ticks Cleared and saves. "

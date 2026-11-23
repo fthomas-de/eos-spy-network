@@ -133,6 +133,7 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
             config.since(),
             config.ignored_ref_types or (),
             members.characters,
+            set(config.ignored_network_characters or ()),
         )
     step("affiliations")
     with measurement.phase(AFFILIATIONS):
@@ -318,6 +319,8 @@ def _inputs() -> tuple:
             "ignored_ref_types",
             "network_neutral",
             "network_blue_above",
+            "ignored_contact_characters",
+            "ignored_network_characters",
         )
         .first(),
         sorted(ContactSource.objects.values_list("kind", "entity_id")),

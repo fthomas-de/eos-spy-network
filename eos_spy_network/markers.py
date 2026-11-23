@@ -388,7 +388,9 @@ def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, charac
     _check_history(accounts, index, config, owner, names, audits, since, current)
     step("contacts")
     # contacts carry no date in corptools: today's are checked whatever the time frame
-    _check_contacts(accounts, index, owner, names, audits, hostile_ids)
+    ignored = set(config.ignored_contact_characters or ())
+    contact_audits = {audit_id: character_id for audit_id, character_id in audits.items() if character_id not in ignored}
+    _check_contacts(accounts, index, owner, names, contact_audits, hostile_ids)
     step("mails")
     _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, since)
     step("wallet")

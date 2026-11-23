@@ -290,15 +290,22 @@ def alliance_ids(alliance_id: int) -> set[int]:
 
 
 def connections(
-    mains: dict, alliance_id: int, stats: dict | None = None, since=None, ignored_ref_types=(), characters=None
+    mains: dict,
+    alliance_id: int,
+    stats: dict | None = None,
+    since=None,
+    ignored_ref_types=(),
+    characters=None,
+    ignored_characters=(),
 ) -> dict:
     """The accounts with connections outside the Alliance, by user ID.
 
     ``mains`` maps the user ID of every account to check to its main
     EveCharacter. ``stats`` gets the number of journal entries read. Only
     payments and contracts from ``since`` on count, and none of
-    ``ignored_ref_types``. ``characters`` is ``markers.Roster.characters``
-    when the caller has read the accounts' characters already.
+    ``ignored_ref_types``, and none of ``ignored_characters`` (EVE IDs).
+    ``characters`` is ``markers.Roster.characters`` when the caller has read
+    the accounts' characters already.
     """
     if stats is not None:
         stats["journal_entries"] = 0
@@ -319,7 +326,8 @@ def connections(
     if stats is not None:
         stats["characters"] = len(owner)
     inside = alliance_ids(alliance_id)
-    audits = character_audits(list(owner))
+    # an ignored character stays in ``owner`` (a payment to it is still no connection outside) but is not read
+    audits = character_audits([character_id for character_id in owner if character_id not in ignored_characters])
 
     # (user, own character, counterpart) -> link
     links = {}

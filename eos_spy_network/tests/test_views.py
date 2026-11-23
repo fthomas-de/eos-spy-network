@@ -658,6 +658,91 @@ class TestSettingsPage(SpyTestCase):
         self.assertRedirects(response, reverse("eos_spy_network:settings"))
         self.assertEqual(SpyConfiguration.get_solo().ignored_ships, ["Capsule"])
 
+    def add_member_with_alt(self):
+        member = make_user("member")
+        CharacterOwnership.objects.create(user=member, character=make_character(5001), owner_hash="hash-5001")
+        return member
+
+    def test_should_offer_the_characters_of_the_checked_accounts(self):
+        configure(ignored_network_characters=[777])
+        member = self.add_member_with_alt()
+
+        response = self.client.get(reverse("eos_spy_network:settings"))
+
+        self.assertContains(response, '<option value="5001">Char 5001 (member main)</option>', html=True)
+        main_id = member.profile.main_character.character_id
+        self.assertContains(response, f'<option value="{main_id}">member main</option>', html=True)
+        # a stored ID that no account holds any more stays selectable
+        self.assertContains(response, '<option value="777" selected>777</option>', html=True)
+
+    def test_should_save_the_ignored_characters(self):
+        configure()
+        member = self.add_member_with_alt()
+        main_id = member.profile.main_character.character_id
+
+        response = self.client.post(
+            reverse("eos_spy_network:settings"),
+            {
+                "alliance": make_alliance().pk,
+                "hostile_below": "0",
+                "blue_from": "5",
+                "network_blue_above": "0",
+                "min_kill_value": "0",
+                "corp_changes_per_year": "4",
+                "lookback_days": "365",
+                "ignored_contact_characters": ["5001"],
+                "ignored_network_characters": ["5001", str(main_id)],
+            },
+        )
+
+        self.assertRedirects(response, reverse("eos_spy_network:settings"))
+        config = SpyConfiguration.get_solo()
+        # EVE IDs as numbers, which is what the checks compare with
+        self.assertEqual(config.ignored_contact_characters, [5001])
+        self.assertEqual(config.ignored_network_characters, sorted([5001, main_id]))
+
+    def test_should_reject_a_character_no_account_holds(self):
+        configure()
+
+        response = self.client.post(
+            reverse("eos_spy_network:settings"),
+            {
+                "alliance": make_alliance().pk,
+                "hostile_below": "0",
+                "blue_from": "5",
+                "network_blue_above": "0",
+                "min_kill_value": "0",
+                "corp_changes_per_year": "4",
+                "lookback_days": "365",
+                "ignored_network_characters": ["424242"],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SpyConfiguration.get_solo().ignored_network_characters, [])
+
+    def test_should_group_the_alliance_tab_in_sections(self):
+        configure()
+
+        html = self.client.get(reverse("eos_spy_network:settings")).content.decode()
+
+        order = [
+            '<h5 class="mb-0">Alliance</h5>',
+            'id="id_alliance"',
+            '<h5 class="mb-0">Hostile and data basis</h5>',
+            'id="id_hostile_below"',
+            '<h5 class="mb-0">Markers</h5>',
+            'id="id_blue_from"',
+            'id="id_capital_ship_groups"',
+            'id="id_corp_changes_per_year"',
+            'id="id_ignored_contact_characters"',
+            '<h5 class="mb-0">Network</h5>',
+            'id="id_network_neutral"',
+            'id="id_ignored_network_characters"',
+        ]
+        positions = [html.index(text) for text in order]
+        self.assertEqual(positions, sorted(positions))
+
     def test_should_offer_the_ship_groups_of_eve_sde(self):
         from eve_sde.models import ItemCategory, ItemGroup
 

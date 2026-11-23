@@ -155,6 +155,22 @@ class SpyConfiguration(SingletonModel):
             "value at a ticked source is blue and leaves the Network."
         ),
     )
+    # EVE IDs: a character is ignored as a source of findings, its alts and main stay checked
+    ignored_contact_characters = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name=_("Ignored characters"),
+        help_text=_("The contacts of these characters are not checked for friendly hostiles."),
+    )
+    ignored_network_characters = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name=_("Ignored characters"),
+        help_text=_(
+            "The payments and contracts of these characters do not count for the Network. A partner shared with "
+            "the account's other characters still counts."
+        ),
+    )
     # the switched-off ones, not the switched-on: a marker added in a later version starts on
     disabled_markers = models.JSONField(
         default=list,

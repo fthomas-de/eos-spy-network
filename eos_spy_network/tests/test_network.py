@@ -176,6 +176,60 @@ class TestSettingsFilters(NetworkTestCase):
         self.assertEqual(self.stored_accounts(), [])
 
 
+class TestIgnoredCharacters(NetworkTestCase):
+    def add_alt(self, character_id, **where):
+        alt = make_character(character_id, **where)
+        CharacterOwnership.objects.create(user=self.user, character=alt, owner_hash=f"hash-{character_id}")
+        self.audits[character_id] = CharacterAudit.objects.create(character=alt)
+        return alt
+
+    def account(self, *ignored):
+        return connections({self.user.pk: self.main}, ALLIANCE_ID, ignored_characters=set(ignored)).get(self.user.pk)
+
+    def test_should_leave_out_the_payments_of_an_ignored_character(self):
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+
+        # the outsider is shared by two characters only until one of them is ignored
+        self.assertIsNone(self.account(5001))
+
+    def test_should_keep_the_partner_the_other_characters_share(self):
+        third = self.add_alt(5002)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+        self.pay(third, OUTSIDER)
+
+        account = self.account(5001)
+
+        self.assertEqual(account.shared, {OUTSIDER})
+        self.assertEqual({link.character_id for link in account.links}, {self.main.character_id, 5002})
+
+    def test_should_not_take_an_ignored_own_character_for_an_outsider(self):
+        # outside the Alliance, so only the ownership says it is no outsider
+        third = self.add_alt(5002)
+        self.add_alt(5003, corporation_id=3001, alliance_id=None)
+        self.pay(self.main, 5003)
+        self.pay(third, 5003)
+
+        self.assertIsNone(self.account(5003))
+
+    def test_should_reach_the_network_through_the_settings(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+        configure(ignored_network_characters=[5001])
+
+        self.assertEqual(self.stored_accounts(), [])
+
+    def test_should_not_touch_the_network_with_the_contact_list(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+        configure(ignored_contact_characters=[5001])
+
+        self.assertEqual(len(self.stored_accounts()), 1)
+
+
 class TestPlayerTrading(NetworkTestCase):
     def test_should_show_a_single_trade_with_an_outsider(self):
         self.pay(self.alt, OUTSIDER, ref_type="player_trading")

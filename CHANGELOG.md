@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.39] - 2026-11-23
+
+### Added
+
+- Settings: *Ignored characters* for *Friendly to hostiles* and for the
+  Network, one list each (migration 0019, default empty). A character the
+  list names is a source of no finding: its contacts are not checked for
+  friendly hostiles, respectively its payments and contracts leave the
+  Network. Its alts and its main stay checked, so a partner the account's
+  other characters share still shows. The ignored character stays known as
+  the account's own: a payment to it from another alt is no connection
+  outside. Picked from every character of the checked accounts (an alt with
+  its main); a stored ID no account holds any more stays selectable.
+
+### Changed
+
+- Settings, tab *Alliance*: grouped in sections with a heading, in the order
+  of the work - *Alliance*, *Hostile and data basis* (hostile standing, time
+  frame, ignored wallet types: shared by Markers and Network), *Markers*
+  (Blue kills, Capital in contract, Frequent Corporation changes, Friendly to
+  hostiles) and *Network*. Before, twelve fields stood in one list.
+
 ## [0.0.38] - 2026-11-23
 
 ### Added

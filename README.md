@@ -153,22 +153,31 @@ every one with a standing below a configurable value.
   entity one of its Corporations is at war with. The Alliance itself and its
   Corporations never count as hostile. A hostile Corporation or Alliance
   also makes its members hostile - as far as Auth knows them (see below)
-- **Settings page**, in five tabs; the first three saved together. *Alliance*: the Alliance, chosen from a searchable dropdown; the
-  standing below which a contact is hostile (default: below 0); the
-  standing from which a contact of the Alliance is blue for the blue kills
-  (default 5); the minimum value of a blue kill in million ISK (default 0:
-  every kill); the ignored ships of a blue kill's victim, chosen from the
-  types killtracker offers as a victim's ship (default none); the capital
-  ship groups of *Capital in contract*, chosen from the ship groups eve_sde
-  holds (default Dreadnought, Lancer Dreadnought, Carrier, Command Carrier,
-  Force Auxiliary, Supercarrier, Titan and Capital Industrial Ship;
-  Freighters and Jump Freighters can be added); the number
-  of Corporation changes per year that sets a marker; the time frame in days
-  (default 365, 0 takes everything): the hostile list is today's, and the
-  further back a payment, mail, contract or former Corporation, the likelier
-  the standing was different then; the ignored wallet entry types, chosen
-  from those in corptools' wallet journals (default `market_transaction`:
-  nobody picks the other side of a market order). *Contact sources*: a
+- **Settings page**, in five tabs; the first three saved together. *Alliance*,
+  in four sections. *Alliance*: the Alliance, chosen from a searchable
+  dropdown. *Hostile and data basis*, shared by Markers and Network: the
+  standing below which a contact is hostile (default: below 0); the time
+  frame in days (default 365, 0 takes everything): the hostile list is
+  today's, and the further back a payment, mail, contract or former
+  Corporation, the likelier the standing was different then; the ignored
+  wallet entry types, chosen from those in corptools' wallet journals
+  (default `market_transaction`: nobody picks the other side of a market
+  order). *Markers*: for the blue kills the standing from which a contact of
+  the Alliance is blue (default 5), the minimum value of a blue kill in
+  million ISK (default 0: every kill), the ignored ships of a blue kill's
+  victim, chosen from the types killtracker offers as a victim's ship
+  (default none) and the note buttons; for *Capital in contract* the capital
+  ship groups, chosen from the ship groups eve_sde holds (default
+  Dreadnought, Lancer Dreadnought, Carrier, Command Carrier, Force Auxiliary,
+  Supercarrier, Titan and Capital Industrial Ship; Freighters and Jump
+  Freighters can be added); for the Corporation changes the number per year
+  that sets a marker; for *Friendly to hostiles* the ignored characters,
+  whose contacts are not checked. *Network*: whether neutral partners show
+  too and the standing above which a partner is blue, and the ignored
+  characters, whose payments and contracts leave the Network. Both lists of
+  ignored characters are chosen from every character of the checked accounts
+  (default none); the alts and the main of an ignored character stay
+  checked. *Contact sources*: a
   searchable table of the Alliance and its Corporations to tick the
   contact sources, each with whether aa-contacts has a token for it, the
   time of the contacts aa-contacts holds, the number of contacts and of
