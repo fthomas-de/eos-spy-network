@@ -643,6 +643,43 @@ def rebuild(request):
     return redirect(target or "eos_spy_network:index")
 
 
+@all_permissions_required(MANAGE_SETTINGS, VIEW_SUSPECTS)
+@require_POST
+def ignore_counterpart(request):
+    """The Network's button: leave one counterpart out of every connection, then recalculate."""
+    config = SpyConfiguration.get_solo()
+    report = _report(config)
+    try:
+        counterpart_id = int(request.POST.get("counterpart_id", ""))
+    except ValueError:
+        return HttpResponseBadRequest()
+    # only a counterpart the Network page lists, and its name is the stored one, not the posted one
+    name = next(
+        (
+            name
+            for tile in (report.network_tiles if report else [])
+            for account in tile.accounts
+            for eve_id, name in account.counterparts.items()
+            if eve_id == counterpart_id
+        ),
+        None,
+    )
+    if name is None:
+        raise Http404
+    config.ignored_network_counterparts = {**(config.ignored_network_counterparts or {}), str(counterpart_id): name}
+    config.save(update_fields=["ignored_network_counterparts"])
+    if _start_rebuild():
+        messages.success(request, _("%(name)s is ignored. The connections are being recalculated.") % {"name": name})
+    else:
+        messages.warning(
+            request,
+            _("%(name)s is ignored, but the task queue is not reachable: recalculate once it is back.")
+            % {"name": name},
+        )
+    # the overview, not this Corporation's page: with its last connection gone that page is a 404
+    return redirect("eos_spy_network:network")
+
+
 # the CEO's Corporation page shows the bar too, without the button that starts a run
 @any_permission_required(VIEW_SUSPECTS, VIEW_OWN_CORPORATION)
 def rebuild_progress(request):

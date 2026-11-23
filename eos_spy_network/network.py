@@ -156,6 +156,7 @@ class Connections:
                 {
                     "character": self.characters.get(link.character_id, str(link.character_id)),
                     "counterpart": self._name(link.counterpart_id),
+                    "counterpart_id": link.counterpart_id,
                     "hostile": self.reason(link.counterpart_id) is not None,
                     "corporation": self._group(corporation_id),
                     "alliance": self._group(alliance_id),
@@ -297,6 +298,7 @@ def connections(
     ignored_ref_types=(),
     characters=None,
     ignored_characters=(),
+    ignored_counterparts=(),
 ) -> dict:
     """The accounts with connections outside the Alliance, by user ID.
 
@@ -304,6 +306,8 @@ def connections(
     EveCharacter. ``stats`` gets the number of journal entries read. Only
     payments and contracts from ``since`` on count, and none of
     ``ignored_ref_types``, and none of ``ignored_characters`` (EVE IDs).
+    ``ignored_counterparts`` (EVE IDs) are no connection at all: they count
+    for neither the shared-partner rule nor player trading.
     ``characters`` is ``markers.Roster.characters`` when the caller has read
     the accounts' characters already.
     """
@@ -336,7 +340,13 @@ def connections(
         user_id = owner[character_id]
         for party_id in party_ids:
             # an own alt, a member of the Alliance or an NPC is no connection outside
-            if not party_id or party_id in inside or party_id in NPC_IDS or owner.get(party_id) == user_id:
+            if (
+                not party_id
+                or party_id in inside
+                or party_id in NPC_IDS
+                or party_id in ignored_counterparts
+                or owner.get(party_id) == user_id
+            ):
                 continue
             link = links.get((user_id, character_id, party_id))
             if link is None:

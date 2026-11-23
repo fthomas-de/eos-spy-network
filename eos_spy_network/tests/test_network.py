@@ -230,6 +230,41 @@ class TestIgnoredCharacters(NetworkTestCase):
         self.assertEqual(len(self.stored_accounts()), 1)
 
 
+class TestIgnoredCounterparts(NetworkTestCase):
+    def account(self, *ignored):
+        return connections(
+            {self.user.pk: self.main}, ALLIANCE_ID, ignored_counterparts=set(ignored)
+        ).get(self.user.pk)
+
+    def test_should_leave_an_ignored_counterpart_out_of_the_shared_rule(self):
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+
+        self.assertIsNone(self.account(OUTSIDER))
+
+    def test_should_leave_an_ignored_counterpart_out_of_player_trading(self):
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+
+        self.assertIsNone(self.account(OUTSIDER))
+
+    def test_should_keep_the_other_counterparts(self):
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+        self.pay(self.main, OTHER_OUTSIDER)
+        self.pay(self.alt, OTHER_OUTSIDER)
+
+        self.assertEqual(self.account(OUTSIDER).shared, {OTHER_OUTSIDER})
+
+    def test_should_reach_the_network_through_the_settings(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+        # the stored keys are strings: JSON has no other
+        configure(ignored_network_counterparts={str(OUTSIDER): "Stranger"})
+
+        self.assertEqual(self.stored_accounts(), [])
+
+
 class TestPlayerTrading(NetworkTestCase):
     def test_should_show_a_single_trade_with_an_outsider(self):
         self.pay(self.alt, OUTSIDER, ref_type="player_trading")

@@ -133,6 +133,13 @@ class SpyConfigurationForm(forms.ModelForm):
         help_text=SpyConfiguration._meta.get_field("ignored_network_characters").help_text,
         widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
     )
+    # only for taking one back: a counterpart is added with the button on the Network page
+    ignored_network_counterparts = forms.MultipleChoiceField(
+        label=SpyConfiguration._meta.get_field("ignored_network_counterparts").verbose_name,
+        required=False,
+        help_text=SpyConfiguration._meta.get_field("ignored_network_counterparts").help_text,
+        widget=forms.SelectMultiple(attrs={"data-eos-spy-network-search": ""}),
+    )
     # the switched-on markers; stored the other way round, as disabled_markers
     markers = forms.MultipleChoiceField(
         label=_("Markers"),
@@ -158,6 +165,7 @@ class SpyConfigurationForm(forms.ModelForm):
             "network_blue_above",
             "ignored_contact_characters",
             "ignored_network_characters",
+            "ignored_network_counterparts",
         ]
         widgets = {
             "network_blue_above": forms.NumberInput(attrs={"step": "0.1", "min": "-10", "max": "10"}),
@@ -176,6 +184,12 @@ class SpyConfigurationForm(forms.ModelForm):
             self.fields[name].choices = character_choices(
                 self.instance, marked_characters(self.instance, contacts), getattr(self.instance, name)
             )
+        # the stored table is a dict: the field shows its IDs as selected, with the names as labels
+        counterparts = self.instance.ignored_network_counterparts or {}
+        self.fields["ignored_network_counterparts"].choices = [
+            (eve_id, name) for eve_id, name in sorted(counterparts.items(), key=lambda row: row[1].lower())
+        ]
+        self.initial["ignored_network_counterparts"] = list(counterparts)
         # the posted texts are valid choices too: clean_note_presets checks them instead
         posted = self.data.getlist("note_presets") if hasattr(self.data, "getlist") else []
         presets = dict.fromkeys([*(self.instance.note_presets or ()), *posted])
@@ -198,6 +212,11 @@ class SpyConfigurationForm(forms.ModelForm):
 
     def clean_ignored_network_characters(self) -> list[int]:
         return sorted(map(int, self.cleaned_data["ignored_network_characters"]))
+
+    def clean_ignored_network_counterparts(self) -> dict:
+        # the choices are the stored IDs: what stays is a subset of the stored table, names included
+        stored = self.instance.ignored_network_counterparts or {}
+        return {eve_id: stored[eve_id] for eve_id in self.cleaned_data["ignored_network_counterparts"]}
 
     def marker_switches(self) -> list[tuple]:
         """Each marker's checkbox with its description, for the switches of the Markers tab."""

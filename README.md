@@ -178,7 +178,11 @@ every one with a standing below a configurable value.
   ignored characters offer the characters with a finding in the last
   calculation (a friendly hostile contact, respectively a Network link) and
   the ones already ignored (default none); the alts and the main of an
-  ignored character stay checked. *Contact sources*: a
+  ignored character stay checked. A counterpart is ignored with the button
+  next to *Counterpart* on a Network Corporation page (needs
+  `manage_settings` as well as `view_suspects`, asks first): it is then no
+  connection at all and shows in the Network list of ignored counterparts,
+  where removing it takes it back. *Contact sources*: a
   searchable table of the Alliance and its Corporations to tick the
   contact sources, each with whether aa-contacts has a token for it, the
   time of the contacts aa-contacts holds, the number of contacts and of

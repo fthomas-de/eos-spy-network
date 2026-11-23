@@ -15,6 +15,7 @@ urlpatterns = [
     path("kills/note/", views.kill_note, name="kill_note"),
     path("kills/day/", views.kill_day_note, name="kill_day_note"),
     path("findings/note/", views.finding_note, name="finding_note"),
+    path("network/ignore/", views.ignore_counterpart, name="ignore_counterpart"),
     path("rebuild/", views.rebuild, name="rebuild"),
     path("rebuild/progress/", views.rebuild_progress, name="rebuild_progress"),
     path("settings/", views.settings, name="settings"),

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.41] - 2026-11-23
+
+### Added
+
+- Network: a button next to a row's *Counterpart* (only with
+  `manage_settings`) ignores that counterpart. A popup asks first and names
+  it; on *Ignore* the counterpart goes into the new setting *Ignored
+  counterparts* (migration 0020, default empty) and the Network is
+  recalculated at once. An ignored counterpart is no connection at all: it
+  counts for neither the shared-partner rule nor player trading, so an
+  account that showed up only through it leaves the Network. The ISK marker
+  is untouched. It is kept by EVE ID, the name is stored beside it - an
+  ignored counterpart leaves the snapshot, so the settings could not name it
+  otherwise. Settings, section *Network*: the list appears once one is
+  ignored; removing an entry and saving takes it back. The view takes the
+  name from the stored result, not from the post, and refuses an ID the
+  Network does not list.
+
 ## [0.0.40] - 2026-11-23
 
 ### Changed

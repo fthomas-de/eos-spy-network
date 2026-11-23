@@ -465,6 +465,66 @@ class TestNetworkPages(SuspectPageTestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    def test_should_offer_the_ignore_button_to_settings_managers(self):
+        self.client.force_login(make_user("lead2", VIEW_SUSPECTS, MANAGE_SETTINGS))
+
+        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+
+        self.assertContains(response, f'data-eos-spy-network-ignore-id="{self.OUTSIDER}"')
+        self.assertContains(response, 'data-eos-spy-network-ignore-name="Stranger"')
+        self.assertContains(response, 'id="eos-spy-network-ignore"')
+        self.assertContains(response, "eos_spy_network/js/ignore.")
+
+    def test_should_keep_the_ignore_button_from_viewers(self):
+        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+
+        self.assertNotContains(response, "data-eos-spy-network-ignore-id")
+        self.assertNotContains(response, 'id="eos-spy-network-ignore"')
+
+    def test_should_ignore_a_counterpart_and_recalculate(self):
+        self.client.force_login(make_user("lead2", VIEW_SUSPECTS, MANAGE_SETTINGS))
+
+        response = self.client.post(reverse("eos_spy_network:ignore_counterpart"), {"counterpart_id": self.OUTSIDER})
+
+        # the overview: the Corporation's own page is gone once its last connection is
+        self.assertRedirects(response, reverse("eos_spy_network:network"))
+        self.assertEqual(
+            SpyConfiguration.get_solo().ignored_network_counterparts, {str(self.OUTSIDER): "Stranger"}
+        )
+        self.update_snapshot.delay.assert_called_once_with()
+
+    def test_should_keep_the_ignoring_from_viewers(self):
+        response = self.client.post(reverse("eos_spy_network:ignore_counterpart"), {"counterpart_id": self.OUTSIDER})
+
+        self.assertTrue(response.url.startswith(LOGIN))
+        self.assertEqual(SpyConfiguration.get_solo().ignored_network_counterparts, {})
+
+    def test_should_keep_the_ignoring_from_settings_managers_without_the_network(self):
+        # the button sits on a page that needs view_suspects: the view asks for both
+        self.client.force_login(make_user("admin", MANAGE_SETTINGS))
+
+        response = self.client.post(reverse("eos_spy_network:ignore_counterpart"), {"counterpart_id": self.OUTSIDER})
+
+        self.assertTrue(response.url.startswith(LOGIN))
+        self.assertEqual(SpyConfiguration.get_solo().ignored_network_counterparts, {})
+
+    def test_should_refuse_a_counterpart_the_network_does_not_list(self):
+        self.client.force_login(make_user("lead2", VIEW_SUSPECTS, MANAGE_SETTINGS))
+
+        for posted in ({"counterpart_id": 12345}, {"counterpart_id": "x"}, {}):
+            with self.subTest(posted=posted):
+                response = self.client.post(reverse("eos_spy_network:ignore_counterpart"), posted)
+                self.assertIn(response.status_code, (400, 404))
+        self.assertEqual(SpyConfiguration.get_solo().ignored_network_counterparts, {})
+        self.update_snapshot.delay.assert_not_called()
+
+    def test_should_refuse_a_get(self):
+        self.client.force_login(make_user("lead2", VIEW_SUSPECTS, MANAGE_SETTINGS))
+
+        response = self.client.get(reverse("eos_spy_network:ignore_counterpart"))
+
+        self.assertEqual(response.status_code, 405)
+
 
 class TestSettingsPage(SpyTestCase):
     def setUp(self):
@@ -770,6 +830,56 @@ class TestSettingsPage(SpyTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(SpyConfiguration.get_solo().ignored_network_characters, [])
+
+    def test_should_list_the_ignored_counterparts_and_take_one_back(self):
+        configure(ignored_network_counterparts={"5": "Stranger", "6": "Other"})
+        self.assertEqual(self.choices("ignored_network_counterparts"), [("6", "Other"), ("5", "Stranger")])
+
+        response = self.client.post(
+            reverse("eos_spy_network:settings"),
+            {
+                "alliance": make_alliance().pk,
+                "hostile_below": "0",
+                "blue_from": "5",
+                "network_blue_above": "0",
+                "min_kill_value": "0",
+                "corp_changes_per_year": "4",
+                "lookback_days": "365",
+                "ignored_network_counterparts": ["5"],
+            },
+        )
+
+        self.assertRedirects(response, reverse("eos_spy_network:settings"))
+        # what stays keeps its stored name
+        self.assertEqual(SpyConfiguration.get_solo().ignored_network_counterparts, {"5": "Stranger"})
+
+    def test_should_not_add_a_counterpart_through_the_settings(self):
+        configure()
+
+        response = self.client.post(
+            reverse("eos_spy_network:settings"),
+            {
+                "alliance": make_alliance().pk,
+                "hostile_below": "0",
+                "blue_from": "5",
+                "network_blue_above": "0",
+                "min_kill_value": "0",
+                "corp_changes_per_year": "4",
+                "lookback_days": "365",
+                "ignored_network_counterparts": ["99"],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SpyConfiguration.get_solo().ignored_network_counterparts, {})
+
+    def test_should_show_the_counterpart_list_only_with_one_ignored(self):
+        configure()
+        self.assertNotContains(self.client.get(reverse("eos_spy_network:settings")), "id_ignored_network_counterparts")
+
+        configure(ignored_network_counterparts={"5": "Stranger"})
+
+        self.assertContains(self.client.get(reverse("eos_spy_network:settings")), "id_ignored_network_counterparts")
 
     def test_should_group_the_alliance_tab_in_sections(self):
         configure()

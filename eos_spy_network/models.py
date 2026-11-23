@@ -171,6 +171,14 @@ class SpyConfiguration(SingletonModel):
             "the account's other characters still counts."
         ),
     )
+    # EVE ID (a string: JSON keys are) -> the name it had when ignored; a counterpart that is ignored leaves
+    # the snapshot, so only this table can still name it in the settings
+    ignored_network_counterparts = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name=_("Ignored counterparts"),
+        help_text=_("Payments and contracts with these counterparts do not count for the Network. Remove one to count it again."),
+    )
     # the switched-off ones, not the switched-on: a marker added in a later version starts on
     disabled_markers = models.JSONField(
         default=list,

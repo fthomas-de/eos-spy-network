@@ -108,7 +108,19 @@
                                         {% for row in account.rows %}
                                             <tr>
                                                 <td class="text-break">{{ row.character }}</td>
-                                                <td class="text-break{% if row.hostile %} text-danger fw-semibold{% endif %}">{{ row.counterpart }}</td>
+                                                <td class="text-break{% if row.hostile %} text-danger fw-semibold{% endif %}">
+                                                    {{ row.counterpart }}
+                                                    {% if perms.eos_spy_network.manage_settings %}
+                                                        <button type="button" class="btn btn-sm btn-link p-0 ms-1 text-body-secondary"
+                                                                data-bs-toggle="modal" data-bs-target="#eos-spy-network-ignore"
+                                                                data-eos-spy-network-ignore-id="{{ row.counterpart_id }}"
+                                                                data-eos-spy-network-ignore-name="{{ row.counterpart }}"
+                                                                title="{% translate 'Ignore this counterpart' %}"
+                                                                aria-label="{% translate 'Ignore this counterpart' %}">
+                                                            <i class="fas fa-eye-slash"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </td>
                                                 {% include "eos_spy_network/partials/group-cell.html" with group=row.corporation %}
                                                 {% include "eos_spy_network/partials/group-cell.html" with group=row.alliance %}
                                                 <td>{{ row.payments }}</td>
@@ -128,6 +140,31 @@
     {% else %}
         <p class="text-body-secondary">{% translate "No connections outside the Alliance." %}</p>
     {% endif %}
+
+    {# the confirmation of the ignore button; ignore.js puts the name in #}
+    {% if perms.eos_spy_network.manage_settings %}
+        <div class="modal fade" id="eos-spy-network-ignore" tabindex="-1" aria-labelledby="eos-spy-network-ignore-title" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="post" action="{% url 'eos_spy_network:ignore_counterpart' %}" class="modal-content">
+                    {% csrf_token %}
+                    <input type="hidden" name="counterpart_id" data-eos-spy-network-ignore-field>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="eos-spy-network-ignore-title">{% translate "Ignore this counterpart" %}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2">{% translate "Ignore this counterpart in the Network?" %}</p>
+                        <p class="fw-bold text-break mb-2" data-eos-spy-network-ignore-name></p>
+                        <p class="small text-body-secondary mb-0">{% translate "Payments and contracts with it no longer count and the Network is recalculated. You can take it back in the settings." %}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Cancel" %}</button>
+                        <button type="submit" class="btn btn-danger">{% translate "Ignore" context "eos-spy-network" %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block extra_css %}
@@ -139,4 +176,5 @@
     {{ block.super }}
     {% include "eos_spy_network/bundles/vis-network-js.html" %}
     {% sri_static "eos_spy_network/js/network.js" %}
+    {% sri_static "eos_spy_network/js/ignore.js" %}
 {% endblock %}

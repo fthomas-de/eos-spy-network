@@ -517,6 +517,38 @@ TRANSLATIONS = {
         "аккаунта, по-прежнему учитывается.",
         "这些 Characters 的付款和合同不计入关系网。与该账号其他 Characters 共有的合作方仍会计入。",
     ),
+    "Ignored counterparts": ("Ignorierte Gegenüber", "Игнорируемые контрагенты", "忽略的对方"),
+    "Payments and contracts with these counterparts do not count for the Network. Remove one to count it again.": (
+        "Zahlungen und Contracts mit diesen Gegenübern zählen nicht für das Network. Entferne eines, damit es "
+        "wieder zählt.",
+        "Платежи и контракты с этими контрагентами не учитываются в сети. Удалите контрагента, чтобы он снова "
+        "учитывался.",
+        "与这些对方的付款和合同不计入关系网。移除某一项即可重新计入。",
+    ),
+    "Ignore this counterpart": ("Dieses Gegenüber ignorieren", "Игнорировать этого контрагента", "忽略此对方"),
+    "Ignore this counterpart in the Network?": (
+        "Dieses Gegenüber im Network ignorieren?",
+        "Игнорировать этого контрагента в сети?",
+        "在关系网中忽略此对方？",
+    ),
+    "Payments and contracts with it no longer count and the Network is recalculated. You can take it back in the settings.": (
+        "Zahlungen und Contracts mit ihm zählen nicht mehr und das Network wird neu berechnet. Du kannst es in den "
+        "Einstellungen zurücknehmen.",
+        "Платежи и контракты с ним больше не учитываются, сеть будет пересчитана. Это можно отменить в настройках.",
+        "与其的付款和合同将不再计入，关系网会重新计算。可在设置中撤销。",
+    ),
+    "Ignore": ("Ignorieren", "Игнорировать", "忽略"),
+    "%(name)s is ignored. The connections are being recalculated.": (
+        "%(name)s wird ignoriert. Die Verbindungen werden neu berechnet.",
+        "%(name)s игнорируется. Связи пересчитываются.",
+        "%(name)s 已被忽略。正在重新计算连接。",
+    ),
+    "%(name)s is ignored, but the task queue is not reachable: recalculate once it is back.": (
+        "%(name)s wird ignoriert, aber die Task-Warteschlange ist nicht erreichbar: Berechne neu, sobald sie "
+        "wieder da ist.",
+        "%(name)s игнорируется, но очередь задач недоступна: пересчитайте, когда она вернётся.",
+        "%(name)s 已被忽略，但任务队列无法访问：恢复后请重新计算。",
+    ),
     "Note buttons": ("Notiz-Buttons", "Кнопки заметок", "备注按钮"),
     (
         "A button each in the note popup of a blue kill: a click enters the text, ticks Cleared and saves. "
