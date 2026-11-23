@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.40] - 2026-11-23
+
+### Changed
+
+- Settings: the two lists of *Ignored characters* offer only the characters
+  that have a finding in the last calculation - a friendly hostile contact
+  for *Friendly to hostiles*, a link to a hostile partner for the Network -
+  plus the IDs already stored. Before, they offered every character of every
+  checked account, a list that grows with the Alliance. An ignored character
+  leaves the findings, so the stored IDs stay in the list or it would
+  vanish the moment it is saved. A result of another Alliance is not read;
+  before the first calculation only the stored IDs are offered. A character
+  whose finding went away on its own is not offered any more.
+
 ## [0.0.39] - 2026-11-23
 
 ### Added

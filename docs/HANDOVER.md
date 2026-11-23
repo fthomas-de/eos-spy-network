@@ -443,6 +443,11 @@ Last updated 2026-11-23 (0.0.39).
   from a searchable list of every character of the checked accounts. Other
   markers have none. The Network's shared-partner rule still needs two
   remaining own characters.
+- Ignored characters, choices (user, 2026-11-23, after 0.0.39): each list
+  offers only the characters with a finding in the stored snapshot (a
+  friendly hostile contact / a Network link, `forms.marked_characters`) plus
+  the IDs already stored; no history is kept, so a finding that went away on
+  its own drops the character from the list.
 - Settings layout (user, 2026-11-23): one tab *Alliance* in sections with a
   heading - Alliance, then what Markers and Network share (hostile
   threshold, time frame, ignored wallet types), then Markers per marker,

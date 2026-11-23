@@ -175,9 +175,10 @@ every one with a standing below a configurable value.
   whose contacts are not checked. *Network*: whether neutral partners show
   too and the standing above which a partner is blue, and the ignored
   characters, whose payments and contracts leave the Network. Both lists of
-  ignored characters are chosen from every character of the checked accounts
-  (default none); the alts and the main of an ignored character stay
-  checked. *Contact sources*: a
+  ignored characters offer the characters with a finding in the last
+  calculation (a friendly hostile contact, respectively a Network link) and
+  the ones already ignored (default none); the alts and the main of an
+  ignored character stay checked. *Contact sources*: a
   searchable table of the Alliance and its Corporations to tick the
   contact sources, each with whether aa-contacts has a token for it, the
   time of the contacts aa-contacts holds, the number of contacts and of

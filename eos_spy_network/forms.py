@@ -5,9 +5,10 @@ from django.utils.translation import pgettext_lazy
 
 from allianceauth.eveonline.models import EveAllianceInfo
 
-from .markers import DESCRIPTIONS, KINDS, LABELS, roster
+from .markers import CONTACTS, DESCRIPTIONS, KINDS, LABELS, roster
 from .models import KILL_NOTE_LENGTH, BlueKill, SpyConfiguration
 from .network import PAYMENT_REF_TYPES
+from .snapshot import current
 
 
 def ref_type_choices(stored=()) -> list[tuple[str, str]]:
@@ -53,13 +54,37 @@ def capital_group_choices(stored=()) -> list[tuple[str, str]]:
     return [(group, group) for group in sorted(groups)]
 
 
-def character_choices(config: SpyConfiguration, stored=()) -> list[tuple[str, str]]:
-    """Every character of the checked accounts, an alt with its main, and whatever is stored already."""
+def marked_characters(config: SpyConfiguration, contacts: bool) -> set[int]:
+    """Characters behind a finding of the last calculation: a friendly hostile contact, or a Network link."""
+    stored = current()
+    # after a change of the Alliance the stored result is of the old one until recalculated
+    if stored is None or not config.alliance or stored.data.get("alliance_id") != config.alliance.alliance_id:
+        return set()
+    corporations = stored.data["corporations"]
+    if contacts:
+        return {
+            character_id
+            for corporation in corporations
+            for suspect in (*corporation["suspects"], *corporation.get("visitors", []))
+            for marker in suspect["markers"]
+            if marker["kind"] == CONTACTS
+            for character_id in marker.get("character_ids", [])
+        }
+    return {
+        link[0] for corporation in corporations for account in corporation.get("connections", []) for link in account["links"]
+    }
+
+
+def character_choices(config: SpyConfiguration, marked: set[int], stored=()) -> list[tuple[str, str]]:
+    """The ``marked`` characters, an alt with its main, and whatever is stored already."""
+    # an ignored character leaves the findings: without the stored ones it would vanish from the list
+    wanted = marked | set(stored or ())
     members = roster(config)
-    labels = {character_id: str(character_id) for character_id in stored or ()}
+    labels = {character_id: str(character_id) for character_id in wanted}
     for user_id, character_id, name, *_rest in members.characters:
-        main = members.mains[user_id]
-        labels[character_id] = name if character_id == main.character_id else f"{name} ({main.character_name})"
+        if character_id in wanted:
+            main = members.mains[user_id]
+            labels[character_id] = name if character_id == main.character_id else f"{name} ({main.character_name})"
     return [(str(character_id), label) for character_id, label in sorted(labels.items(), key=lambda row: row[1].lower())]
 
 
@@ -147,8 +172,10 @@ class SpyConfigurationForm(forms.ModelForm):
         self.fields["ignored_ref_types"].choices = ref_type_choices(self.instance.ignored_ref_types)
         self.fields["ignored_ships"].choices = ship_choices(self.instance.ignored_ships)
         self.fields["capital_ship_groups"].choices = capital_group_choices(self.instance.capital_ship_groups)
-        for name in ("ignored_contact_characters", "ignored_network_characters"):
-            self.fields[name].choices = character_choices(self.instance, getattr(self.instance, name))
+        for name, contacts in (("ignored_contact_characters", True), ("ignored_network_characters", False)):
+            self.fields[name].choices = character_choices(
+                self.instance, marked_characters(self.instance, contacts), getattr(self.instance, name)
+            )
         # the posted texts are valid choices too: clean_note_presets checks them instead
         posted = self.data.getlist("note_presets") if hasattr(self.data, "getlist") else []
         presets = dict.fromkeys([*(self.instance.note_presets or ()), *posted])

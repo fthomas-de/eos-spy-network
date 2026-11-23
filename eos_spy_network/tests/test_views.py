@@ -9,7 +9,7 @@ from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from eos_spy_network import snapshot
-from eos_spy_network.models import BlueKill, ContactSource, SpyConfiguration, SweepStats
+from eos_spy_network.models import BlueKill, ContactSource, Snapshot, SpyConfiguration, SweepStats
 
 from . import test_markers
 from .base import (
@@ -663,22 +663,72 @@ class TestSettingsPage(SpyTestCase):
         CharacterOwnership.objects.create(user=member, character=make_character(5001), owner_hash="hash-5001")
         return member
 
-    def test_should_offer_the_characters_of_the_checked_accounts(self):
+    def store_findings(self, contact_ids=(), link_ids=(), alliance_id=ALLIANCE_ID):
+        """A stored result with a friendly hostile contact behind each of ``contact_ids`` and a Network link
+        behind each of ``link_ids``."""
+        suspect = {
+            "user_id": 1,
+            "main_id": 1,
+            "main_name": "Main",
+            "corporation_id": 2001,
+            "character_count": 1,
+            "markers": [{"kind": "contacts", "count": 1, "details": [], "rows": [], "character_ids": list(contact_ids)}],
+        }
+        account = {
+            "user_id": 1,
+            "main_id": 1,
+            "main_name": "Main",
+            "corporation_id": 2001,
+            "characters": [],
+            "counterparts": [],
+            "links": [[character_id, 9, 1, 0, "0", None, None] for character_id in link_ids],
+        }
+        row = {"id": 2001, "name": "Corp", "ticker": "C", "mains": 1, "suspects": [suspect], "connections": [account]}
+        Snapshot.objects.update_or_create(
+            pk=1,
+            defaults={
+                "built_at": timezone.now(),
+                "data": {"alliance_id": alliance_id, "alliance_name": "Alliance", "corporations": [row]},
+            },
+        )
+
+    def choices(self, field):
+        response = self.client.get(reverse("eos_spy_network:settings"))
+        return response.context["form"].fields[field].choices
+
+    def test_should_offer_only_the_characters_with_a_finding(self):
         configure(ignored_network_characters=[777])
         member = self.add_member_with_alt()
-
-        response = self.client.get(reverse("eos_spy_network:settings"))
-
-        self.assertContains(response, '<option value="5001">Char 5001 (member main)</option>', html=True)
         main_id = member.profile.main_character.character_id
-        self.assertContains(response, f'<option value="{main_id}">member main</option>', html=True)
-        # a stored ID that no account holds any more stays selectable
-        self.assertContains(response, '<option value="777" selected>777</option>', html=True)
+        self.store_findings(contact_ids=[5001], link_ids=[main_id])
+
+        # the contact list: the alt behind the contact, not the main behind the link
+        self.assertEqual(self.choices("ignored_contact_characters"), [("5001", "Char 5001 (member main)")])
+        # the network list: the main behind the link, not the alt; a stored ID no account holds any more
+        # stays selectable
+        self.assertEqual(self.choices("ignored_network_characters"), [("777", "777"), (str(main_id), "member main")])
+
+    def test_should_offer_nothing_new_without_a_stored_result(self):
+        configure(ignored_contact_characters=[5001])
+        self.add_member_with_alt()
+
+        # an ignored character leaves the findings, so only the stored ID is left to offer
+        self.assertEqual(self.choices("ignored_contact_characters"), [("5001", "Char 5001 (member main)")])
+        self.assertEqual(self.choices("ignored_network_characters"), [])
+
+    def test_should_ignore_the_result_of_another_alliance(self):
+        configure()
+        self.add_member_with_alt()
+        self.store_findings(contact_ids=[5001], link_ids=[5001], alliance_id=ALLIANCE_ID + 1)
+
+        self.assertEqual(self.choices("ignored_contact_characters"), [])
+        self.assertEqual(self.choices("ignored_network_characters"), [])
 
     def test_should_save_the_ignored_characters(self):
         configure()
         member = self.add_member_with_alt()
         main_id = member.profile.main_character.character_id
+        self.store_findings(contact_ids=[5001], link_ids=[5001, main_id])
 
         response = self.client.post(
             reverse("eos_spy_network:settings"),
