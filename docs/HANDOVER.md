@@ -4,40 +4,48 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-23 (0.0.38).
+Last updated 2026-11-23 (0.0.39).
 
 ## State
 
-- Version: `0.0.38`, 2026-11-23 (see `CHANGELOG.md`): Network with contracts without
-  ISK and a switch for neutral partners. Started from
-  the user's question why "E 'o" (95864929, IGC, account `E_o`) and the
-  unauthed "E' o" (2114054940) do not show: in `aa_dev` they share only a
-  0-ISK item contract and a +10 contact, no journal entry.
-  - `network.connections()` reads `Contract` once more (price, reward and
-    collateral all 0, every type/status, issuer/assignee/acceptor, time
-    frame on `date_issued`) through the shared inner `add()`;
-    `hostile_only` is now `kept_partners(accounts, blues=None)`;
-    `hostiles.network_blue_ids(config)` (ticked sources, standing `>`
-    `network_blue_above`); `snapshot.build` passes the blues only with
-    `network_neutral`; both fields are in `_inputs()`.
-  - Decisions (user, 2026-11-23): switch "hostile only" / "hostile and
-    neutral", blue always out; own threshold over the ticked sources,
-    default above 0; a hostile anywhere in the chain wins over blue;
-    contracts without ISK only, any status, both directions, two own
-    characters needed as for payments (so the user's example still does not
-    show - only "E 'o" has a contract with "E' o"); shown as payments, no
-    own edge kind; switch off by default.
-  - Migration 0018 applied to `aa_dev`. Tests: `TestContractsWithoutIsk`
-    (5), `TestNeutralPartners` (5), settings POSTs carry
-    `network_blue_above`; the positive ones red against the old code, the
-    guards red against single broken lines of the new code (one mutation
-    each, file restored). Suite at the commit: 437 without translation tests
-    plus the translation tests of `tools/translate.py`, all green (fresh
-    test database). 4 new glossary texts, machine-translated, not reviewed
-    by the user. Not seen in a browser (the two fields in tab *Alliance*
-    only rendered by the test client); the `aa_dev` snapshot not
-    recalculated, and with the switch off the user's example would not show
-    anyway.
+- Version: `0.0.39`, 2026-11-23 (see `CHANGELOG.md`): two lists of ignored
+  characters and the settings tab *Alliance* in sections.
+  - `SpyConfiguration.ignored_contact_characters` /
+    `ignored_network_characters` (JSON lists of EVE IDs, migration 0019).
+    `markers._check` hands `_check_contacts` only the audits of characters
+    not on the contact list; `network.connections(..., ignored_characters=)`
+    reads the wallet and contracts of the others only, but keeps the ignored
+    ones in `owner` - a payment to an own alt outside the Alliance must stay
+    "own", not an outsider. `snapshot.build` passes the network list,
+    `_inputs()` has both. Both are in `forms.SpyConfigurationForm`
+    (`character_choices`: every character of `markers.roster`, an alt as
+    "Name (Main)", stored IDs not held any more stay selectable; the clean
+    methods turn the posted strings into sorted ints).
+  - `settings.html`, tab *Alliance*: cards *Alliance*, *Hostile and data
+    basis* (hostile below, time frame, ignored wallet types), *Markers*
+    (h6 per marker: Blue kills, Capital in contract, Frequent Corporation
+    changes, Friendly to hostiles) and *Network*. Template only, one form
+    as before.
+  - Tests: `TestContacts` (2), `TestIgnoredCharacters` in `test_network` (5),
+    four in `TestSettingsPage` (offer, save, reject, section order). The
+    positive ones red against the old code; the two guards (ignored
+    character stays own, the network ignores the contact list) red against
+    one broken line each. The first version of the "stays own" test passed
+    against the mutation: an alt inside the Alliance is in `inside` anyway -
+    the test uses an alt outside. Suite at the commit: 448 without
+    translation tests plus the translation tests of `tools/translate.py`,
+    all green (fresh test database). 4 new glossary texts (*Hostile and data
+    basis*, *Ignored characters*, two help texts), machine-translated, not
+    reviewed by the user. Not seen in a browser (SSO), only rendered by the
+    test client.
+- Before (0.0.38), 2026-11-23: Network with contracts without ISK
+  (`network.connections()` reads `Contract` once more: price, reward and
+  collateral 0, every type/status, time frame on `date_issued`) and the
+  switch *Network: neutral partners too* with `network_blue_above`
+  (`kept_partners(accounts, blues=None)`, `hostiles.network_blue_ids`,
+  migration 0018). Decisions below. The user's example "E 'o" / "E' o"
+  (95864929 / 2114054940) still does not show: only one own character has
+  the contract, below the two-character rule.
 - Before (0.0.37), 2026-11-23: copy button for the in-game link of a
   capital contract (`partials/ingame-link-button.html`,
   `<url=contract:0//ID>ships</url>`, `copy.js` with Alliance Auth's
@@ -194,16 +202,20 @@ Last updated 2026-11-23 (0.0.38).
   (0.0.21/0.0.22): spy markers Bootstrap info, `text-info-emphasis` for
   text, legend from Bootstrap classes, only the hostile Alliance keeps
   `#8b1a1a` in `network.css`.
-- What the app does today: settings (Alliance, hostile threshold, blue
-  threshold, minimum kill value, ignored ships, capital ship groups, note buttons, Corporation changes per year, time frame,
-  ignored wallet entry types; contact sources; marker switches; every
+- What the app does today: settings (tab Alliance in sections: Alliance;
+  hostile threshold, time frame, ignored wallet entry types; per marker blue
+  threshold, minimum kill value, ignored ships, note buttons, capital ship
+  groups, Corporation changes per year, ignored characters for friendly
+  hostiles; Network: neutral partners, blue threshold, ignored characters;
+  contact sources; marker switches; every
   stored blue kill and every friendly hostile contact with note and Cleared
   tick, an admin clears without a note); Markers: the Corporations as
   tiles, per Corporation the mains with markers (hostile membership now and
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: count and state in the 0.0.37 bullets above. `tests.base.SpyTestCase` patches
+- Tests: count and state in the 0.0.39 bullet above (the capital tests: see
+  0.0.37). `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
@@ -225,17 +237,26 @@ Last updated 2026-11-23 (0.0.38).
 | Corporation (CEO) | `view_own_corporation` | only the main's own Corporation, with its evidence, its visitors' whole accounts (no link to their mains' pages) and the contract popup; notes and ticks read-only; no Back, no Recalculate; any other Corporation 404 |
 | Statistics | `manage_settings` + `view_suspects` | the last contract sweep: tiles (regions, failed, public contracts, Alliance contracts, characters, Corporations, new, gone), a warning for items not fetched, Alliance contracts per region and per Corporation |
 | Log | `manage_settings` + `view_suspects` | every save of a note or tick of both review tabs |
-| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles) | tabs: Alliance (hostile and blue threshold, minimum kill value, ignored ships, capital ship groups, note buttons, Corporation changes per year, time frame, ignored wallet types), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note |
+| Settings | `manage_settings` (+ `view_suspects` for the tabs Blue kills, Friendly to hostiles) | tabs: Alliance (sections Alliance; Hostile and data basis: hostile threshold, time frame, ignored wallet types; Markers: blue threshold, minimum kill value, ignored ships, note buttons, capital ship groups, Corporation changes per year, ignored characters; Network: neutral partners, blue threshold, ignored characters), Contact sources with aa-contacts' token state, Markers (switch per marker), Blue kills (all stored at or above the minimum value), Friendly to hostiles (all of the snapshot); in those two note and tick editable with `view_suspects`, clearing without a note |
 
 ## Open
 
+- 0.0.39 on prod: run migration 0019 (two JSON fields, default empty), no
+  static file; nothing changes until an admin picks characters. Not seen in
+  a browser: the sections of tab *Alliance* and the two searchable lists
+  (Tom Select in a tab that is initially hidden, as the other lists there).
+  The lists hold every character of the checked accounts - on a big
+  Alliance the page grows; if it is slow, the choices would need a search
+  endpoint instead. A character that is only the counterpart of another
+  account's payment is not ignored, only its own payments and contracts
+  (the user's reading: ignore characters as actors).
 - 0.0.38 on prod: run migration 0018 (only the two fields), no static
   file. Nothing changes until an admin ticks *Network: neutral partners
   too*; contracts without ISK with hostile partners show after the next
   recalculation. Once switched on, expect clearly more accounts on the
   Network pages (traders, haulers outside the Alliance) - check whether the
-  blue threshold 0 is right there. Not seen: the two fields in tab
-  *Alliance*, a neutral partner (grey) in the graph.
+  blue threshold 0 is right there. Not seen: the two fields in the
+  Network section, a neutral partner (grey) in the graph.
 - Possible next step the user may want: the user's example ("E 'o" and
   "E' o") still does not show - one own character with one contract is
   below the two-character rule (user's decision); contacts (+10) are not a
@@ -417,6 +438,15 @@ Last updated 2026-11-23 (0.0.38).
 
 ## Decisions
 
+- Ignored characters (user, 2026-11-23): for *Friendly to hostiles* and for
+  the Network, one list each; single characters, not whole accounts; picked
+  from a searchable list of every character of the checked accounts. Other
+  markers have none. The Network's shared-partner rule still needs two
+  remaining own characters.
+- Settings layout (user, 2026-11-23): one tab *Alliance* in sections with a
+  heading - Alliance, then what Markers and Network share (hostile
+  threshold, time frame, ignored wallet types), then Markers per marker,
+  then Network; not own tabs.
 - In-game link (user, 2026-11-23): copy button for the capital contracts
   in the table and in the popup; link text = the ships. The solar system
   is `0`: the user tried `<url=contract:30000142//ID>` (wrong system) and
@@ -599,8 +629,8 @@ Last updated 2026-11-23 (0.0.38).
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0018
-  applied to `aa_dev` (0018 on 2026-11-23), `collectstatic` run (0.0.37, `copy.js`). `SweepStats` holds
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0019
+  applied to `aa_dev` (0019 on 2026-11-23), `collectstatic` run (0.0.37, `copy.js`). `SweepStats` holds
   the row of the 2026-11-20 hand run. `local.py` has a `## eos spy
   network` block with the sweep's beat entry (2026-11-19); no Celery
   process runs, so it fires only once worker and beat are started. The
