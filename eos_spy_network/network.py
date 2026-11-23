@@ -1,6 +1,6 @@
 """ISK connections of an account to characters outside the Alliance.
 
-Two kinds of connection make an account show up:
+Three kinds of connection make an account show up:
 
 - a shared counterpart: at least two characters of the account - the main and
   an alt, or two alts - exchanged ISK or a contract without ISK with the same
@@ -8,6 +8,8 @@ Two kinds of connection make an account show up:
   overlap that tells.
 - player trading: any trade window deal of one of the account's characters
   with someone outside the Alliance.
+- a private contract with items: any one, with or without ISK, counted apart
+  from the payments.
 
 "Outside" is whatever Auth does not know as part of the Alliance: a
 character Auth has never seen counts as outside, since the app makes no ESI
@@ -31,7 +33,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 
 from django.apps import apps
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
+from django.utils import timezone
 
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
@@ -39,6 +42,8 @@ from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from .markers import character_audits
 
 TRADING = "player_trading"
+# corptools' Contract.availability of a contract offered to one party
+PRIVATE = "personal"
 # ISK moved between two parties on purpose: donations, trades, contracts
 PAYMENT_REF_TYPES = (
     "player_donation",
@@ -64,12 +69,20 @@ class Link:
     # the first and the last payment, as ISO dates: the snapshot stores JSON
     first: str | None = None
     last: str | None = None
+    # private contracts with items; counted apart from the payments
+    contracts: int = 0
+    # "o": the own character gave (paid, issued), "i": it received; both may be there. Empty in an older snapshot
+    direction: str = ""
 
-    def add(self, day: str, trade: bool, isk) -> None:
-        self.payments += 1
-        if trade:
-            self.trades += 1
-        self.isk += abs(isk or 0)
+    def add(self, day: str, trade: bool, isk, direction: str = "", contract: bool = False) -> None:
+        if contract:
+            self.contracts += 1
+        else:
+            self.payments += 1
+            if trade:
+                self.trades += 1
+            self.isk += abs(isk or 0)
+        self.direction = "".join(sorted(set(self.direction + direction)))
         self.first = min(self.first or day, day)
         self.last = max(self.last or day, day)
 
@@ -103,6 +116,8 @@ class Connections:
     hostiles: dict = field(default_factory=dict)
     # EVE ID -> the standing the Alliance itself holds, hostile or not; shared as well
     standings: dict = field(default_factory=dict)
+    # own character ID -> birthday; read by ``fill_birthdays`` for the one page that shows the age
+    birthdays: dict = field(default_factory=dict)
 
     @property
     def shared(self) -> set:
@@ -115,6 +130,10 @@ class Connections:
     @property
     def trading(self) -> set:
         return {link.counterpart_id for link in self.links if link.trades}
+
+    @property
+    def contracting(self) -> set:
+        return {link.counterpart_id for link in self.links if link.contracts}
 
     def chain(self, counterpart_id: int) -> list[int]:
         """The counterpart, its Corporation and its Alliance, as far as they are known."""
@@ -154,13 +173,18 @@ class Connections:
     def rows(self) -> list[dict]:
         """One per link, for the table under the graph."""
         rows = []
+        today = timezone.localdate()
         for link in self.links:
             entity = self.entities.get(link.counterpart_id)
             corporation_id = entity.corporation_id if entity else None
             alliance_id = entity.alliance_id if entity else None
+            birthday = self.birthdays.get(link.character_id)
             rows.append(
                 {
                     "character": self.characters.get(link.character_id, str(link.character_id)),
+                    "character_id": link.character_id,
+                    "birthday": birthday,
+                    "age_days": (today - birthday).days if birthday else None,
                     "counterpart": self._name(link.counterpart_id),
                     "counterpart_id": link.counterpart_id,
                     "counterpart_held": self.standings.get(link.counterpart_id),
@@ -169,6 +193,7 @@ class Connections:
                     "alliance": self._group(alliance_id),
                     "payments": link.payments,
                     "trades": link.trades,
+                    "contracts": link.contracts,
                     "isk": link.isk,
                     "first": link.first,
                     "last": link.last,
@@ -226,9 +251,11 @@ class Connections:
             {
                 "from": link.character_id,
                 "to": link.counterpart_id,
-                "kind": "trading" if link.trades else "payment",
+                "kind": "trading" if link.trades else "payment" if link.payments else "contract",
                 "payments": link.payments,
                 "trades": link.trades,
+                "contracts": link.contracts,
+                "direction": link.direction,
                 "first": link.first,
                 "last": link.last,
             }
@@ -323,7 +350,7 @@ def connections(
         stats["characters"] = 0
     if not mains or not apps.is_installed("corptools"):
         return {}
-    from corptools.models import CharacterWalletJournalEntry, Contract
+    from corptools.models import CharacterWalletJournalEntry, Contract, ContractItem
 
     if characters is None:
         characters = CharacterOwnership.objects.filter(user_id__in=mains).values_list(
@@ -343,7 +370,7 @@ def connections(
     # (user, own character, counterpart) -> link
     links = {}
 
-    def add(character_id, party_ids, day: str, trade: bool, isk) -> None:
+    def add(character_id, party_ids, day: str, trade: bool, isk, direction: str = "", contract: bool = False) -> None:
         user_id = owner[character_id]
         for party_id in party_ids:
             # an own alt, a member of the Alliance or an NPC is no connection outside
@@ -358,7 +385,7 @@ def connections(
             link = links.get((user_id, character_id, party_id))
             if link is None:
                 link = links[(user_id, character_id, party_id)] = Link(character_id, party_id)
-            link.add(day, trade, isk)
+            link.add(day, trade, isk, direction, contract)
 
     entries = CharacterWalletJournalEntry.objects.filter(
         character_id__in=list(audits),
@@ -372,18 +399,36 @@ def connections(
     for audit_id, ref_type, amount, date, first_id, second_id in entries.iterator():
         if stats is not None:
             stats["journal_entries"] += 1
-        add(audits[audit_id], (first_id, second_id), date.date().isoformat(), ref_type == TRADING, amount)
+        # the journal is the own character's: a negative amount left its wallet
+        direction = "i" if amount and amount > 0 else "o" if amount else ""
+        add(audits[audit_id], (first_id, second_id), date.date().isoformat(), ref_type == TRADING, amount, direction)
 
-    # a contract with ISK is in the journal already; without any - collateral included, which has its
-    # own journal entries - it is a payment of 0 ISK. Every type and status, both directions (user)
-    contracts = Contract.objects.filter(character_id__in=list(audits))
+    # A private contract with items is a kind of its own, with or without ISK (user, 2026-11-23). Any other
+    # contract with ISK is in the journal already; without any - collateral included, which has its own
+    # journal entries - it is a payment of 0 ISK. Every type and status, both directions (user)
+    has_items = Exists(ContractItem.objects.filter(contract=OuterRef("pk")))
+    contracts = Contract.objects.filter(character_id__in=list(audits)).annotate(has_items=has_items)
     if since is not None:
         contracts = contracts.filter(date_issued__gte=since)
-    for audit_id, date, price, reward, collateral, *party_ids in contracts.values_list(
-        "character_id", "date_issued", "price", "reward", "collateral", "issuer_id", "assignee_id", "acceptor_id"
+    for audit_id, date, price, reward, collateral, availability, with_items, issuer_id, *party_ids in contracts.values_list(
+        "character_id",
+        "date_issued",
+        "price",
+        "reward",
+        "collateral",
+        "availability",
+        "has_items",
+        "issuer_id",
+        "assignee_id",
+        "acceptor_id",
     ).iterator():
-        if not (price or reward or collateral):
-            add(audits[audit_id], set(party_ids), date.date().isoformat(), False, 0)
+        own_id = audits[audit_id]
+        parties = {issuer_id, *party_ids}
+        day = date.date().isoformat()
+        if availability == PRIVATE and with_items:
+            add(own_id, parties, day, False, 0, "o" if issuer_id == own_id else "i", contract=True)
+        elif not (price or reward or collateral):
+            add(own_id, parties, day, False, 0)
 
     by_user = defaultdict(list)
     for (user_id, _character_id, _counterpart_id), link in links.items():
@@ -394,7 +439,7 @@ def connections(
         main = mains[user_id]
         account = Connections(user_id, main.character_id, main.character_name, main.corporation_id)
         account.links = user_links
-        keep = account.shared | account.trading
+        keep = account.shared | account.trading | account.contracting
         if not keep:
             continue
         account.links = sorted(
@@ -409,6 +454,22 @@ def connections(
 
     _fill_names([account.counterparts for account in result.values()])
     return result
+
+
+def fill_birthdays(accounts) -> None:
+    """Hand each account the birthdays of its characters: one query, for the page that shows the age.
+
+    Auth has no birthday for a character it never refreshed from ESI; the table shows a dash then.
+    """
+    accounts = list(accounts)
+    ids = {link.character_id for account in accounts for link in account.links}
+    found = dict(
+        EveCharacter.objects.filter(character_id__in=ids, birthday__isnull=False).values_list(
+            "character_id", "birthday"
+        )
+    )
+    for account in accounts:
+        account.birthdays = found
 
 
 def _fill_names(tables: list[dict]) -> None:

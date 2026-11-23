@@ -50,6 +50,12 @@
                                             <span class="small text-body-secondary ms-auto text-nowrap">{% translate "Mains" context "eos-spy-network" %}: {{ tile.trading_count }}</span>
                                         </li>
                                     {% endif %}
+                                    {% if tile.contracting_count %}
+                                        <li class="list-group-item d-flex align-items-center gap-2 px-0">
+                                            <span class="badge text-bg-primary text-wrap" title="{% translate 'Private contracts with items with characters outside the Alliance.' %}">{% translate "Private contract" %}</span>
+                                            <span class="small text-body-secondary ms-auto text-nowrap">{% translate "Mains" context "eos-spy-network" %}: {{ tile.contracting_count }}</span>
+                                        </li>
+                                    {% endif %}
                                 </ul>
                             {% else %}
                                 <div class="text-center text-success my-3">

@@ -462,6 +462,7 @@ class TestNetworkPages(SuspectPageTestCase):
             "fa-shield-halved text-secondary text-opacity-50 eos-spy-network-legend-alliance",
             "fa-minus text-warning eos-spy-network-legend-payment-edge",
             "fa-minus text-info eos-spy-network-legend-trading-edge",
+            "fa-minus text-primary eos-spy-network-legend-contract-edge",
         ):
             with self.subTest(classes=classes):
                 self.assertContains(response, classes)
@@ -471,6 +472,88 @@ class TestNetworkPages(SuspectPageTestCase):
         response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2999]))
 
         self.assertEqual(response.status_code, 404)
+
+    def add_private_contract(self, partner_id=None):
+        from corptools.models import CharacterAudit, Contract, ContractItem
+        from eve_sde.models import ItemCategory, ItemGroup, ItemType
+
+        from .test_network import eve_name
+
+        main = EveCharacter.objects.get(pk=self.suspect_main.pk)
+        partner_id = partner_id or self.OUTSIDER
+        audit = CharacterAudit.objects.get(character=main)
+        now = timezone.now()
+        contract = Contract.objects.create(
+            id="private-1", contract_id=77, character=audit,
+            issuer_id=main.character_id, issuer_name=eve_name(main.character_id),
+            issuer_corporation_id=2001, issuer_corporation_name=eve_name(2001, "corporation"),
+            assignee_id=partner_id, assignee_name=eve_name(partner_id), acceptor_id=0, acceptor_name=eve_name(0),
+            for_corporation=False, date_expired=now, date_issued=now, status="finished",
+            contract_type="item_exchange", availability="personal", title="Gift",
+        )
+        category = ItemCategory.objects.create(id=6, name="Ship", published=True)
+        group = ItemGroup.objects.create(id=25, name="Frigate", category=category, published=True)
+        ContractItem.objects.create(
+            contract=contract, is_included=True, is_singleton=False, quantity=3, record_id=1,
+            type_name=ItemType.objects.create(id=587, name="Rifter", group=group),
+        )
+        snapshot.update()
+        return main
+
+    def test_should_show_the_age_of_the_own_character(self):
+        main = EveCharacter.objects.get(pk=self.suspect_main.pk)
+        main.birthday = timezone.localdate().replace(year=timezone.localdate().year - 3, month=1, day=1)
+        main.save()
+
+        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+
+        self.assertContains(response, f'title="{main.birthday.isoformat()}"')
+        self.assertContains(response, "<th>Age</th>")
+
+    def test_should_show_a_dash_for_a_character_without_a_birthday(self):
+        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+
+        self.assertContains(response, '<td class="text-nowrap" data-order=""')
+
+    def test_should_offer_the_details_of_a_private_contract(self):
+        main = self.add_private_contract()
+
+        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+
+        url = reverse("eos_spy_network:network_contracts", args=[main.character_id, self.OUTSIDER])
+        self.assertContains(response, f'data-eos-spy-network-contracts="{url}"')
+        self.assertContains(response, "data-eos-spy-network-contracts-modal")
+        self.assertContains(response, "eos_spy_network/js/contracts.")
+
+    def test_should_offer_no_details_without_a_private_contract(self):
+        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+
+        self.assertNotContains(response, 'data-eos-spy-network-contracts="')
+
+    def test_should_show_the_items_of_a_private_contract_in_the_popup(self):
+        main = self.add_private_contract()
+
+        response = self.client.get(reverse("eos_spy_network:network_contracts", args=[main.character_id, self.OUTSIDER]))
+
+        self.assertContains(response, "Contract 77")
+        self.assertContains(response, "Rifter")
+        self.assertContains(response, "Gift")
+
+    def test_should_refuse_the_popup_for_a_pair_the_network_does_not_list(self):
+        main = self.add_private_contract()
+
+        for args in ((main.character_id, 90000999), (5001, self.OUTSIDER)):
+            with self.subTest(args=args):
+                response = self.client.get(reverse("eos_spy_network:network_contracts", args=args))
+                self.assertEqual(response.status_code, 404)
+
+    def test_should_keep_the_popup_from_users_without_the_network(self):
+        main = self.add_private_contract()
+        self.client.force_login(make_user("nobody"))
+
+        response = self.client.get(reverse("eos_spy_network:network_contracts", args=[main.character_id, self.OUTSIDER]))
+
+        self.assertTrue(response.url.startswith(LOGIN))
 
     def test_should_offer_the_ignore_button_to_settings_managers(self):
         self.client.force_login(make_user("lead2", VIEW_SUSPECTS, MANAGE_SETTINGS))

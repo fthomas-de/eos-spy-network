@@ -8,6 +8,33 @@ Last updated 2026-11-23 (0.0.43).
 
 ## State
 
+- Unreleased (after 0.0.43, 2026-11-23, nothing committed): Network, three requests of the user.
+  - *Private contract* as a third kind of link (`network.PRIVATE = "personal"`, `Link.contracts`,
+    `Connections.contracting`): a corptools `Contract` with availability personal and at least one
+    `ContractItem` (`Exists` annotation), any type/status, with or without ISK; it counts alone
+    (`keep = shared | trading | contracting`) and no longer as a 0-ISK payment. Everything else is as
+    before (no items or public = payment of 0 ISK without ISK). Popup: `views.network_contracts`
+    (`network/contracts/<char>/<counterpart>/`, `view_suspects`, 404 unless the stored Network has a
+    link with `contracts`), `contract_details.private()` reads the contracts from corptools at the
+    click and renders `partials/contract-details.html`; `contracts.js` and its modal sit on
+    `network_corporation.html`. Tile list and badges got an entry (`text-bg-primary`), legend class
+    `contract-edge`, graph edge kind `contract`.
+  - Arrowheads: `Link.direction` ("o" own character gave: negative journal amount or issuer of the
+    contract; "i" received; both letters sorted), stored as the 9th value of a snapshot link
+    (`[..., first, last, contracts, direction]`; older snapshots read without, no arrowheads until a
+    recalculation). `network.js`: `arrows: {to, from}` on payment/trading/contract lines, `to` on
+    account and membership lines.
+  - Column *Age* (`Connections.birthdays`, `network.fill_birthdays`, one query in
+    `views.network_corporation` only, so the search page rows carry `birthday` None): `timesince`
+    of `EveCharacter.birthday`, date as tooltip, `data-order` in days, dash when Auth has none.
+  - Tests: `TestPrivateContracts`, `TestDirection`, `TestAge` (`test_network`), eight in
+    `TestNetworkPages`; seven mutations checked red (not the new permission guard of the popup).
+    Affected modules 219 green, whole suite not run. `collectstatic` run. Not seen in a browser
+    (SSO): arrowheads, the contract line colour, the popup, the column. New texts for the glossary
+    (to do at `/commit`): Private contract, Private contracts with items with characters outside
+    the Alliance., Arrow: from the giver to the receiver, Age; machine translation not reviewed.
+    Prod: no migration, `collectstatic`, recalculate once (arrowheads and the contract kind need a
+    new snapshot); expect more accounts, one private contract now suffices.
 - Version `0.0.43`, 2026-11-23: *Network search* and *Highlights*.
   - `views.network_search` (`network/search/`, nav key `network_search`, `view_suspects`) and
     `templates/.../network_search.html`: a GET form with one `<select name="q">` that

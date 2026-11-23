@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.44] - 2026-11-23
+
+### Added
+
+- Network: private contracts with items are a kind of their own next to
+  *Shared payment partner* and *Player trading*. Every contract corptools holds
+  with availability *personal* and at least one item shows an account on its
+  own, with or without ISK, in any status. Before, a gift of items only counted
+  as a payment of 0 ISK and needed two own characters with the same partner; a
+  contract without items, or a public one, is unchanged. The table has a new
+  column *Private contract* with a *View details* button that opens the
+  contracts with their items in the popup of the Markers page
+  (`network/contracts/<character>/<counterpart>/`, `view_suspects`, only for a
+  pair the stored Network lists with contracts). The graph draws the contracts
+  as a line of their own, and the legend and badges have an entry.
+- Network graph: arrowheads follow the giver - to the partner when the own
+  character paid or issued, to the own character when it was paid or handed a
+  contract, both ways for both; the lines to alts and Corporations point away
+  from the main and the partner. The direction is stored per link, so a
+  snapshot made before shows no arrowheads until the next calculation.
+- Network table: new column *Age*, the age of the own character from Auth's
+  birthday (the date as tooltip, sortable; a dash when Auth has none). It is
+  read with one query when the page is shown and not stored in the snapshot.
+
 ## [0.0.43] - 2026-11-23
 
 ### Added

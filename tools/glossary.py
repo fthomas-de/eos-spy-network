@@ -696,6 +696,19 @@ TRANSLATIONS = {
         "Выберите имя или введите его часть: здесь перечислены все связи сети, у которых совпадает контрагент, Corporation или Alliance.",
         "选择一个名称或输入其一部分：此处列出关系网中对方、Corporation 或 Alliance 匹配的所有关联。",
     ),
+    # Network: private contracts, arrowheads, age (2026-11-23)
+    "Private contract": ("Privater Contract", "Личный контракт", "私人合同"),
+    "Private contracts with items with characters outside the Alliance.": (
+        "Private Contracts mit Items mit Characters außerhalb der Alliance.",
+        "Личные контракты с предметами с Character вне Alliance.",
+        "与 Alliance 外 Character 之间带物品的私人合同。",
+    ),
+    "Arrow: from the giver to the receiver": (
+        "Pfeil: vom Geber zum Empfänger",
+        "Стрелка: от отдающего к получающему",
+        "箭头：从给予方指向接收方",
+    ),
+    "Age": ("Alter", "Возраст", "角龄"),
 }
 
 PLURALS = {}

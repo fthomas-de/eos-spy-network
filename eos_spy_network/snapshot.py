@@ -94,6 +94,10 @@ class NetworkTile:
         return sum(1 for account in self.accounts if account.trading)
 
     @property
+    def contracting_count(self) -> int:
+        return sum(1 for account in self.accounts if account.contracting)
+
+    @property
     def hostile_count(self) -> int:
         return sum(1 for account in self.accounts if account.hostile)
 
@@ -315,7 +319,17 @@ def _connections_data(account: Connections) -> dict:
         "characters": [[character_id, name] for character_id, name in account.characters.items()],
         "counterparts": [[counterpart_id, name] for counterpart_id, name in account.counterparts.items()],
         "links": [
-            [link.character_id, link.counterpart_id, link.payments, link.trades, str(link.isk), link.first, link.last]
+            [
+                link.character_id,
+                link.counterpart_id,
+                link.payments,
+                link.trades,
+                str(link.isk),
+                link.first,
+                link.last,
+                link.contracts,
+                link.direction,
+            ]
             for link in account.links
         ],
     }

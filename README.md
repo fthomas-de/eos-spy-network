@@ -132,6 +132,21 @@ every one with a standing below a configurable value.
     and status, issued, assigned or accepted, as a payment of 0 ISK
   - *Player trading*: any trade window deal (`player_trading`) of one of its
     characters with someone outside the Alliance
+  - *Private contract*: any contract with items that corptools holds with
+    availability *personal* (private), of any type and status, issued,
+    assigned or accepted by one of its characters with someone outside the
+    Alliance - with or without ISK, one is enough. It is counted apart from
+    the payments, so it is no payment of 0 ISK any more. A button in its row
+    opens a popup with the contracts and their items (`view_suspects`; the
+    contracts are read from corptools at the click)
+
+  The graph's arrowheads follow the giver: a line points to the partner when
+  the own character paid or issued, to the own character when it was paid or
+  was handed a contract, both ways when both happened; the lines to alts and
+  Corporations point away from the main and the partner. A snapshot of an
+  older version shows no arrowheads until the next calculation. The table
+  shows the age of each own character (from Auth's birthday, a dash when Auth
+  has none).
 
   "Outside" is everything Auth does not know as part of the Alliance, so a
   character Auth has never seen counts as outside. NPCs (agents, NPC

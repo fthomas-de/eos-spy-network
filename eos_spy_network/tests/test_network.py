@@ -1,7 +1,8 @@
 import re
 from datetime import timedelta
 
-from corptools.models import CharacterAudit, CharacterWalletJournalEntry, Contract, EveName
+from corptools.models import CharacterAudit, CharacterWalletJournalEntry, Contract, ContractItem, EveName
+from eve_sde.models import ItemCategory, ItemGroup, ItemType
 
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
@@ -60,20 +61,34 @@ class NetworkTestCase(SpyTestCase):
             balance=0,
         )
 
-    def contract(self, character, partner_id, issued=True, days_ago=0, status="finished", **isk):
-        """A contract of ``character`` with ``partner_id``, issued by the one or the other."""
+    def contract(
+        self, character, partner_id, issued=True, days_ago=0, status="finished", items=False, availability="personal",
+        **isk
+    ):
+        """A contract of ``character`` with ``partner_id``, issued by the one or the other; ``items`` puts one in."""
         self.entry_id += 1
         issuer, assignee = (character.character_id, partner_id) if issued else (partner_id, character.character_id)
         audit = self.audits[character.character_id]
         when = timezone.now() - timedelta(days=days_ago)
-        Contract.objects.create(
+        contract = Contract.objects.create(
             id=f"{audit.pk}-{self.entry_id}", contract_id=self.entry_id, character=audit,
             issuer_id=issuer, issuer_name=eve_name(issuer),
             issuer_corporation_id=2001, issuer_corporation_name=eve_name(2001, "corporation"),
             assignee_id=assignee, assignee_name=eve_name(assignee), acceptor_id=0, acceptor_name=eve_name(0),
             for_corporation=False, date_expired=when, date_issued=when, status=status,
-            contract_type="item_exchange", availability="personal", title="", **isk,
+            contract_type="item_exchange", availability=availability, title="", **isk,
         )
+        if items:
+            category = ItemCategory.objects.get_or_create(id=6, defaults={"name": "Ship", "published": True})[0]
+            group, _created = ItemGroup.objects.get_or_create(
+                id=25, defaults={"name": "Frigate", "category": category, "published": True}
+            )
+            item_type = ItemType.objects.get_or_create(id=587, defaults={"name": "Rifter", "group": group})[0]
+            ContractItem.objects.create(
+                contract=contract, is_included=True, is_singleton=False, quantity=1, record_id=self.entry_id,
+                type_name=item_type,
+            )
+        return contract
 
     def account(self, since=None):
         return connections({self.user.pk: self.main}, ALLIANCE_ID, since=since).get(self.user.pk)
@@ -523,6 +538,160 @@ class TestContractsWithoutIsk(NetworkTestCase):
         self.contract(self.alt, OUTSIDER, days_ago=60)
 
         self.assertIsNone(self.account(since=timezone.now() - timedelta(days=30)))
+
+
+class TestPrivateContracts(NetworkTestCase):
+    """A private contract with items is a kind of its own: it shows an account alone and is no 0-ISK payment."""
+
+    def test_should_show_an_account_for_one_private_contract_with_items(self):
+        self.contract(self.alt, OUTSIDER, items=True)
+
+        account = self.account()
+
+        self.assertEqual(account.contracting, {OUTSIDER})
+        self.assertEqual(account.shared, set())
+        (link,) = account.links
+        self.assertEqual((link.contracts, link.payments, link.isk), (1, 0, 0))
+
+    def test_should_count_it_with_isk_too(self):
+        self.contract(self.alt, OUTSIDER, items=True, price=1000)
+
+        self.assertEqual(self.account().contracting, {OUTSIDER})
+
+    def test_should_leave_a_contract_without_items_a_payment(self):
+        self.contract(self.main, OUTSIDER)
+        self.contract(self.alt, OUTSIDER)
+
+        account = self.account()
+
+        self.assertEqual(account.contracting, set())
+        self.assertEqual(account.shared, {OUTSIDER})
+
+    def test_should_leave_a_public_contract_with_items_a_payment(self):
+        self.contract(self.main, OUTSIDER, items=True, availability="public")
+        self.contract(self.alt, OUTSIDER, items=True, availability="public")
+
+        account = self.account()
+
+        self.assertEqual(account.contracting, set())
+        self.assertEqual(account.shared, {OUTSIDER})
+
+    def test_should_ignore_a_contract_inside_the_alliance(self):
+        member = make_character(6001)
+        self.contract(self.alt, member.character_id, items=True)
+
+        self.assertIsNone(self.account())
+
+    def test_should_keep_to_the_time_frame(self):
+        self.contract(self.alt, OUTSIDER, items=True, days_ago=40)
+
+        self.assertIsNone(self.account(since=timezone.now() - timedelta(days=10)))
+
+    def test_should_show_a_line_of_its_own_in_the_graph(self):
+        self.contract(self.alt, OUTSIDER, items=True)
+
+        edges = [edge for edge in self.account().graph()["edges"] if edge["kind"] != "account"]
+
+        (edge,) = edges
+        self.assertEqual((edge["kind"], edge["contracts"], edge["payments"]), ("contract", 1, 0))
+
+    def test_should_keep_it_through_the_snapshot(self):
+        self.make_hostile(OUTSIDER)
+        self.contract(self.alt, OUTSIDER, items=True)
+
+        (account,) = self.stored_accounts()
+
+        self.assertEqual(account.contracting, {OUTSIDER})
+        self.assertEqual(account.rows[0]["contracts"], 1)
+
+
+class TestDirection(NetworkTestCase):
+    """The arrow of the graph: "o" went from the own character, "i" came to it."""
+
+    def direction(self):
+        (link,) = self.account().links
+        return link.direction
+
+    def test_should_point_away_from_a_character_that_paid(self):
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+
+        self.assertEqual(self.direction(), "o")
+
+    def test_should_point_to_a_character_that_was_paid(self):
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading", amount=-100)
+
+        self.assertEqual(self.direction(), "i")
+
+    def test_should_point_both_ways_for_both(self):
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading", amount=-100)
+
+        self.assertEqual(self.direction(), "io")
+
+    def test_should_follow_the_issuer_of_a_contract(self):
+        self.contract(self.alt, OUTSIDER, items=True, issued=True)
+        self.assertEqual(self.direction(), "o")
+
+        Contract.objects.all().delete()
+        self.contract(self.alt, OUTSIDER, items=True, issued=False)
+        self.assertEqual(self.direction(), "i")
+
+    def test_should_reach_the_graph_edges_and_survive_the_snapshot(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+
+        (account,) = self.stored_accounts()
+
+        (edge,) = [edge for edge in account.graph()["edges"] if edge["kind"] == "trading"]
+        self.assertEqual(edge["direction"], "o")
+
+    def test_should_read_an_older_snapshot_without_direction(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+        stored = snapshot.update()
+        for corporation in stored.data["corporations"]:
+            for stored_account in corporation.get("connections", []):
+                # the links of 0.0.43 and older end with the period
+                stored_account["links"] = [link[:7] for link in stored_account["links"]]
+
+        (account,) = snapshot.Report(stored).network_tile(2001).accounts
+
+        self.assertEqual([(link.contracts, link.direction) for link in account.links], [(0, "")])
+
+
+class TestAge(NetworkTestCase):
+    def rows(self):
+        from eos_spy_network.network import fill_birthdays
+
+        account = self.account()
+        fill_birthdays([account])
+        return account.rows
+
+    def test_should_give_the_age_of_the_own_character_in_days(self):
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+        self.alt.birthday = timezone.localdate() - timedelta(days=400)
+        self.alt.save()
+
+        (row,) = self.rows()
+
+        self.assertEqual((row["character_id"], row["age_days"], row["birthday"]), (5001, 400, self.alt.birthday))
+
+    def test_should_leave_the_age_empty_without_a_birthday(self):
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+
+        (row,) = self.rows()
+
+        self.assertEqual((row["birthday"], row["age_days"]), (None, None))
+
+    def test_should_read_the_birthdays_in_one_query(self):
+        from eos_spy_network.network import fill_birthdays
+
+        self.pay(self.main, OUTSIDER, ref_type="player_trading")
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+        account = self.account()
+
+        with self.assertNumQueries(1):
+            fill_birthdays([account])
 
 
 class TestNeutralPartners(NetworkTestCase):

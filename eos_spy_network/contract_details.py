@@ -6,12 +6,13 @@ payment (``contract_price`` ...) corptools' journal names the contract in
 live from corptools, once per click, never stored in the snapshot.
 """
 
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from .markers import CONTRACT_REF_TYPES, character_audits
 from .models import CapitalContract
+from .network import PRIVATE
 
 
 def _with_details(queryset):
@@ -57,6 +58,31 @@ def contract(contract_id: int) -> list[dict]:
         },
     }
     return [{"contract_id": contract_id, "contract": shown, "payments": []}]
+
+
+def private(character_id: int, counterpart_id: int, since=None) -> list[dict]:
+    """The private contracts with items of one own character and one counterpart, the latest first.
+
+    The ones the Network counts (``network.connections``): read from the contracts themselves, not from the
+    journal, since a gift of items leaves no journal entry. ``since`` is the time frame of the settings.
+    """
+    from corptools.models import Contract, ContractItem
+
+    audits = character_audits([character_id])
+    if not audits:
+        return []
+    contracts = Contract.objects.filter(
+        Q(issuer_id=counterpart_id) | Q(assignee_id=counterpart_id) | Q(acceptor_id=counterpart_id),
+        Exists(ContractItem.objects.filter(contract=OuterRef("pk"))),
+        character_id__in=list(audits),
+        availability=PRIVATE,
+    )
+    if since is not None:
+        contracts = contracts.filter(date_issued__gte=since)
+    return [
+        {"contract_id": contract.contract_id, "contract": contract, "payments": []}
+        for contract in _with_details(contracts).order_by("-date_issued")
+    ]
 
 
 def details(character_id: int, counterpart_id: int, since=None, ignored=()) -> list[dict]:

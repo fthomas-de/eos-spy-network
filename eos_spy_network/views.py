@@ -22,6 +22,7 @@ from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
 from .markers import BLUE_KILLS, CAPITAL_CONTRACTS, CONTACTS, KINDS, LABELS, WALLET, corptools_installed, million, own_kill, worth_counting
 from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, ReviewLog, SpyConfiguration, SweepStats
+from .network import fill_birthdays
 from .permissions import (
     APP_PERMISSIONS,
     MANAGE_SETTINGS,
@@ -576,6 +577,7 @@ def network_corporation(request, corporation_id):
     tile = report.network_tile(corporation_id) if report else None
     if tile is None:
         raise Http404
+    fill_birthdays(tile.accounts)
     return _render(
         request,
         "eos_spy_network/network_corporation.html",
@@ -612,6 +614,29 @@ def contracts(request, character_id, counterpart_id):
                 character_id, counterpart_id, config.since(), config.ignored_ref_types or ()
             )
         },
+    )
+
+
+@any_permission_required(VIEW_SUSPECTS)
+def network_contracts(request, character_id, counterpart_id):
+    """The popup of a Network link's private contracts: one own character with one counterpart, as HTML."""
+    if not corptools_installed():
+        raise Http404
+    config = SpyConfiguration.get_solo()
+    report = _report(config)
+    # only a pair the Network shows with contracts: any other character's contracts are not ours to show
+    offered = report is not None and any(
+        (link.character_id, link.counterpart_id) == (character_id, counterpart_id) and link.contracts
+        for tile in report.network_tiles
+        for account in tile.accounts
+        for link in account.links
+    )
+    if not offered:
+        raise Http404
+    return render(
+        request,
+        "eos_spy_network/partials/contract-details.html",
+        {"contracts": contract_details.private(character_id, counterpart_id, config.since())},
     )
 
 

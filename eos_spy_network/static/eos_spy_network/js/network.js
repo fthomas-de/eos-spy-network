@@ -3,7 +3,10 @@
  *
  * Each account's card is followed in its body by the json_script of its graph:
  * {nodes: [{id, label, group, level, standing?, sources?, affiliation?}],
- *  edges: [{from, to, kind, payments?, trades?, first?, last?}]}.
+ *  edges: [{from, to, kind, payments?, trades?, contracts?, direction?, first?, last?}]}.
+ * A line between an own character and a partner gets arrowheads from its
+ * direction ("o" the own character gave, "i" it received); the others point
+ * from -> to.
  * Levels are the columns left to right: main, alts, partners, their
  * Corporations, their Alliances - so a hostile Corporation shows as the
  * reason at the end of the chain; a group behind the reason is left out and
@@ -48,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const edgeColours = {
         payment: colour("payment-edge"),
         trading: colour("trading-edge"),
+        contract: colour("contract-edge"),
         account: colour("alt"),
         member: colour("corporation"),
     };
@@ -70,17 +74,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const edge = (raw) => {
         const shown = { from: raw.from, to: raw.to, color: { color: edgeColours[raw.kind] } };
-        if (raw.kind === "payment" || raw.kind === "trading") {
-            shown.label = String(raw.payments);
-            shown.width = raw.trades ? 3 : 1 + Math.min(raw.payments, 5) / 2;
+        if (raw.kind === "payment" || raw.kind === "trading" || raw.kind === "contract") {
+            // a contract line is labelled with its contracts, the others with their payments
+            const count = raw.kind === "contract" ? raw.contracts : raw.payments;
+            shown.label = String(count);
+            shown.width = raw.trades ? 3 : 1 + Math.min(count, 5) / 2;
             shown.title = `${text("payments", "Payments")}: ${raw.payments} · ${text("trades", "Player trading")}: ${raw.trades}`;
+            if (raw.contracts) {
+                shown.title += ` · ${text("contracts", "Private contract")}: ${raw.contracts}`;
+            }
             if (raw.first) {
                 shown.title += `\n${text("period", "Period")}: ${period(raw.first, raw.last)}`;
             }
+            // the arrow follows the giver: "o" went from the own character, "i" came to it; an older snapshot has none
+            const direction = raw.direction || "";
+            shown.arrows = { to: direction.includes("o"), from: direction.includes("i") };
         } else {
-            // account and membership lines carry no ISK: thin and dashed
+            // account and membership lines carry no ISK: thin and dashed, pointing to the alt / the group
             shown.dashes = true;
             shown.width = 1;
+            shown.arrows = { to: true };
         }
         return shown;
     };

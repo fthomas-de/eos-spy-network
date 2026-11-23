@@ -46,6 +46,9 @@
                             {% if account.trading %}
                                 <span class="badge text-bg-info" title="{% translate 'Player trading' %}">{{ account.trading|length }}</span>
                             {% endif %}
+                            {% if account.contracting %}
+                                <span class="badge text-bg-primary" title="{% translate 'Private contract' %}">{{ account.contracting|length }}</span>
+                            {% endif %}
                         </button>
                     {% endfor %}
                 </div>
@@ -62,6 +65,7 @@
                      data-eos-spy-network-graph-labels
                      data-payments="{% translate 'Payments' %}"
                      data-trades="{% translate 'Player trading' %}"
+                     data-contracts="{% translate 'Private contract' %}"
                      data-standing="{% translate 'Standing' context 'eos-spy-network' %}"
                      data-period="{% translate 'Period' %}"></div>
 
@@ -84,6 +88,9 @@
                             {% if account.trading %}
                                 <span class="badge text-bg-info">{% translate "Player trading" %}: {{ account.trading|length }}</span>
                             {% endif %}
+                            {% if account.contracting %}
+                                <span class="badge text-bg-primary">{% translate "Private contract" %}: {{ account.contracting|length }}</span>
+                            {% endif %}
                         </div>
                         <div class="card-body">
                             {% include "eos_spy_network/partials/network-legend.html" %}
@@ -95,11 +102,13 @@
                                     <thead>
                                         <tr>
                                             <th>{% translate "Character" context "EVE jargon" %}</th>
+                                            <th>{% translate "Age" context "eos-spy-network" %}</th>
                                             <th>{% translate "Counterpart" %}</th>
                                             <th>{% translate "Corporation" context "EVE jargon" %}</th>
                                             <th>{% translate "Alliance" context "EVE jargon" %}</th>
                                             <th>{% translate "Payments" %}</th>
                                             <th>{% translate "Player trading" %}</th>
+                                            <th>{% translate "Private contract" %}</th>
                                             <th>ISK</th>
                                             <th>{% translate "Period" %}</th>
                                         </tr>
@@ -108,6 +117,14 @@
                                         {% for row in account.rows %}
                                             <tr>
                                                 <td class="text-break">{{ row.character }}</td>
+                                                {# the age of the own character; Auth has no birthday for one it never refreshed #}
+                                                <td class="text-nowrap" data-order="{{ row.age_days|default_if_none:'' }}">
+                                                    {% if row.birthday %}
+                                                        <span title="{{ row.birthday|date:'Y-m-d' }}">{{ row.birthday|timesince }}</span>
+                                                    {% else %}
+                                                        <span class="text-body-secondary">–</span>
+                                                    {% endif %}
+                                                </td>
                                                 <td class="text-break{% if row.hostile %} text-danger fw-semibold{% endif %}">
                                                     {{ row.counterpart }}
                                                     {% if row.counterpart_held is None %}
@@ -130,6 +147,14 @@
                                                 {% include "eos_spy_network/partials/group-cell.html" with group=row.alliance with_held=True %}
                                                 <td>{{ row.payments }}</td>
                                                 <td>{{ row.trades }}</td>
+                                                <td class="text-nowrap" data-order="{{ row.contracts }}">
+                                                    {{ row.contracts }}
+                                                    {% if row.contracts %}
+                                                        <button type="button" class="btn btn-sm btn-secondary ms-1" data-eos-spy-network-contracts="{% url 'eos_spy_network:network_contracts' row.character_id row.counterpart_id %}">
+                                                            {% translate "View details" %}
+                                                        </button>
+                                                    {% endif %}
+                                                </td>
                                                 <td data-order="{{ row.isk }}" class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>
                                                 <td data-order="{{ row.last }}" class="text-nowrap">{% include "eos_spy_network/partials/period.html" with first=row.first last=row.last %}</td>
                                             </tr>
@@ -145,6 +170,19 @@
     {% else %}
         <p class="text-body-secondary">{% translate "No connections outside the Alliance." %}</p>
     {% endif %}
+
+    {# one popup for every private contract link; contracts.js fills it #}
+    <div class="modal fade" tabindex="-1" aria-hidden="true" data-eos-spy-network-contracts-modal>
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{% translate "Contracts" context "eos-spy-network" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
+                </div>
+                <div class="modal-body" data-eos-spy-network-contracts-body data-loading="{% translate 'Loading ...' %}" data-failed="{% translate 'The contracts could not be loaded.' %}"></div>
+            </div>
+        </div>
+    </div>
 
     {# the confirmation of the ignore button; ignore.js puts the name in #}
     {% if perms.eos_spy_network.manage_settings %}
@@ -182,4 +220,5 @@
     {% include "eos_spy_network/bundles/vis-network-js.html" %}
     {% sri_static "eos_spy_network/js/network.js" %}
     {% sri_static "eos_spy_network/js/ignore.js" %}
+    {% sri_static "eos_spy_network/js/contracts.js" %}
 {% endblock %}

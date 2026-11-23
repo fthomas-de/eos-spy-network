@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-23 16:19+0000\n"
-"PO-Revision-Date: 2026-11-23 16:19+0000\n"
+"POT-Creation-Date: 2026-11-23 17:59+0000\n"
+"PO-Revision-Date: 2026-11-23 17:59+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: zh_Hans\n"
 "Language: zh_Hans\n"
@@ -22,7 +22,7 @@ msgid "Spy Network"
 msgstr "Spy Network"
 
 #: contacts.py:25 snapshot.py:51
-#: templates/eos_spy_network/network_corporation.html:97
+#: templates/eos_spy_network/network_corporation.html:104
 #: templates/eos_spy_network/network_search.html:39
 #: templates/eos_spy_network/partials/capital-contracts.html:7
 #: templates/eos_spy_network/partials/dealings.html:7
@@ -33,7 +33,7 @@ msgid "Character"
 msgstr "Character"
 
 #: contacts.py:26 models.py:363 snapshot.py:52
-#: templates/eos_spy_network/network_corporation.html:99
+#: templates/eos_spy_network/network_corporation.html:107
 #: templates/eos_spy_network/network_search.html:41
 #: templates/eos_spy_network/partials/contacts.html:10
 #: templates/eos_spy_network/partials/dealings.html:10
@@ -45,7 +45,7 @@ msgid "Corporation"
 msgstr "Corporation"
 
 #: contacts.py:27 forms.py:101 models.py:63 models.py:362 snapshot.py:53
-#: templates/eos_spy_network/network_corporation.html:100
+#: templates/eos_spy_network/network_corporation.html:108
 #: templates/eos_spy_network/network_search.html:42
 #: templates/eos_spy_network/partials/contacts.html:11
 #: templates/eos_spy_network/partials/dealings.html:11
@@ -66,7 +66,7 @@ msgstr "Faction"
 #: templates/eos_spy_network/corporation.html:55
 #: templates/eos_spy_network/corporation.html:104
 #: templates/eos_spy_network/settings.html:33
-#: templates/eos_spy_network/settings.html:75 views.py:39
+#: templates/eos_spy_network/settings.html:75 views.py:40
 msgid "Markers"
 msgstr "标记"
 
@@ -368,7 +368,7 @@ msgid "Saving the result"
 msgstr "保存结果"
 
 #: snapshot.py:49 templates/eos_spy_network/base.html:23
-#: templates/eos_spy_network/settings.html:91 views.py:41 views.py:42
+#: templates/eos_spy_network/settings.html:91 views.py:42 views.py:43
 msgid "Network"
 msgstr "关系网"
 
@@ -376,19 +376,19 @@ msgstr "关系网"
 msgid "Affiliations"
 msgstr "所属关系"
 
-#: templates/eos_spy_network/base.html:26 views.py:43
+#: templates/eos_spy_network/base.html:26 views.py:44
 msgid "Network search"
 msgstr "关系网搜索"
 
-#: templates/eos_spy_network/base.html:32 views.py:45
+#: templates/eos_spy_network/base.html:32 views.py:46
 msgid "Statistics"
 msgstr "统计"
 
-#: templates/eos_spy_network/base.html:35 views.py:46
+#: templates/eos_spy_network/base.html:35 views.py:47
 msgid "Log"
 msgstr "日志"
 
-#: templates/eos_spy_network/base.html:41 views.py:44
+#: templates/eos_spy_network/base.html:41 views.py:45
 msgid "Settings"
 msgstr "设置"
 
@@ -399,6 +399,7 @@ msgstr "设置"
 #: templates/eos_spy_network/network.html:38
 #: templates/eos_spy_network/network.html:44
 #: templates/eos_spy_network/network.html:50
+#: templates/eos_spy_network/network.html:56
 #: templates/eos_spy_network/network_corporation.html:20
 #: templates/eos_spy_network/partials/highlight-tile.html:40
 msgctxt "eos-spy-network"
@@ -511,6 +512,7 @@ msgid "Note"
 msgstr "备注"
 
 #: templates/eos_spy_network/corporation.html:210
+#: templates/eos_spy_network/network_corporation.html:179
 #: templates/eos_spy_network/statistics.html:44
 #: templates/eos_spy_network/statistics.html:68
 msgctxt "eos-spy-network"
@@ -518,16 +520,19 @@ msgid "Contracts"
 msgstr "合同"
 
 #: templates/eos_spy_network/corporation.html:211
-#: templates/eos_spy_network/network_corporation.html:158
+#: templates/eos_spy_network/network_corporation.html:180
+#: templates/eos_spy_network/network_corporation.html:196
 #: templates/eos_spy_network/partials/kill-note-modal.html:22
 msgid "Close"
 msgstr "关闭"
 
 #: templates/eos_spy_network/corporation.html:213
+#: templates/eos_spy_network/network_corporation.html:182
 msgid "Loading ..."
 msgstr "加载中 ..."
 
 #: templates/eos_spy_network/corporation.html:213
+#: templates/eos_spy_network/network_corporation.html:182
 msgid "The contracts could not be loaded."
 msgstr "无法加载合同。"
 
@@ -547,7 +552,8 @@ msgid "Hide Corporations without markers"
 msgstr "隐藏无标记的 Corporations"
 
 #: templates/eos_spy_network/corporations.html:64
-#: templates/eos_spy_network/network.html:63
+#: templates/eos_spy_network/network.html:69
+#: templates/eos_spy_network/network_corporation.html:154
 #: templates/eos_spy_network/partials/capital-contracts.html:33
 #: templates/eos_spy_network/partials/dealings.html:33
 #: templates/eos_spy_network/partials/highlight-tile.html:45
@@ -555,7 +561,7 @@ msgid "View details"
 msgstr "查看详情"
 
 #: templates/eos_spy_network/corporations.html:73
-#: templates/eos_spy_network/network.html:72
+#: templates/eos_spy_network/network.html:78
 msgid "Auth knows no Corporation of this Alliance."
 msgstr "Auth 不知道此 Alliance 的任何 Corporation。"
 
@@ -619,7 +625,7 @@ msgstr "该对象、其 Corporation 或其 Alliance 是敌对联系人。"
 
 #: templates/eos_spy_network/network.html:37
 #: templates/eos_spy_network/network_corporation.html:41
-#: templates/eos_spy_network/network_corporation.html:79
+#: templates/eos_spy_network/network_corporation.html:83
 #: templates/eos_spy_network/partials/network-legend.html:7
 msgid "Hostile partner"
 msgstr "敌对对象"
@@ -632,7 +638,7 @@ msgstr "该账号至少有两个 Character 与 Alliance 外的同一 Character �
 
 #: templates/eos_spy_network/network.html:43
 #: templates/eos_spy_network/network_corporation.html:44
-#: templates/eos_spy_network/network_corporation.html:82
+#: templates/eos_spy_network/network_corporation.html:86
 msgid "Shared payment partner"
 msgstr "共同付款对象"
 
@@ -642,52 +648,70 @@ msgstr "与 Alliance 外 Character 的 Player trading。"
 
 #: templates/eos_spy_network/network.html:49
 #: templates/eos_spy_network/network_corporation.html:47
-#: templates/eos_spy_network/network_corporation.html:64
-#: templates/eos_spy_network/network_corporation.html:85
-#: templates/eos_spy_network/network_corporation.html:102
+#: templates/eos_spy_network/network_corporation.html:67
+#: templates/eos_spy_network/network_corporation.html:89
+#: templates/eos_spy_network/network_corporation.html:110
 #: templates/eos_spy_network/network_search.html:44
 #: templates/eos_spy_network/partials/network-legend.html:13
 msgid "Player trading"
 msgstr "Player trading"
 
-#: templates/eos_spy_network/network.html:57
-#: templates/eos_spy_network/network_corporation.html:146
+#: templates/eos_spy_network/network.html:55
+msgid "Private contracts with items with characters outside the Alliance."
+msgstr "与 Alliance 外 Character 之间带物品的私人合同。"
+
+#: templates/eos_spy_network/network.html:55
+#: templates/eos_spy_network/network_corporation.html:50
+#: templates/eos_spy_network/network_corporation.html:68
+#: templates/eos_spy_network/network_corporation.html:92
+#: templates/eos_spy_network/network_corporation.html:111
+#: templates/eos_spy_network/partials/network-legend.html:14
+msgid "Private contract"
+msgstr "私人合同"
+
+#: templates/eos_spy_network/network.html:63
+#: templates/eos_spy_network/network_corporation.html:171
 msgid "No connections outside the Alliance."
 msgstr "没有与 Alliance 外的关联。"
 
-#: templates/eos_spy_network/network_corporation.html:57
+#: templates/eos_spy_network/network_corporation.html:60
 msgid "Click a main to see its connections."
 msgstr "点击一个 Main 查看其关联。"
 
-#: templates/eos_spy_network/network_corporation.html:63
-#: templates/eos_spy_network/network_corporation.html:101
+#: templates/eos_spy_network/network_corporation.html:66
+#: templates/eos_spy_network/network_corporation.html:109
 #: templates/eos_spy_network/network_search.html:43
 #: templates/eos_spy_network/partials/network-legend.html:12
 msgid "Payments"
 msgstr "付款"
 
-#: templates/eos_spy_network/network_corporation.html:65
+#: templates/eos_spy_network/network_corporation.html:69
 #: templates/eos_spy_network/partials/group-cell.html:13
 #: templates/eos_spy_network/partials/highlight-tile.html:21
 msgctxt "eos-spy-network"
 msgid "Standing"
 msgstr "Standing"
 
-#: templates/eos_spy_network/network_corporation.html:66
-#: templates/eos_spy_network/network_corporation.html:104
+#: templates/eos_spy_network/network_corporation.html:70
+#: templates/eos_spy_network/network_corporation.html:113
 #: templates/eos_spy_network/network_search.html:46
 #: templates/eos_spy_network/partials/dealings.html:15
 msgid "Period"
 msgstr "时间段"
 
-#: templates/eos_spy_network/network_corporation.html:98
+#: templates/eos_spy_network/network_corporation.html:105
+msgctxt "eos-spy-network"
+msgid "Age"
+msgstr "角龄"
+
+#: templates/eos_spy_network/network_corporation.html:106
 #: templates/eos_spy_network/network_search.html:40
 #: templates/eos_spy_network/partials/dealings.html:8
 msgid "Counterpart"
 msgstr "对方"
 
-#: templates/eos_spy_network/network_corporation.html:114
-#: templates/eos_spy_network/network_corporation.html:116
+#: templates/eos_spy_network/network_corporation.html:131
+#: templates/eos_spy_network/network_corporation.html:133
 #: templates/eos_spy_network/partials/group-cell.html:8
 #: templates/eos_spy_network/partials/group-cell.html:10
 #: templates/eos_spy_network/partials/standing-badge.html:4
@@ -695,28 +719,28 @@ msgstr "对方"
 msgid "Standing held by the Alliance"
 msgstr "Alliance 持有的 Standing"
 
-#: templates/eos_spy_network/network_corporation.html:123
-#: templates/eos_spy_network/network_corporation.html:124
-#: templates/eos_spy_network/network_corporation.html:157
+#: templates/eos_spy_network/network_corporation.html:140
+#: templates/eos_spy_network/network_corporation.html:141
+#: templates/eos_spy_network/network_corporation.html:195
 msgid "Ignore this counterpart"
 msgstr "忽略此对方"
 
-#: templates/eos_spy_network/network_corporation.html:161
+#: templates/eos_spy_network/network_corporation.html:199
 msgid "Ignore this counterpart in the Network?"
 msgstr "在关系网中忽略此对方？"
 
-#: templates/eos_spy_network/network_corporation.html:163
+#: templates/eos_spy_network/network_corporation.html:201
 msgid ""
 "Payments and contracts with it no longer count and the Network is "
 "recalculated. You can take it back in the settings."
 msgstr "与其的付款和合同将不再计入，关系网会重新计算。可在设置中撤销。"
 
-#: templates/eos_spy_network/network_corporation.html:166
+#: templates/eos_spy_network/network_corporation.html:204
 #: templates/eos_spy_network/partials/kill-note-modal.html:50
 msgid "Cancel"
 msgstr "取消"
 
-#: templates/eos_spy_network/network_corporation.html:167
+#: templates/eos_spy_network/network_corporation.html:205
 msgctxt "eos-spy-network"
 msgid "Ignore"
 msgstr "忽略"
@@ -1014,6 +1038,10 @@ msgstr "敌对 Corporation"
 msgid "Hostile Alliance"
 msgstr "敌对 Alliance"
 
+#: templates/eos_spy_network/partials/network-legend.html:15
+msgid "Arrow: from the giver to the receiver"
+msgstr "箭头：从给予方指向接收方"
+
 #: templates/eos_spy_network/partials/notices.html:5
 msgid "aa-contacts is not installed: the hostiles are made from its contacts."
 msgstr "未安装 aa-contacts：敌对方由其联系人生成。"
@@ -1236,36 +1264,36 @@ msgstr "各 Corporation 的合同"
 msgid "No contract sweep has run yet."
 msgstr "尚未运行过合同扫描。"
 
-#: views.py:40
+#: views.py:41
 msgid "Suspects"
 msgstr "嫌疑人"
 
-#: views.py:660
+#: views.py:685
 msgid "The markers and connections are being recalculated."
 msgstr "正在重新计算标记和关联。"
 
-#: views.py:662
+#: views.py:687
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr "无法开始重新计算：任务队列不可达。"
 
-#: views.py:699
+#: views.py:724
 #, python-format
 msgid "%(name)s is ignored. The connections are being recalculated."
 msgstr "%(name)s 已被忽略。正在重新计算连接。"
 
-#: views.py:703
+#: views.py:728
 #, python-format
 msgid ""
 "%(name)s is ignored, but the task queue is not reachable: recalculate once "
 "it is back."
 msgstr "%(name)s 已被忽略，但任务队列无法访问：恢复后请重新计算。"
 
-#: views.py:730
+#: views.py:755
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr "设置已保存。正在重新计算标记和关联。"
 
-#: views.py:734
+#: views.py:759
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."
