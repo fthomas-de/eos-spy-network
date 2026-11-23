@@ -4,28 +4,45 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-23 (0.0.37).
+Last updated 2026-11-23 (0.0.38).
 
 ## State
 
-- Version: `0.0.37`, 2026-11-23 (see `CHANGELOG.md`): copy button for the
-  in-game link of a capital contract.
-  - `partials/ingame-link-button.html` builds
-    `<url=contract:0//ID>ships</url>` in the template (ships = the row's
-    `ships` list, the *Ships* column) - no model change, no migration, no
-    recalculation. Included in `partials/capital-contracts.html` next to
-    *View details* and in the card header of `contract-details.html`, there
-    only when the view passes `ingame_ships`.
-  - `views.capital_contract` now finds the matching row with `next(...)`
-    (same permission filter as before) and passes `ingame_ships`; the ISK
-    popup (`views.contracts`) passes nothing, so no button there.
-  - `static/eos_spy_network/js/copy.js` (copy of eos-invoices' one):
-    Alliance Auth's `bundles/clipboard-js.html`, selector
-    `.eos-spy-network-copy`; ClipboardJS delegates on the document, so the
-    buttons of the popup loaded later work too. Included in
-    `corporation.html` only.
-  - Tests: 3 in `test_views` (table, popup, no button in the ISK popup); the
-    two positive ones were red against 0.0.36.
+- Version: `0.0.38`, 2026-11-23 (see `CHANGELOG.md`): Network with contracts without
+  ISK and a switch for neutral partners. Started from
+  the user's question why "E 'o" (95864929, IGC, account `E_o`) and the
+  unauthed "E' o" (2114054940) do not show: in `aa_dev` they share only a
+  0-ISK item contract and a +10 contact, no journal entry.
+  - `network.connections()` reads `Contract` once more (price, reward and
+    collateral all 0, every type/status, issuer/assignee/acceptor, time
+    frame on `date_issued`) through the shared inner `add()`;
+    `hostile_only` is now `kept_partners(accounts, blues=None)`;
+    `hostiles.network_blue_ids(config)` (ticked sources, standing `>`
+    `network_blue_above`); `snapshot.build` passes the blues only with
+    `network_neutral`; both fields are in `_inputs()`.
+  - Decisions (user, 2026-11-23): switch "hostile only" / "hostile and
+    neutral", blue always out; own threshold over the ticked sources,
+    default above 0; a hostile anywhere in the chain wins over blue;
+    contracts without ISK only, any status, both directions, two own
+    characters needed as for payments (so the user's example still does not
+    show - only "E 'o" has a contract with "E' o"); shown as payments, no
+    own edge kind; switch off by default.
+  - Migration 0018 applied to `aa_dev`. Tests: `TestContractsWithoutIsk`
+    (5), `TestNeutralPartners` (5), settings POSTs carry
+    `network_blue_above`; the positive ones red against the old code, the
+    guards red against single broken lines of the new code (one mutation
+    each, file restored). Suite at the commit: 437 without translation tests
+    plus the translation tests of `tools/translate.py`, all green (fresh
+    test database). 4 new glossary texts, machine-translated, not reviewed
+    by the user. Not seen in a browser (the two fields in tab *Alliance*
+    only rendered by the test client); the `aa_dev` snapshot not
+    recalculated, and with the switch off the user's example would not show
+    anyway.
+- Before (0.0.37), 2026-11-23: copy button for the in-game link of a
+  capital contract (`partials/ingame-link-button.html`,
+  `<url=contract:0//ID>ships</url>`, `copy.js` with Alliance Auth's
+  clipboard bundle); not in the ISK popup - corptools' contracts are
+  private.
 - Before (0.0.36), 2026-11-21: page *Statistics* (`statistics/`, numbers
   of the last sweep in `SweepStats`, migration 0017) and *Log* (`log/`) as
   own pages, both `manage_settings` **and** `view_suspects`
@@ -212,6 +229,17 @@ Last updated 2026-11-23 (0.0.37).
 
 ## Open
 
+- 0.0.38 on prod: run migration 0018 (only the two fields), no static
+  file. Nothing changes until an admin ticks *Network: neutral partners
+  too*; contracts without ISK with hostile partners show after the next
+  recalculation. Once switched on, expect clearly more accounts on the
+  Network pages (traders, haulers outside the Alliance) - check whether the
+  blue threshold 0 is right there. Not seen: the two fields in tab
+  *Alliance*, a neutral partner (grey) in the graph.
+- Possible next step the user may want: the user's example ("E 'o" and
+  "E' o") still does not show - one own character with one contract is
+  below the two-character rule (user's decision); contacts (+10) are not a
+  Network connection at all.
 - 0.0.37 on prod: no migration; `collectstatic` (new `copy.js`). Not seen
   in a browser (SSO) and the copied text not pasted in game: click the
   button once in the table and once in the popup, paste into an EVE chat,
@@ -406,6 +434,8 @@ Last updated 2026-11-23 (0.0.37).
   Corporations never count.
 - Network hostile-only (2026-10-09): shared partner and player trading
   count only with a hostile partner (itself, its Corporation or Alliance).
+  Since 2026-11-23 the default only: the setting *Network: neutral partners
+  too* keeps the neutral ones as well, the blue never (see State).
 - Network (2026-10-09): payments are donations, player trading and
   contract payments; one payment per character is enough, it is the overlap
   of two own characters that counts; player trading shows on its own. A
@@ -569,8 +599,8 @@ Last updated 2026-11-23 (0.0.37).
 ## Dev instance
 
 - Installed editable (`pip install --no-deps -e`), listed in
-  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0017
-  applied to `aa_dev`, `collectstatic` run (0.0.37, `copy.js`). `SweepStats` holds
+  `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0018
+  applied to `aa_dev` (0018 on 2026-11-23), `collectstatic` run (0.0.37, `copy.js`). `SweepStats` holds
   the row of the 2026-11-20 hand run. `local.py` has a `## eos spy
   network` block with the sweep's beat entry (2026-11-19); no Celery
   process runs, so it fires only once worker and beat are started. The
@@ -642,6 +672,13 @@ Last updated 2026-11-23 (0.0.37).
 - Checking new tests against the unfixed code in one go: `git stash push
   -- <the changed code files>` (tests left in place), run the modules,
   `git stash pop`. Name the paths, or the tests go into the stash too.
+  Stashing a template-facing `forms.py` alone turns every settings page
+  test into an error (the template asks for the new field), not only the
+  new one.
+- A guard test of a new feature ("leaves X out") passes against the old
+  code, which knew nothing of X: check it against the new code with that
+  one line broken instead - a script that replaces the line (asserting it
+  occurs once), runs the test and writes the file back in `finally`.
 
 - A Celery worker started before an app joined `INSTALLED_APPS` drops that
   app's tasks as "unregistered", and celery_once keeps their lock for an
