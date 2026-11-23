@@ -4,28 +4,33 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-21 (0.0.36).
+Last updated 2026-11-23 (0.0.37).
 
 ## State
 
-- Version: `0.0.36`, 2026-11-21 (see `CHANGELOG.md`): page *Statistics*
-  and *Log* as its own page.
-  - `capital_sweep.sweep()` stores the numbers of its last run in
-    `SweepStats` (one row, pk=1, `update_or_create`; migration 0017):
-    regions asked/failed, public contracts listed, Alliance contracts,
-    issuers, Corporations, added, items failed, removed, plus JSON
-    `per_region` (name -> count) and `per_corporation` (ID as string ->
-    count). No extra ESI call. `_delete()` returns only the
-    `CapitalContract` count from `delete()[1]` - the total would add the
-    cascaded items.
-  - `views.statistics` (`statistics/`) and `views.log` (`log/`, the former
-    settings tab *Log*) both need `manage_settings` **and** `view_suspects`
-    (new `permissions.all_permissions_required`); the nav shows them only
-    then, order Markers | Network | Statistics | Log | Settings. The
-    settings keep five tabs. Templates `statistics.html`, `log.html`,
-    `partials/stat-tile.html`.
-  - Tests: `TestSweepStats` (3), `TestStatisticsPage` (5), the log tests
-    on the new URL; all new ones were red against 0.0.35.
+- Version: `0.0.37`, 2026-11-23 (see `CHANGELOG.md`): copy button for the
+  in-game link of a capital contract.
+  - `partials/ingame-link-button.html` builds
+    `<url=contract:0//ID>ships</url>` in the template (ships = the row's
+    `ships` list, the *Ships* column) - no model change, no migration, no
+    recalculation. Included in `partials/capital-contracts.html` next to
+    *View details* and in the card header of `contract-details.html`, there
+    only when the view passes `ingame_ships`.
+  - `views.capital_contract` now finds the matching row with `next(...)`
+    (same permission filter as before) and passes `ingame_ships`; the ISK
+    popup (`views.contracts`) passes nothing, so no button there.
+  - `static/eos_spy_network/js/copy.js` (copy of eos-invoices' one):
+    Alliance Auth's `bundles/clipboard-js.html`, selector
+    `.eos-spy-network-copy`; ClipboardJS delegates on the document, so the
+    buttons of the popup loaded later work too. Included in
+    `corporation.html` only.
+  - Tests: 3 in `test_views` (table, popup, no button in the ISK popup); the
+    two positive ones were red against 0.0.36.
+- Before (0.0.36), 2026-11-21: page *Statistics* (`statistics/`, numbers
+  of the last sweep in `SweepStats`, migration 0017) and *Log* (`log/`) as
+  own pages, both `manage_settings` **and** `view_suspects`
+  (`permissions.all_permissions_required`); nav order Markers | Network |
+  Statistics | Log | Settings.
 - Before (0.0.35), 2026-11-20: three fixes of the
   capital sweep after an ESI review (user asked for the token use, buckets,
   timeouts and duplicate requests).
@@ -66,7 +71,7 @@ Last updated 2026-11-21 (0.0.36).
   Changed in 0.0.34: no `outstanding`/`public` columns (ESI lists only open
   public ones), `for_corporation` is not read - the issuer's Corporation
   decides. Two item rows of one ship type in a contract add up now.
-- Tests (0.0.36): 424 without translation tests plus the translation tests
+- Tests (0.0.37): 427 without translation tests plus the translation tests
   of `tools/translate.py`, all green (fresh test database). The 10 sweep
   tests of 0.0.34 and the
   capital tests in `test_markers` and `test_views.TestCapitalContractDetails`
@@ -181,7 +186,7 @@ Last updated 2026-11-21 (0.0.36).
   in the history, frequent Corporation changes, friendly hostile contacts,
   mails, ISK, contracts, blue kills - over main and alts); Network: the ISK
   connections with hostile partners. Pages read only the stored snapshot.
-- Tests: count and state in the 0.0.36 bullets above. `tests.base.SpyTestCase` patches
+- Tests: count and state in the 0.0.37 bullets above. `tests.base.SpyTestCase` patches
   `views.update_snapshot` and the three ESI calls of `affiliations.py`.
   `testauth` has `eveuniverse` and `killtracker` installed for the tests.
 - Translations: de, ru, zh_Hans, machine-generated, in `tools/glossary.py`;
@@ -207,6 +212,12 @@ Last updated 2026-11-21 (0.0.36).
 
 ## Open
 
+- 0.0.37 on prod: no migration; `collectstatic` (new `copy.js`). Not seen
+  in a browser (SSO) and the copied text not pasted in game: click the
+  button once in the table and once in the popup, paste into an EVE chat,
+  click the link. The user's own test pasted the same text typed by hand
+  and it worked. `aa_dev` has no capital contract, so the button shows
+  nowhere there.
 - 0.0.34/0.0.35 on prod: run migration 0016 (0.0.35 adds none), add the
   beat entry from the README (`eos_spy_network_sweep_capital_contracts`),
   restart Celery (worker and beat - the task's signature changed to
@@ -378,6 +389,12 @@ Last updated 2026-11-21 (0.0.36).
 
 ## Decisions
 
+- In-game link (user, 2026-11-23): copy button for the capital contracts
+  in the table and in the popup; link text = the ships. The solar system
+  is `0`: the user tried `<url=contract:30000142//ID>` (wrong system) and
+  `<url=contract:0//ID>` in game, both open the contract - and a
+  structure's system is unknown without a token. Not for the ISK popup:
+  corptools' contracts are private.
 - Purpose: detect suspected spies (not run an own spy network, not an intel
   board).
 - Start page: a tile per Corporation of the Alliance; a click opens the
@@ -553,7 +570,7 @@ Last updated 2026-11-21 (0.0.36).
 
 - Installed editable (`pip install --no-deps -e`), listed in
   `INSTALLED_APPS` of `myauth/settings/local.py`; migrations 0001 to 0017
-  applied to `aa_dev`, `collectstatic` run (0.0.36). `SweepStats` holds
+  applied to `aa_dev`, `collectstatic` run (0.0.37, `copy.js`). `SweepStats` holds
   the row of the 2026-11-20 hand run. `local.py` has a `## eos spy
   network` block with the sweep's beat entry (2026-11-19); no Celery
   process runs, so it fires only once worker and beat are started. The
@@ -578,6 +595,9 @@ Last updated 2026-11-21 (0.0.36).
 
 ## Traps
 
+- `sri_static` renders the hashed file name (`copy.<hash>.js`): a test that
+  a page loads a script asserts on `eos_spy_network/js/copy.`, not on
+  `copy.js`.
 - django-esi 10: `.results()` uses ETags by default and raises
   `HTTPNotModified` when every page answered 304 - a caller that needs the
   data must pass `use_etag=False` or catch it. Its built-in retry
