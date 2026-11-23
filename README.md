@@ -116,20 +116,27 @@ every one with a standing below a configurable value.
   the rest neutral; a hostile carries its standing, the sources in its
   tooltip; a line's tooltip gives the payments and their period. A main
   shows up when one of these is with a hostile partner - with anyone else
-  they are everyday trading and hauling:
+  they are everyday trading and hauling. The setting *Network: neutral
+  partners too* lets the neutral partners show as well: then only a blue
+  one stays out - it, its Corporation or its Alliance above *Network: blue
+  above standing* (default 0) at a ticked source, and none of the three
+  hostile:
   - *Shared payment partner*: at least two characters of the account - main
     and alt, or two alts - exchanged ISK with the same character outside the
     Alliance; one payment each is enough. Payments are the wallet journal's
     `player_donation`, `player_trading` and contract payments
     (`contract_price`, `contract_price_payment_corp`, `contract_reward`,
-    `contract_collateral`, `contract_collateral_payout`)
+    `contract_collateral`, `contract_collateral_payout`), and every contract
+    without ISK (price, reward and collateral 0 - a gift of items leaves no
+    journal entry with the partner) from corptools' contracts, of any type
+    and status, issued, assigned or accepted, as a payment of 0 ISK
   - *Player trading*: any trade window deal (`player_trading`) of one of its
     characters with someone outside the Alliance
 
   "Outside" is everything Auth does not know as part of the Alliance, so a
   character Auth has never seen counts as outside. NPCs (agents, NPC
   Corporations, factions) never count. Only payments within the time frame
-  count, and none of the ignored entry types. An account whose main is
+  count (a contract by its issue date), and none of the ignored entry types. An account whose main is
   outside the Alliance shows at the Corporations of its alts. The page
   needs `view_suspects`
 - **Recalculate**: the markers and connections are calculated by a task and

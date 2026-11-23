@@ -136,6 +136,25 @@ class SpyConfiguration(SingletonModel):
         verbose_name=_("Ignored wallet entry types"),
         help_text=_("Wallet journal entries of these types count neither as ISK with hostiles nor as a payment."),
     )
+    network_neutral = models.BooleanField(
+        default=False,
+        verbose_name=_("Network: neutral partners too"),
+        help_text=_(
+            "Off, the Network shows only partners that are hostile themselves or through their Corporation or "
+            "Alliance. On, the neutral ones too; a blue one stays out unless something in its chain is hostile."
+        ),
+    )
+    network_blue_above = models.DecimalField(
+        max_digits=3,
+        decimal_places=1,
+        default=Decimal("0"),
+        validators=[MinValueValidator(Decimal("-10")), MaxValueValidator(Decimal("10"))],
+        verbose_name=_("Network: blue above standing"),
+        help_text=_(
+            "With neutral partners on: a partner, its Corporation or its Alliance with a standing above this "
+            "value at a ticked source is blue and leaves the Network."
+        ),
+    )
     # the switched-off ones, not the switched-on: a marker added in a later version starts on
     disabled_markers = models.JSONField(
         default=list,

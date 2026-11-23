@@ -3,8 +3,9 @@
 Two kinds of connection make an account show up:
 
 - a shared counterpart: at least two characters of the account - the main and
-  an alt, or two alts - exchanged ISK with the same character outside the
-  Alliance. One payment each is enough; it is the overlap that tells.
+  an alt, or two alts - exchanged ISK or a contract without ISK with the same
+  character outside the Alliance. One payment each is enough; it is the
+  overlap that tells.
 - player trading: any trade window deal of one of the account's characters
   with someone outside the Alliance.
 
@@ -13,13 +14,16 @@ character Auth has never seen counts as outside, since the app makes no ESI
 call to look its affiliation up. NPCs (agents, NPC Corporations, factions)
 never count - bounties and taxes would connect every ratter.
 
-The data is corptools' wallet journal; without corptools there is none.
+The data is corptools' wallet journal and, for the contracts no ISK moved
+with (a gift of items leaves no journal entry with the partner), its
+contracts; without corptools there is none.
 
 Each counterpart is then followed to its Corporation and Alliance
 (``affiliations``); a hostile standing on any of the three makes it a hostile
 partner, and the graph shows the chain up to the entity that carries it.
-Only hostile partners stay (``hostile_only``): sharing a trader or a hauler
-outside the Alliance is everyday business in EVE, sharing a hostile is not.
+By default only hostile partners stay (``kept_partners``): sharing a trader
+or a hauler outside the Alliance is everyday business in EVE, sharing a
+hostile is not. A setting lets the neutral ones stay too, the blue never.
 """
 
 from collections import defaultdict
@@ -247,20 +251,30 @@ def affiliate(accounts, hostiles: dict, more_ids=()) -> dict:
     return entities
 
 
-def hostile_only(accounts: dict) -> dict:
-    """The accounts cut down to their hostile partners, by user ID; an account without one goes.
+def kept_partners(accounts: dict, blues: set | None = None) -> dict:
+    """The accounts cut down to the partners that stay, by user ID; an account without one goes.
 
+    Without ``blues`` only the hostile partners stay. With them the neutral
+    ones too: a partner goes only when its chain holds a blue ID and no
+    hostile one - a hostile anywhere in the chain wins (user, 2026-11-23).
     Needs the affiliations (``affiliate``) first: a partner is often hostile
     only through its Corporation or Alliance.
     """
     result = {}
     for user_id, account in accounts.items():
-        hostile = account.hostile
-        if not hostile:
+        if blues is None:
+            kept = account.hostile
+        else:
+            kept = {
+                counterpart_id
+                for counterpart_id in account.counterparts
+                if account.reason(counterpart_id) or blues.isdisjoint(account.chain(counterpart_id))
+            }
+        if not kept:
             continue
-        account.links = [link for link in account.links if link.counterpart_id in hostile]
+        account.links = [link for link in account.links if link.counterpart_id in kept]
         account.counterparts = {
-            counterpart_id: name for counterpart_id, name in account.counterparts.items() if counterpart_id in hostile
+            counterpart_id: name for counterpart_id, name in account.counterparts.items() if counterpart_id in kept
         }
         result[user_id] = account
     return result
@@ -282,16 +296,16 @@ def connections(
 
     ``mains`` maps the user ID of every account to check to its main
     EveCharacter. ``stats`` gets the number of journal entries read. Only
-    payments from ``since`` on count, and none of ``ignored_ref_types``.
-    ``characters`` is ``markers.Roster.characters`` when the caller has read
-    the accounts' characters already.
+    payments and contracts from ``since`` on count, and none of
+    ``ignored_ref_types``. ``characters`` is ``markers.Roster.characters``
+    when the caller has read the accounts' characters already.
     """
     if stats is not None:
         stats["journal_entries"] = 0
         stats["characters"] = 0
     if not mains or not apps.is_installed("corptools"):
         return {}
-    from corptools.models import CharacterWalletJournalEntry
+    from corptools.models import CharacterWalletJournalEntry, Contract
 
     if characters is None:
         characters = CharacterOwnership.objects.filter(user_id__in=mains).values_list(
@@ -309,6 +323,18 @@ def connections(
 
     # (user, own character, counterpart) -> link
     links = {}
+
+    def add(character_id, party_ids, day: str, trade: bool, isk) -> None:
+        user_id = owner[character_id]
+        for party_id in party_ids:
+            # an own alt, a member of the Alliance or an NPC is no connection outside
+            if not party_id or party_id in inside or party_id in NPC_IDS or owner.get(party_id) == user_id:
+                continue
+            link = links.get((user_id, character_id, party_id))
+            if link is None:
+                link = links[(user_id, character_id, party_id)] = Link(character_id, party_id)
+            link.add(day, trade, isk)
+
     entries = CharacterWalletJournalEntry.objects.filter(
         character_id__in=list(audits),
         ref_type__in=[ref_type for ref_type in PAYMENT_REF_TYPES if ref_type not in ignored_ref_types],
@@ -321,16 +347,18 @@ def connections(
     for audit_id, ref_type, amount, date, first_id, second_id in entries.iterator():
         if stats is not None:
             stats["journal_entries"] += 1
-        character_id = audits[audit_id]
-        user_id = owner[character_id]
-        for party_id in (first_id, second_id):
-            # an own alt, a member of the Alliance or an NPC is no connection outside
-            if not party_id or party_id in inside or party_id in NPC_IDS or owner.get(party_id) == user_id:
-                continue
-            link = links.get((user_id, character_id, party_id))
-            if link is None:
-                link = links[(user_id, character_id, party_id)] = Link(character_id, party_id)
-            link.add(date.date().isoformat(), ref_type == TRADING, amount)
+        add(audits[audit_id], (first_id, second_id), date.date().isoformat(), ref_type == TRADING, amount)
+
+    # a contract with ISK is in the journal already; without any - collateral included, which has its
+    # own journal entries - it is a payment of 0 ISK. Every type and status, both directions (user)
+    contracts = Contract.objects.filter(character_id__in=list(audits))
+    if since is not None:
+        contracts = contracts.filter(date_issued__gte=since)
+    for audit_id, date, price, reward, collateral, *party_ids in contracts.values_list(
+        "character_id", "date_issued", "price", "reward", "collateral", "issuer_id", "assignee_id", "acceptor_id"
+    ).iterator():
+        if not (price or reward or collateral):
+            add(audits[audit_id], set(party_ids), date.date().isoformat(), False, 0)
 
     by_user = defaultdict(list)
     for (user_id, _character_id, _counterpart_id), link in links.items():

@@ -1,7 +1,7 @@
 import re
 from datetime import timedelta
 
-from corptools.models import CharacterAudit, CharacterWalletJournalEntry, EveName
+from corptools.models import CharacterAudit, CharacterWalletJournalEntry, Contract, EveName
 
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
@@ -60,8 +60,23 @@ class NetworkTestCase(SpyTestCase):
             balance=0,
         )
 
-    def account(self):
-        return connections({self.user.pk: self.main}, ALLIANCE_ID).get(self.user.pk)
+    def contract(self, character, partner_id, issued=True, days_ago=0, status="finished", **isk):
+        """A contract of ``character`` with ``partner_id``, issued by the one or the other."""
+        self.entry_id += 1
+        issuer, assignee = (character.character_id, partner_id) if issued else (partner_id, character.character_id)
+        audit = self.audits[character.character_id]
+        when = timezone.now() - timedelta(days=days_ago)
+        Contract.objects.create(
+            id=f"{audit.pk}-{self.entry_id}", contract_id=self.entry_id, character=audit,
+            issuer_id=issuer, issuer_name=eve_name(issuer),
+            issuer_corporation_id=2001, issuer_corporation_name=eve_name(2001, "corporation"),
+            assignee_id=assignee, assignee_name=eve_name(assignee), acceptor_id=0, acceptor_name=eve_name(0),
+            for_corporation=False, date_expired=when, date_issued=when, status=status,
+            contract_type="item_exchange", availability="personal", title="", **isk,
+        )
+
+    def account(self, since=None):
+        return connections({self.user.pk: self.main}, ALLIANCE_ID, since=since).get(self.user.pk)
 
     def make_hostile(self, eve_id, contact_type="character", standing=-10):
         if not ContactSource.objects.exists():
@@ -341,6 +356,102 @@ class TestHostileChain(NetworkTestCase):
         self.assertEqual(self.stored_accounts(), [])
 
 
+def eve_name(eve_id, category="character"):
+    return EveName.objects.get_or_create(eve_id=eve_id, defaults={"name": f"Name {eve_id}", "category": category})[0]
+
+
+class TestContractsWithoutIsk(NetworkTestCase):
+    """A gift of items leaves no journal entry with the partner; the contract stands in as a payment."""
+
+    def test_should_count_a_contract_without_isk_as_a_payment(self):
+        self.contract(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+
+        account = self.account()
+
+        self.assertEqual(account.shared, {OUTSIDER})
+        link = next(link for link in account.links if link.character_id == self.main.character_id)
+        self.assertEqual((link.payments, link.trades, link.isk), (1, 0, 0))
+
+    def test_should_count_both_directions_and_every_status(self):
+        self.contract(self.main, OUTSIDER, status="outstanding")
+        self.contract(self.alt, OUTSIDER, issued=False, status="deleted")
+
+        self.assertEqual(self.account().shared, {OUTSIDER})
+
+    def test_should_leave_a_contract_with_isk_to_the_journal(self):
+        for isk in ({"price": 1}, {"reward": 1}, {"collateral": 1}):
+            with self.subTest(**isk):
+                Contract.objects.all().delete()
+                self.contract(self.main, OUTSIDER, **isk)
+                self.contract(self.alt, OUTSIDER, **isk)
+
+                self.assertIsNone(self.account())
+
+    def test_should_need_two_characters_like_a_payment(self):
+        self.contract(self.main, OUTSIDER)
+        self.contract(self.main, OUTSIDER)
+
+        self.assertIsNone(self.account())
+
+    def test_should_ignore_a_contract_before_the_time_frame(self):
+        self.contract(self.main, OUTSIDER)
+        self.contract(self.alt, OUTSIDER, days_ago=60)
+
+        self.assertIsNone(self.account(since=timezone.now() - timedelta(days=30)))
+
+
+class TestNeutralPartners(NetworkTestCase):
+    """The switch lets neutral partners stay; a blue one goes unless its chain holds a hostile."""
+
+    def setUp(self):
+        super().setUp()
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+
+    def in_hostile_corporation(self):
+        make_corporation(HOSTILE_CORP, alliance_id=OTHER_ALLIANCE_ID)
+        self.esi_names.return_value = {OUTSIDER: ("Outsider", "character")}
+        self.esi_affiliations.return_value = {OUTSIDER: (HOSTILE_CORP, OTHER_ALLIANCE_ID)}
+
+    def test_should_keep_a_neutral_partner_when_switched_on(self):
+        configure(network_neutral=True)
+
+        (account,) = self.stored_accounts()
+
+        self.assertEqual(set(account.counterparts), {OUTSIDER})
+        self.assertEqual(account.hostile, set())
+
+    def test_should_drop_a_blue_partner(self):
+        configure(network_neutral=True)
+        self.make_hostile(OUTSIDER, standing=0.5)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+    def test_should_take_the_blue_standing_from_the_settings(self):
+        configure(network_neutral=True, network_blue_above=5)
+        self.make_hostile(OUTSIDER, standing=5)
+
+        self.assertEqual(len(self.stored_accounts()), 1)
+
+    def test_should_drop_a_partner_blue_through_its_corporation(self):
+        configure(network_neutral=True)
+        self.in_hostile_corporation()
+        self.make_hostile(HOSTILE_CORP, contact_type="corporation", standing=10)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+    def test_should_keep_a_blue_partner_in_a_hostile_corporation(self):
+        configure(network_neutral=True)
+        self.in_hostile_corporation()
+        self.make_hostile(OUTSIDER, standing=10)
+        self.make_hostile(HOSTILE_CORP, contact_type="corporation", standing=-10)
+
+        (account,) = self.stored_accounts()
+
+        self.assertEqual(account.hostile, {OUTSIDER})
+
+
 def _from(table):
     """Matches a query that reads ``table`` first, in MySQL's and sqlite's quoting."""
     return re.compile(rf'FROM [`"]?{table}[`"]?\s', re.IGNORECASE)
@@ -366,10 +477,12 @@ class TestQueries(NetworkTestCase):
         with CaptureQueriesContext(connection) as queries:
             self.account()
 
-        journal = [query["sql"] for query in queries if CORPTOOLS_DATA.search(query["sql"])]
-        self.assertEqual(len(journal), 1)
-        self.assertNotIn("eveonline_evecharacter", journal[0])
-        self.assertNotIn("corptools_evename", journal[0])
+        corptools = [query["sql"] for query in queries if CORPTOOLS_DATA.search(query["sql"])]
+        # the journal, and the contracts without ISK
+        self.assertEqual(len(corptools), 2)
+        for sql in corptools:
+            self.assertNotIn("eveonline_evecharacter", sql)
+            self.assertNotIn("corptools_evename", sql)
 
     def test_should_read_the_marker_tables_without_eve_characters(self):
         with CaptureQueriesContext(connection) as queries:

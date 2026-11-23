@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.38] - 2026-11-23
+
+### Added
+
+- Network: contracts without ISK count as payments. A gift of items
+  (price, reward and collateral 0) leaves no journal entry with the partner,
+  so two characters handing items to the same outsider never showed up. They
+  are read from corptools' contracts - every type and status, issued,
+  assigned or accepted, within the time frame by the issue date - and count
+  like a payment of 0 ISK, with the same two-character rule. A contract with
+  any ISK stays with the journal; collateral included, which has journal
+  entries of its own, so nothing counts twice.
+- Network: setting *Network: neutral partners too* (default off, so nothing
+  changes until switched on) and *Network: blue above standing* (default 0;
+  migration 0018). Switched on, partners without a hostile standing stay
+  too; one goes only when it, its Corporation or its Alliance is above the
+  blue standing at a ticked source and none of the three is hostile.
+
 ## [0.0.37] - 2026-11-23
 
 ### Added

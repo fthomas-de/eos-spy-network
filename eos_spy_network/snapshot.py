@@ -21,7 +21,7 @@ from django.utils.translation import gettext_lazy as _
 from allianceauth.services.hooks import get_extension_logger
 
 from .affiliations import ALLIANCE, CORPORATION, Entity
-from .hostiles import hostile_entities
+from .hostiles import hostile_entities, network_blue_ids
 from .markers import (
     BLUE_KILLS,
     CONTACTS,
@@ -37,7 +37,7 @@ from .markers import (
     roster,
 )
 from .models import BlueKill, ContactSource, FindingReview, Snapshot, SpyConfiguration
-from .network import Connections, Link, Standing, affiliate, connections, hostile_only
+from .network import Connections, Link, Standing, affiliate, connections, kept_partners
 
 logger = get_extension_logger(__name__)
 
@@ -157,7 +157,7 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
         _affiliate_rows(dealing_rows, entities, hostiles)
         _affiliate_rows(contact_rows, entities, hostiles, "contact_id")
         _reference_rows(contact_rows, entities, hostiles)
-        found = hostile_only(found)
+        found = kept_partners(found, network_blue_ids(config) if config.network_neutral else None)
 
     tile_ids = {tile.id for tile in tiles}
     visited = defaultdict(set)  # user -> the Corporations of the Alliance its characters are in
@@ -316,6 +316,8 @@ def _inputs() -> tuple:
             "corp_changes_per_year",
             "lookback_days",
             "ignored_ref_types",
+            "network_neutral",
+            "network_blue_above",
         )
         .first(),
         sorted(ContactSource.objects.values_list("kind", "entity_id")),

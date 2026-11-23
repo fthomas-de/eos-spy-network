@@ -107,8 +107,11 @@ class SpyConfigurationForm(forms.ModelForm):
             "corp_changes_per_year",
             "lookback_days",
             "ignored_ref_types",
+            "network_neutral",
+            "network_blue_above",
         ]
         widgets = {
+            "network_blue_above": forms.NumberInput(attrs={"step": "0.1", "min": "-10", "max": "10"}),
             "hostile_below": forms.NumberInput(attrs={"step": "0.1", "min": "-10", "max": "10"}),
             "blue_from": forms.NumberInput(attrs={"step": "0.1", "min": "-10", "max": "10"}),
             "corp_changes_per_year": forms.NumberInput(attrs={"min": "2", "max": "50"}),

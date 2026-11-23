@@ -160,6 +160,32 @@ TRANSLATIONS = {
         "Записи кошелька этих типов не считаются ни ISK с врагами, ни платежом.",
         "这些类型的钱包日志条目既不算作与敌对方的 ISK，也不算作付款。",
     ),
+    "Network: neutral partners too": (
+        "Network: auch neutrale Partner",
+        "Сеть: также нейтральные партнёры",
+        "关系网：也包括中立对象",
+    ),
+    "Off, the Network shows only partners that are hostile themselves or through their Corporation or Alliance. On, the neutral ones too; a blue one stays out unless something in its chain is hostile.": (
+        "Aus: Das Network zeigt nur Partner, die selbst oder über ihre Corporation oder Alliance feindlich sind. "
+        "An: auch die neutralen; ein blauer bleibt draußen, außer etwas in seiner Kette ist feindlich.",
+        "Выкл.: сеть показывает только партнёров, враждебных сами по себе или через свою Corporation или Alliance. "
+        "Вкл.: также нейтральных; синий не показывается, если в его цепочке нет враждебного.",
+        "关闭：关系网只显示本身或通过其 Corporation 或 Alliance 敌对的对象。"
+        "开启：也显示中立对象；蓝色对象不显示，除非其链条中有敌对方。",
+    ),
+    "Network: blue above standing": (
+        "Network: blau über Standing",
+        "Сеть: синий выше Standing",
+        "关系网：Standing 高于此值为蓝色",
+    ),
+    "With neutral partners on: a partner, its Corporation or its Alliance with a standing above this value at a ticked source is blue and leaves the Network.": (
+        "Bei eingeschalteten neutralen Partnern: Ein Partner, seine Corporation oder seine Alliance mit einem "
+        "Standing über diesem Wert bei einer angehakten Quelle ist blau und fällt aus dem Network.",
+        "При включённых нейтральных партнёрах: партнёр, его Corporation или его Alliance со Standing выше этого "
+        "значения у отмеченного источника считается синим и исключается из сети.",
+        "开启中立对象时：对象、其 Corporation 或其 Alliance 在已勾选来源处的 Standing 高于此值即为蓝色，"
+        "并从关系网中移除。",
+    ),
     "Mains with markers": ("Mains mit Markern", "Mains с маркерами", "有标记的 Mains"),
     "Markers": ("Marker", "Маркеры", "标记"),
     "No markers.": ("Keine Marker.", "Нет маркеров.", "没有标记。"),
@@ -213,10 +239,12 @@ TRANSLATIONS = {
         "隐藏无标记的 Corporations",
     ),
     "Mains with connections": ("Mains mit Verbindungen", "Mains со связями", "有关联的 Mains"),
-    "At least two characters of the account exchanged ISK with the same character outside the Alliance.": (
-        "Mindestens zwei Characters des Accounts haben ISK mit demselben Character außerhalb der Alliance getauscht.",
-        "Как минимум два Character аккаунта обменивались ISK с одним и тем же Character вне Alliance.",
-        "该账号至少有两个 Character 与 Alliance 外的同一 Character 有过 ISK 往来。",
+    "At least two characters of the account exchanged ISK or a contract without ISK with the same character outside the Alliance.": (
+        "Mindestens zwei Characters des Accounts haben ISK oder einen Vertrag ohne ISK mit demselben Character "
+        "außerhalb der Alliance getauscht.",
+        "Как минимум два Character аккаунта обменивались ISK или контрактом без ISK с одним и тем же Character "
+        "вне Alliance.",
+        "该账号至少有两个 Character 与 Alliance 外的同一 Character 有过 ISK 往来或不含 ISK 的合同。",
     ),
     "Shared payment partner": ("Gemeinsamer Zahlungspartner", "Общий платёжный партнёр", "共同付款对象"),
     "Player trading with characters outside the Alliance.": (

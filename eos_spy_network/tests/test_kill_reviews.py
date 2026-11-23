@@ -575,6 +575,7 @@ class TestNotePresets(ReviewTestCase):
                 "alliance": SpyConfiguration.get_solo().alliance.pk,
                 "hostile_below": "0",
                 "blue_from": "5",
+                "network_blue_above": "0",
                 "min_kill_value": "0",
                 "note_presets": presets,
                 "corp_changes_per_year": "4",

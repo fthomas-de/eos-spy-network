@@ -74,6 +74,16 @@ def blue_entities(config: SpyConfiguration) -> dict[int, Contact]:
     return {row.contact_id: row for row in contacts.contacts([source], at_least=config.blue_from)}
 
 
+def network_blue_ids(config: SpyConfiguration) -> set[int]:
+    """Every contact a ticked source holds above the Network's blue standing.
+
+    The ticked sources, unlike ``blue_entities``: the Network's hostiles come
+    from them too, so a partner is weighed on one scale.
+    """
+    rows = contacts.contacts(ContactSource.objects.all())
+    return {row.contact_id for row in rows if row.standing > config.network_blue_above}
+
+
 @dataclass
 class HostileIndex:
     """Which EVE IDs count as hostile, and on whose account.

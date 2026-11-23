@@ -40,7 +40,7 @@
                                     {% endif %}
                                     {% if tile.shared_count %}
                                         <li class="list-group-item d-flex align-items-center gap-2 px-0">
-                                            <span class="badge text-bg-warning text-wrap" title="{% translate 'At least two characters of the account exchanged ISK with the same character outside the Alliance.' %}">{% translate "Shared payment partner" %}</span>
+                                            <span class="badge text-bg-warning text-wrap" title="{% translate 'At least two characters of the account exchanged ISK or a contract without ISK with the same character outside the Alliance.' %}">{% translate "Shared payment partner" %}</span>
                                             <span class="small text-body-secondary ms-auto text-nowrap">{% translate "Mains" context "eos-spy-network" %}: {{ tile.shared_count }}</span>
                                         </li>
                                     {% endif %}

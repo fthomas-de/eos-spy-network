@@ -492,6 +492,8 @@ class TestSettingsPage(SpyTestCase):
                 "alliance": make_alliance().pk,
                 "hostile_below": "-5",
                 "blue_from": "7.5",
+                "network_neutral": "on",
+                "network_blue_above": "2.5",
                 "min_kill_value": "3",
                 "corp_changes_per_year": "6",
                 "lookback_days": "90",
@@ -507,6 +509,8 @@ class TestSettingsPage(SpyTestCase):
         config = SpyConfiguration.get_solo()
         self.assertEqual(config.hostile_below, Decimal("-5"))
         self.assertEqual(config.blue_from, Decimal("7.5"))
+        self.assertTrue(config.network_neutral)
+        self.assertEqual(config.network_blue_above, Decimal("2.5"))
         self.assertEqual(config.min_kill_value, 3)
         self.assertEqual(config.corp_changes_per_year, 6)
         self.assertEqual(config.lookback_days, 90)
@@ -539,6 +543,7 @@ class TestSettingsPage(SpyTestCase):
                 "alliance": make_alliance().pk,
                 "hostile_below": "0",
                 "blue_from": "5",
+                "network_blue_above": "0",
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
@@ -559,6 +564,7 @@ class TestSettingsPage(SpyTestCase):
                 "alliance": make_alliance().pk,
                 "hostile_below": "0",
                 "blue_from": "5",
+                "network_blue_above": "0",
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
@@ -598,6 +604,7 @@ class TestSettingsPage(SpyTestCase):
                 "alliance": make_alliance().pk,
                 "hostile_below": "0",
                 "blue_from": "5",
+                "network_blue_above": "0",
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
@@ -640,6 +647,7 @@ class TestSettingsPage(SpyTestCase):
                 "alliance": make_alliance().pk,
                 "hostile_below": "0",
                 "blue_from": "5",
+                "network_blue_above": "0",
                 "min_kill_value": "0",
                 "ignored_ships": ["Capsule"],
                 "corp_changes_per_year": "4",
@@ -674,6 +682,7 @@ class TestSettingsPage(SpyTestCase):
                 "alliance": make_alliance().pk,
                 "hostile_below": "0",
                 "blue_from": "5",
+                "network_blue_above": "0",
                 "min_kill_value": "0",
                 "capital_ship_groups": ["Titan"],
                 "corp_changes_per_year": "4",
