@@ -4,19 +4,34 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-24 (version 0.1.1, tag `v0.1.1`).
+Last updated 2026-11-24 (version 0.1.3, tag `v0.1.3`).
 
 ## State
 
-- Pushed together (remote was at 0.0.45): 0.0.46 (clickable Network legend, `network.js` + `network-legend.html`),
-  0.0.47 (highlighted counterparts red in the graph), 0.1.0, 0.1.1; only `v0.1.1` is tagged. Prod: run migration
-  0023, `collectstatic` (`network.js`), recalculate once. The legend and the red highlights were not seen in a
-  browser (SSO). The first run asks ESI for the corporation history of every counterpart corptools has no audit of.
-- Unreleased, 2026-11-24 (not committed): *Network by points* (user). `network._cut(account, minimum, blues)`
+- Pushed together (remote was at 0.1.1): 0.1.2 (Network by points) and 0.1.3; only `v0.1.3` is tagged. Prod:
+  run migration 0024, `collectstatic` (`network.js`), recalculate once. Expect fewer Network accounts, fewer ISK
+  and Contracts markers (public contracts gone), and a graph without figure eights.
+- Version `0.1.3`, 2026-11-24 (see `CHANGELOG.md`): public contracts out, double count fixed, graph order.
+  - `markers.PUBLIC` and `markers.without_public_contracts(entries)`: drops journal entries with
+    `context_id_type == "contract_id"` whose context is any public `Contract` corptools holds (subquery, no time
+    frame - a contract issued before the time frame and paid in it goes too; one corptools does not hold still
+    counts). Used by `markers._check_wallet` and `network.connections`; `_check_contracts` and the Network's
+    contract query `.exclude(availability=PUBLIC)`. *Capital in contract* unchanged (public contracts are its point).
+  - Network: a contract's party is `acceptor_id or assignee_id` (plus the issuer), no longer both - a contract to
+    a Corporation accepted by a member scored the Corporation twice and reached the default minimum of 2 alone.
+  - `network.js`: `place(graph)` orders each column by barycentre (8 sweeps alternating, fewest crossings kept),
+    nodes get fixed `x = level * LEVEL_SEPARATION (320)`, `y` from `place`; `physics: false`, no hierarchical
+    layout, then `fit()`. Checked in a browser only with a synthetic graph served as a static page; alts sharing
+    partners may still cross where no order avoids it.
+  - Tests: `TestPublicContracts`, `TestContractParty`, one more in `TestMinimumConnections` (`test_network`); three
+    in `test_markers` (`TestWallet` public/private price, `TestContracts` public). All mutation-checked red.
+    Suite 602 without translation tests, green. No new texts. Point "contract issued before joining, paid after"
+    was looked at and left as is (user).
+- Version `0.1.2`, 2026-11-24: *Network by points* (user). `network._cut(account, minimum, blues)`
   replaces the three rules: `Link.points` = payments + contracts; the points of every link count for the
   counterpart and for each Corporation/Alliance of its chain that is in `account.hostiles` or, with `blues` (the
   neutral switch), not blue; whatever reaches `minimum` keeps the links of all its members. Setting
-  `SpyConfiguration.network_min_connections` (default 2, 1-100, migration 0024, NOT yet applied to `aa_dev`;
+  `SpyConfiguration.network_min_connections` (default 2, 1-100, migration 0024, applied to `aa_dev`;
   `snapshot._inputs`, form, Network section of the settings). `connections(..., minimum=1)` cuts only by the
   account's total (no group can score more, no affiliations needed yet); `drop_ours(..., minimum, blues)` does the
   real check after `kept_partners` and the replay. `snapshot.build` computes `blues` once for both.
@@ -718,6 +733,9 @@ Last updated 2026-11-24 (version 0.1.1, tag `v0.1.1`).
 
 ## Decisions
 
+- Public contracts (user, 2026-11-24): never count for the Network and the markers ISK and Contracts - neither
+  the contract nor the wallet entries paying for it; *Capital in contract* keeps them. A contract counts for one
+  partner: the acceptor, before acceptance the assignee.
 - Network by points (user, 2026-11-24): every payment, contract and trade is one point, a private contract with
   items one point however many wallet entries it has; a main shows up at X points (setting, default 2) with one
   counterpart character or with one hostile Corporation/Alliance (neutral ones too with the neutral switch, blue
