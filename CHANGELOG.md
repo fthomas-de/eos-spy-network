@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-24
+
+### Changed
+
+- Fewer ESI requests per run. A stored alliance or corporation history is
+  asked again after a day only when it changed lately: only its last entry can
+  still change, so the wait is a thirtieth of the time since that entry,
+  between one day and one week. The Alliance's own Corporations (and a
+  Corporation whose stored history still puts it in the Alliance) and a
+  counterpart in one of its Corporations stay at one day, because the day one
+  joins or leaves must show. A Corporation counterpart Auth has no Alliance
+  for no longer costs a `get_corporation` call in every run: its Alliance is
+  the last entry of the stored alliance history, which the tenure check
+  needs anyway; NPC Corporations are not asked at all. Trade-off: a
+  Corporation that moves into another Alliance after a long time without a
+  change is seen up to a week late (`tenure.MAX_STALE`).
+
+### Fixed
+
+- A Corporation or character ESI answers with 404 (closed Corporation, deleted
+  character) was never stored and came first in every run's list; five of
+  them in a row stopped the refresh for everyone else. The 404 is now kept as
+  an empty history and asked again only after a week.
+
 ## [0.1.0] - 2026-11-24
 
 ### Changed

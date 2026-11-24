@@ -1,6 +1,7 @@
 """Whether a character was in the Alliance when something happened (user, 2026-11-23)."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from corptools.models import CharacterAudit, CorporationHistory, EveName
 
@@ -9,7 +10,8 @@ from django.utils import timezone
 from eos_spy_network import markers, tenure
 from eos_spy_network.affiliations import Entity
 from eos_spy_network.models import CharacterCorporations, CorporationAlliances
-from eos_spy_network.tenure import Tenure
+from eos_spy_network.tenure import Tenure, _esi_alliance_history as real_alliance_history
+from eos_spy_network.tenure import _esi_corporation_history as real_corporation_history
 
 from .base import ALLIANCE_ID, OTHER_ALLIANCE_ID, SpyTestCase, configure, make_corporation, make_user
 
@@ -163,6 +165,76 @@ class TestLoad(SpyTestCase):
 
         self.assertEqual(self.esi_alliance_history.call_count, tenure.MAX_FAILURES)
 
+    def test_should_trust_a_history_that_has_stood_for_long_for_up_to_a_week(self):
+        self.join(OUTSIDE_CORPORATION, 100, 1)
+        self.store(OUTSIDE_CORPORATION, [[ago(400).isoformat(), OTHER_ALLIANCE_ID]], fetched_days_ago=5)
+
+        self.load()
+        self.esi_alliance_history.assert_not_called()
+
+        CorporationAlliances.objects.update(fetched_at=ago(8))
+        self.load()
+        self.esi_alliance_history.assert_called_once_with(OUTSIDE_CORPORATION)
+
+    def test_should_ask_daily_for_a_history_that_changed_lately(self):
+        self.join(OUTSIDE_CORPORATION, 100, 1)
+        # the last change was 8 days before the fetch: a thirtieth of that is under a day
+        self.store(OUTSIDE_CORPORATION, [[ago(10).isoformat(), OTHER_ALLIANCE_ID]], fetched_days_ago=2)
+
+        self.load()
+
+        self.esi_alliance_history.assert_called_once_with(OUTSIDE_CORPORATION)
+
+    def test_should_ask_daily_for_a_corporation_that_may_just_have_left_our_alliance(self):
+        self.join(OUTSIDE_CORPORATION, 100, 1)
+        # Auth no longer has it in the Alliance, the stored history still does
+        self.store(OUTSIDE_CORPORATION, [[ago(400).isoformat(), ALLIANCE_ID]], fetched_days_ago=3)
+
+        self.load()
+
+        self.esi_alliance_history.assert_called_once_with(OUTSIDE_CORPORATION)
+
+    def test_should_ask_daily_for_a_corporation_auth_has_in_the_alliance(self):
+        self.join(INSIDE_CORPORATION, 50, 1)
+        # a Corporation that joined: the stored history, long stable, does not know yet
+        self.store(INSIDE_CORPORATION, [[ago(400).isoformat(), OTHER_ALLIANCE_ID]], fetched_days_ago=3)
+
+        self.load()
+
+        self.esi_alliance_history.assert_called_once_with(INSIDE_CORPORATION)
+
+    def test_should_remember_that_esi_knows_nothing_of_a_corporation(self):
+        for number, corporation_id in enumerate(range(4000, 4008), start=1):
+            self.join(corporation_id, 300 - number * 10, number)
+        # ESI's 404 is an answer: eight of them are no outage, and none is asked again
+        self.esi_alliance_history.return_value = []
+
+        self.load()
+        self.load()
+
+        self.assertEqual(self.esi_alliance_history.call_count, 8)
+        self.assertEqual(CorporationAlliances.objects.filter(history=[]).count(), 8)
+
+
+class NotFound(Exception):
+    status_code = 404
+
+
+class TestEsiAnswers(SpyTestCase):
+    def ask(self, ask, operation, error):
+        with patch("eos_spy_network.tenure.esi") as provider:
+            call = getattr(getattr(provider.client, operation[0]), operation[1])
+            call.return_value.results.side_effect = error
+            return ask(1)
+
+    def test_should_take_a_404_for_an_empty_history_and_any_other_error_for_no_answer(self):
+        for ask, operation in (
+            (real_alliance_history, ("Corporation", "GetCorporationsCorporationIdAlliancehistory")),
+            (real_corporation_history, ("Character", "GetCharactersCharacterIdCorporationhistory")),
+        ):
+            self.assertEqual(self.ask(ask, operation, NotFound()), [])
+            self.assertIsNone(self.ask(ask, operation, OSError("ESI down")))
+
 
 class TestWasOurs(SpyTestCase):
     """A counterpart that was in 2001 until 20 days ago; 2001 has been in the Alliance for years (user, 2026-11-24)."""
@@ -251,3 +323,25 @@ class TestPrepare(SpyTestCase):
         self.tenure.prepare({4002}, {4002: corporation})
 
         self.esi_alliance_history.assert_called_once_with(4002)
+
+    def store(self, corporation_id, fetched_days_ago):
+        CharacterCorporations.objects.create(
+            character_id=self.COUNTERPART,
+            history=[[ago(400).isoformat(), corporation_id]],
+            fetched_at=ago(fetched_days_ago),
+        )
+
+    def test_should_trust_a_counterpart_history_that_has_stood_for_long(self):
+        self.store(OUTSIDE_CORPORATION, fetched_days_ago=3)
+
+        self.prepare()
+
+        self.esi_corporation_history.assert_not_called()
+
+    def test_should_ask_daily_for_a_counterpart_in_one_of_our_corporations(self):
+        # the day it leaves is the one that matters
+        self.store(INSIDE_CORPORATION, fetched_days_ago=3)
+
+        self.prepare()
+
+        self.esi_corporation_history.assert_called_once_with(self.COUNTERPART)

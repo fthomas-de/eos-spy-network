@@ -271,8 +271,10 @@ the Alliance: mails, ISK, contracts, the Network's payments and contracts,
 and blue kills before it joined or after it left are left out. That needs
 two histories - corptools' list of the Corporations a character was in, and
 ESI's public alliance history of each of those Corporations, which the task
-asks for once a day per Corporation (no token, at most 500 per run; the rest
-follows the next runs) and keeps in a table of this app. Where one is
+asks for once a day per Corporation - less often the longer its last entry
+has stood, up to once a week, but daily for the Alliance's own Corporations
+(no token, at most 500 per run; the rest follows the next runs) - and keeps
+in a table of this app. Where one is
 missing the present stands in: a character corptools has not read yet counts
 through its current Corporation, a Corporation ESI could not be asked about
 counts when Auth has it in the Alliance now.
@@ -281,7 +283,8 @@ The same goes for the counterpart: a mail, an ISK transfer or a contract
 with a hostile counts only if the hostile was not in the Alliance at the
 time. Its Corporations come from corptools when it has a Character Audit,
 else from ESI's public corporation history (no token, once a day per
-character, at most 500 per run, kept in a table of this app); to tell a
+character, or up to once a week when its last entry has stood for long, at
+most 500 per run, kept in a table of this app); to tell a
 character from a Corporation the task looks the counterpart up as the
 network does. Without a history its Corporation and Alliance of today stand
 in.
@@ -294,8 +297,10 @@ the characters are checked.
 The network is the exception: for each counterpart outside the Alliance
 the task looks up its Corporation and Alliance - first in Auth's and
 corptools' tables, and only for what neither knows through ESI's public
-endpoints (names, character affiliation, Corporation), without a token. A
-failed request leaves that counterpart without Corporation; the
+endpoints (names, character affiliation; a Corporation's Alliance from the
+stored alliance history above, so a Corporation is not asked again every
+run), without a token. A failed request leaves that counterpart without
+Corporation; the
 calculation goes on. The rows of *ISK with hostiles*, *Contracts with
 hostiles* and *Friendly to hostiles* get their counterpart's or contact's
 Corporation and Alliance from the same lookup; whether one is hostile is

@@ -1,12 +1,22 @@
+from datetime import timedelta
 from unittest.mock import patch
 
 from corptools.models import EveName
+
+from django.utils import timezone
 
 from allianceauth.eveonline.models import EveCorporationInfo
 
 from eos_spy_network.affiliations import _esi_affiliations, _esi_names, resolve
 
 from .base import OTHER_ALLIANCE_ID, SpyTestCase, make_character, make_corporation
+
+NOW = timezone.now()
+
+
+def ago(days):
+    return NOW - timedelta(days=days)
+
 
 STRANGER = 90000200
 STRANGER_CORP = 98000300
@@ -34,7 +44,52 @@ class TestKnownData(SpyTestCase):
 
         self.assertEqual(entities[4002].category, "corporation")
         self.assertEqual(entities[4002].alliance_id, OTHER_ALLIANCE_ID)
-        self.esi_corporation_alliance.assert_not_called()
+        self.esi_alliance_history.assert_not_called()
+
+
+class TestCorporationAlliance(SpyTestCase):
+    """A Corporation counterpart Auth has no Alliance for: from the stored alliance history, ESI once."""
+
+    CORPORATION = 98000500
+
+    def known(self):
+        EveName.objects.create(eve_id=self.CORPORATION, name="Far Corp", category="corporation")
+
+    def test_should_take_the_alliance_of_today_from_the_alliance_history_and_keep_it(self):
+        self.known()
+        self.esi_alliance_history.return_value = [[ago(400).isoformat(), STRANGER_ALLIANCE]]
+
+        entities = resolve({self.CORPORATION})
+        resolve({self.CORPORATION})
+
+        self.assertEqual(entities[self.CORPORATION].alliance_id, STRANGER_ALLIANCE)
+        self.assertEqual(entities[STRANGER_ALLIANCE].category, "alliance")
+        # the second run reads the table: a Corporation is not asked again every run
+        self.esi_alliance_history.assert_called_once_with(self.CORPORATION)
+
+    def test_should_not_ask_again_for_a_corporation_without_an_alliance(self):
+        self.known()
+        self.esi_alliance_history.return_value = []
+
+        first = resolve({self.CORPORATION})
+        resolve({self.CORPORATION})
+
+        self.assertIsNone(first[self.CORPORATION].alliance_id)
+        self.esi_alliance_history.assert_called_once_with(self.CORPORATION)
+
+    def test_should_leave_the_corporation_without_an_alliance_when_esi_cannot_be_asked(self):
+        self.known()
+
+        entities = resolve({self.CORPORATION})
+
+        self.assertIsNone(entities[self.CORPORATION].alliance_id)
+
+    def test_should_not_ask_for_an_npc_corporation(self):
+        EveName.objects.create(eve_id=1000125, name="CONCORD", category="corporation")
+
+        resolve({1000125})
+
+        self.esi_alliance_history.assert_not_called()
 
 
 class TestEsi(SpyTestCase):

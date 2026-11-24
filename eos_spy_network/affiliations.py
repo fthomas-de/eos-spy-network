@@ -3,8 +3,9 @@
 The network graph follows a counterpart up to its Corporation and Alliance:
 that is where a hostile standing usually sits, not on the character. What
 Auth and corptools already hold comes first; only what neither knows is
-asked from ESI, through its public endpoints (names, character affiliation,
-Corporation) without a token. Only the task calls this, never a page view.
+asked from ESI, through its public endpoints (names, character affiliation;
+a Corporation's Alliance through the alliance history ``tenure`` stores)
+without a token. Only the task calls this, never a page view.
 
 A failed ESI request costs the affiliation, never the calculation: the
 counterpart then ends at itself in the graph.
@@ -67,17 +68,6 @@ def _esi_affiliations(character_ids: list[int]) -> dict[int, tuple[int, int | No
         except Exception as error:  # noqa: BLE001
             logger.warning("ESI affiliation lookup failed for %d characters: %s", len(chunk), error)
     return found
-
-
-def _esi_corporation_alliance(corporation_id: int) -> int | None:
-    from allianceauth.eveonline.providers import open_api_provider
-
-    try:
-        corporation, _response = open_api_provider.get_corporation(corporation_id)
-    except Exception as error:  # noqa: BLE001
-        logger.warning("ESI Corporation lookup failed for %s: %s", corporation_id, error)
-        return None
-    return getattr(corporation, "alliance_id", None) or None
 
 
 def resolve(ids) -> dict[int, Entity]:
@@ -154,13 +144,17 @@ def resolve(ids) -> dict[int, Entity]:
         entity(group_id)
     _known_groups(entity, groups)
 
-    # a Corporation counterpart, or a character's Corporation Auth does not know: its Alliance
-    for found in list(entities.values()):
-        if found.category == CORPORATION and found.alliance_id is None and found.id in ids:
-            alliance_id = _esi_corporation_alliance(found.id)
-            if alliance_id:
-                found.alliance_id = alliance_id
-                entity(alliance_id, category=ALLIANCE)
+    # a Corporation counterpart Auth has no Alliance for: its Alliance of today is the last entry of the alliance
+    # history ``tenure`` keeps (and needs anyway), so a Corporation without one is not asked again every run
+    from .tenure import current_alliances
+
+    lonely = [
+        found for found in entities.values() if found.category == CORPORATION and found.alliance_id is None and found.id in ids
+    ]
+    for corporation_id, alliance_id in current_alliances(found.id for found in lonely).items():
+        if alliance_id:
+            entities[corporation_id].alliance_id = alliance_id
+            entity(alliance_id, category=ALLIANCE)
     for found in entities.values():
         if found.category == CHARACTER and found.corporation_id and not found.alliance_id:
             found.alliance_id = entities[found.corporation_id].alliance_id
