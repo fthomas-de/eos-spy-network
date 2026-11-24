@@ -460,3 +460,22 @@ class CorporationAlliances(models.Model):
 
     def __str__(self):
         return f"Alliance history of {self.corporation_id}"
+
+
+class CharacterCorporations(models.Model):
+    """The Corporations a counterpart was in and since when, as ESI's public corporation history lists them.
+
+    Whether a counterpart was in the Alliance when the payment or the mail happened (``tenure``) needs its past;
+    corptools holds it only for characters with an audit. The calculation task fills it for the others.
+    """
+
+    character_id = models.PositiveBigIntegerField(primary_key=True)
+    # [[ISO start, Corporation ID], ...], oldest first
+    history = models.JSONField(default=list)
+    fetched_at = models.DateTimeField()
+
+    class Meta:
+        default_permissions = ()
+
+    def __str__(self):
+        return f"Corporation history of {self.character_id}"

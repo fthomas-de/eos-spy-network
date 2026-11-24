@@ -4,10 +4,35 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-23 (0.0.45).
+Last updated 2026-11-24 (after 0.0.47, uncommitted).
 
 ## State
 
+- Uncommitted (2026-11-24, `[Unreleased]`, after 0.0.47): *Counterpart by its Alliance at the time* (user).
+  - `tenure.Tenure.was_ours(eve_id, when)` (character through its Corporation records, Corporation through
+    `alliances`/`corporations_now`, the Alliance ID itself; undated = today; unknown = outside) and
+    `Tenure.prepare(ids, entities=None)`: resolves unknown IDs (`affiliations.resolve`, ESI names/affiliations
+    in the task), Corporations from corptools' `CorporationHistory` (audit) else `CharacterCorporations`
+    (new model, migration 0023, applied to `aa_dev`) via ESI `GetCharactersCharacterIdCorporationhistory`,
+    fallback the entity's Corporation of today from the beginning; an entity whose Alliance today is ours puts
+    its Corporation into `corporations_now`. `prepared` remembers looked-up IDs (a Corporation ESI fails on is
+    not asked twice per run). `_histories` now goes through the generic `_refresh(model, ids, fetch, first)`.
+  - Network: `connections(..., tenure=)` uses `tenure.was_ours(party, date)` instead of today's
+    `alliance_ids` (kept only without tenure); `Link.events` (not stored) keeps each `add`;
+    `network.drop_ours(accounts, tenure, entities)` after `kept_partners` (whose `inside` parameter is gone)
+    replays the events without the ones while the counterpart was ours and re-applies the rules (`_cut`,
+    shared with `connections`).
+  - Markers: `counterparts(user_id, when, *ids)` drops a hostile that was ours then; `_check_mails/_wallet/
+    _contracts` read their rows into a list and `prepare` the hostile parties first. Blue kills unchanged
+    (awox is the point), contacts and membership unchanged.
+  - Tests: `TestWasOurs` (3), `TestPrepare` (4) in `test_tenure`, `TestCounterpartTenure` (3) in `test_network`,
+    three in `test_markers.TestTenure`; `SpyTestCase` patches `tenure._esi_corporation_history` (None). Nine
+    mutations checked red (two tests had to be rewritten first: the network one went through the markers'
+    `prepare`, the once-per-run one through `characters`). Suite 565 without translation tests, green
+    (fresh test database once, then kept). Real run on `aa_dev` 0.58 s, no counterpart looked up (no hostile
+    partner there). No new texts, no template or static change.
+  - Prod: migration 0023, recalculate. The first run asks ESI for the corporation history of every remaining
+    counterpart corptools has no audit of (hostile ones, plus all neutral ones with *neutral partners too*).
 - Version `0.0.45`, 2026-11-23 (see `CHANGELOG.md`), four requests of the user:
   - *Own Alliance is no counterpart*: `network.kept_partners(accounts, blues=None, inside=frozenset())`
     drops a partner whose chain (`Connections.chain`: itself, its Corporation, its Alliance, as `affiliate`
@@ -648,6 +673,10 @@ Last updated 2026-11-23 (0.0.45).
 
 ## Decisions
 
+- Counterpart at the time (user, 2026-11-24): the counterpart's Alliance at the time of the payment, contract
+  or mail decides, both ways (ours then -> no counterpart even if hostile today; joined later -> counts for the
+  time before); existing data first (corptools), ESI's public corporation history otherwise; Network and the
+  markers ISK, Contracts, Mails. Hostility stays today's.
 - Alliance as counterpart and tenure (user, 2026-11-23): the own Alliance (and its Corporations) is never a
   counterpart, also not for a character Auth does not know whom ESI puts there; mails, ISK, contracts,
   Network payments and contracts and blue kills count only from the time the character was in a Corporation

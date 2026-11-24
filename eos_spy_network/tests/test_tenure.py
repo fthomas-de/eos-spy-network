@@ -7,7 +7,8 @@ from corptools.models import CharacterAudit, CorporationHistory, EveName
 from django.utils import timezone
 
 from eos_spy_network import markers, tenure
-from eos_spy_network.models import CorporationAlliances
+from eos_spy_network.affiliations import Entity
+from eos_spy_network.models import CharacterCorporations, CorporationAlliances
 from eos_spy_network.tenure import Tenure
 
 from .base import ALLIANCE_ID, OTHER_ALLIANCE_ID, SpyTestCase, configure, make_corporation, make_user
@@ -161,3 +162,92 @@ class TestLoad(SpyTestCase):
         self.load()
 
         self.assertEqual(self.esi_alliance_history.call_count, tenure.MAX_FAILURES)
+
+
+class TestWasOurs(SpyTestCase):
+    """A counterpart that was in 2001 until 20 days ago; 2001 has been in the Alliance for years (user, 2026-11-24)."""
+
+    def setUp(self):
+        super().setUp()
+        self.found = Tenure(
+            ALLIANCE_ID,
+            {INSIDE_CORPORATION},
+            {CHARACTER: [(ago(100), INSIDE_CORPORATION), (ago(20), OUTSIDE_CORPORATION)]},
+            {INSIDE_CORPORATION: [(ago(400), ALLIANCE_ID)], OUTSIDE_CORPORATION: [(ago(400), OTHER_ALLIANCE_ID)]},
+        )
+
+    def test_should_answer_for_a_character_by_its_corporation_at_the_time(self):
+        self.assertTrue(self.found.was_ours(CHARACTER, ago(30)))
+        self.assertFalse(self.found.was_ours(CHARACTER, ago(10)))
+        # undated: today
+        self.assertFalse(self.found.was_ours(CHARACTER, None))
+
+    def test_should_answer_for_a_corporation_and_the_alliance_itself(self):
+        self.assertTrue(self.found.was_ours(INSIDE_CORPORATION, ago(10)))
+        self.assertFalse(self.found.was_ours(OUTSIDE_CORPORATION, ago(10)))
+        self.assertTrue(self.found.was_ours(ALLIANCE_ID, ago(10)))
+        self.assertFalse(self.found.was_ours(OTHER_ALLIANCE_ID, ago(10)))
+
+    def test_should_take_an_unknown_id_for_an_outsider(self):
+        self.assertFalse(self.found.was_ours(999, ago(10)))
+
+
+class TestPrepare(SpyTestCase):
+    COUNTERPART = 90000200
+
+    def setUp(self):
+        super().setUp()
+        self.config = configure()
+        make_corporation(INSIDE_CORPORATION)
+        make_user("member")
+        self.tenure = tenure.load(self.config, markers.roster(self.config).characters)
+
+    def prepare(self, corporation_id=OUTSIDE_CORPORATION, alliance_id=None):
+        entity = Entity(self.COUNTERPART, "Counterpart", "character", corporation_id, alliance_id)
+        self.tenure.prepare({self.COUNTERPART}, {self.COUNTERPART: entity})
+
+    def test_should_read_the_corporations_of_corptools_for_a_counterpart_with_an_audit(self):
+        from allianceauth.eveonline.models import EveCharacter
+
+        character = EveCharacter.objects.create(
+            character_id=self.COUNTERPART, character_name="Counterpart", corporation_id=OUTSIDE_CORPORATION,
+            corporation_name="Out", corporation_ticker="OUT",
+        )
+        audit = CharacterAudit.objects.create(character=character)
+        name = EveName.objects.create(eve_id=INSIDE_CORPORATION, name="In", category="corporation")
+        CorporationHistory.objects.create(
+            character=audit, corporation_id=INSIDE_CORPORATION, corporation_name=name, record_id=1, start_date=ago(100)
+        )
+
+        self.prepare()
+
+        self.esi_corporation_history.assert_not_called()
+        self.assertTrue(self.tenure.was_ours(self.COUNTERPART, ago(10)))
+
+    def test_should_ask_esi_for_the_others_and_keep_the_answer(self):
+        self.esi_corporation_history.return_value = [
+            [ago(100).isoformat(), INSIDE_CORPORATION], [ago(20).isoformat(), OUTSIDE_CORPORATION]
+        ]
+
+        self.prepare()
+
+        self.esi_corporation_history.assert_called_once_with(self.COUNTERPART)
+        self.assertEqual(CharacterCorporations.objects.get(pk=self.COUNTERPART).history[1][1], OUTSIDE_CORPORATION)
+        self.assertTrue(self.tenure.was_ours(self.COUNTERPART, ago(30)))
+        self.assertFalse(self.tenure.was_ours(self.COUNTERPART, ago(10)))
+
+    def test_should_take_todays_corporation_and_alliance_when_esi_cannot_be_asked(self):
+        # ESI puts it into a Corporation Auth does not know, in our Alliance: today stands in
+        self.prepare(corporation_id=4001, alliance_id=ALLIANCE_ID)
+
+        self.assertTrue(self.tenure.was_ours(self.COUNTERPART, ago(300)))
+
+    def test_should_look_up_a_counterpart_once_per_run(self):
+        corporation = Entity(4002, "Corp", "corporation")
+
+        # ESI cannot answer: the second call must not ask again
+        self.esi_alliance_history.reset_mock()
+        self.tenure.prepare({4002}, {4002: corporation})
+        self.tenure.prepare({4002}, {4002: corporation})
+
+        self.esi_alliance_history.assert_called_once_with(4002)

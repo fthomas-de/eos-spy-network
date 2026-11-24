@@ -850,3 +850,37 @@ class TestTenure(MarkerTestCase):
         self.add_mail(2, HOSTILE_MEMBER)
 
         self.assertEqual(self.kinds(), {markers.MAILS})
+
+    def was_a_member(self):
+        """HOSTILE_MEMBER was in 2001 until 20 days ago (user, 2026-11-24)."""
+        now = timezone.now()
+        self.esi_corporation_history.return_value = [
+            [(now - timedelta(days=200)).isoformat(), 2001], [(now - timedelta(days=20)).isoformat(), HOSTILE_CORP]
+        ]
+
+    def test_should_ignore_isk_with_a_hostile_while_it_was_in_the_alliance(self):
+        self.was_a_member()
+        self.add_entry(1, HOSTILE_MEMBER, self.main.character_id, days_ago=25)
+        self.assertEqual(self.kinds(), set())
+
+        self.add_entry(2, HOSTILE_MEMBER, self.main.character_id, days_ago=10)
+
+        self.assertEqual(self.kinds(), {markers.WALLET})
+
+    def test_should_ignore_a_contract_with_a_hostile_while_it_was_in_the_alliance(self):
+        self.was_a_member()
+        self.add_contract(1, self.main.character_id, HOSTILE_MEMBER, days_ago=25)
+        self.assertEqual(self.kinds(), set())
+
+        self.add_contract(2, self.main.character_id, HOSTILE_MEMBER, days_ago=10)
+
+        self.assertEqual(self.kinds(), {markers.CONTRACTS})
+
+    def test_should_ignore_a_mail_of_a_hostile_while_it_was_in_the_alliance(self):
+        self.was_a_member()
+        self.add_mail(1, HOSTILE_MEMBER, days_ago=25)
+        self.assertEqual(self.kinds(), set())
+
+        self.add_mail(2, HOSTILE_MEMBER, days_ago=10)
+
+        self.assertEqual(self.kinds(), {markers.MAILS})

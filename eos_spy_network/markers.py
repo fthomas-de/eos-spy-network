@@ -382,8 +382,15 @@ def _check(
     for character_id, user_id in owner.items():
         own[user_id].add(character_id)
 
-    def counterparts(user_id, *party_ids):
-        return {party_id for party_id in party_ids if party_id in index and party_id not in own[user_id]}
+    def counterparts(user_id, when, *party_ids):
+        # a hostile of today that was in the Alliance at the time was a member then (user, 2026-11-24)
+        return {
+            party_id
+            for party_id in party_ids
+            if party_id in index
+            and party_id not in own[user_id]
+            and not (tenure is not None and tenure.was_ours(party_id, when))
+        }
 
     audits = character_audits(list(owner))
     hostile_ids = index.ids
@@ -485,23 +492,22 @@ def _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, sinc
             Q(mailmessage__timestamp__gte=since) | Q(mailmessage__timestamp__isnull=True)
         )
 
+    sent_by = list(mails.filter(from_id__in=hostile_ids).values_list("character_id", "mail_id", "from_id", "timestamp"))
+    sent_to = list(
+        recipients.values_list(
+            "mailmessage__character_id", "mailmessage__mail_id", "mailrecipient_id", "mailmessage__timestamp"
+        )
+    )
+    if tenure is not None:
+        tenure.prepare({party_id for _audit, _mail, party_id, _sent in sent_by + sent_to})
+
     found = Found()  # (account, mail ID) -> hostile counterparts, own mailboxes
-    for audit_id, mail_id, from_id, sent in mails.filter(from_id__in=hostile_ids).values_list(
-        "character_id", "mail_id", "from_id", "timestamp"
-    ):
+    for audit_id, mail_id, party_id, sent in sent_by + sent_to:
         character_id = audits[audit_id]
         if tenure is not None and not tenure.counts(character_id, sent):
             continue
         user_id = owner[character_id]
-        found.add((user_id, mail_id), counterparts(user_id, from_id), character_id)
-    for audit_id, mail_id, recipient_id, sent in recipients.values_list(
-        "mailmessage__character_id", "mailmessage__mail_id", "mailrecipient_id", "mailmessage__timestamp"
-    ):
-        character_id = audits[audit_id]
-        if tenure is not None and not tenure.counts(character_id, sent):
-            continue
-        user_id = owner[character_id]
-        found.add((user_id, mail_id), counterparts(user_id, recipient_id), character_id)
+        found.add((user_id, mail_id), counterparts(user_id, sent, party_id), character_id)
     # a mail in the boxes of two own characters counts once
     _mark_found(accounts, index, found, MAILS)
 
@@ -518,16 +524,20 @@ def _check_wallet(
     if since is not None:
         entries = entries.filter(date__gte=since)
 
+    entries = list(
+        entries.values_list("pk", "character_id", "first_party_id", "second_party_id", "date", "ref_type", "amount")
+    )
+    if tenure is not None:
+        tenure.prepare({party_id for entry in entries for party_id in entry[2:4] if party_id in index})
+
     found = Found()
     dealings = defaultdict(Dealings)  # (account, own character, hostile) -> Dealings
-    for pk, audit_id, first_party_id, second_party_id, date, ref_type, amount in entries.values_list(
-        "pk", "character_id", "first_party_id", "second_party_id", "date", "ref_type", "amount"
-    ):
+    for pk, audit_id, first_party_id, second_party_id, date, ref_type, amount in entries:
         character_id = audits[audit_id]
         if tenure is not None and not tenure.counts(character_id, date):
             continue
         user_id = owner[character_id]
-        parties = counterparts(user_id, first_party_id, second_party_id)
+        parties = counterparts(user_id, date, first_party_id, second_party_id)
         found.add((user_id, pk), parties, character_id)
         for party_id in parties:
             dealings[(user_id, character_id, party_id)].add(date, ref_type, amount)
@@ -542,20 +552,7 @@ def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counter
     if since is not None:
         contracts = contracts.filter(date_issued__gte=since)
 
-    found = Found()
-    dealings = defaultdict(Dealings)
-    for (
-        audit_id,
-        contract_id,
-        issuer_id,
-        issuer_corporation_id,
-        assignee_id,
-        acceptor_id,
-        date_issued,
-        contract_type,
-        price,
-        reward,
-    ) in contracts.filter(
+    rows = list(contracts.filter(
         Q(issuer_id__in=hostile_ids)
         | Q(issuer_corporation_id__in=hostile_ids)
         | Q(assignee_id__in=hostile_ids)
@@ -571,7 +568,24 @@ def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counter
         "contract_type",
         "price",
         "reward",
-    ):
+    ))
+    if tenure is not None:
+        tenure.prepare({party_id for row in rows for party_id in row[2:6] if party_id in index})
+
+    found = Found()
+    dealings = defaultdict(Dealings)
+    for (
+        audit_id,
+        contract_id,
+        issuer_id,
+        issuer_corporation_id,
+        assignee_id,
+        acceptor_id,
+        date_issued,
+        contract_type,
+        price,
+        reward,
+    ) in rows:
         character_id = audits[audit_id]
         if tenure is not None and not tenure.counts(character_id, date_issued):
             continue
@@ -580,7 +594,7 @@ def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counter
         # the issuer's Corporation speaks for a stranger only: an own alt's Corporation is the membership marker
         if owner.get(issuer_id) != user_id:
             parties.append(issuer_corporation_id)
-        parties = counterparts(user_id, *parties)
+        parties = counterparts(user_id, date_issued, *parties)
         found.add((user_id, contract_id), parties, character_id)
         for party_id in parties:
             # what changes hands; the collateral is a deposit that comes back (user)

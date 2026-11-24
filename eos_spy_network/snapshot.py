@@ -39,7 +39,7 @@ from .markers import (
     roster,
 )
 from .models import BlueKill, ContactSource, FindingReview, Snapshot, SpyConfiguration
-from .network import Connections, Link, Standing, affiliate, connections, kept_partners
+from .network import Connections, Link, Standing, affiliate, connections, drop_ours, kept_partners
 from .tenure import load as load_tenure
 
 logger = get_extension_logger(__name__)
@@ -182,9 +182,9 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
         _affiliate_rows(contact_rows, entities, hostiles, "contact_id")
         _reference_rows(contact_rows, entities, hostiles)
         standings = {eve_id: standing for eve_id, standing in alliance_standings(config).items() if eve_id in entities}
-        # a partner ESI puts into our Alliance or one of our Corporations is a member, whatever Auth knows
-        ours = {config.alliance.alliance_id, *(tile.id for tile in tiles)}
-        found = kept_partners(found, network_blue_ids(config) if config.network_neutral else None, ours)
+        found = kept_partners(found, network_blue_ids(config) if config.network_neutral else None)
+        # a partner that was in our Alliance at the time is a member then, whatever Auth knows (user, 2026-11-24)
+        found = drop_ours(found, tenure, entities)
 
     tile_ids = {tile.id for tile in tiles}
     visited = defaultdict(set)  # user -> the Corporations of the Alliance its characters are in

@@ -11,6 +11,10 @@ ESI, never a page view.
 
 Where a history is missing the present stands in: a character corptools has no history of counts through its
 current Corporation, a Corporation ESI could not be asked about counts if Auth has it in the Alliance now.
+
+The same holds for the other side (user, 2026-11-24): a counterpart that was in the Alliance at the time is no
+counterpart, one that joined later is. Its Corporations come from corptools where it has an audit, else from ESI's
+public corporation history, kept in ``CharacterCorporations``.
 """
 
 from bisect import bisect_right
@@ -27,7 +31,7 @@ from allianceauth.eveonline.models import EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
 
 from . import __version__
-from .models import CorporationAlliances
+from .models import CharacterCorporations, CorporationAlliances
 
 logger = get_extension_logger(__name__)
 
@@ -37,7 +41,7 @@ esi = ESIClientProvider(
     ua_appname="eos-spy-network",
     ua_version=__version__,
     ua_url="https://github.com/fthomas-de/eos-spy-network",
-    operations=["GetCorporationsCorporationIdAlliancehistory"],
+    operations=["GetCorporationsCorporationIdAlliancehistory", "GetCharactersCharacterIdCorporationhistory"],
 )
 
 # a Corporation joins or leaves an Alliance rarely; a day is as fresh as ESI's own cache of the list
@@ -65,11 +69,27 @@ def _esi_alliance_history(corporation_id: int) -> list | None:
     return [[row.start_date.isoformat(), getattr(row, "alliance_id", None) or None] for row in rows]
 
 
+def _esi_corporation_history(character_id: int) -> list | None:
+    """[[ISO start, Corporation ID], ...] oldest first; None when ESI could not be asked."""
+    try:
+        rows = esi.client.Character.GetCharactersCharacterIdCorporationhistory(character_id=character_id).results(
+            use_etag=False, store_cache=False
+        )
+    except Exception as error:  # noqa: BLE001
+        logger.warning("ESI corporation history of character %s failed: %s", character_id, error)
+        return None
+    rows = sorted(rows, key=lambda row: (row.start_date, row.record_id))
+    return [[row.start_date.isoformat(), row.corporation_id] for row in rows]
+
+
 class Tenure:
     """Answers ``counts(character_id, when)`` from the two histories."""
 
-    def __init__(self, alliance_id: int, corporations_now: set, characters: dict, alliances: dict):
+    def __init__(self, alliance_id: int, corporations_now: set, characters: dict, alliances: dict, since=None):
         self.alliance_id = alliance_id
+        self.since = since
+        # counterparts ``prepare`` has looked up already, found or not
+        self.prepared = set()
         # Corporations Auth has in the Alliance now: the fallback for a Corporation without a history
         self.corporations_now = corporations_now
         # character ID -> [(start, Corporation ID)], oldest first
@@ -86,6 +106,58 @@ class Tenure:
             return False
         found = bisect_right(records, when, key=lambda record: record[0]) - 1
         return found >= 0 and self._in_alliance(records[found][1], when)
+
+    def was_ours(self, eve_id: int, when: datetime | None) -> bool:
+        """The character, Corporation or Alliance was ours at ``when`` (undated: today); ``prepare`` it first."""
+        when = when or timezone.now()
+        if eve_id == self.alliance_id:
+            return True
+        if eve_id in self.characters:
+            return self.counts(eve_id, when)
+        return (eve_id in self.alliances or eve_id in self.corporations_now) and self._in_alliance(eve_id, when)
+
+    def prepare(self, ids, entities: dict | None = None) -> None:
+        """Read the histories of the counterparts ``ids``; ``entities`` is ``affiliations.resolve``'s answer if at hand."""
+        from .affiliations import resolve
+        from .markers import character_audits
+
+        ids = {eve_id for eve_id in ids if eve_id and eve_id not in self.prepared and eve_id not in self.characters}
+        if not ids:
+            return
+        self.prepared |= ids
+        entities = entities or {}
+        missing = ids - entities.keys()
+        found = {**entities, **(resolve(missing) if missing else {})}
+        found = {eve_id: found[eve_id] for eve_id in ids if eve_id in found}
+        for entity in found.values():
+            # where no history answers, today's Alliance stands in - ESI's too, for a Corporation Auth does not know
+            group_id = entity.id if entity.category == "corporation" else entity.corporation_id
+            if group_id and entity.alliance_id == self.alliance_id:
+                self.corporations_now.add(group_id)
+
+        characters = [eve_id for eve_id, entity in found.items() if entity.category == "character"]
+        records = defaultdict(list)
+        if apps.is_installed("corptools"):
+            from corptools.models import CorporationHistory
+
+            audits = character_audits(characters)
+            for audit_id, corporation_id, start_date in CorporationHistory.objects.filter(
+                character_id__in=list(audits)
+            ).values_list("character_id", "corporation_id", "start_date"):
+                records[audits[audit_id]].append((start_date, corporation_id))
+        unread = {character_id for character_id in characters if character_id not in records}
+        records.update(_refresh(CharacterCorporations, unread, _esi_corporation_history))
+        for character_id in characters:
+            corporation_id = found[character_id].corporation_id
+            history = records.get(character_id) or ([(BEGINNING, corporation_id)] if corporation_id else [])
+            if history:
+                self.characters[character_id] = sorted(history)
+
+        known = {character_id: self.characters[character_id] for character_id in characters if character_id in self.characters}
+        corporations = _needed(known, self.since) | {
+            eve_id for eve_id, entity in found.items() if entity.category == "corporation" and eve_id not in NPC_CORPORATIONS
+        }
+        self.alliances.update(_histories(corporations - self.alliances.keys(), self.corporations_now))
 
     def _in_alliance(self, corporation_id: int, when: datetime) -> bool:
         history = self.alliances.get(corporation_id)
@@ -121,7 +193,7 @@ def load(config, characters: list, since: datetime | None = None) -> Tenure:
         records[character_id].sort()
 
     corporations = _needed(records, since)
-    return Tenure(alliance_id, corporations_now, dict(records), _histories(corporations, corporations_now))
+    return Tenure(alliance_id, corporations_now, dict(records), _histories(corporations, corporations_now), since)
 
 
 def _needed(records: dict, since: datetime | None) -> set[int]:
@@ -136,31 +208,33 @@ def _needed(records: dict, since: datetime | None) -> set[int]:
 
 
 def _histories(corporations: set, corporations_now: set) -> dict:
-    """Corporation ID -> [(start, Alliance ID or None)]; refreshes what is stale and ESI can still answer."""
+    """Corporation ID -> [(start, Alliance ID or None)]; the Alliance's own Corporations matter most."""
+    return _refresh(CorporationAlliances, corporations, _esi_alliance_history, corporations_now)
+
+
+def _refresh(model, ids: set, fetch, first=frozenset()) -> dict:
+    """ID -> [(start, value)] of ``model``; refreshes what is stale and ESI can still answer, ``first`` first."""
     now = timezone.now()
-    stored = {row.pk: row for row in CorporationAlliances.objects.filter(pk__in=corporations)}
+    stored = {row.pk: row for row in model.objects.filter(pk__in=ids)}
     stale = sorted(
-        (corporation_id for corporation_id in corporations if corporation_id not in stored or stored[corporation_id].fetched_at < now - STALE_AFTER),
-        # the Alliance's own Corporations matter most; then the oldest entries
-        key=lambda corporation_id: (
-            corporation_id not in corporations_now,
-            stored[corporation_id].fetched_at if corporation_id in stored else BEGINNING,
-        ),
+        (eve_id for eve_id in ids if eve_id not in stored or stored[eve_id].fetched_at < now - STALE_AFTER),
+        # then the oldest entries
+        key=lambda eve_id: (eve_id not in first, stored[eve_id].fetched_at if eve_id in stored else BEGINNING),
     )[:MAX_PER_RUN]
     failures = 0
-    for corporation_id in stale:
-        history = _esi_alliance_history(corporation_id)
+    for eve_id in stale:
+        history = fetch(eve_id)
         if history is None:
             failures += 1
             if failures >= MAX_FAILURES:
-                logger.warning("ESI alliance history stopped after %d failures in a row", failures)
+                logger.warning("ESI %s stopped after %d failures in a row", model.__name__, failures)
                 break
             continue
         failures = 0
-        stored[corporation_id], _created = CorporationAlliances.objects.update_or_create(
-            pk=corporation_id, defaults={"history": history, "fetched_at": now}
+        stored[eve_id], _created = model.objects.update_or_create(
+            pk=eve_id, defaults={"history": history, "fetched_at": now}
         )
     return {
-        corporation_id: [(datetime.fromisoformat(start), alliance) for start, alliance in row.history]
-        for corporation_id, row in stored.items()
+        eve_id: [(datetime.fromisoformat(start), value) for start, value in row.history]
+        for eve_id, row in stored.items()
     }

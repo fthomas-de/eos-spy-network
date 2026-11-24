@@ -150,11 +150,11 @@ every one with a standing below a configurable value.
   shows the age of each own character (from Auth's birthday, a dash when Auth
   has none).
 
-  "Outside" is everything Auth does not know as part of the Alliance, so a
-  character Auth has never seen counts as outside. NPCs (agents, NPC
-  Corporations, factions) never count, and neither does a character Auth does
-  not know whom ESI puts into the Alliance or one of its Corporations: the
-  Alliance is no counterpart of itself. Only payments within the time frame
+  "Outside" is whoever was not in the Alliance when the payment or contract
+  happened: a counterpart that was in one of its Corporations then is a
+  member, also when it is hostile today, and one that joined later counts for
+  the time before. NPCs (agents, NPC Corporations, factions) never count.
+  Only payments within the time frame
   count (a contract by its issue date), only those made while the own character
   was in a Corporation of the Alliance, and none of the ignored entry types. An account whose main is
   outside the Alliance shows at the Corporations of its alts. The page
@@ -276,6 +276,15 @@ follows the next runs) and keeps in a table of this app. Where one is
 missing the present stands in: a character corptools has not read yet counts
 through its current Corporation, a Corporation ESI could not be asked about
 counts when Auth has it in the Alliance now.
+
+The same goes for the counterpart: a mail, an ISK transfer or a contract
+with a hostile counts only if the hostile was not in the Alliance at the
+time. Its Corporations come from corptools when it has a Character Audit,
+else from ESI's public corporation history (no token, once a day per
+character, at most 500 per run, kept in a table of this app); to tell a
+character from a Corporation the task looks the counterpart up as the
+network does. Without a history its Corporation and Alliance of today stand
+in.
 
 The markers read corptools' data; an account without a working Character
 Audit simply shows fewer markers. corptools is read when installed and is

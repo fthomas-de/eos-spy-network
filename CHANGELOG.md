@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-24
+
+### Changed
+
+- Network and markers decide by the counterpart's Alliance at the time, not by
+  today's. A counterpart that was in a Corporation of the Alliance when the
+  payment, contract or mail happened is a member then and counts nowhere, even
+  when it is hostile today (a former member who left for a hostile Alliance no
+  longer makes the old payments to him a finding). One that joined later counts
+  for the time before it joined: with *Network: neutral partners too* such
+  payments to today's members now show, before they were dropped as "inside".
+  Hostility itself is still today's. The counterpart's Corporations come from
+  corptools when it has a Character Audit, else from ESI's public corporation
+  history, fetched by the calculation task once a day per character and kept
+  in the new table `CharacterCorporations` (migration 0023; at most 500 per
+  run); the Corporations' Alliances from the existing `CorporationAlliances`.
+  Without a history the counterpart's Corporation and Alliance of today stand
+  in. Only the counterparts left after the hostile filter are looked up, so
+  most payments inside the Alliance need no request. Blue kills are unchanged:
+  a victim in the Alliance at the time is the awox the marker is about.
+
 ## [0.0.47] - 2026-11-24
 
 ### Changed

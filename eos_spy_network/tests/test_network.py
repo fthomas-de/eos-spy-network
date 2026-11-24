@@ -926,3 +926,70 @@ class TestOwnAlliance(NetworkTestCase):
 
         self.assertEqual(account.trading, {OUTSIDER})
         self.assertEqual(account.entities[OUTSIDER].alliance_id, OTHER_ALLIANCE_ID)
+
+
+def _corptools_history(audit, *records):
+    """corptools' Corporation history of ``audit``: (Corporation ID, days ago) oldest first."""
+    for record_id, (corporation_id, days_ago) in enumerate(records, start=1):
+        name, _created = EveName.objects.get_or_create(
+            eve_id=corporation_id, defaults={"name": f"Corp {corporation_id}", "category": "corporation"}
+        )
+        CorporationHistory.objects.create(
+            character=audit, corporation_id=corporation_id, corporation_name=name, record_id=record_id,
+            start_date=timezone.now() - timedelta(days=days_ago),
+        )
+
+
+def _days_ago(days):
+    return (timezone.now() - timedelta(days=days)).isoformat()
+
+
+class TestCounterpartTenure(NetworkTestCase):
+    """A counterpart counts by where it was at the time, not by where it is today (user, 2026-11-24)."""
+
+    def test_should_count_a_member_of_today_for_the_time_before_it_joined(self):
+        other = make_user("other").profile.main_character
+        _corptools_history(CharacterAudit.objects.create(character=other), (4000, 100), (2001, 30))
+        config = SpyConfiguration.get_solo()
+        found = tenure.load(config, markers.roster(config).characters)
+
+        def account():
+            return connections({self.user.pk: self.main}, ALLIANCE_ID, tenure=found).get(self.user.pk)
+
+        self.pay(self.alt, other.character_id, ref_type="player_trading", days_ago=10)
+        self.assertIsNone(account())
+
+        self.pay(self.alt, other.character_id, ref_type="player_trading", days_ago=60)
+        self.assertEqual(account().trading, {other.character_id})
+        self.assertEqual(account().links[0].payments, 1)
+
+    def test_should_drop_a_hostile_for_the_time_it_was_in_the_alliance(self):
+        # hostile through its Corporation only, which Auth does not know: the markers never see it
+        self.make_hostile(4000, contact_type="corporation")
+        self.esi_names.return_value = {OUTSIDER: ("Outsider", "character")}
+        self.esi_affiliations.return_value = {OUTSIDER: (4000, None)}
+        self.esi_corporation_history.return_value = [[_days_ago(200), 2001], [_days_ago(40), 4000]]
+        self.pay(self.main, OUTSIDER, days_ago=60)
+        self.pay(self.alt, OUTSIDER, days_ago=60)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+        self.pay(self.main, OUTSIDER, days_ago=10)
+        self.pay(self.alt, OUTSIDER, days_ago=10)
+
+        (account,) = self.stored_accounts()
+        self.assertEqual(account.shared, {OUTSIDER})
+        self.assertEqual(account.links[0].payments, 1)
+
+    def test_should_keep_a_neutral_partner_auth_has_in_the_alliance_for_the_time_before_it_joined(self):
+        configure(network_neutral=True)
+        make_character(OTHER_OUTSIDER, corporation_id=2001)
+        self.esi_corporation_history.return_value = [[_days_ago(100), 4000], [_days_ago(20), 2001]]
+        self.pay(self.alt, OTHER_OUTSIDER, ref_type="player_trading", days_ago=10)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+        self.pay(self.alt, OTHER_OUTSIDER, ref_type="player_trading", days_ago=60)
+
+        (account,) = self.stored_accounts()
+        self.assertEqual(account.trading, {OTHER_OUTSIDER})

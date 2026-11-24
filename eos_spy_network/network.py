@@ -11,12 +11,13 @@ Three kinds of connection make an account show up:
 - a private contract with items: any one, with or without ISK, counted apart
   from the payments.
 
-"Outside" is whatever Auth does not know as part of the Alliance: a
-character Auth has never seen counts as outside until its affiliation is
-looked up (``affiliate``); one whose Corporation or Alliance is ours then goes
-(``kept_partners``). NPCs (agents, NPC Corporations, factions) never count -
-bounties and taxes would connect every ratter. A payment or contract counts
-only if its own character was in the Alliance at the time (``tenure``).
+"Outside" is whoever was not in the Alliance when the payment or contract
+happened (``tenure``): a character the account holders' histories do not
+answer for counts as outside until its affiliation is looked up
+(``affiliate``) and its own history read (``drop_ours``). NPCs (agents, NPC
+Corporations, factions) never count - bounties and taxes would connect every
+ratter. A payment or contract counts only if its own character was in the
+Alliance at the time as well.
 
 The data is corptools' wallet journal and, for the contracts no ISK moved
 with (a gift of items leaves no journal entry with the partner), its
@@ -75,6 +76,8 @@ class Link:
     contracts: int = 0
     # "o": the own character gave (paid, issued), "i": it received; both may be there. Empty in an older snapshot
     direction: str = ""
+    # (when, trade, isk, direction, contract) of each ``add``, for ``drop_ours``; not stored
+    events: list = field(default_factory=list, repr=False, compare=False)
 
     def add(self, day: str, trade: bool, isk, direction: str = "", contract: bool = False) -> None:
         if contract:
@@ -297,7 +300,7 @@ def affiliate(accounts, hostiles: dict, more_ids=()) -> dict:
     return entities
 
 
-def kept_partners(accounts: dict, blues: set | None = None, inside=frozenset()) -> dict:
+def kept_partners(accounts: dict, blues: set | None = None) -> dict:
     """The accounts cut down to the partners that stay, by user ID; an account without one goes.
 
     Without ``blues`` only the hostile partners stay. With them the neutral
@@ -305,10 +308,6 @@ def kept_partners(accounts: dict, blues: set | None = None, inside=frozenset()) 
     hostile one - a hostile anywhere in the chain wins (user, 2026-11-23).
     Needs the affiliations (``affiliate``) first: a partner is often hostile
     only through its Corporation or Alliance.
-
-    A partner whose chain holds one of ``inside`` (the Alliance and its Corporations) goes in any case: a
-    character Auth does not know, whose Corporation or Alliance ESI names as ours, is a member and no
-    connection outside (user, 2026-11-23).
     """
     result = {}
     for user_id, account in accounts.items():
@@ -320,7 +319,6 @@ def kept_partners(accounts: dict, blues: set | None = None, inside=frozenset()) 
                 for counterpart_id in account.counterparts
                 if account.reason(counterpart_id) or blues.isdisjoint(account.chain(counterpart_id))
             }
-        kept = {counterpart_id for counterpart_id in kept if inside.isdisjoint(account.chain(counterpart_id))}
         if not kept:
             continue
         account.links = [link for link in account.links if link.counterpart_id in kept]
@@ -329,6 +327,40 @@ def kept_partners(accounts: dict, blues: set | None = None, inside=frozenset()) 
         }
         result[user_id] = account
     return result
+
+
+def drop_ours(accounts: dict, tenure, entities: dict) -> dict:
+    """The accounts without what was exchanged while the counterpart was in the Alliance (user, 2026-11-24).
+
+    A character ESI puts into one of our Corporations is a member, not a connection outside - but only for the
+    time it was there. Runs after ``kept_partners``: only the partners left need their histories.
+    """
+    tenure.prepare({counterpart_id for account in accounts.values() for counterpart_id in account.counterparts}, entities)
+    result = {}
+    for user_id, account in accounts.items():
+        links = []
+        for link in account.links:
+            kept = Link(link.character_id, link.counterpart_id)
+            for when, *event in link.events:
+                if not tenure.was_ours(link.counterpart_id, when):
+                    kept.add(when.date().isoformat(), *event)
+            if kept.payments or kept.contracts:
+                links.append(kept)
+        account.links = links
+        if _cut(account):
+            result[user_id] = account
+    return result
+
+
+def _cut(account: Connections) -> bool:
+    """Keep only the links of the counterparts that make the account show up; False when none does."""
+    keep = account.shared | account.trading | account.contracting
+    account.links = sorted(
+        (link for link in account.links if link.counterpart_id in keep),
+        key=lambda link: (-link.payments, link.character_id, link.counterpart_id),
+    )
+    account.counterparts = {counterpart_id: account.counterparts.get(counterpart_id) for counterpart_id in keep}
+    return bool(keep)
 
 
 def alliance_ids(alliance_id: int) -> set[int]:
@@ -357,7 +389,8 @@ def connections(
     EveCharacter. ``stats`` gets the number of journal entries read. Only
     payments and contracts from ``since`` on count, and none of
     ``ignored_ref_types``, and none of ``ignored_characters`` (EVE IDs).
-    With a ``tenure`` only those made while the own character was in the Alliance.
+    With a ``tenure`` only those made while the own character was in the Alliance, and a counterpart is
+    inside when it was in the Alliance at the time; without one, when Auth has it in the Alliance today.
     ``ignored_counterparts`` (EVE IDs) are no connection at all: they count
     for neither the shared-partner rule nor player trading.
     ``characters`` is ``markers.Roster.characters`` when the caller has read
@@ -381,29 +414,30 @@ def connections(
         names[character_id] = name
     if stats is not None:
         stats["characters"] = len(owner)
-    inside = alliance_ids(alliance_id)
+    inside = alliance_ids(alliance_id) if tenure is None else frozenset()
     # an ignored character stays in ``owner`` (a payment to it is still no connection outside) but is not read
     audits = character_audits([character_id for character_id in owner if character_id not in ignored_characters])
 
     # (user, own character, counterpart) -> link
     links = {}
 
-    def add(character_id, party_ids, day: str, trade: bool, isk, direction: str = "", contract: bool = False) -> None:
+    def add(character_id, party_ids, when, trade: bool, isk, direction: str = "", contract: bool = False) -> None:
         user_id = owner[character_id]
         for party_id in party_ids:
-            # an own alt, a member of the Alliance or an NPC is no connection outside
+            # an own alt, a member of the Alliance at the time or an NPC is no connection outside
             if (
                 not party_id
-                or party_id in inside
                 or party_id in NPC_IDS
                 or party_id in ignored_counterparts
                 or owner.get(party_id) == user_id
+                or (party_id in inside if tenure is None else tenure.was_ours(party_id, when))
             ):
                 continue
             link = links.get((user_id, character_id, party_id))
             if link is None:
                 link = links[(user_id, character_id, party_id)] = Link(character_id, party_id)
-            link.add(day, trade, isk, direction, contract)
+            link.add(when.date().isoformat(), trade, isk, direction, contract)
+            link.events.append((when, trade, isk, direction, contract))
 
     entries = CharacterWalletJournalEntry.objects.filter(
         character_id__in=list(audits),
@@ -421,7 +455,7 @@ def connections(
         direction = "i" if amount and amount > 0 else "o" if amount else ""
         own_id = audits[audit_id]
         if tenure is None or tenure.counts(own_id, date):
-            add(own_id, (first_id, second_id), date.date().isoformat(), ref_type == TRADING, amount, direction)
+            add(own_id, (first_id, second_id), date, ref_type == TRADING, amount, direction)
 
     # A private contract with items is a kind of its own, with or without ISK (user, 2026-11-23). Any other
     # contract with ISK is in the journal already; without any - collateral included, which has its own
@@ -446,11 +480,10 @@ def connections(
         if tenure is not None and not tenure.counts(own_id, date):
             continue
         parties = {issuer_id, *party_ids}
-        day = date.date().isoformat()
         if availability == PRIVATE and with_items:
-            add(own_id, parties, day, False, 0, "o" if issuer_id == own_id else "i", contract=True)
+            add(own_id, parties, date, False, 0, "o" if issuer_id == own_id else "i", contract=True)
         elif not (price or reward or collateral):
-            add(own_id, parties, day, False, 0)
+            add(own_id, parties, date, False, 0)
 
     by_user = defaultdict(list)
     for (user_id, _character_id, _counterpart_id), link in links.items():
@@ -461,17 +494,11 @@ def connections(
         main = mains[user_id]
         account = Connections(user_id, main.character_id, main.character_name, main.corporation_id)
         account.links = user_links
-        keep = account.shared | account.trading | account.contracting
-        if not keep:
+        if not _cut(account):
             continue
-        account.links = sorted(
-            (link for link in user_links if link.counterpart_id in keep),
-            key=lambda link: (-link.payments, link.character_id, link.counterpart_id),
-        )
         account.characters = {
             character_id: name for character_id, name in names.items() if owner[character_id] == user_id
         }
-        account.counterparts = dict.fromkeys(keep)
         result[user_id] = account
 
     _fill_names([account.counterparts for account in result.values()])
