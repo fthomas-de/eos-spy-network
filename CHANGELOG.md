@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.46] - 2026-11-24
+
+### Added
+
+- The legend of the Network graph is clickable: Partner, Hostile partner,
+  Corporation, Hostile Corporation, Alliance and Hostile Alliance each show or
+  hide that kind of node, with the lines that end at it. A button *Show all*
+  appears while something is hidden. Hidden nodes keep their place, so the graph
+  does not move, and a Corporation whose partner is hidden stays until it is
+  hidden itself. The choice holds for every account's graph on the page and
+  ends with a reload. Main, Alt and the lines are not switchable: without the
+  main the graph has no anchor. One new text (*Show all*).
+
 ## [0.0.45] - 2026-11-23
 
 ### Changed

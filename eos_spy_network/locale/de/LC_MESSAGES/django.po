@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-23 21:55+0000\n"
-"PO-Revision-Date: 2026-11-23 21:55+0000\n"
+"POT-Creation-Date: 2026-11-24 10:19+0000\n"
+"PO-Revision-Date: 2026-11-24 10:19+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: de\n"
 "Language: de\n"
@@ -1099,6 +1099,11 @@ msgstr "Feindliche Alliance"
 #: templates/eos_spy_network/partials/network-legend.html:15
 msgid "Arrow: from the giver to the receiver"
 msgstr "Pfeil: vom Geber zum Empfänger"
+
+#: templates/eos_spy_network/partials/network-legend.html:16
+msgctxt "eos-spy-network"
+msgid "Show all"
+msgstr "Alle anzeigen"
 
 #: templates/eos_spy_network/partials/notices.html:5
 msgid "aa-contacts is not installed: the hostiles are made from its contacts."

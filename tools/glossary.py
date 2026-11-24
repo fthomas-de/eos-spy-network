@@ -710,6 +710,8 @@ TRANSLATIONS = {
         "箭头：从给予方指向接收方",
     ),
     "Age": ("Alter", "Возраст", "角龄"),
+    # Network graph legend (2026-11-24)
+    "Show all": ("Alle anzeigen", "Показать все", "显示全部"),
 }
 
 PLURALS = {}

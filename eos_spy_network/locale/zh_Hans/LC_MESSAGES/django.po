@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-23 21:55+0000\n"
-"PO-Revision-Date: 2026-11-23 21:55+0000\n"
+"POT-Creation-Date: 2026-11-24 10:19+0000\n"
+"PO-Revision-Date: 2026-11-24 10:19+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: zh_Hans\n"
 "Language: zh_Hans\n"
@@ -1043,6 +1043,11 @@ msgstr "敌对 Alliance"
 #: templates/eos_spy_network/partials/network-legend.html:15
 msgid "Arrow: from the giver to the receiver"
 msgstr "箭头：从给予方指向接收方"
+
+#: templates/eos_spy_network/partials/network-legend.html:16
+msgctxt "eos-spy-network"
+msgid "Show all"
+msgstr "显示全部"
 
 #: templates/eos_spy_network/partials/notices.html:5
 msgid "aa-contacts is not installed: the hostiles are made from its contacts."

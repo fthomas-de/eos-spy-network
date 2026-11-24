@@ -12,6 +12,8 @@
  * reason at the end of the chain; a group behind the reason is left out and
  * named in the partner's tooltip. A graph is drawn on first show only: vis
  * cannot lay out inside a hidden container.
+ * The legend's buttons show and hide a kind of counterpart node (and its
+ * lines) in every graph of the page; the choice lasts until a reload.
  */
 document.addEventListener("DOMContentLoaded", () => {
     "use strict";
@@ -98,6 +100,47 @@ document.addEventListener("DOMContentLoaded", () => {
         return shown;
     };
 
+    // Node groups switched off in the legend, shared by every account's graph and gone with the page.
+    // A hidden node keeps its place (no new layout) and takes its lines with it; the other
+    // end of a line stays, so a Corporation without its partner is left standing.
+    const hiddenGroups = new Set();
+    const drawn = [];
+    const toggles = document.querySelectorAll("[data-eos-spy-network-toggle]");
+    const resets = document.querySelectorAll("[data-eos-spy-network-reset]");
+
+    const apply = ({ nodes, edges }) => {
+        const gone = (id) => hiddenGroups.has(nodes.get(id).group);
+        nodes.update(nodes.get().map((raw) => ({ id: raw.id, hidden: hiddenGroups.has(raw.group) })));
+        edges.update(edges.get().map((raw) => ({ id: raw.id, hidden: gone(raw.from) || gone(raw.to) })));
+    };
+
+    const refresh = () => {
+        toggles.forEach((toggle) => {
+            const off = hiddenGroups.has(toggle.dataset.eosSpyNetworkToggle);
+            toggle.setAttribute("aria-pressed", String(!off));
+            toggle.classList.toggle("opacity-50", off);
+            toggle.classList.toggle("text-decoration-line-through", off);
+        });
+        resets.forEach((reset) => reset.classList.toggle("d-none", !hiddenGroups.size));
+        drawn.forEach(apply);
+    };
+
+    toggles.forEach((toggle) => {
+        toggle.addEventListener("click", () => {
+            const group = toggle.dataset.eosSpyNetworkToggle;
+            if (!hiddenGroups.delete(group)) {
+                hiddenGroups.add(group);
+            }
+            refresh();
+        });
+    });
+    resets.forEach((reset) => {
+        reset.addEventListener("click", () => {
+            hiddenGroups.clear();
+            refresh();
+        });
+    });
+
     const draw = (card) => {
         if (card.dataset.drawn || typeof vis === "undefined") {
             return;
@@ -153,10 +196,12 @@ document.addEventListener("DOMContentLoaded", () => {
             network.setOptions({ physics: false });
             network.fit();
         });
-        network.setData({
-            nodes: new vis.DataSet(graph.nodes.map(node)),
-            edges: new vis.DataSet(graph.edges.map(edge)),
-        });
+        const nodes = new vis.DataSet(graph.nodes.map(node));
+        const edges = new vis.DataSet(graph.edges.map(edge));
+        network.setData({ nodes: nodes, edges: edges });
+        drawn.push({ nodes: nodes, edges: edges });
+        // a legend choice made before this card was first shown applies to it too
+        apply(drawn[drawn.length - 1]);
         card.dataset.drawn = "1";
     };
 

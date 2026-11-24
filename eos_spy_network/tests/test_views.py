@@ -468,6 +468,24 @@ class TestNetworkPages(SuspectPageTestCase):
                 self.assertContains(response, classes)
         self.assertContains(response, 'class="eos-spy-network-graph border rounded mb-3"')
 
+    def test_should_offer_a_toggle_for_every_counterpart_group_in_the_legend(self):
+        # network.js hides the node group named in data-eos-spy-network-toggle; Main, Alt and the lines stay fixed
+        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+
+        for group in (
+            "partner",
+            "hostile_partner",
+            "corporation",
+            "hostile_corporation",
+            "alliance",
+            "hostile_alliance",
+        ):
+            with self.subTest(group=group):
+                self.assertContains(response, f'data-eos-spy-network-toggle="{group}" aria-pressed="true"')
+        self.assertNotContains(response, 'data-eos-spy-network-toggle="main"')
+        self.assertNotContains(response, 'data-eos-spy-network-toggle="alt"')
+        self.assertContains(response, "data-eos-spy-network-reset")
+
     def test_should_refuse_a_corporation_outside_the_alliance(self):
         response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2999]))
 

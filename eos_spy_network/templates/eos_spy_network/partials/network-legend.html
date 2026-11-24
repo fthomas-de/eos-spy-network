@@ -1,16 +1,17 @@
 {% load i18n %}
-{# What the colours of the graph mean; network.js takes the colours from these icons by their eos-spy-network-legend-* class, so both always agree. #}
+{# What the colours of the graph mean; network.js takes the colours from these icons by their eos-spy-network-legend-* class, so both always agree. The buttons (data-eos-spy-network-toggle = the node group) show and hide that kind of node, lines with it; Main, Alt and the lines stay fixed. #}
 <div class="d-flex flex-wrap gap-3 small mb-2">
     <span><i class="fas fa-circle text-success eos-spy-network-legend-main"></i> {% translate "Main" context "EVE jargon" %}</span>
     <span><i class="fas fa-circle text-success text-opacity-50 eos-spy-network-legend-alt"></i> {% translate "Alt" %}</span>
-    <span><i class="fas fa-diamond text-warning eos-spy-network-legend-partner"></i> {% translate "Partner outside the Alliance" %}</span>
-    <span><i class="fas fa-diamond text-danger text-opacity-50 eos-spy-network-legend-hostile_partner"></i> {% translate "Hostile partner" %}</span>
-    <span><i class="fas fa-square text-secondary eos-spy-network-legend-corporation"></i> {% translate "Corporation" context "EVE jargon" %}</span>
-    <span><i class="fas fa-square text-danger eos-spy-network-legend-hostile_corporation"></i> {% translate "Hostile Corporation" %}</span>
-    <span><i class="fas fa-shield-halved text-secondary text-opacity-50 eos-spy-network-legend-alliance"></i> {% translate "Alliance" context "EVE jargon" %}</span>
-    <span><i class="fas fa-shield-halved eos-spy-network-legend-hostile_alliance"></i> {% translate "Hostile Alliance" %}</span>
+    <button type="button" class="btn btn-sm p-0 border-0 align-baseline" data-eos-spy-network-toggle="partner" aria-pressed="true"><i class="fas fa-diamond text-warning eos-spy-network-legend-partner"></i> {% translate "Partner outside the Alliance" %}</button>
+    <button type="button" class="btn btn-sm p-0 border-0 align-baseline" data-eos-spy-network-toggle="hostile_partner" aria-pressed="true"><i class="fas fa-diamond text-danger text-opacity-50 eos-spy-network-legend-hostile_partner"></i> {% translate "Hostile partner" %}</button>
+    <button type="button" class="btn btn-sm p-0 border-0 align-baseline" data-eos-spy-network-toggle="corporation" aria-pressed="true"><i class="fas fa-square text-secondary eos-spy-network-legend-corporation"></i> {% translate "Corporation" context "EVE jargon" %}</button>
+    <button type="button" class="btn btn-sm p-0 border-0 align-baseline" data-eos-spy-network-toggle="hostile_corporation" aria-pressed="true"><i class="fas fa-square text-danger eos-spy-network-legend-hostile_corporation"></i> {% translate "Hostile Corporation" %}</button>
+    <button type="button" class="btn btn-sm p-0 border-0 align-baseline" data-eos-spy-network-toggle="alliance" aria-pressed="true"><i class="fas fa-shield-halved text-secondary text-opacity-50 eos-spy-network-legend-alliance"></i> {% translate "Alliance" context "EVE jargon" %}</button>
+    <button type="button" class="btn btn-sm p-0 border-0 align-baseline" data-eos-spy-network-toggle="hostile_alliance" aria-pressed="true"><i class="fas fa-shield-halved eos-spy-network-legend-hostile_alliance"></i> {% translate "Hostile Alliance" %}</button>
     <span><i class="fas fa-minus text-warning eos-spy-network-legend-payment-edge"></i> {% translate "Payments" %}</span>
     <span><i class="fas fa-minus text-info eos-spy-network-legend-trading-edge"></i> {% translate "Player trading" %}</span>
     <span><i class="fas fa-minus text-primary eos-spy-network-legend-contract-edge"></i> {% translate "Private contract" %}</span>
     <span class="text-body-secondary"><i class="fas fa-arrow-right"></i> {% translate "Arrow: from the giver to the receiver" %}</span>
+    <button type="button" class="btn btn-sm btn-outline-secondary py-0 d-none" data-eos-spy-network-reset>{% translate "Show all" context "eos-spy-network" %}</button>
 </div>
