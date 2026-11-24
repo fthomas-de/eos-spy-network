@@ -22,9 +22,6 @@
         {% url "eos_spy_network:network" as network_url %}
         {% translate "Network" as network_title %}
         {% include "eos_spy_network/partials/nav-item.html" with nav_url=network_url nav_title=network_title nav_key="network" %}
-        {% url "eos_spy_network:network_search" as network_search_url %}
-        {% translate "Network search" as network_search_title %}
-        {% include "eos_spy_network/partials/nav-item.html" with nav_url=network_search_url nav_title=network_search_title nav_key="network_search" %}
     {% endif %}
 
     {% if perms.eos_spy_network.manage_settings and perms.eos_spy_network.view_suspects %}

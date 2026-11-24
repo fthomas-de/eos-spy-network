@@ -12,9 +12,11 @@ Three kinds of connection make an account show up:
   from the payments.
 
 "Outside" is whatever Auth does not know as part of the Alliance: a
-character Auth has never seen counts as outside, since the app makes no ESI
-call to look its affiliation up. NPCs (agents, NPC Corporations, factions)
-never count - bounties and taxes would connect every ratter.
+character Auth has never seen counts as outside until its affiliation is
+looked up (``affiliate``); one whose Corporation or Alliance is ours then goes
+(``kept_partners``). NPCs (agents, NPC Corporations, factions) never count -
+bounties and taxes would connect every ratter. A payment or contract counts
+only if its own character was in the Alliance at the time (``tenure``).
 
 The data is corptools' wallet journal and, for the contracts no ISK moved
 with (a gift of items leaves no journal entry with the partner), its
@@ -286,7 +288,7 @@ def affiliate(accounts, hostiles: dict, more_ids=()) -> dict:
     return entities
 
 
-def kept_partners(accounts: dict, blues: set | None = None) -> dict:
+def kept_partners(accounts: dict, blues: set | None = None, inside=frozenset()) -> dict:
     """The accounts cut down to the partners that stay, by user ID; an account without one goes.
 
     Without ``blues`` only the hostile partners stay. With them the neutral
@@ -294,6 +296,10 @@ def kept_partners(accounts: dict, blues: set | None = None) -> dict:
     hostile one - a hostile anywhere in the chain wins (user, 2026-11-23).
     Needs the affiliations (``affiliate``) first: a partner is often hostile
     only through its Corporation or Alliance.
+
+    A partner whose chain holds one of ``inside`` (the Alliance and its Corporations) goes in any case: a
+    character Auth does not know, whose Corporation or Alliance ESI names as ours, is a member and no
+    connection outside (user, 2026-11-23).
     """
     result = {}
     for user_id, account in accounts.items():
@@ -305,6 +311,7 @@ def kept_partners(accounts: dict, blues: set | None = None) -> dict:
                 for counterpart_id in account.counterparts
                 if account.reason(counterpart_id) or blues.isdisjoint(account.chain(counterpart_id))
             }
+        kept = {counterpart_id for counterpart_id in kept if inside.isdisjoint(account.chain(counterpart_id))}
         if not kept:
             continue
         account.links = [link for link in account.links if link.counterpart_id in kept]
@@ -333,6 +340,7 @@ def connections(
     characters=None,
     ignored_characters=(),
     ignored_counterparts=(),
+    tenure=None,
 ) -> dict:
     """The accounts with connections outside the Alliance, by user ID.
 
@@ -340,6 +348,7 @@ def connections(
     EveCharacter. ``stats`` gets the number of journal entries read. Only
     payments and contracts from ``since`` on count, and none of
     ``ignored_ref_types``, and none of ``ignored_characters`` (EVE IDs).
+    With a ``tenure`` only those made while the own character was in the Alliance.
     ``ignored_counterparts`` (EVE IDs) are no connection at all: they count
     for neither the shared-partner rule nor player trading.
     ``characters`` is ``markers.Roster.characters`` when the caller has read
@@ -401,7 +410,9 @@ def connections(
             stats["journal_entries"] += 1
         # the journal is the own character's: a negative amount left its wallet
         direction = "i" if amount and amount > 0 else "o" if amount else ""
-        add(audits[audit_id], (first_id, second_id), date.date().isoformat(), ref_type == TRADING, amount, direction)
+        own_id = audits[audit_id]
+        if tenure is None or tenure.counts(own_id, date):
+            add(own_id, (first_id, second_id), date.date().isoformat(), ref_type == TRADING, amount, direction)
 
     # A private contract with items is a kind of its own, with or without ISK (user, 2026-11-23). Any other
     # contract with ISK is in the journal already; without any - collateral included, which has its own
@@ -423,6 +434,8 @@ def connections(
         "acceptor_id",
     ).iterator():
         own_id = audits[audit_id]
+        if tenure is not None and not tenure.counts(own_id, date):
+            continue
         parties = {issuer_id, *party_ids}
         day = date.date().isoformat()
         if availability == PRIVATE and with_items:

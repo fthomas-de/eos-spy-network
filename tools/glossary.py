@@ -329,6 +329,7 @@ TRANSLATIONS = {
     "Recalculating": ("Neuberechnung läuft", "Идёт пересчёт", "正在重新计算"),
     # the steps of the progress bar
     "Waiting for the task queue": ("Warte auf die Task-Queue", "Ожидание очереди задач", "等待任务队列"),
+    "Reading Alliance histories": ("Lese Alliance-Historien", "Чтение истории Alliance", "读取 Alliance 历史"),
     "Reading the hostile contacts": ("Lese die feindlichen Kontakte", "Чтение враждебных контактов", "读取敌对联系人"),
     "Checking memberships": ("Prüfe Mitgliedschaften", "Проверка членства", "检查成员关系"),
     "Checking Corporation histories": (
@@ -678,10 +679,10 @@ TRANSLATIONS = {
     "Network search": ("Network-Suche", "Поиск по сети", "关系网搜索"),
     "Highlights": ("Highlights", "Выделенные", "重点关注"),
     "Highlighted counterparts": ("Hervorgehobene Gegenüber", "Выделенные контрагенты", "重点关注的对方"),
-    "Characters, Corporations and Alliances that get a tile on the Markers page, with the number of accounts that deal with them in the Network.": (
-        "Characters, Corporations und Alliances, die auf der Marker-Seite eine Kachel bekommen, mit der Anzahl der Accounts, die im Network mit ihnen zu tun haben.",
-        "Characters, Corporations и Alliances, для которых на странице маркеров создаётся плитка с числом аккаунтов, имеющих с ними дело в сети.",
-        "在标记页面上获得磁贴的 Characters、Corporations 和 Alliances，并显示在关系网中与其有往来的账户数量。",
+    "Characters, Corporations and Alliances that get a tile on the Network page, with the number of accounts that deal with them in the Network.": (
+        "Characters, Corporations und Alliances, die auf der Network-Seite eine Kachel bekommen, mit der Anzahl der Accounts, die im Network mit ihnen zu tun haben.",
+        "Characters, Corporations и Alliances, для которых на странице сети создаётся плитка с числом аккаунтов, имеющих с ними дело в сети.",
+        "在关系网页面上获得磁贴的 Characters、Corporations 和 Alliances，并显示在关系网中与其有往来的账户数量。",
     ),
     "Counterpart, Corporation or Alliance": (
         "Gegenüber, Corporation oder Alliance",

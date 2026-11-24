@@ -49,7 +49,6 @@ LOCATIONS = {
 
 NAV_MARKERS = "markers"
 NAV_NETWORK = "network"
-NAV_NETWORK_SEARCH = "network_search"
 NAV_SETTINGS = "settings"
 NAV_STATISTICS = "statistics"
 NAV_LOG = "log"
@@ -487,7 +486,6 @@ def corporations(request):
             **_notices(config),
             "report": report,
             "tiles": report.tiles if report else [],
-            "highlights": report.highlight_tiles(config.highlight_counterparts or {}) if report else [],
             "switched_off": _switched_off(config),
             "killmails_missing": _killmails_missing(config),
         },
@@ -539,7 +537,13 @@ def network(request):
     return _render(
         request,
         "eos_spy_network/network.html",
-        {**_notices(config), "report": report, "tiles": report.network_tiles if report else []},
+        {
+            **_notices(config),
+            "report": report,
+            "tiles": report.network_tiles if report else [],
+            "highlights": report.highlight_tiles(config.highlight_counterparts or {}) if report else [],
+            "suggestions": report.suggestions() if report else [],
+        },
         NAV_NETWORK,
         started,
     )
@@ -564,7 +568,7 @@ def network_search(request):
             "query_listed": any(query in names for _label, names in suggestions),
             "rows": report.search(query) if report else [],
         },
-        NAV_NETWORK_SEARCH,
+        NAV_NETWORK,
         started,
     )
 

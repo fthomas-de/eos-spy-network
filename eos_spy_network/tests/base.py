@@ -42,6 +42,8 @@ class SpyTestCase(TestCase):
         self.esi_names = self._patch("eos_spy_network.affiliations._esi_names", {})
         self.esi_affiliations = self._patch("eos_spy_network.affiliations._esi_affiliations", {})
         self.esi_corporation_alliance = self._patch("eos_spy_network.affiliations._esi_corporation_alliance", None)
+        # None = ESI could not be asked: a Corporation then counts by what Auth has it in today
+        self.esi_alliance_history = self._patch("eos_spy_network.tenure._esi_alliance_history", None)
 
     def _patch(self, target, return_value):
         patcher = patch(target, return_value=return_value)

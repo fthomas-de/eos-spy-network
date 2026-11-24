@@ -97,10 +97,32 @@ class TestSearchPage(SearchTestCase):
 
         self.assertTrue(response.url.startswith(LOGIN))
 
-    def test_should_list_the_page_in_the_menu(self):
-        response = self.client.get(reverse("eos_spy_network:network"))
+    def test_should_put_the_search_box_on_the_network_page_and_not_in_the_menu(self):
+        search = reverse("eos_spy_network:network_search")
 
-        self.assertContains(response, reverse("eos_spy_network:network_search"))
+        network = self.client.get(reverse("eos_spy_network:network"))
+        markers = self.client.get(reverse("eos_spy_network:corporations"))
+
+        self.assertContains(network, f'action="{search}"')
+        self.assertContains(network, '<option value="Outsider">Outsider</option>', html=True)
+        self.assertNotContains(markers, search)
+
+    def test_should_keep_the_network_tab_current_on_the_search_page(self):
+        response = self.client.get(reverse("eos_spy_network:network_search"), {"q": "Outsider"})
+
+        self.assertEqual(response.context["nav"], "network")
+
+    def test_should_not_offer_the_alliance_or_its_corporations(self):
+        stored = snapshot.current()
+        # a snapshot of before the rule: the outsider sits in our Corporation and Alliance
+        row = next(row for row in stored.data["entities"] if row[0] == OUTSIDER)
+        row[3], row[4] = 2001, ALLIANCE_ID
+
+        parties = snapshot.Report(stored).parties
+
+        self.assertIn(OUTSIDER, parties)
+        self.assertNotIn(2001, parties)
+        self.assertNotIn(ALLIANCE_ID, parties)
 
 
 class TestHighlights(SearchTestCase):
@@ -142,19 +164,26 @@ class TestHighlightPages(SearchTestCase):
         self.client.force_login(make_user("lead", VIEW_SUSPECTS))
 
     def test_should_show_no_section_without_a_highlight(self):
-        response = self.client.get(reverse("eos_spy_network:corporations"))
+        response = self.client.get(reverse("eos_spy_network:network"))
 
         self.assertNotContains(response, "Highlights")
 
-    def test_should_show_the_tiles_above_the_corporations(self):
+    def test_should_show_the_tiles_above_the_corporations_of_the_network_page(self):
+        configure(highlight_counterparts={str(OUTSIDER): "Outsider"})
+
+        response = self.client.get(reverse("eos_spy_network:network"))
+
+        html = response.content.decode()
+        self.assertContains(response, reverse("eos_spy_network:network_search") + "?q=Outsider")
+        self.assertLess(html.index("Highlights"), html.index(reverse("eos_spy_network:network_corporation", args=[2001])))
+
+    def test_should_not_show_the_tiles_on_the_markers_page(self):
         configure(highlight_counterparts={str(OUTSIDER): "Outsider"})
 
         response = self.client.get(reverse("eos_spy_network:corporations"))
 
-        html = response.content.decode()
-        self.assertContains(response, "Outsider")
-        self.assertContains(response, reverse("eos_spy_network:network_search") + "?q=Outsider")
-        self.assertLess(html.index("Highlights"), html.index(reverse("eos_spy_network:corporation", args=[2001])))
+        self.assertNotContains(response, "Highlights")
+        self.assertNotContains(response, "?q=Outsider")
 
 
 class TestHighlightSettings(SearchTestCase):

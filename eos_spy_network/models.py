@@ -186,7 +186,7 @@ class SpyConfiguration(SingletonModel):
         blank=True,
         verbose_name=_("Highlighted counterparts"),
         help_text=_(
-            "Characters, Corporations and Alliances that get a tile on the Markers page, with the number of "
+            "Characters, Corporations and Alliances that get a tile on the Network page, with the number of "
             "accounts that deal with them in the Network."
         ),
     )
@@ -441,3 +441,22 @@ class SweepStats(models.Model):
 
     def __str__(self):
         return f"Sweep {self.finished_at:%Y-%m-%d %H:%M}"
+
+
+class CorporationAlliances(models.Model):
+    """The Alliances a Corporation was in and since when, as ESI's public alliance history lists them.
+
+    Auth knows only a Corporation's Alliance of today; whether a character's payment of last spring was made
+    while its Corporation was in the Alliance needs the past (``tenure``). The calculation task fills it.
+    """
+
+    corporation_id = models.PositiveBigIntegerField(primary_key=True)
+    # [[ISO start, Alliance ID or null], ...], oldest first; null = left its Alliance
+    history = models.JSONField(default=list)
+    fetched_at = models.DateTimeField()
+
+    class Meta:
+        default_permissions = ()
+
+    def __str__(self):
+        return f"Alliance history of {self.corporation_id}"

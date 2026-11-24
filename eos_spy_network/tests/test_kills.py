@@ -12,6 +12,7 @@ from allianceauth.authentication.models import CharacterOwnership
 
 from eos_spy_network import markers, snapshot
 from eos_spy_network.models import BlueKill, ContactSource
+from eos_spy_network.tenure import Tenure
 
 from .base import ALLIANCE_ID, OTHER_ALLIANCE_ID, SpyTestCase, add_contact, add_token, configure, make_character, make_corporation, make_user
 
@@ -356,3 +357,42 @@ class TestKillsPage(KillTestCase):
             response = self.client.get(reverse("eos_spy_network:corporations"))
 
         self.assertContains(response, "killtracker is not installed")
+
+
+class TestKillsTenure(KillTestCase):
+    """The alt was in a Corporation outside the Alliance until 30 days ago (user, 2026-11-23)."""
+
+    def setUp(self):
+        super().setUp()
+        now = timezone.now()
+        self.tenure = Tenure(
+            ALLIANCE_ID,
+            {2001},
+            {ALT: [(now - timedelta(days=100), 4000), (now - timedelta(days=30), 2001)]},
+            {4000: [], 2001: [(now - timedelta(days=900), ALLIANCE_ID)]},
+        )
+
+    def marker(self):
+        (tile,) = markers.corporation_tiles(corporation_id=2001, tenure=self.tenure)
+        suspect = next((suspect for suspect in tile.suspects if suspect.user_id == self.user.pk), None)
+        return suspect.markers.get(markers.BLUE_KILLS) if suspect else None
+
+    def test_should_ignore_a_kill_from_before_the_character_joined_and_not_copy_it(self):
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=BLUE_ALLIANCE, days_ago=60)
+
+        self.assertIsNone(self.marker())
+        self.assertFalse(BlueKill.objects.exists())
+
+    def test_should_count_a_kill_from_since_the_character_joined(self):
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=BLUE_ALLIANCE, days_ago=10)
+
+        self.assertEqual(self.marker().count, 1)
+
+    def test_should_hide_a_copy_made_before_the_rule(self):
+        add_killmail(1, [ALT], victim_id=90000001, alliance_id=BLUE_ALLIANCE, days_ago=60)
+        self.tenure, tenure = None, self.tenure
+        self.assertEqual(self.marker().count, 1)
+
+        self.tenure = tenure
+
+        self.assertIsNone(self.marker())

@@ -1,6 +1,6 @@
 {% load i18n %}
 {% load evelinks %}
-{# One highlighted party on the Markers page: its standings, its Corporation and Alliance, the accounts that deal with it. #}
+{# One highlighted party on the Network page: its standings, its Corporation and Alliance, the accounts that deal with it. #}
 <div class="card h-100 {% if tile.hostile is not None %}border-danger{% elif tile.accounts %}border-warning{% else %}border-secondary{% endif %}">
     <div class="card-body d-flex flex-column">
         <div class="d-flex align-items-center gap-2 mb-2">

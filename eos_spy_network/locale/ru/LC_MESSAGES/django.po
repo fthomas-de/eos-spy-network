@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-23 17:59+0000\n"
-"PO-Revision-Date: 2026-11-23 17:59+0000\n"
+"POT-Creation-Date: 2026-11-23 21:55+0000\n"
+"PO-Revision-Date: 2026-11-23 21:55+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: ru\n"
 "Language: ru\n"
@@ -17,11 +17,11 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: auth_hooks.py:15 templates/eos_spy_network/base.html:6
-#: templates/eos_spy_network/base.html:51
+#: templates/eos_spy_network/base.html:48
 msgid "Spy Network"
 msgstr "Spy Network"
 
-#: contacts.py:25 snapshot.py:51
+#: contacts.py:25 snapshot.py:52
 #: templates/eos_spy_network/network_corporation.html:104
 #: templates/eos_spy_network/network_search.html:39
 #: templates/eos_spy_network/partials/capital-contracts.html:7
@@ -32,7 +32,7 @@ msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:363 snapshot.py:52
+#: contacts.py:26 models.py:363 snapshot.py:53
 #: templates/eos_spy_network/network_corporation.html:107
 #: templates/eos_spy_network/network_search.html:41
 #: templates/eos_spy_network/partials/contacts.html:10
@@ -44,7 +44,7 @@ msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:101 models.py:63 models.py:362 snapshot.py:53
+#: contacts.py:27 forms.py:101 models.py:63 models.py:362 snapshot.py:54
 #: templates/eos_spy_network/network_corporation.html:108
 #: templates/eos_spy_network/network_search.html:42
 #: templates/eos_spy_network/partials/contacts.html:11
@@ -62,7 +62,7 @@ msgctxt "EVE jargon"
 msgid "Faction"
 msgstr "Faction"
 
-#: forms.py:160 snapshot.py:49 templates/eos_spy_network/base.html:17
+#: forms.py:160 snapshot.py:50 templates/eos_spy_network/base.html:17
 #: templates/eos_spy_network/corporation.html:55
 #: templates/eos_spy_network/corporation.html:104
 #: templates/eos_spy_network/settings.html:33
@@ -323,11 +323,11 @@ msgstr "Выделенные контрагенты"
 
 #: models.py:189
 msgid ""
-"Characters, Corporations and Alliances that get a tile on the Markers page, "
+"Characters, Corporations and Alliances that get a tile on the Network page, "
 "with the number of accounts that deal with them in the Network."
 msgstr ""
-"Characters, Corporations и Alliances, для которых на странице маркеров "
-"создаётся плитка с числом аккаунтов, имеющих с ними дело в сети."
+"Characters, Corporations и Alliances, для которых на странице сети создаётся"
+" плитка с числом аккаунтов, имеющих с ними дело в сети."
 
 #: models.py:197
 msgid "Markers switched off"
@@ -349,86 +349,86 @@ msgid "Waiting for the task queue"
 msgstr "Ожидание очереди задач"
 
 #: progress.py:19
+msgid "Reading Alliance histories"
+msgstr "Чтение истории Alliance"
+
+#: progress.py:20
 msgid "Reading the hostile contacts"
 msgstr "Чтение враждебных контактов"
 
-#: progress.py:20
+#: progress.py:21
 msgid "Checking memberships"
 msgstr "Проверка членства"
 
-#: progress.py:21
+#: progress.py:22
 msgid "Checking Corporation histories"
 msgstr "Проверка истории Corporation"
 
-#: progress.py:22
+#: progress.py:23
 msgid "Checking contacts"
 msgstr "Проверка контактов"
 
-#: progress.py:23
+#: progress.py:24
 msgid "Checking mails"
 msgstr "Проверка писем"
 
-#: progress.py:24
+#: progress.py:25
 msgid "Checking wallet journals"
 msgstr "Проверка журналов кошелька"
 
-#: progress.py:25
+#: progress.py:26
 msgid "Checking contracts"
 msgstr "Проверка контрактов"
 
-#: progress.py:26
+#: progress.py:27
 msgid "Checking killmails"
 msgstr "Проверка киллмейлов"
 
-#: progress.py:27
+#: progress.py:28
 msgid "Checking capital contracts"
 msgstr "Проверка капитальных контрактов"
 
-#: progress.py:28
+#: progress.py:29
 msgid "Finding connections outside the Alliance"
 msgstr "Поиск связей за пределами Alliance"
 
-#: progress.py:29
+#: progress.py:30
 msgid "Looking up Corporations and Alliances"
 msgstr "Определение Corporation и Alliance"
 
-#: progress.py:30
+#: progress.py:31
 msgid "Saving the result"
 msgstr "Сохранение результата"
 
-#: snapshot.py:49 templates/eos_spy_network/base.html:23
+#: snapshot.py:50 templates/eos_spy_network/base.html:23
 #: templates/eos_spy_network/settings.html:91 views.py:42 views.py:43
 msgid "Network"
 msgstr "Сеть"
 
-#: snapshot.py:49
+#: snapshot.py:50
 msgid "Affiliations"
 msgstr "Принадлежность"
 
-#: templates/eos_spy_network/base.html:26 views.py:44
-msgid "Network search"
-msgstr "Поиск по сети"
-
-#: templates/eos_spy_network/base.html:32 views.py:46
+#: templates/eos_spy_network/base.html:29 views.py:46
 msgid "Statistics"
 msgstr "Статистика"
 
-#: templates/eos_spy_network/base.html:35 views.py:47
+#: templates/eos_spy_network/base.html:32 views.py:47
 msgid "Log"
 msgstr "Журнал"
 
-#: templates/eos_spy_network/base.html:41 views.py:45
+#: templates/eos_spy_network/base.html:38 views.py:45
 msgid "Settings"
 msgstr "Настройки"
 
 #: templates/eos_spy_network/corporation.html:29
-#: templates/eos_spy_network/corporations.html:41
-#: templates/eos_spy_network/corporations.html:51
-#: templates/eos_spy_network/network.html:29
-#: templates/eos_spy_network/network.html:38
-#: templates/eos_spy_network/network.html:44
-#: templates/eos_spy_network/network.html:50
-#: templates/eos_spy_network/network.html:56
+#: templates/eos_spy_network/corporations.html:30
+#: templates/eos_spy_network/corporations.html:40
+#: templates/eos_spy_network/network.html:62
+#: templates/eos_spy_network/network.html:71
+#: templates/eos_spy_network/network.html:77
+#: templates/eos_spy_network/network.html:83
+#: templates/eos_spy_network/network.html:89
 #: templates/eos_spy_network/network_corporation.html:20
 #: templates/eos_spy_network/partials/highlight-tile.html:40
 msgctxt "eos-spy-network"
@@ -437,12 +437,12 @@ msgstr "Mains"
 
 #: templates/eos_spy_network/corporation.html:30
 #: templates/eos_spy_network/corporation.html:45
-#: templates/eos_spy_network/corporations.html:42
+#: templates/eos_spy_network/corporations.html:31
 msgid "Mains with markers"
 msgstr "Mains с маркерами"
 
 #: templates/eos_spy_network/corporation.html:31
-#: templates/eos_spy_network/corporations.html:43
+#: templates/eos_spy_network/corporations.html:32
 msgid "Alts of other mains with markers"
 msgstr "Alts чужих Mains с маркерами"
 
@@ -470,7 +470,7 @@ msgid "Characters"
 msgstr "Characters"
 
 #: templates/eos_spy_network/corporation.html:82
-#: templates/eos_spy_network/corporations.html:58
+#: templates/eos_spy_network/corporations.html:47
 msgid "No markers."
 msgstr "Нет маркеров."
 
@@ -568,23 +568,12 @@ msgstr "Загрузка ..."
 msgid "The contracts could not be loaded."
 msgstr "Не удалось загрузить контракты."
 
-#: templates/eos_spy_network/corporations.html:12
-#: templates/eos_spy_network/settings.html:103
-msgid "Highlights"
-msgstr "Выделенные"
-
-#: templates/eos_spy_network/corporations.html:18
-#: templates/eos_spy_network/statistics.html:21
-msgctxt "eos-spy-network"
-msgid "Corporations"
-msgstr "Corporations"
-
-#: templates/eos_spy_network/corporations.html:25
+#: templates/eos_spy_network/corporations.html:14
 msgid "Hide Corporations without markers"
 msgstr "Скрыть Corporations без маркеров"
 
-#: templates/eos_spy_network/corporations.html:64
-#: templates/eos_spy_network/network.html:69
+#: templates/eos_spy_network/corporations.html:53
+#: templates/eos_spy_network/network.html:102
 #: templates/eos_spy_network/network_corporation.html:154
 #: templates/eos_spy_network/partials/capital-contracts.html:33
 #: templates/eos_spy_network/partials/dealings.html:33
@@ -592,8 +581,8 @@ msgstr "Скрыть Corporations без маркеров"
 msgid "View details"
 msgstr "Подробнее"
 
-#: templates/eos_spy_network/corporations.html:73
-#: templates/eos_spy_network/network.html:78
+#: templates/eos_spy_network/corporations.html:62
+#: templates/eos_spy_network/network.html:111
 msgid "Auth knows no Corporation of this Alliance."
 msgstr "Auth не знает ни одной Corporation этого Alliance."
 
@@ -645,26 +634,48 @@ msgid "Nothing saved yet."
 msgstr "Пока ничего не сохранено."
 
 #: templates/eos_spy_network/network.html:14
+#: templates/eos_spy_network/network_search.html:12
+msgid "Counterpart, Corporation or Alliance"
+msgstr "Контрагент, Corporation или Alliance"
+
+#: templates/eos_spy_network/network.html:27
+#: templates/eos_spy_network/network_search.html:28
+msgctxt "eos-spy-network"
+msgid "Search"
+msgstr "Поиск"
+
+#: templates/eos_spy_network/network.html:34
+#: templates/eos_spy_network/settings.html:103
+msgid "Highlights"
+msgstr "Выделенные"
+
+#: templates/eos_spy_network/network.html:40
+#: templates/eos_spy_network/statistics.html:21
+msgctxt "eos-spy-network"
+msgid "Corporations"
+msgstr "Corporations"
+
+#: templates/eos_spy_network/network.html:47
 msgid "Hide Corporations without connections"
 msgstr "Скрыть Corporation без связей"
 
-#: templates/eos_spy_network/network.html:30
+#: templates/eos_spy_network/network.html:63
 #: templates/eos_spy_network/network_corporation.html:21
 msgid "Mains with connections"
 msgstr "Mains со связями"
 
-#: templates/eos_spy_network/network.html:37
+#: templates/eos_spy_network/network.html:70
 msgid "The partner, its Corporation or its Alliance is a hostile contact."
 msgstr "Партнёр, его Corporation или его Alliance — враждебный контакт."
 
-#: templates/eos_spy_network/network.html:37
+#: templates/eos_spy_network/network.html:70
 #: templates/eos_spy_network/network_corporation.html:41
 #: templates/eos_spy_network/network_corporation.html:83
 #: templates/eos_spy_network/partials/network-legend.html:7
 msgid "Hostile partner"
 msgstr "Враждебный партнёр"
 
-#: templates/eos_spy_network/network.html:43
+#: templates/eos_spy_network/network.html:76
 msgid ""
 "At least two characters of the account exchanged ISK or a contract without "
 "ISK with the same character outside the Alliance."
@@ -672,17 +683,17 @@ msgstr ""
 "Как минимум два Character аккаунта обменивались ISK или контрактом без ISK с"
 " одним и тем же Character вне Alliance."
 
-#: templates/eos_spy_network/network.html:43
+#: templates/eos_spy_network/network.html:76
 #: templates/eos_spy_network/network_corporation.html:44
 #: templates/eos_spy_network/network_corporation.html:86
 msgid "Shared payment partner"
 msgstr "Общий платёжный партнёр"
 
-#: templates/eos_spy_network/network.html:49
+#: templates/eos_spy_network/network.html:82
 msgid "Player trading with characters outside the Alliance."
 msgstr "Player trading с Character вне Alliance."
 
-#: templates/eos_spy_network/network.html:49
+#: templates/eos_spy_network/network.html:82
 #: templates/eos_spy_network/network_corporation.html:47
 #: templates/eos_spy_network/network_corporation.html:67
 #: templates/eos_spy_network/network_corporation.html:89
@@ -692,11 +703,11 @@ msgstr "Player trading с Character вне Alliance."
 msgid "Player trading"
 msgstr "Player trading"
 
-#: templates/eos_spy_network/network.html:55
+#: templates/eos_spy_network/network.html:88
 msgid "Private contracts with items with characters outside the Alliance."
 msgstr "Личные контракты с предметами с Character вне Alliance."
 
-#: templates/eos_spy_network/network.html:55
+#: templates/eos_spy_network/network.html:88
 #: templates/eos_spy_network/network_corporation.html:50
 #: templates/eos_spy_network/network_corporation.html:68
 #: templates/eos_spy_network/network_corporation.html:92
@@ -705,7 +716,7 @@ msgstr "Личные контракты с предметами с Character в�
 msgid "Private contract"
 msgstr "Личный контракт"
 
-#: templates/eos_spy_network/network.html:63
+#: templates/eos_spy_network/network.html:96
 #: templates/eos_spy_network/network_corporation.html:171
 msgid "No connections outside the Alliance."
 msgstr "Нет связей вне Alliance."
@@ -782,15 +793,6 @@ msgstr "Отмена"
 msgctxt "eos-spy-network"
 msgid "Ignore"
 msgstr "Игнорировать"
-
-#: templates/eos_spy_network/network_search.html:12
-msgid "Counterpart, Corporation or Alliance"
-msgstr "Контрагент, Corporation или Alliance"
-
-#: templates/eos_spy_network/network_search.html:28
-msgctxt "eos-spy-network"
-msgid "Search"
-msgstr "Поиск"
 
 #: templates/eos_spy_network/network_search.html:37
 msgctxt "eos-spy-network"
@@ -1335,21 +1337,25 @@ msgstr "Обход контрактов ещё не выполнялся."
 msgid "Suspects"
 msgstr "Подозреваемые"
 
-#: views.py:685
+#: views.py:44
+msgid "Network search"
+msgstr "Поиск по сети"
+
+#: views.py:689
 msgid "The markers and connections are being recalculated."
 msgstr "Маркеры и связи пересчитываются."
 
-#: views.py:687
+#: views.py:691
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr "Не удалось запустить пересчёт: очередь задач недоступна."
 
-#: views.py:724
+#: views.py:728
 #, python-format
 msgid "%(name)s is ignored. The connections are being recalculated."
 msgstr "%(name)s игнорируется. Связи пересчитываются."
 
-#: views.py:728
+#: views.py:732
 #, python-format
 msgid ""
 "%(name)s is ignored, but the task queue is not reachable: recalculate once "
@@ -1358,11 +1364,11 @@ msgstr ""
 "%(name)s игнорируется, но очередь задач недоступна: пересчитайте, когда она "
 "вернётся."
 
-#: views.py:755
+#: views.py:759
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr "Настройки сохранены. Маркеры и связи пересчитываются."
 
-#: views.py:759
+#: views.py:763
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

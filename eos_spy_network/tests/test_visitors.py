@@ -187,23 +187,30 @@ class TestContracts(VisitorTestCase):
 class TestNetwork(VisitorTestCase):
     STRANGER = 90000100
 
-    def test_should_show_an_outsider_at_the_alts_corporation(self):
+    def trade(self, character):
         from corptools.models import CharacterAudit, CharacterWalletJournalEntry, EveName
 
         EveName.objects.create(eve_id=self.STRANGER, name="Stranger", category="character")
-        main = EveCharacter.objects.get(pk=self.outsider.profile.main_character.pk)
         CharacterWalletJournalEntry.objects.create(
-            character=CharacterAudit.objects.create(character=main), entry_id=1, date=timezone.now(),
-            description="", ref_type="player_trading", first_party_id=main.character_id,
+            character=CharacterAudit.objects.create(character=character), entry_id=1, date=timezone.now(),
+            description="", ref_type="player_trading", first_party_id=character.character_id,
             second_party_id=self.STRANGER, amount=-1000, balance=0,
         )
         add_contact(ContactSource.ALLIANCE, ALLIANCE_ID, self.STRANGER, -10, contact_type="character")
         snapshot.update()
         self.login(VIEW_SUSPECTS)
+        return self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
 
-        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+    def test_should_show_an_outsider_at_the_alts_corporation(self):
+        # the alt in the Alliance made the payment: the main outside the Alliance did nothing that counts
+        response = self.trade(EveCharacter.objects.get(character_id=5201))
 
         self.assertContains(response, "outsider main")
+
+    def test_should_not_count_what_the_main_outside_the_alliance_paid(self):
+        response = self.trade(EveCharacter.objects.get(pk=self.outsider.profile.main_character.pk))
+
+        self.assertNotContains(response, "outsider main")
 
 
 class TestSettings(VisitorTestCase):

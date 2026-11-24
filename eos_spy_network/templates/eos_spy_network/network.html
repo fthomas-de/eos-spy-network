@@ -7,6 +7,39 @@
     {% include "eos_spy_network/partials/notices.html" %}
     {% include "eos_spy_network/partials/state.html" %}
 
+    {# the same box as on the search page (searchable.js: a Tom Select, a typed text is kept); the result is listed there #}
+    {% if report %}
+        <form method="get" action="{% url 'eos_spy_network:network_search' %}" class="row g-2 align-items-end mb-4">
+            <div class="col-md-8 col-lg-6">
+                <label for="eos-spy-network-search-query" class="form-label">{% translate "Counterpart, Corporation or Alliance" %}</label>
+                <select id="eos-spy-network-search-query" name="q" class="form-select" data-eos-spy-network-search data-eos-spy-network-create>
+                    <option value=""></option>
+                    {% for label, names in suggestions %}
+                        <optgroup label="{{ label }}">
+                            {% for name in names %}
+                                <option value="{{ name }}">{{ name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">{% translate "Search" context "eos-spy-network" %}</button>
+            </div>
+        </form>
+    {% endif %}
+
+    {# the highlighted counterparts of the settings: only when there are any, the Corporations then get a heading of their own #}
+    {% if highlights %}
+        <h5 class="mb-3">{% translate "Highlights" %}</h5>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3 mb-4">
+            {% for tile in highlights %}
+                <div class="col">{% include "eos_spy_network/partials/highlight-tile.html" %}</div>
+            {% endfor %}
+        </div>
+        <h5 class="mb-3">{% translate "Corporations" context "eos-spy-network" %}</h5>
+    {% endif %}
+
     {% if tiles %}
         {# tiles.js hides the tiles marked clean while the switch is on, and remembers it per browser #}
         <div class="form-check form-switch mb-3">
@@ -79,7 +112,13 @@
     {% endif %}
 {% endblock %}
 
+{% block extra_css %}
+    {{ block.super }}
+    {% include "eos_spy_network/bundles/tom-select-css.html" %}
+{% endblock %}
+
 {% block extra_javascript %}
     {{ block.super }}
+    {% include "eos_spy_network/bundles/tom-select-js.html" %}
     {% sri_static "eos_spy_network/js/tiles.js" %}
 {% endblock %}

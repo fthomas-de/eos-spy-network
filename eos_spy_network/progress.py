@@ -16,6 +16,7 @@ RUNNING_TIMEOUT = 60 * 60
 
 STEPS = {
     QUEUED: _("Waiting for the task queue"),
+    "tenure": _("Reading Alliance histories"),
     "hostiles": _("Reading the hostile contacts"),
     "membership": _("Checking memberships"),
     "history": _("Checking Corporation histories"),

@@ -40,6 +40,7 @@ from .markers import (
 )
 from .models import BlueKill, ContactSource, FindingReview, Snapshot, SpyConfiguration
 from .network import Connections, Link, Standing, affiliate, connections, kept_partners
+from .tenure import load as load_tenure
 
 logger = get_extension_logger(__name__)
 
@@ -139,7 +140,10 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
         # both read once here, for the markers and the network alike
         hostile_list = hostile_entities(config)
         members = roster(config)
-        tiles = corporation_tiles(config, step=step, hostiles=hostile_list, members=members)
+        step("tenure")
+        # when each character was in the Alliance: what it did before or after does not count (user, 2026-11-23)
+        tenure = load_tenure(config, members.characters, config.since())
+        tiles = corporation_tiles(config, step=step, hostiles=hostile_list, members=members, tenure=tenure)
     step("connections")
     mains = members.mains
     with measurement.phase(NETWORK):
@@ -152,6 +156,7 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
             members.characters,
             set(config.ignored_network_characters or ()),
             {int(eve_id) for eve_id in config.ignored_network_counterparts or ()},
+            tenure,
         )
     step("affiliations")
     with measurement.phase(AFFILIATIONS):
@@ -177,7 +182,9 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
         _affiliate_rows(contact_rows, entities, hostiles, "contact_id")
         _reference_rows(contact_rows, entities, hostiles)
         standings = {eve_id: standing for eve_id, standing in alliance_standings(config).items() if eve_id in entities}
-        found = kept_partners(found, network_blue_ids(config) if config.network_neutral else None)
+        # a partner ESI puts into our Alliance or one of our Corporations is a member, whatever Auth knows
+        ours = {config.alliance.alliance_id, *(tile.id for tile in tiles)}
+        found = kept_partners(found, network_blue_ids(config) if config.network_neutral else None, ours)
 
     tile_ids = {tile.id for tile in tiles}
     visited = defaultdict(set)  # user -> the Corporations of the Alliance its characters are in
@@ -656,11 +663,16 @@ class Report:
     @cached_property
     def parties(self) -> dict:
         """EVE ID -> (name, category) of every counterpart of the Network and of its Corporation and Alliance."""
+        # the Alliance and its Corporations are no counterpart (user, 2026-11-23); a snapshot older than that
+        # rule may still hold them in a chain
+        ours = {self.alliance_id, *(tile.id for tile in self.network_tiles)}
         parties = {}
         for tile in self.network_tiles:
             for account in tile.accounts:
                 for counterpart_id in account.counterparts:
                     for eve_id in account.chain(counterpart_id):
+                        if eve_id in ours:
+                            continue
                         entity = self.entities.get(eve_id)
                         parties[eve_id] = (account._name(eve_id), entity.category if entity else "")
         return parties

@@ -21,6 +21,7 @@ from allianceauth.eveonline.models import EveCorporationInfo
 from eos_spy_network import markers, snapshot
 from eos_spy_network.hostiles import hostile_index
 from eos_spy_network.models import CapitalContract, CapitalContractItem, ContactSource
+from eos_spy_network.tenure import Tenure
 
 from .base import ALLIANCE_ID, SpyTestCase, add_contact, add_token, configure, make_alliance, make_character, make_corporation, make_user
 
@@ -776,3 +777,76 @@ class TestCapitalContracts(MarkerTestCase):
         self.assertIn("2x Naglfar", html)
         self.assertIn("5,000.0 M", html)
         self.assertIn("Cheap", html)
+
+
+class TestTenure(MarkerTestCase):
+    """Only what the character did while it was in a Corporation of the Alliance counts (user, 2026-11-23).
+
+    The main was in a Corporation outside the Alliance until 30 days ago.
+    """
+
+    def setUp(self):
+        super().setUp()
+        now = timezone.now()
+        self.tenure = Tenure(
+            ALLIANCE_ID,
+            {2001},
+            {self.main.character_id: [(now - timedelta(days=100), 4000), (now - timedelta(days=30), 2001)]},
+            {4000: [], 2001: [(now - timedelta(days=900), ALLIANCE_ID)]},
+        )
+
+    def kinds(self):
+        (tile,) = markers.corporation_tiles(corporation_id=2001, tenure=self.tenure)
+        return {kind for suspect in tile.suspects for kind in suspect.markers}
+
+    def add_entry(self, entry_id, first_party_id, second_party_id, days_ago):
+        CharacterWalletJournalEntry.objects.create(
+            character=self.audit, entry_id=entry_id, date=timezone.now() - timedelta(days=days_ago), description="",
+            ref_type="player_donation", first_party_id=first_party_id, second_party_id=second_party_id, amount=1,
+            balance=1,
+        )
+
+    def add_contract(self, contract_id, issuer_id, assignee_id, days_ago):
+        now = timezone.now() - timedelta(days=days_ago)
+        Contract.objects.create(
+            id=f"{self.audit.pk}-{contract_id}", contract_id=contract_id, character=self.audit,
+            issuer_id=issuer_id, issuer_name=eve_name(issuer_id), issuer_corporation_id=2001,
+            issuer_corporation_name=eve_name(2001, "corporation"), assignee_id=assignee_id,
+            assignee_name=eve_name(assignee_id), acceptor_id=0, acceptor_name=eve_name(0), for_corporation=False,
+            date_expired=now, date_issued=now, status="finished", contract_type="item_exchange",
+            availability="personal", title="",
+        )
+
+    def add_mail(self, mail_id, from_id, days_ago=None):
+        timestamp = None if days_ago is None else timezone.now() - timedelta(days=days_ago)
+        MailMessage.objects.create(
+            id_key=mail_id, character=self.audit, mail_id=mail_id, from_id=from_id, timestamp=timestamp
+        )
+
+    def test_should_ignore_isk_from_before_the_character_joined(self):
+        self.add_entry(1, HOSTILE_CORP, self.main.character_id, days_ago=60)
+
+        self.assertEqual(self.kinds(), set())
+
+    def test_should_count_isk_from_since_the_character_joined(self):
+        self.add_entry(1, HOSTILE_CORP, self.main.character_id, days_ago=10)
+
+        self.assertEqual(self.kinds(), {markers.WALLET})
+
+    def test_should_ignore_a_contract_from_before_the_character_joined(self):
+        self.add_contract(1, self.main.character_id, HOSTILE_CORP, days_ago=60)
+
+        self.assertEqual(self.kinds(), set())
+
+    def test_should_count_a_contract_from_since_the_character_joined(self):
+        self.add_contract(1, self.main.character_id, HOSTILE_CORP, days_ago=10)
+
+        self.assertEqual(self.kinds(), {markers.CONTRACTS})
+
+    def test_should_ignore_mails_from_before_the_character_joined_but_keep_an_undated_one(self):
+        self.add_mail(1, HOSTILE_MEMBER, days_ago=60)
+        self.assertEqual(self.kinds(), set())
+
+        self.add_mail(2, HOSTILE_MEMBER)
+
+        self.assertEqual(self.kinds(), {markers.MAILS})

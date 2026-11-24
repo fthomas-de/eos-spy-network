@@ -300,10 +300,13 @@ def corporation_tiles(
     step=_no_step,
     hostiles: list | None = None,
     members: Roster | None = None,
+    tenure=None,
 ) -> list:
     """The Corporations of the configured Alliance, each with its marked accounts; with
     ``corporation_id`` only that one. ``step`` is told the name of each check as it starts.
-    ``hostiles`` (``hostile_entities``) and ``members`` (``roster``) save reading them twice."""
+    ``hostiles`` (``hostile_entities``) and ``members`` (``roster``) save reading them twice. With a
+    ``tenure`` (``tenure.load``) mails, ISK, contracts and kills count only from the time the character was in
+    the Alliance."""
     config = config or SpyConfiguration.get_solo()
     if not config.alliance:
         return []
@@ -327,11 +330,11 @@ def corporation_tiles(
     step("hostiles")
     index = hostile_index(config, hostiles)
     if accounts and index:
-        _check(accounts, index, config, members.characters, step)
+        _check(accounts, index, config, members.characters, step, tenure)
     # blue kills need no hostile: the victim is a friend
     if accounts:
         step("kills")
-        _check_kills(accounts, config, members.characters)
+        _check_kills(accounts, config, members.characters, tenure)
     # like the kills, no hostile needed: the contract itself is the finding
     if accounts:
         step("capitals")
@@ -354,7 +357,9 @@ def corporation_tiles(
     return list(tiles.values())
 
 
-def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, characters: list, step=_no_step) -> None:
+def _check(
+    accounts: dict, index: HostileIndex, config: SpyConfiguration, characters: list, step=_no_step, tenure=None
+) -> None:
     step("membership")
     # EVE ID of every character -> its account; a character of the own account is never a counterpart
     owner = {}
@@ -392,13 +397,13 @@ def _check(accounts: dict, index: HostileIndex, config: SpyConfiguration, charac
     contact_audits = {audit_id: character_id for audit_id, character_id in audits.items() if character_id not in ignored}
     _check_contacts(accounts, index, owner, names, contact_audits, hostile_ids)
     step("mails")
-    _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, since)
+    _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, since, tenure)
     step("wallet")
     _check_wallet(
-        accounts, index, owner, names, audits, hostile_ids, counterparts, since, config.ignored_ref_types or ()
+        accounts, index, owner, names, audits, hostile_ids, counterparts, since, config.ignored_ref_types or (), tenure
     )
     step("contracts")
-    _check_contracts(accounts, index, owner, names, audits, hostile_ids, counterparts, since)
+    _check_contracts(accounts, index, owner, names, audits, hostile_ids, counterparts, since, tenure)
 
 
 def _check_history(accounts, index, config, owner, names, audits, since=None, current=frozenset()):
@@ -466,7 +471,7 @@ def _check_contacts(accounts, index, owner, names, audits, hostile_ids):
         row["character_ids"].append(character_id)
 
 
-def _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, since=None):
+def _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, since=None, tenure=None):
     from corptools.models import MailMessage
 
     mails = MailMessage.objects.filter(character_id__in=list(audits))
@@ -481,23 +486,29 @@ def _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, sinc
         )
 
     found = Found()  # (account, mail ID) -> hostile counterparts, own mailboxes
-    for audit_id, mail_id, from_id in mails.filter(from_id__in=hostile_ids).values_list(
-        "character_id", "mail_id", "from_id"
+    for audit_id, mail_id, from_id, sent in mails.filter(from_id__in=hostile_ids).values_list(
+        "character_id", "mail_id", "from_id", "timestamp"
     ):
         character_id = audits[audit_id]
+        if tenure is not None and not tenure.counts(character_id, sent):
+            continue
         user_id = owner[character_id]
         found.add((user_id, mail_id), counterparts(user_id, from_id), character_id)
-    for audit_id, mail_id, recipient_id in recipients.values_list(
-        "mailmessage__character_id", "mailmessage__mail_id", "mailrecipient_id"
+    for audit_id, mail_id, recipient_id, sent in recipients.values_list(
+        "mailmessage__character_id", "mailmessage__mail_id", "mailrecipient_id", "mailmessage__timestamp"
     ):
         character_id = audits[audit_id]
+        if tenure is not None and not tenure.counts(character_id, sent):
+            continue
         user_id = owner[character_id]
         found.add((user_id, mail_id), counterparts(user_id, recipient_id), character_id)
     # a mail in the boxes of two own characters counts once
     _mark_found(accounts, index, found, MAILS)
 
 
-def _check_wallet(accounts, index, owner, names, audits, hostile_ids, counterparts, since=None, ignored=()):
+def _check_wallet(
+    accounts, index, owner, names, audits, hostile_ids, counterparts, since=None, ignored=(), tenure=None
+):
     from corptools.models import CharacterWalletJournalEntry
 
     entries = CharacterWalletJournalEntry.objects.filter(
@@ -513,6 +524,8 @@ def _check_wallet(accounts, index, owner, names, audits, hostile_ids, counterpar
         "pk", "character_id", "first_party_id", "second_party_id", "date", "ref_type", "amount"
     ):
         character_id = audits[audit_id]
+        if tenure is not None and not tenure.counts(character_id, date):
+            continue
         user_id = owner[character_id]
         parties = counterparts(user_id, first_party_id, second_party_id)
         found.add((user_id, pk), parties, character_id)
@@ -522,7 +535,7 @@ def _check_wallet(accounts, index, owner, names, audits, hostile_ids, counterpar
     _add_rows(accounts, index, names, dealings, WALLET)
 
 
-def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counterparts, since=None):
+def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counterparts, since=None, tenure=None):
     from corptools.models import Contract
 
     contracts = Contract.objects.filter(character_id__in=list(audits))
@@ -560,6 +573,8 @@ def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counter
         "reward",
     ):
         character_id = audits[audit_id]
+        if tenure is not None and not tenure.counts(character_id, date_issued):
+            continue
         user_id = owner[character_id]
         parties = [issuer_id, assignee_id, acceptor_id]
         # the issuer's Corporation speaks for a stranger only: an own alt's Corporation is the membership marker
@@ -627,7 +642,7 @@ def worth_counting(kills, config):
     return kills.filter(Q(value__isnull=True) | Q(value__gte=config.min_kill_value * 1_000_000))
 
 
-def _check_kills(accounts, config, characters):
+def _check_kills(accounts, config, characters, tenure=None):
     """Killmails with an own character among the attackers and a victim in the Alliance or blue to it.
 
     What killtracker holds is copied into ``BlueKill`` first, the marker is
@@ -639,15 +654,17 @@ def _check_kills(accounts, config, characters):
     names = {character_id: name for _user_id, character_id, name, *_rest in characters}
     alliance_id = config.alliance.alliance_id
     since = config.since()
-    _copy_kills(alliance_id, owner, blue_entities(config), since)
+    _copy_kills(alliance_id, owner, blue_entities(config), since, tenure)
 
     kills = worth_counting(BlueKill.objects.filter(alliance_id=alliance_id, character_id__in=list(owner)), config)
     if since is not None:
         kills = kills.filter(time__gte=since)
     seen = defaultdict(set)  # account -> killmail IDs
     for kill in kills.order_by("-time", "killmail_id", "character_id"):
-        # a copy made before own kills were left out
-        if own_kill(owner, kill.character_id, kill.victim_id):
+        # a copy made before own kills were left out, or before the tenure counted
+        if own_kill(owner, kill.character_id, kill.victim_id) or (
+            tenure is not None and not tenure.counts(kill.character_id, kill.time)
+        ):
             continue
         user_id = owner[kill.character_id]
         marker = accounts[user_id].markers.setdefault(BLUE_KILLS, Marker(BLUE_KILLS))
@@ -741,11 +758,11 @@ def own_kill(owner: dict, attacker_id: int, victim_id: int | None) -> bool:
     return victim_id in owner and owner[victim_id] == owner.get(attacker_id)
 
 
-def _copy_kills(alliance_id, owner, blues, since):
+def _copy_kills(alliance_id, owner, blues, since, tenure=None):
     """Copy the blue kills killtracker holds into ``BlueKill``; one already copied keeps its reason.
 
     ``owner`` maps every character of the accounts to its user ID; a kill
-    inside one account is not copied.
+    inside one account is not copied, nor one from before the character was in the Alliance.
     """
 
     def name(found: str, eve_id: int | None) -> str:
@@ -756,7 +773,9 @@ def _copy_kills(alliance_id, owner, blues, since):
 
     copies = []
     for kill in killmails.kills(list(owner), alliance_id, list(blues), since):
-        if own_kill(owner, kill.attacker_id, kill.victim_id):
+        if own_kill(owner, kill.attacker_id, kill.victim_id) or (
+            tenure is not None and not tenure.counts(kill.attacker_id, kill.time)
+        ):
             continue
         # the victim first, then its Corporation, then its Alliance: the closest reason names the standing
         if kill.victim_alliance_id == alliance_id:

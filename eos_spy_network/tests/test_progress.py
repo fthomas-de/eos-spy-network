@@ -24,7 +24,7 @@ class TestTask(SpyTestCase):
             update_snapshot()
 
         steps = [call.args[0] for call in step.call_args_list]
-        self.assertEqual(steps[0], "hostiles")
+        self.assertEqual(steps[:2], ["tenure", "hostiles"])
         self.assertEqual(steps[-3:], ["connections", "affiliations", "saving"])
         self.assertEqual(steps, sorted(steps, key=progress.ORDER.index))
         self.assertIsNone(progress.current())

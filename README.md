@@ -100,8 +100,10 @@ every one with a standing below a configurable value.
 
   Mails, ISK and contracts between characters of the same account never
   count. Mails, ISK and contracts count only within the time frame (a mail
-  without a date always counts); the contacts carry no date in corptools,
-  so today's are checked whatever the time frame.
+  without a date always counts) and only from the time the character was in a
+  Corporation of the Alliance (see [What the markers can see](#what-the-markers-can-see));
+  the contacts carry no date in corptools, so today's are checked whatever the
+  time frame.
 - **Network**: a tile per Corporation with the mains that have ISK
   connections with hostile partners outside the Alliance (a switch hides the
   Corporations without any), and per Corporation the list of such mains; a
@@ -150,17 +152,21 @@ every one with a standing below a configurable value.
 
   "Outside" is everything Auth does not know as part of the Alliance, so a
   character Auth has never seen counts as outside. NPCs (agents, NPC
-  Corporations, factions) never count. Only payments within the time frame
-  count (a contract by its issue date), and none of the ignored entry types. An account whose main is
+  Corporations, factions) never count, and neither does a character Auth does
+  not know whom ESI puts into the Alliance or one of its Corporations: the
+  Alliance is no counterpart of itself. Only payments within the time frame
+  count (a contract by its issue date), only those made while the own character
+  was in a Corporation of the Alliance, and none of the ignored entry types. An account whose main is
   outside the Alliance shows at the Corporations of its alts. The page
   needs `view_suspects`
-- **Network search** (menu entry of its own, `view_suspects`): one search box
+- **Network search** (`view_suspects`; the search box sits on the Network page and
+  leads to a page of its own for the result): one search box
   over the Network tables of every Corporation. Rows whose counterpart, its
   Corporation or its Alliance has the typed text in its name are listed with
   the main (linked to its Corporation's Network page, the main opened) and
   its Corporation; the own characters are not searched. The box suggests the
   parties of the stored Network; a typed text works as well.
-- **Highlights**: the Markers page shows a section above the Corporations
+- **Highlights**: the Network page shows a section above the Corporations
   with a tile per highlighted counterpart (Character, Corporation or
   Alliance, chosen in the settings): the standing the Alliance holds for it,
   its hostile standing if any, its Corporation and Alliance with theirs, and
@@ -212,7 +218,7 @@ every one with a standing below a configurable value.
   `manage_settings` as well as `view_suspects`, asks first): it is then no
   connection at all and shows in the Network list of ignored counterparts,
   where removing it takes it back. *Highlights*: the counterparts that get a
-  tile on the Markers page, chosen from the parties of the last Network
+  tile on the Network page, chosen from the parties of the last Network
   calculation and the ones already chosen (default none). *Contact sources*: a
   searchable table of the Alliance and its Corporations to tick the
   contact sources, each with whether aa-contacts has a token for it, the
@@ -249,7 +255,8 @@ every one with a standing below a configurable value.
 
 ## What the markers can see
 
-The markers decide without ESI. Who belongs to a hostile Corporation or Alliance
+The markers decide who is hostile without ESI (only the time a character
+was in the Alliance needs it, see below). Who belongs to a hostile Corporation or Alliance
 is known to them only for the characters and Corporations Auth has in its own
 tables; corptools stores the names of mail, wallet and contract partners
 without their Corporation. A mail, an ISK transfer or a contract with a
@@ -258,6 +265,17 @@ contact itself, or - for contracts - the issuer's Corporation, which the
 contract names, is hostile.
 A past Corporation counts when it is hostile itself; the Alliance it
 belonged to back then is not stored anywhere.
+
+What a character did counts only from the time it was in a Corporation of
+the Alliance: mails, ISK, contracts, the Network's payments and contracts,
+and blue kills before it joined or after it left are left out. That needs
+two histories - corptools' list of the Corporations a character was in, and
+ESI's public alliance history of each of those Corporations, which the task
+asks for once a day per Corporation (no token, at most 500 per run; the rest
+follows the next runs) and keeps in a table of this app. Where one is
+missing the present stands in: a character corptools has not read yet counts
+through its current Corporation, a Corporation ESI could not be asked about
+counts when Auth has it in the Alliance now.
 
 The markers read corptools' data; an account without a working Character
 Audit simply shows fewer markers. corptools is read when installed and is

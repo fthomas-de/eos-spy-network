@@ -4,10 +4,49 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-23 (0.0.44).
+Last updated 2026-11-23 (0.0.45).
 
 ## State
 
+- Version `0.0.45`, 2026-11-23 (see `CHANGELOG.md`), four requests of the user:
+  - *Own Alliance is no counterpart*: `network.kept_partners(accounts, blues=None, inside=frozenset())`
+    drops a partner whose chain (`Connections.chain`: itself, its Corporation, its Alliance, as `affiliate`
+    found them) holds one of `inside`; `snapshot.build` passes the Alliance ID and the IDs of its tiles.
+    `Report.parties` leaves them out as well, so a snapshot made before shows no own Alliance in the search
+    suggestions or the highlight choices (`forms.network_parties` reads `parties`).
+  - *Only what was done while the character was in the Alliance* (`tenure.py`, new): `tenure.load(config,
+    roster.characters, since)` -> `Tenure.counts(character_id, when)`. Corporations of the character from
+    corptools' `CorporationHistory` (a character without any: its current Corporation from the beginning);
+    whether the Corporation was in the Alliance then from `CorporationAlliances` (new model, migration 0022,
+    applied to `aa_dev`): ESI's public `GetCorporationsCorporationIdAlliancehistory` through an own
+    `ESIClientProvider` (as `capital_sweep`), refreshed when older than a day, NPC Corporations and ones outside
+    the time frame skipped, at most `MAX_PER_RUN` (500) per run, stop after `MAX_FAILURES` (5) failures in a
+    row; no stored row -> Auth's alliance of today (`corporations_now`). Used by `network.connections(...,
+    tenure=)` (journal and contracts), `markers._check_mails/_wallet/_contracts/_kills`, `_copy_kills` (an
+    out-of-time kill is not copied; one copied before is hidden in `_check_kills`; the Blue kills settings tab
+    still lists it). `snapshot.build` loads it first (new step `tenure`, first in `progress.STEPS`).
+    `tests.base.SpyTestCase` patches `tenure._esi_alliance_history` (None = ESI unavailable).
+    Not touched: Membership, Corporation changes, Contacts (no date), Capital contracts (open now), the
+    contract popups (they read corptools at the click, unfiltered).
+  - *Highlights* moved from `corporations.html` to `network.html` (view `network` passes `highlights`);
+    *Search*: the select form sits on the Network page (copy of the one on `network_search.html`, no shared
+    partial on purpose - no new files without asking), `action` = the search page; the menu entry is gone and
+    the search page uses `NAV_NETWORK`.
+  - Tests: `test_tenure.py` (new, 13), `TestTenure` and `TestOwnAlliance` in `test_network` (10), `TestTenure`
+    in `test_markers` (5), `TestKillsTenure` in `test_kills` (3), changes in `test_network_search`,
+    `test_visitors` (a main outside the Alliance paying now counts nothing: the payment moved to the alt in
+    the Alliance), `test_progress`. Suite: 550 without translation tests, green (fresh test database);
+    14 mutations checked red. Real run on `aa_dev`: 0.7 s,
+    one Corporation history fetched. Not seen in a browser (SSO): the search box on the Network page (Tom
+    Select there), the highlights above the tiles.
+  - Two glossary texts, machine-translated, not reviewed by the user: *Reading Alliance histories* (progress
+    step) and the changed help text of *Highlighted counterparts* ("... tile on the Network page ...").
+  - Prod: run migration 0022; no static file; recalculate once. The first run asks ESI for the alliance
+    history of every Corporation any account character was in within the time frame (up to 500 per run, so
+    a large Alliance may need a few runs before every history is stored; until then the present stands in).
+    Expect fewer markers and Network accounts than before: a main that joined recently no longer brings its
+    old partners. ESI's cache may delay a Corporation that joined the Alliance today by a day (its first
+    day's payments then do not count until the history is refreshed).
 - Version `0.0.44`, 2026-11-23 (see `CHANGELOG.md`): Network, three requests of the user.
   - *Private contract* as a third kind of link (`network.PRIVATE = "personal"`, `Link.contracts`,
     `Connections.contracting`): a corptools `Contract` with availability personal and at least one
@@ -604,6 +643,11 @@ Last updated 2026-11-23 (0.0.44).
 
 ## Decisions
 
+- Alliance as counterpart and tenure (user, 2026-11-23): the own Alliance (and its Corporations) is never a
+  counterpart, also not for a character Auth does not know whom ESI puts there; mails, ISK, contracts,
+  Network payments and contracts and blue kills count only from the time the character was in a Corporation
+  of the Alliance, with the Corporation's own alliance history from ESI; highlights and the search box
+  belong to the Network tab (the search result stays on its own page, no menu entry).
 - Network contracts, arrows, age (user, 2026-11-23): a private contract with items is an own kind
   that counts alone (not a 0-ISK payment); the arrows show the direction of the flow (from the
   giver to the receiver); the age of the source character is a new column *Age* in the table

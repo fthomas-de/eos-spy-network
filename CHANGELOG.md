@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.45] - 2026-11-23
+
+### Changed
+
+- Network and markers count only what a character did while it was in a
+  Corporation of the Alliance: payments, contracts, mails and blue kills from
+  before it joined or after it left no longer count (ISK with hostiles,
+  Contracts with hostiles, Mails with hostiles, Blue kills, and the Network's
+  payments and contracts). Before, everything within the time frame counted,
+  whatever Corporation the character was in at the time - a main that joined
+  last month brought its old trading partners along. The Corporations a
+  character was in come from corptools; whether a Corporation was in the
+  Alliance back then comes from ESI's public alliance history of that
+  Corporation, which the calculation task fetches once a day and keeps in the
+  new table `CorporationAlliances` (migration 0022; at most 500 Corporations
+  per run, the rest the next run). Without a history the present stands in:
+  a character corptools has not read counts through its current Corporation,
+  a Corporation ESI could not be asked about counts when Auth has it in the
+  Alliance. The first calculation after the update needs ESI and takes longer.
+  A blue kill copied before this change stays stored (the Blue kills settings
+  tab still lists it) but no longer counts.
+- Highlights moved from the Markers page to the Network page, above the
+  Corporations. The Network page also carries the search box now; its result
+  is still the page *Network search*, which no longer has a menu entry of its
+  own (the *Network* tab stays current there).
+
+### Fixed
+
+- Network: the Alliance can no longer be a counterpart. A character Auth does
+  not know, whom ESI puts into the Alliance or one of its Corporations, stayed
+  a counterpart (Auth only drops the characters it knows), so the Network, its
+  search and the highlight choices offered the own Alliance. Such a partner is
+  a member now and dropped; a snapshot made before still holds it until the
+  next calculation, but the search and highlight choices leave the Alliance
+  and its Corporations out at once.
+
 ## [0.0.44] - 2026-11-23
 
 ### Added

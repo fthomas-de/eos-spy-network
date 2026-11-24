@@ -1,7 +1,14 @@
 import re
 from datetime import timedelta
 
-from corptools.models import CharacterAudit, CharacterWalletJournalEntry, Contract, ContractItem, EveName
+from corptools.models import (
+    CharacterAudit,
+    CharacterWalletJournalEntry,
+    Contract,
+    ContractItem,
+    CorporationHistory,
+    EveName,
+)
 from eve_sde.models import ItemCategory, ItemGroup, ItemType
 
 from django.db import connection
@@ -10,7 +17,7 @@ from django.utils import timezone
 
 from allianceauth.authentication.models import CharacterOwnership
 
-from eos_spy_network import markers, snapshot
+from eos_spy_network import markers, snapshot, tenure
 from eos_spy_network.network import connections
 
 from eos_spy_network.models import ContactSource, SpyConfiguration
@@ -800,3 +807,111 @@ class TestQueries(NetworkTestCase):
         self.assertEqual(count("authentication_userprofile"), 1)
         # the characters, and inside the mains' query the accounts with an alt in the Alliance
         self.assertEqual(count("authentication_characterownership"), 2)
+
+
+class TestTenure(NetworkTestCase):
+    """The main was in a Corporation outside the Alliance until 30 days ago; the alt was always in 2001."""
+
+    def setUp(self):
+        super().setUp()
+        for corporation_id, days_ago, record_id in ((4000, 100, 1), (2001, 30, 2)):
+            name, _created = EveName.objects.get_or_create(
+                eve_id=corporation_id, defaults={"name": f"Corp {corporation_id}", "category": "corporation"}
+            )
+            CorporationHistory.objects.create(
+                character=self.audits[self.main.character_id], corporation_id=corporation_id,
+                corporation_name=name, record_id=record_id, start_date=timezone.now() - timedelta(days=days_ago),
+            )
+        # 4000 was never in the Alliance, 2001 was for years
+        self.esi_alliance_history.side_effect = lambda corporation_id: (
+            [] if corporation_id == 4000 else [["2020-01-01T00:00:00+00:00", ALLIANCE_ID]]
+        )
+        config = SpyConfiguration.get_solo()
+        self.tenure = tenure.load(config, markers.roster(config).characters)
+
+    def account(self, counted=True):
+        return connections(
+            {self.user.pk: self.main}, ALLIANCE_ID, tenure=self.tenure if counted else None
+        ).get(self.user.pk)
+
+    def test_should_not_count_a_payment_of_the_main_from_before_it_joined(self):
+        self.pay(self.main, OUTSIDER, days_ago=60)
+        self.pay(self.alt, OUTSIDER, days_ago=60)
+
+        # two characters share the partner only when both payments count
+        self.assertIsNotNone(self.account(counted=False))
+        self.assertIsNone(self.account())
+
+    def test_should_count_a_payment_of_the_main_from_since_it_joined(self):
+        self.pay(self.main, OUTSIDER, days_ago=10)
+        self.pay(self.alt, OUTSIDER, days_ago=60)
+
+        self.assertEqual(self.account().shared, {OUTSIDER})
+
+    def test_should_not_count_a_private_contract_from_before_the_joining(self):
+        self.contract(self.main, OUTSIDER, days_ago=60, items=True)
+
+        self.assertIsNotNone(self.account(counted=False))
+        self.assertIsNone(self.account())
+
+    def test_should_count_a_private_contract_from_since_the_joining(self):
+        self.contract(self.main, OUTSIDER, days_ago=10, items=True)
+
+        self.assertEqual(self.account().contracting, {OUTSIDER})
+
+    def test_should_not_count_a_contract_without_isk_from_before_the_joining(self):
+        self.contract(self.main, OUTSIDER, days_ago=60)
+        self.contract(self.alt, OUTSIDER, days_ago=60)
+
+        self.assertIsNotNone(self.account(counted=False))
+        self.assertIsNone(self.account())
+
+    def test_should_apply_it_in_the_calculation(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.main, OUTSIDER, days_ago=60)
+        self.pay(self.alt, OUTSIDER, days_ago=60)
+
+        self.assertEqual(snapshot.Report(snapshot.update()).network_tile(2001).accounts, [])
+
+    def test_should_apply_it_to_the_markers_of_the_calculation(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.main, OUTSIDER, days_ago=60)
+
+        tile = snapshot.Report(snapshot.update()).tile(2001)
+        self.assertEqual(tile.suspects, [])
+
+        self.pay(self.main, OUTSIDER, days_ago=10)
+
+        (suspect,) = snapshot.Report(snapshot.update()).tile(2001).suspects
+        self.assertEqual(suspect.markers[markers.WALLET].count, 1)
+
+
+class TestOwnAlliance(NetworkTestCase):
+    """A character Auth has never seen, whom ESI puts into the Alliance, is a member and no counterpart."""
+
+    def test_should_drop_a_partner_that_esi_puts_into_our_corporation(self):
+        configure(network_neutral=True)
+        self.esi_names.return_value = {OUTSIDER: ("Outsider", "character")}
+        self.esi_affiliations.return_value = {OUTSIDER: (2001, ALLIANCE_ID)}
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+
+        self.assertEqual(snapshot.Report(snapshot.update()).network_tile(2001).accounts, [])
+
+    def test_should_drop_a_partner_that_esi_puts_into_our_alliance_only(self):
+        configure(network_neutral=True)
+        self.esi_names.return_value = {OUTSIDER: ("Outsider", "character")}
+        self.esi_affiliations.return_value = {OUTSIDER: (4001, ALLIANCE_ID)}
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+
+        self.assertEqual(snapshot.Report(snapshot.update()).network_tile(2001).accounts, [])
+
+    def test_should_keep_a_neutral_partner_of_another_alliance(self):
+        configure(network_neutral=True)
+        self.esi_names.return_value = {OUTSIDER: ("Outsider", "character")}
+        self.esi_affiliations.return_value = {OUTSIDER: (4001, OTHER_ALLIANCE_ID)}
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+
+        (account,) = snapshot.Report(snapshot.update()).network_tile(2001).accounts
+
+        self.assertEqual(account.trading, {OUTSIDER})
+        self.assertEqual(account.entities[OUTSIDER].alliance_id, OTHER_ALLIANCE_ID)
