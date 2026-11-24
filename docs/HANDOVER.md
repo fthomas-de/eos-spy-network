@@ -41,6 +41,11 @@ Last updated 2026-11-23 (0.0.45).
     Select there), the highlights above the tiles.
   - Two glossary texts, machine-translated, not reviewed by the user: *Reading Alliance histories* (progress
     step) and the changed help text of *Highlighted counterparts* ("... tile on the Network page ...").
+  - Dev instance: migration 0022 applied to `aa_dev`; `CorporationAlliances` holds the one history the real
+    run fetched; no Celery worker runs there. Trap of this session: WSL restarted uncleanly after the commit
+    and left the new git objects empty (the commit was unreadable, `git fsck` red); repaired by resetting
+    `main` to the previous commit, deleting the 0-byte object files and committing again, then `sync`. After
+    a commit, `sync` costs nothing; check `git fsck` once if WSL restarted meanwhile.
   - Prod: run migration 0022; no static file; recalculate once. The first run asks ESI for the alliance
     history of every Corporation any account character was in within the time frame (up to 500 per run, so
     a large Alliance may need a few runs before every history is stored; until then the present stands in).
