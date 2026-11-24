@@ -3,7 +3,8 @@
 Every connection is worth one point (user, 2026-11-24): a wallet payment
 (donation, trade, contract payment), a contract without ISK, a private
 contract with items. A private contract with items counts once, not again
-for the wallet entries that belong to it. An account shows up when its
+for the wallet entries that belong to it. A public contract never counts,
+nor do its wallet entries: whoever takes it is a stranger on the market. An account shows up when its
 characters together reach ``minimum`` points (setting, default 2) with one
 counterpart, or with one Corporation or Alliance behind the counterparts that
 is hostile - or, with the neutral ones switched on, not blue (``_cut``).
@@ -39,7 +40,7 @@ from django.utils import timezone
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
-from .markers import character_audits
+from .markers import PUBLIC, character_audits, without_public_contracts
 
 TRADING = "player_trading"
 # corptools' Contract.availability of a contract offered to one party
@@ -99,6 +100,7 @@ class Link:
 
 # the columns of the graph, left to right: own side, partners, their groups
 LEVELS = {"main": 0, "alt": 1, "partner": 2, "corporation": 3, "alliance": 4}
+ALLIANCE_KIND = "alliance"
 
 
 @dataclass
@@ -200,7 +202,7 @@ class Connections:
                     "counterpart": self._name(link.counterpart_id),
                     "counterpart_id": link.counterpart_id,
                     "counterpart_held": self.standings.get(link.counterpart_id),
-                    "hostile":self.reason(link.counterpart_id) is not None,
+                    "hostile": self.reason(link.counterpart_id) is not None,
                     "corporation": self._group(corporation_id),
                     "alliance": self._group(alliance_id),
                     "payments": link.payments,
@@ -239,6 +241,7 @@ class Connections:
         linked = {link.character_id for link in self.links}
         nodes = {}
         edges = []
+        members = set()  # (child, parent) of the membership lines drawn: partners share a Corporation
         for character_id, name in self.characters.items():
             # an alt without a link would float alone; the main stays as the anchor
             if character_id in linked or character_id == self.main_id:
@@ -262,9 +265,9 @@ class Connections:
                 entity = self.entities.get(parent)
                 kind = ALLIANCE_KIND if entity and entity.category == "alliance" else "corporation"
                 nodes.setdefault(parent, self._node(parent, kind))
-                edge = {"from": child, "to": parent, "kind": "member"}
-                if edge not in edges:
-                    edges.append(edge)
+                if (child, parent) not in members:
+                    members.add((child, parent))
+                    edges.append({"from": child, "to": parent, "kind": "member"})
 
         edges += [
             {
@@ -281,9 +284,6 @@ class Connections:
             for link in self.links
         ]
         return {"nodes": list(nodes.values()), "edges": edges}
-
-
-ALLIANCE_KIND = "alliance"
 
 
 def affiliate(accounts, hostiles: dict, more_ids=()) -> dict:
@@ -469,12 +469,14 @@ def connections(
     # contract with ISK is in the journal already; without any - collateral included, which has its own
     # journal entries - it is a payment of 0 ISK. Every type and status, both directions (user)
     has_items = Exists(ContractItem.objects.filter(contract=OuterRef("pk")))
-    contracts = Contract.objects.filter(character_id__in=list(audits)).annotate(has_items=has_items)
+    contracts = (
+        Contract.objects.filter(character_id__in=list(audits)).exclude(availability=PUBLIC).annotate(has_items=has_items)
+    )
     if since is not None:
         contracts = contracts.filter(date_issued__gte=since)
     # read first: the journal needs to know which wallet entries belong to a contract that counts as one point
     counted = set()
-    for audit_id, contract_id, date, price, reward, collateral, availability, with_items, issuer_id, *party_ids in (
+    for audit_id, contract_id, date, price, reward, collateral, availability, with_items, issuer_id, assignee_id, acceptor_id in (
         contracts.values_list(
             "character_id",
             "contract_id",
@@ -492,7 +494,9 @@ def connections(
         own_id = audits[audit_id]
         if tenure is not None and not tenure.counts(own_id, date):
             continue
-        parties = {issuer_id, *party_ids}
+        # once accepted, the acceptor is the party: a contract assigned to a Corporation would else count for the
+        # Corporation and for its member who took it, and reach two points in the Corporation's group alone
+        parties = {issuer_id, acceptor_id or assignee_id}
         if availability == PRIVATE and with_items:
             counted.add(contract_id)
             add(own_id, parties, date, False, 0, "o" if issuer_id == own_id else "i", contract=True)
@@ -505,6 +509,8 @@ def connections(
     )
     if since is not None:
         entries = entries.filter(date__gte=since)
+    # no time frame on the contracts there: one may be issued before it and paid in it
+    entries = without_public_contracts(entries)
     # no names here: most entries are payments inside the Alliance and drop out; _fill_names
     # looks up only the counterparts that stay
     entries = entries.values_list(

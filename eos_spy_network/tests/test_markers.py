@@ -356,12 +356,41 @@ class TestMails(MarkerTestCase):
 
 
 class TestWallet(MarkerTestCase):
-    def add_entry(self, entry_id, first_party_id, second_party_id, amount=1, days_ago=0, ref_type="player_donation"):
+    def add_entry(
+        self, entry_id, first_party_id, second_party_id, amount=1, days_ago=0, ref_type="player_donation", **context
+    ):
         CharacterWalletJournalEntry.objects.create(
             character=self.audit, entry_id=entry_id, date=timezone.now() - timedelta(days=days_ago), description="",
             ref_type=ref_type, first_party_id=first_party_id, second_party_id=second_party_id, amount=amount,
-            balance=1,
+            balance=1, **context,
         )
+
+    def add_sold_contract(self, contract_id, availability):
+        """A contract of the main that ``HOSTILE_MEMBER`` bought, and the wallet entry of the price."""
+        now = timezone.now()
+        Contract.objects.create(
+            id=f"{self.audit.pk}-{contract_id}", contract_id=contract_id, character=self.audit,
+            issuer_id=self.main.character_id, issuer_name=eve_name(self.main.character_id),
+            issuer_corporation_id=2001, issuer_corporation_name=eve_name(2001, "corporation"),
+            assignee_id=0, assignee_name=eve_name(0),
+            acceptor_id=HOSTILE_MEMBER, acceptor_name=eve_name(HOSTILE_MEMBER),
+            for_corporation=False, date_expired=now, date_issued=now, status="finished",
+            contract_type="item_exchange", availability=availability, title="", price=1000,
+        )
+        self.add_entry(
+            contract_id, HOSTILE_MEMBER, self.main.character_id, amount=1000, ref_type="contract_price",
+            context_id_type="contract_id", context_id=contract_id,
+        )
+
+    def test_should_ignore_the_price_of_a_public_contract(self):
+        self.add_sold_contract(1, "public")
+
+        self.assertIsNone(self.suspect())
+
+    def test_should_mark_the_price_of_a_private_contract(self):
+        self.add_sold_contract(1, "personal")
+
+        self.assertEqual(self.kinds(), {markers.WALLET, markers.CONTRACTS})
 
     def test_should_sum_up_the_entries_per_hostile(self):
         self.add_entry(1, HOSTILE_CORP, self.main.character_id, amount=500, days_ago=30)
@@ -428,7 +457,10 @@ class TestWallet(MarkerTestCase):
 
 
 class TestContracts(MarkerTestCase):
-    def add_contract(self, contract_id, issuer_id, issuer_corporation_id, assignee_id, acceptor_id=0, days_ago=0, **isk):
+    def add_contract(
+        self, contract_id, issuer_id, issuer_corporation_id, assignee_id, acceptor_id=0, days_ago=0,
+        availability="personal", **isk
+    ):
         now = timezone.now() - timedelta(days=days_ago)
         Contract.objects.create(
             id=f"{self.audit.pk}-{contract_id}", contract_id=contract_id, character=self.audit,
@@ -437,8 +469,13 @@ class TestContracts(MarkerTestCase):
             assignee_id=assignee_id, assignee_name=eve_name(assignee_id),
             acceptor_id=acceptor_id, acceptor_name=eve_name(acceptor_id),
             for_corporation=False, date_expired=now, date_issued=now, status="finished",
-            contract_type="item_exchange", availability="personal", title="", **isk,
+            contract_type="item_exchange", availability=availability, title="", **isk,
         )
+
+    def test_should_ignore_a_public_contract_a_hostile_took(self):
+        self.add_contract(1, self.main.character_id, 2001, 0, acceptor_id=HOSTILE_MEMBER, availability="public")
+
+        self.assertIsNone(self.suspect())
 
     def test_should_sum_up_price_and_reward_without_the_collateral(self):
         self.add_contract(1, self.main.character_id, 2001, HOSTILE_CORP, price=1_000_000_000)

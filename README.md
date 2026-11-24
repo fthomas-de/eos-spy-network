@@ -99,7 +99,10 @@ every one with a standing below a configurable value.
     [Killmails](#killmails)); needs no hostile
 
   Mails, ISK and contracts between characters of the same account never
-  count. Mails, ISK and contracts count only within the time frame (a mail
+  count. Neither do public contracts nor the wallet entries that pay for one
+  (journal `context_id` = a public contract corptools holds): whoever takes a
+  public contract is a stranger on the market. Mails, ISK and contracts count
+  only within the time frame (a mail
   without a date always counts) and only from the time the character was in a
   Corporation of the Alliance (see [What the markers can see](#what-the-markers-can-see));
   the contacts carry no date in corptools, so today's are checked whatever the
@@ -142,6 +145,10 @@ every one with a standing below a configurable value.
     belong to it add their ISK but no point. A button in its row opens a
     popup with the contracts and their items (`view_suspects`; the contracts
     are read from corptools at the click)
+
+  A contract counts for one partner: whoever accepted it, before that whom it
+  was assigned to. A public contract never counts, nor do the wallet entries
+  that pay for it (see the markers above).
 
   The badges on the main's entry say what the shown rows are: *Shared payment
   partner* (two characters of the account with the same counterpart), *Player

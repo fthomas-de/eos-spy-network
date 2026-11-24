@@ -75,6 +75,19 @@ CONTRACT_REF_TYPES = (
     "contract_collateral",
     "contract_collateral_payout",
 )
+# corptools' Contract.availability of a contract anybody in the region may take: whoever does is a stranger on
+# the market, so neither the contract nor its wallet entries count, in the markers or the Network (user, 2026-11-24)
+PUBLIC = "public"
+
+
+def without_public_contracts(entries):
+    """The wallet entries less those that pay for a public contract corptools holds, of any time."""
+    from corptools.models import Contract
+
+    return entries.exclude(
+        context_id_type="contract_id",
+        context_id__in=Contract.objects.filter(availability=PUBLIC).values("contract_id"),
+    )
 
 
 @dataclass
@@ -523,6 +536,7 @@ def _check_wallet(
     ).exclude(ref_type__in=ignored)
     if since is not None:
         entries = entries.filter(date__gte=since)
+    entries = without_public_contracts(entries)
 
     entries = list(
         entries.values_list("pk", "character_id", "first_party_id", "second_party_id", "date", "ref_type", "amount")
@@ -548,7 +562,7 @@ def _check_wallet(
 def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counterparts, since=None, tenure=None):
     from corptools.models import Contract
 
-    contracts = Contract.objects.filter(character_id__in=list(audits))
+    contracts = Contract.objects.filter(character_id__in=list(audits)).exclude(availability=PUBLIC)
     if since is not None:
         contracts = contracts.filter(date_issued__gte=since)
 

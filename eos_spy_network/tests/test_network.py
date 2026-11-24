@@ -36,6 +36,7 @@ from .base import (
 
 OUTSIDER = 90000100  # a character Auth has never seen
 OTHER_OUTSIDER = 90000101
+OUTSIDER_CORPORATION = 4100  # a Corporation outside the Alliance
 NPC_CORPORATION = 1000125
 
 
@@ -72,9 +73,12 @@ class NetworkTestCase(SpyTestCase):
 
     def contract(
         self, character, partner_id, issued=True, days_ago=0, status="finished", items=False, availability="personal",
-        **isk
+        acceptor=0, **isk
     ):
-        """A contract of ``character`` with ``partner_id``, issued by the one or the other; ``items`` puts one in."""
+        """A contract of ``character`` with ``partner_id``, issued by the one or the other; ``items`` puts one in.
+
+        ``acceptor`` is who took it; 0 (not accepted) by default.
+        """
         self.entry_id += 1
         issuer, assignee = (character.character_id, partner_id) if issued else (partner_id, character.character_id)
         audit = self.audits[character.character_id]
@@ -83,7 +87,7 @@ class NetworkTestCase(SpyTestCase):
             id=f"{audit.pk}-{self.entry_id}", contract_id=self.entry_id, character=audit,
             issuer_id=issuer, issuer_name=eve_name(issuer),
             issuer_corporation_id=2001, issuer_corporation_name=eve_name(2001, "corporation"),
-            assignee_id=assignee, assignee_name=eve_name(assignee), acceptor_id=0, acceptor_name=eve_name(0),
+            assignee_id=assignee, assignee_name=eve_name(assignee), acceptor_id=acceptor, acceptor_name=eve_name(acceptor),
             for_corporation=False, date_expired=when, date_issued=when, status=status,
             contract_type="item_exchange", availability=availability, title="", **isk,
         )
@@ -590,15 +594,6 @@ class TestPrivateContracts(NetworkTestCase):
         self.assertEqual(account.contracting, set())
         self.assertEqual(account.shared, {OUTSIDER})
 
-    def test_should_leave_a_public_contract_with_items_a_payment(self):
-        self.contract(self.main, OUTSIDER, items=True, availability="public")
-        self.contract(self.alt, OUTSIDER, items=True, availability="public")
-
-        account = self.account()
-
-        self.assertEqual(account.contracting, set())
-        self.assertEqual(account.shared, {OUTSIDER})
-
     def test_should_ignore_a_contract_inside_the_alliance(self):
         member = make_character(6001)
         self.contract(self.alt, member.character_id, items=True)
@@ -626,6 +621,62 @@ class TestPrivateContracts(NetworkTestCase):
 
         self.assertEqual(account.contracting, {OUTSIDER})
         self.assertEqual(account.rows[0]["contracts"], 1)
+
+
+class TestPublicContracts(NetworkTestCase):
+    """Whoever takes a public contract is a stranger on the market: neither the contract nor its ISK counts."""
+
+    def test_should_ignore_a_public_contract(self):
+        for items in (False, True):
+            with self.subTest(items=items):
+                Contract.objects.all().delete()
+                self.contract(self.main, OUTSIDER, items=items, availability="public")
+
+                self.assertIsNone(self.account())
+
+    def test_should_ignore_the_payment_of_a_public_contract(self):
+        contract = self.contract(self.main, OUTSIDER, availability="public", price=1000, acceptor=OUTSIDER)
+        self.pay(
+            self.main, OUTSIDER, ref_type="contract_price", context_id_type="contract_id",
+            context_id=contract.contract_id,
+        )
+
+        self.assertIsNone(self.account())
+
+    def test_should_ignore_it_issued_before_the_time_frame(self):
+        contract = self.contract(self.main, OUTSIDER, availability="public", price=1000, days_ago=40)
+        self.pay(
+            self.main, OUTSIDER, ref_type="contract_price", context_id_type="contract_id",
+            context_id=contract.contract_id,
+        )
+
+        self.assertIsNone(self.account(since=timezone.now() - timedelta(days=30)))
+
+    def test_should_keep_the_payment_of_a_private_contract(self):
+        contract = self.contract(self.main, OUTSIDER, price=1000)
+        self.pay(
+            self.main, OUTSIDER, ref_type="contract_price", context_id_type="contract_id",
+            context_id=contract.contract_id,
+        )
+
+        (link,) = self.account().links
+        self.assertEqual(link.payments, 1)
+
+
+class TestContractParty(NetworkTestCase):
+    """A contract counts for one party: the acceptor once accepted, before that the assignee."""
+
+    def test_should_count_the_acceptor_only(self):
+        self.contract(self.main, OUTSIDER_CORPORATION, items=True, acceptor=OUTSIDER)
+
+        (link,) = self.account().links
+        self.assertEqual((link.counterpart_id, link.points), (OUTSIDER, 1))
+
+    def test_should_count_the_assignee_before_it_is_accepted(self):
+        self.contract(self.main, OUTSIDER_CORPORATION, items=True, status="outstanding")
+
+        (link,) = self.account().links
+        self.assertEqual(link.counterpart_id, OUTSIDER_CORPORATION)
 
 
 class TestDirection(NetworkTestCase):
@@ -1067,6 +1118,14 @@ class TestMinimumConnections(NetworkTestCase):
         # the ISK of the wallet entry still shows, it is just no second connection
         self.assertEqual((link.points, link.contracts, link.payments, link.isk), (1, 1, 0, 1000))
         self.assertIsNone(self.account(minimum=2))
+
+    def test_should_not_reach_the_minimum_with_one_contract_to_a_corporation(self):
+        # assigned to the hostile Corporation, taken by its member: one point for the group, not one each
+        self.in_corporation(OUTSIDER_CORPORATION, OUTSIDER)
+        self.make_hostile(OUTSIDER_CORPORATION, contact_type="corporation")
+        self.contract(self.main, OUTSIDER_CORPORATION, items=True, acceptor=OUTSIDER)
+
+        self.assertEqual(self.stored_accounts(), [])
 
     def test_should_count_the_wallet_entry_of_another_contract(self):
         contract = self.contract(self.alt, OUTSIDER, items=True)

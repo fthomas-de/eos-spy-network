@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-24
+
+### Changed
+
+- The Network and the markers *ISK with hostiles* and *Contracts with
+  hostiles* ignore public contracts: neither the contract nor the wallet
+  entries that belong to it (journal `context_id` = a public contract) count.
+  *Capital in contract* is unchanged - public contracts are what it looks at. Whoever takes a public contract is a stranger on the
+  market, not someone the character chose to deal with. The wallet entries are
+  matched against every public contract corptools holds, without the time
+  frame, so a contract issued before the time frame and paid in it goes too.
+  One that corptools does not hold still counts.
+
+### Fixed
+
+- Network: a contract assigned to a Corporation and accepted by one of its
+  members counted twice - once for the Corporation, once for the member - so
+  the Corporation reached two points, the default minimum, with one contract.
+  Once accepted, only the acceptor is the contract's party now; before that
+  the assignee.
+
+- Network graph: lines between partners, Corporations and Alliances crossed
+  into figure eights. vis-network's hierarchical layout stacks each column in
+  the order of the data and its physics run then shuffles it further, with no
+  regard to the lines. `network.js` now orders each column itself (the mean
+  height of the neighbours, a few passes both ways, the order with the fewest
+  crossings kept) and gives every node a fixed point; no physics run, so the
+  graph also no longer moves after it is drawn. Lines of several alts to the
+  same partners may still cross where no order avoids it.
+
 ## [0.1.2] - 2026-11-24
 
 ### Changed

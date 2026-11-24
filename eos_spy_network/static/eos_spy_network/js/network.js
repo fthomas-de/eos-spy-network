@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     const textColour = getComputedStyle(document.body).color;
     const NODE_SPACING = 110;
+    const LEVEL_SEPARATION = 320;
     const SHAPES = {
         main: ["dot", 20],
         alt: ["dot", 14],
@@ -70,6 +71,74 @@ document.addEventListener("DOMContentLoaded", () => {
             shown.title = lines.join("\n");
         }
         return shown;
+    };
+
+    // vis's hierarchical layout stacks a column in JSON order and its physics run reshuffles it, so lines
+    // crossed into figure eights: the columns are ordered here (barycentre sweeps both ways, the order with the
+    // fewest crossings wins) and each node gets a fixed point. Returns node ID -> y.
+    const place = (graph) => {
+        const level = new Map(graph.nodes.map((raw) => [raw.id, raw.level]));
+        const columns = new Map();
+        graph.nodes.forEach((raw) => {
+            if (!columns.has(raw.level)) {
+                columns.set(raw.level, []);
+            }
+            columns.get(raw.level).push(raw.id);
+        });
+        const levels = [...columns.keys()].sort((a, b) => a - b);
+        const y = new Map();
+        const stack = (ids) => ids.forEach((id, index) => y.set(id, (index - (ids.length - 1) / 2) * NODE_SPACING));
+        columns.forEach(stack);
+
+        // lines grouped by the pair of columns they join: only lines of one pair can be counted as crossing
+        const spans = new Map();
+        const neighbours = new Map(graph.nodes.map((raw) => [raw.id, []]));
+        graph.edges.forEach(({ from, to }) => {
+            const [left, right] = level.get(from) <= level.get(to) ? [from, to] : [to, from];
+            const key = `${level.get(left)}-${level.get(right)}`;
+            if (!spans.has(key)) {
+                spans.set(key, []);
+            }
+            spans.get(key).push([left, right]);
+            neighbours.get(left).push(right);
+            neighbours.get(right).push(left);
+        });
+        const crossings = () => {
+            let count = 0;
+            spans.forEach((pairs) => {
+                pairs.forEach(([a, b], index) => {
+                    pairs.slice(index + 1).forEach(([c, d]) => {
+                        if ((y.get(a) - y.get(c)) * (y.get(b) - y.get(d)) < 0) {
+                            count += 1;
+                        }
+                    });
+                });
+            });
+            return count;
+        };
+
+        let best = new Map(y);
+        let fewest = crossings();
+        for (let sweep = 0; sweep < 8 && fewest; sweep += 1) {
+            const leftward = sweep % 2 === 1;
+            (leftward ? [...levels].reverse() : levels).forEach((at) => {
+                // the mean height of the neighbours in the columns already placed this sweep; none: stay put
+                const centre = (id) => {
+                    const side = neighbours.get(id).filter((other) => (leftward ? level.get(other) > at : level.get(other) < at));
+                    return side.length ? side.reduce((sum, other) => sum + y.get(other), 0) / side.length : y.get(id);
+                };
+                const ids = columns.get(at);
+                const centres = new Map(ids.map((id) => [id, centre(id)]));
+                ids.sort((a, b) => centres.get(a) - centres.get(b));
+                stack(ids);
+            });
+            const count = crossings();
+            if (count < fewest) {
+                fewest = count;
+                best = new Map(y);
+            }
+        }
+        return best;
     };
 
     const period = (first, last) => (first === last ? first : `${first} – ${last}`);
@@ -158,7 +227,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         const fullest = Math.max(1, ...Object.values(perLevel));
         container.style.height = `${Math.min(1600, Math.max(420, fullest * NODE_SPACING + 120))}px`;
-        // created empty: with the data in the constructor the stabilization ends before a listener exists
         const network = new vis.Network(
             container,
             {},
@@ -170,35 +238,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     font: { color: textColour, strokeWidth: 0, align: "middle" },
                     smooth: { type: "cubicBezier", forceDirection: "horizontal", roundness: 0.4 },
                 },
-                layout: {
-                    hierarchical: {
-                        direction: "LR",
-                        levelSeparation: 320,
-                        nodeSpacing: NODE_SPACING,
-                        treeSpacing: NODE_SPACING * 1.5,
-                        blockShifting: true,
-                        edgeMinimization: true,
-                        parentCentralization: true,
-                        sortMethod: "directed",
-                        shakeTowards: "roots",
-                    },
-                },
-                // the layout alone stacks two-line labels into each other; a short repulsion
-                // run pushes them apart within their column, then the graph stands still
-                physics: {
-                    hierarchicalRepulsion: { nodeDistance: NODE_SPACING, avoidOverlap: 1 },
-                    stabilization: { iterations: 300, fit: true },
-                },
+                // every node has its fixed point from ``place``
+                physics: false,
                 interaction: { hover: true },
             },
         );
-        network.once("stabilizationIterationsDone", () => {
-            network.setOptions({ physics: false });
-            network.fit();
-        });
-        const nodes = new vis.DataSet(graph.nodes.map(node));
+        const heights = place(graph);
+        const nodes = new vis.DataSet(
+            graph.nodes.map((raw) => ({ ...node(raw), x: raw.level * LEVEL_SEPARATION, y: heights.get(raw.id) })),
+        );
         const edges = new vis.DataSet(graph.edges.map(edge));
         network.setData({ nodes: nodes, edges: edges });
+        network.fit();
         drawn.push({ nodes: nodes, edges: edges });
         // a legend choice made before this card was first shown applies to it too
         apply(drawn[drawn.length - 1]);
