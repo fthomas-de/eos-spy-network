@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.47] - 2026-11-24
+
+### Changed
+
+- The Network graph colours a highlighted counterpart (Settings, *Highlighted
+  counterparts*) red like a hostile one: the node itself, and a partner whose
+  Corporation or Alliance is highlighted. Only the colours change; the hostile
+  list, the Network's filter and the tables stay as they are.
+
 ## [0.0.46] - 2026-11-24
 
 ### Added

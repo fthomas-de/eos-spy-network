@@ -126,7 +126,8 @@ def _report(config) -> snapshots.Report | None:
     disabled = config.disabled_markers or ()
     reviews = {} if BLUE_KILLS in disabled else snapshots.kill_reviews(config.alliance.alliance_id)
     findings = {} if CONTACTS in disabled else snapshots.finding_reviews(config.alliance.alliance_id)
-    return snapshots.Report(current, disabled, reviews, findings)
+    highlights = {int(eve_id) for eve_id in config.highlight_counterparts or ()}
+    return snapshots.Report(current, disabled, reviews, findings, highlights)
 
 
 def open_mains(corporation_id=None) -> int:

@@ -116,6 +116,8 @@ class Connections:
     entities: dict = field(default_factory=dict)
     # EVE ID -> Standing of every hostile contact; shared as well
     hostiles: dict = field(default_factory=dict)
+    # EVE IDs highlighted in the settings: red in the graph like a hostile, nothing else; shared as well
+    highlights: frozenset = frozenset()
     # EVE ID -> the standing the Alliance itself holds, hostile or not; shared as well
     standings: dict = field(default_factory=dict)
     # own character ID -> birthday; read by ``fill_birthdays`` for the one page that shows the age
@@ -203,13 +205,20 @@ class Connections:
             )
         return rows
 
+    def _flagged(self, counterpart_id: int) -> int | None:
+        """Like ``reason``, but a highlighted entity makes the chain red too; the graph only."""
+        return next(
+            (eve_id for eve_id in self.chain(counterpart_id) if eve_id in self.hostiles or eve_id in self.highlights),
+            None,
+        )
+
     def _node(self, eve_id, kind: str) -> dict:
         hostile = self.hostiles.get(eve_id)
         node = {
             "id": eve_id,
             "label": self._name(eve_id),
             # hostile_partner, hostile_corporation ...: the red tones in network.js
-            "group": f"hostile_{kind}" if hostile else kind,
+            "group": f"hostile_{kind}" if hostile or eve_id in self.highlights else kind,
             "level": LEVELS[kind],
         }
         if hostile:
@@ -232,7 +241,7 @@ class Connections:
 
         for counterpart_id in self.counterparts:
             chain = self.chain(counterpart_id)
-            reason = self.reason(counterpart_id)
+            reason = self._flagged(counterpart_id)
             node = self._node(counterpart_id, "partner")
             if reason is not None and node["group"] == "partner":
                 # hostile through its Corporation or Alliance: red as well, the reason sits further right

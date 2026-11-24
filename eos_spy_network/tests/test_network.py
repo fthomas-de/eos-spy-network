@@ -440,6 +440,17 @@ class TestHostileChain(NetworkTestCase):
         members = {(edge["from"], edge["to"]) for edge in graph["edges"] if edge["kind"] == "member"}
         self.assertEqual(members, {(OUTSIDER, 4001), (4001, OTHER_ALLIANCE_ID)})
 
+    def test_should_colour_a_highlighted_alliance_like_a_hostile_one(self):
+        account = self.account()
+        account.hostiles = {}
+        account.highlights = frozenset({OTHER_ALLIANCE_ID})
+
+        nodes = {node["id"]: node["group"] for node in account.graph()["nodes"]}
+
+        self.assertEqual(nodes[OUTSIDER], "hostile_partner")
+        self.assertEqual(nodes[HOSTILE_CORP], "corporation")
+        self.assertEqual(nodes[OTHER_ALLIANCE_ID], "hostile_alliance")
+
     def test_should_draw_no_group_of_a_partner_hostile_itself(self):
         self.esi_affiliations.return_value = {OUTSIDER: (4001, OTHER_ALLIANCE_ID)}
         self.make_hostile(OUTSIDER)

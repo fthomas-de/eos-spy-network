@@ -542,11 +542,12 @@ class Report:
     other findings reviewed, from ``finding_reviews()``, alike.
     """
 
-    def __init__(self, snapshot: Snapshot, disabled=(), reviews=None, findings=None):
+    def __init__(self, snapshot: Snapshot, disabled=(), reviews=None, findings=None, highlights=()):
         self.built_at = snapshot.built_at
         data = snapshot.data
         self.alliance_id = data["alliance_id"]
         self.alliance_name = data["alliance_name"]
+        self.highlights = frozenset(highlights)
         rows = data["corporations"]
         self.entities = {
             row[0]: Entity(row[0], row[1], row[2], row[3], row[4]) for row in data.get("entities", [])
@@ -640,6 +641,7 @@ class Report:
             ]
             account.entities = self.entities
             account.hostiles = self.hostiles
+            account.highlights = self.highlights
             account.standings = self.standings
             tile.accounts.append(account)
         return tile
