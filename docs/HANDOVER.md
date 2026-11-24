@@ -4,11 +4,35 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-24 (after 0.0.47, uncommitted).
+Last updated 2026-11-24 (version 0.1.1, tag `v0.1.1`).
 
 ## State
 
-- Uncommitted (2026-11-24, `[Unreleased]`, after 0.0.47): *Counterpart by its Alliance at the time* (user).
+- Pushed together (remote was at 0.0.45): 0.0.46 (clickable Network legend, `network.js` + `network-legend.html`),
+  0.0.47 (highlighted counterparts red in the graph), 0.1.0, 0.1.1; only `v0.1.1` is tagged. Prod: run migration
+  0023, `collectstatic` (`network.js`), recalculate once. The legend and the red highlights were not seen in a
+  browser (SSO). The first run asks ESI for the corporation history of every counterpart corptools has no audit of.
+- Version `0.1.1`, 2026-11-24: fewer ESI requests (user asked to buffer the new calls).
+  - `tenure._stale(row, now, daily)`: a stored history is trusted for a thirtieth of the time since its last entry,
+    between `STALE_AFTER` (1 day) and `MAX_STALE` (7 days); an empty history (ESI 404, or a Corporation never in an
+    Alliance) waits `MAX_STALE`. Daily regardless: `first` (Auth's `corporations_now`) and a row whose last value
+    `daily` accepts (`_histories`: last Alliance is ours; `Tenure.prepare`: counterpart's last Corporation is ours).
+  - `_esi_alliance_history` / `_esi_corporation_history` return `[]` on a 404 (`_not_found`, `status_code` of the
+    exception), `None` stays "could not ask"; `_refresh` stores `[]` rows but leaves them out of its answer, so
+    callers still fall back to today's data. Before, a dead ID was never stored, sorted first every run and five of
+    them tripped `MAX_FAILURES`.
+  - `affiliations._esi_corporation_alliance` (`get_corporation`) is gone: `resolve` takes the Alliance of a
+    Corporation counterpart Auth has none for from `tenure.current_alliances` (last entry of the stored alliance
+    history, ESI only when stale; NPC Corporations skipped). First sight of a Corporation now costs one request, not two.
+  - Not done on purpose: no table for names or character affiliations - both are bulk POSTs (1000 IDs per request),
+    a few requests per run, a table would save little. Point 4 of the proposal (ask only when an event is newer than
+    the stored history) was left out: `Tenure` would need the event dates first.
+  - Tests: 12 new (`TestCorporationAlliance` 4 in `test_affiliations`, five in `test_tenure.TestLoad`,
+    `TestEsiAnswers`, two in `TestPrepare`); `SpyTestCase` no longer patches `_esi_corporation_alliance`. Eight
+    mutations checked red. Suite 577 without translation tests, green. Not measured on prod: how many requests a run
+    saves; a log line per request would give the number.
+  - Prod: no migration. Expect the first run after the update to ask as before for Corporations with no stored row.
+- Version `0.1.0`, 2026-11-24: *Counterpart by its Alliance at the time* (user).
   - `tenure.Tenure.was_ours(eve_id, when)` (character through its Corporation records, Corporation through
     `alliances`/`corporations_now`, the Alliance ID itself; undated = today; unknown = outside) and
     `Tenure.prepare(ids, entities=None)`: resolves unknown IDs (`affiliations.resolve`, ESI names/affiliations
