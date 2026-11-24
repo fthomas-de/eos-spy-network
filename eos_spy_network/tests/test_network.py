@@ -42,7 +42,8 @@ NPC_CORPORATION = 1000125
 class NetworkTestCase(SpyTestCase):
     def setUp(self):
         super().setUp()
-        configure()
+        # most fixtures are one connection: the minimum is a rule of its own, see TestMinimumConnections
+        configure(network_min_connections=1)
         make_corporation(2001)
         self.user = make_user("member")
         self.main = self.user.profile.main_character
@@ -54,7 +55,7 @@ class NetworkTestCase(SpyTestCase):
         }
         self.entry_id = 0
 
-    def pay(self, character, counterpart_id, ref_type="player_donation", amount=100, days_ago=0):
+    def pay(self, character, counterpart_id, ref_type="player_donation", amount=100, days_ago=0, **extra):
         self.entry_id += 1
         CharacterWalletJournalEntry.objects.create(
             character=self.audits[character.character_id],
@@ -66,6 +67,7 @@ class NetworkTestCase(SpyTestCase):
             second_party_id=counterpart_id,
             amount=-amount,
             balance=0,
+            **extra,
         )
 
     def contract(
@@ -97,8 +99,8 @@ class NetworkTestCase(SpyTestCase):
             )
         return contract
 
-    def account(self, since=None):
-        return connections({self.user.pk: self.main}, ALLIANCE_ID, since=since).get(self.user.pk)
+    def account(self, since=None, minimum=1):
+        return connections({self.user.pk: self.main}, ALLIANCE_ID, since=since, minimum=minimum).get(self.user.pk)
 
     def make_hostile(self, eve_id, contact_type="character", standing=-10):
         if not ContactSource.objects.exists():
@@ -137,12 +139,11 @@ class TestSharedCounterpart(NetworkTestCase):
         accounts = {(edge["from"], edge["to"]) for edge in graph["edges"] if edge["kind"] == "account"}
         self.assertEqual(accounts, {(self.main.character_id, 5001), (self.main.character_id, 5002)})
 
-    def test_should_leave_an_outsider_paid_by_one_character_out(self):
+    def test_should_count_two_payments_of_one_character(self):
         self.pay(self.main, OUTSIDER)
         self.pay(self.main, OUTSIDER)
-        self.pay(self.alt, OTHER_OUTSIDER)
 
-        self.assertIsNone(self.account())
+        self.assertEqual(self.account().counterparts, {OUTSIDER: str(OUTSIDER)})
 
     def test_should_count_contract_payments(self):
         self.pay(self.main, OUTSIDER, ref_type="contract_price")
@@ -178,7 +179,7 @@ class TestSettingsFilters(NetworkTestCase):
         self.make_hostile(OUTSIDER)
 
     def test_should_ignore_payments_before_the_time_frame(self):
-        configure(lookback_days=30)
+        configure(lookback_days=30, network_min_connections=2)
         self.pay(self.main, OUTSIDER)
         self.pay(self.alt, OUTSIDER, days_ago=60)
 
@@ -206,7 +207,9 @@ class TestIgnoredCharacters(NetworkTestCase):
         return alt
 
     def account(self, *ignored):
-        return connections({self.user.pk: self.main}, ALLIANCE_ID, ignored_characters=set(ignored)).get(self.user.pk)
+        return connections(
+            {self.user.pk: self.main}, ALLIANCE_ID, ignored_characters=set(ignored), minimum=2
+        ).get(self.user.pk)
 
     def test_should_leave_out_the_payments_of_an_ignored_character(self):
         self.pay(self.main, OUTSIDER)
@@ -239,7 +242,7 @@ class TestIgnoredCharacters(NetworkTestCase):
         self.make_hostile(OUTSIDER)
         self.pay(self.main, OUTSIDER)
         self.pay(self.alt, OUTSIDER)
-        configure(ignored_network_characters=[5001])
+        configure(ignored_network_characters=[5001], network_min_connections=2)
 
         self.assertEqual(self.stored_accounts(), [])
 
@@ -545,17 +548,19 @@ class TestContractsWithoutIsk(NetworkTestCase):
 
                 self.assertIsNone(self.account())
 
-    def test_should_need_two_characters_like_a_payment(self):
+    def test_should_count_each_contract_as_a_payment(self):
         self.contract(self.main, OUTSIDER)
         self.contract(self.main, OUTSIDER)
 
-        self.assertIsNone(self.account())
+        (link,) = self.account().links
+
+        self.assertEqual(link.points, 2)
 
     def test_should_ignore_a_contract_before_the_time_frame(self):
         self.contract(self.main, OUTSIDER)
         self.contract(self.alt, OUTSIDER, days_ago=60)
 
-        self.assertIsNone(self.account(since=timezone.now() - timedelta(days=30)))
+        self.assertIsNone(self.account(since=timezone.now() - timedelta(days=30), minimum=2))
 
 
 class TestPrivateContracts(NetworkTestCase):
@@ -840,18 +845,18 @@ class TestTenure(NetworkTestCase):
         config = SpyConfiguration.get_solo()
         self.tenure = tenure.load(config, markers.roster(config).characters)
 
-    def account(self, counted=True):
+    def account(self, counted=True, minimum=1):
         return connections(
-            {self.user.pk: self.main}, ALLIANCE_ID, tenure=self.tenure if counted else None
+            {self.user.pk: self.main}, ALLIANCE_ID, tenure=self.tenure if counted else None, minimum=minimum
         ).get(self.user.pk)
 
     def test_should_not_count_a_payment_of_the_main_from_before_it_joined(self):
         self.pay(self.main, OUTSIDER, days_ago=60)
         self.pay(self.alt, OUTSIDER, days_ago=60)
 
-        # two characters share the partner only when both payments count
-        self.assertIsNotNone(self.account(counted=False))
-        self.assertIsNone(self.account())
+        # two points only when both payments count
+        self.assertIsNotNone(self.account(counted=False, minimum=2))
+        self.assertIsNone(self.account(minimum=2))
 
     def test_should_count_a_payment_of_the_main_from_since_it_joined(self):
         self.pay(self.main, OUTSIDER, days_ago=10)
@@ -874,10 +879,11 @@ class TestTenure(NetworkTestCase):
         self.contract(self.main, OUTSIDER, days_ago=60)
         self.contract(self.alt, OUTSIDER, days_ago=60)
 
-        self.assertIsNotNone(self.account(counted=False))
-        self.assertIsNone(self.account())
+        self.assertIsNotNone(self.account(counted=False, minimum=2))
+        self.assertIsNone(self.account(minimum=2))
 
     def test_should_apply_it_in_the_calculation(self):
+        configure(network_min_connections=2)
         self.make_hostile(OUTSIDER)
         self.pay(self.main, OUTSIDER, days_ago=60)
         self.pay(self.alt, OUTSIDER, days_ago=60)
@@ -993,3 +999,168 @@ class TestCounterpartTenure(NetworkTestCase):
 
         (account,) = self.stored_accounts()
         self.assertEqual(account.trading, {OTHER_OUTSIDER})
+
+
+class TestMinimumConnections(NetworkTestCase):
+    """Every connection is one point; an account shows up at ``network_min_connections`` with one party (user, 2026-11-24)."""
+
+    def setUp(self):
+        super().setUp()
+        configure(network_min_connections=2)
+
+    def in_corporation(self, corporation_id, *outsiders):
+        make_corporation(corporation_id, alliance_id=OTHER_ALLIANCE_ID)
+        self.esi_names.return_value = {eve_id: (f"Outsider {eve_id}", "character") for eve_id in outsiders}
+        self.esi_affiliations.return_value = {eve_id: (corporation_id, OTHER_ALLIANCE_ID) for eve_id in outsiders}
+
+    def test_should_not_show_one_connection(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+    def test_should_not_show_one_trade_or_one_private_contract(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+        self.assertEqual(self.stored_accounts(), [])
+
+        self.contract(self.alt, OTHER_OUTSIDER, items=True)
+        self.make_hostile(OTHER_OUTSIDER)
+        self.assertEqual(self.stored_accounts(), [])
+
+    def test_should_show_two_connections_of_one_character(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+
+        (account,) = self.stored_accounts()
+
+        self.assertEqual(set(account.counterparts), {OUTSIDER})
+
+    def test_should_add_up_every_kind_of_connection(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER, ref_type="player_trading")
+        self.contract(self.alt, OUTSIDER, items=True)
+        self.contract(self.main, OUTSIDER)
+
+        (account,) = self.stored_accounts()
+
+        self.assertEqual(sum(link.points for link in account.links), 4)
+
+    def test_should_add_up_the_characters_of_the_account(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OUTSIDER)
+
+        self.assertEqual(len(self.stored_accounts()), 1)
+
+    def test_should_count_a_private_contract_with_isk_once(self):
+        contract = self.contract(self.alt, OUTSIDER, items=True, price=1000)
+        self.pay(
+            self.alt, OUTSIDER, ref_type="contract_price", amount=1000,
+            context_id=contract.contract_id, context_id_type="contract_id",
+        )
+
+        (link,) = self.account().links
+
+        # the ISK of the wallet entry still shows, it is just no second connection
+        self.assertEqual((link.points, link.contracts, link.payments, link.isk), (1, 1, 0, 1000))
+        self.assertIsNone(self.account(minimum=2))
+
+    def test_should_count_the_wallet_entry_of_another_contract(self):
+        contract = self.contract(self.alt, OUTSIDER, items=True)
+        self.pay(
+            self.alt, OUTSIDER, ref_type="contract_price", context_id=contract.contract_id + 1000,
+            context_id_type="contract_id",
+        )
+
+        self.assertEqual(self.account().links[0].points, 2)
+
+    def test_should_not_show_a_partner_that_is_not_hostile(self):
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+    def test_should_follow_the_setting(self):
+        self.make_hostile(OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+        configure(network_min_connections=3)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+        self.pay(self.main, OUTSIDER)
+
+        self.assertEqual(len(self.stored_accounts()), 1)
+
+    def test_should_add_up_the_members_of_a_hostile_corporation(self):
+        self.in_corporation(HOSTILE_CORP, OUTSIDER, OTHER_OUTSIDER)
+        self.make_hostile(HOSTILE_CORP, contact_type="corporation")
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OTHER_OUTSIDER)
+
+        (account,) = self.stored_accounts()
+
+        # both rows stay, the one connection of each included: they are what added up
+        self.assertEqual(set(account.counterparts), {OUTSIDER, OTHER_OUTSIDER})
+        self.assertEqual(len(account.links), 2)
+
+    def test_should_not_add_up_two_different_corporations(self):
+        other_corporation = HOSTILE_CORP + 1
+        self.in_corporation(HOSTILE_CORP, OUTSIDER)
+        make_corporation(other_corporation, alliance_id=OTHER_ALLIANCE_ID)
+        self.esi_names.return_value[OTHER_OUTSIDER] = ("Other", "character")
+        self.esi_affiliations.return_value[OTHER_OUTSIDER] = (other_corporation, OTHER_ALLIANCE_ID)
+        self.make_hostile(HOSTILE_CORP, contact_type="corporation")
+        self.make_hostile(other_corporation, contact_type="corporation")
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OTHER_OUTSIDER)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+    def test_should_add_up_the_members_of_a_hostile_alliance(self):
+        self.esi_names.return_value = {OUTSIDER: ("One", "character"), OTHER_OUTSIDER: ("Two", "character")}
+        self.esi_affiliations.return_value = {OUTSIDER: (4001, OTHER_ALLIANCE_ID), OTHER_OUTSIDER: (4002, OTHER_ALLIANCE_ID)}
+        self.make_hostile(OTHER_ALLIANCE_ID, contact_type="alliance")
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OTHER_OUTSIDER)
+
+        self.assertEqual(len(self.stored_accounts()), 1)
+
+    def test_should_leave_a_neutral_corporation_no_group_unless_neutral_partners_are_on(self):
+        self.in_corporation(4001, OUTSIDER, OTHER_OUTSIDER)
+        self.make_hostile(OUTSIDER)
+        self.make_hostile(OTHER_OUTSIDER)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OTHER_OUTSIDER)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+        configure(network_neutral=True)
+
+        self.assertEqual(len(self.stored_accounts()), 1)
+
+    def test_should_leave_a_blue_corporation_no_group(self):
+        configure(network_neutral=True)
+        # no Alliance behind it: a neutral one would be a group of its own
+        self.esi_names.return_value = {eve_id: (f"Outsider {eve_id}", "character") for eve_id in (OUTSIDER, OTHER_OUTSIDER)}
+        self.esi_affiliations.return_value = {OUTSIDER: (4001, None), OTHER_OUTSIDER: (4001, None)}
+        self.make_hostile(OUTSIDER)
+        self.make_hostile(OTHER_OUTSIDER)
+        self.make_hostile(4001, contact_type="corporation", standing=10)
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OTHER_OUTSIDER)
+
+        self.assertEqual(self.stored_accounts(), [])
+
+    def test_should_not_count_a_highlight_as_a_group(self):
+        self.in_corporation(4001, OUTSIDER, OTHER_OUTSIDER)
+        self.make_hostile(OUTSIDER)
+        self.make_hostile(OTHER_OUTSIDER)
+        configure(highlight_counterparts={"4001": "Corp 4001"})
+        self.pay(self.main, OUTSIDER)
+        self.pay(self.alt, OTHER_OUTSIDER)
+
+        self.assertEqual(self.stored_accounts(), [])

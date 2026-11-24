@@ -178,6 +178,24 @@ TRANSLATIONS = {
         "Сеть: синий выше Standing",
         "关系网：Standing 高于此值为蓝色",
     ),
+    "Network: minimum connections": (
+        "Network: Mindestzahl Verbindungen",
+        "Сеть: минимум связей",
+        "关系网：最少连接数",
+    ),
+    "An account shows up in the Network once its characters have at least this many connections with one counterpart, or with one hostile Corporation or Alliance (a neutral one too, with neutral partners on). A payment, a trade, a contract and a private contract with items count once each.": (
+        "Ein Account erscheint im Network, sobald seine Characters mindestens so viele Verbindungen zu einem "
+        "Counterpart oder zu einer feindlichen Corporation oder Alliance haben (mit neutralen Partnern auch zu "
+        "einer neutralen). Eine Zahlung, ein Trade, ein Contract und ein privater Contract mit Items zählen "
+        "je einmal.",
+        "Аккаунт появляется в сети, когда его персонажи вместе имеют не меньше стольких связей с одним "
+        "контрагентом или с одной враждебной Corporation или Alliance (при включённых нейтральных партнёрах "
+        "также с нейтральной). Платёж, сделка, контракт и приватный контракт с предметами считаются по одному "
+        "разу.",
+        "当账号的 Character 与某个对象，或与某个敌对的 Corporation 或 Alliance（开启中立对象时也包括中立的）"
+        "的连接数合计不少于此值时，该账号显示在关系网中。一笔付款、一次交易、一份 Contract 以及一份含物品的"
+        "私人 Contract 各计一次。",
+    ),
     "With neutral partners on: a partner, its Corporation or its Alliance with a standing above this value at a ticked source is blue and leaves the Network.": (
         "Bei eingeschalteten neutralen Partnern: Ein Partner, seine Corporation oder seine Alliance mit einem "
         "Standing über diesem Wert bei einer angehakten Quelle ist blau und fällt aus dem Network.",

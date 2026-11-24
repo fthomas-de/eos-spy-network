@@ -14,7 +14,7 @@ from allianceauth.eveonline.models import EveCharacter
 
 from eos_spy_network import api, snapshot
 from eos_spy_network.auth_hooks import SpyNetworkMenuItem
-from eos_spy_network.models import ContactSource
+from eos_spy_network.models import ContactSource, SpyConfiguration
 
 from .base import ALLIANCE_ID, OTHER_ALLIANCE_ID, add_contact, make_character, make_corporation, make_user
 from .test_views import HOSTILE_CORP, MANAGE_SETTINGS, VIEW_SUSPECTS, SuspectPageTestCase
@@ -197,6 +197,8 @@ class TestNetwork(VisitorTestCase):
             second_party_id=self.STRANGER, amount=-1000, balance=0,
         )
         add_contact(ContactSource.ALLIANCE, ALLIANCE_ID, self.STRANGER, -10, contact_type="character")
+        # one trade is all this fixture has
+        SpyConfiguration.objects.update(network_min_connections=1)
         snapshot.update()
         self.login(VIEW_SUSPECTS)
         return self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))

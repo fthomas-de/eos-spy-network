@@ -1,15 +1,12 @@
 """ISK connections of an account to characters outside the Alliance.
 
-Three kinds of connection make an account show up:
-
-- a shared counterpart: at least two characters of the account - the main and
-  an alt, or two alts - exchanged ISK or a contract without ISK with the same
-  character outside the Alliance. One payment each is enough; it is the
-  overlap that tells.
-- player trading: any trade window deal of one of the account's characters
-  with someone outside the Alliance.
-- a private contract with items: any one, with or without ISK, counted apart
-  from the payments.
+Every connection is worth one point (user, 2026-11-24): a wallet payment
+(donation, trade, contract payment), a contract without ISK, a private
+contract with items. A private contract with items counts once, not again
+for the wallet entries that belong to it. An account shows up when its
+characters together reach ``minimum`` points (setting, default 2) with one
+counterpart, or with one Corporation or Alliance behind the counterparts that
+is hostile - or, with the neutral ones switched on, not blue (``_cut``).
 
 "Outside" is whoever was not in the Alliance when the payment or contract
 happened (``tenure``): a character the account holders' histories do not
@@ -76,16 +73,24 @@ class Link:
     contracts: int = 0
     # "o": the own character gave (paid, issued), "i": it received; both may be there. Empty in an older snapshot
     direction: str = ""
-    # (when, trade, isk, direction, contract) of each ``add``, for ``drop_ours``; not stored
+    # (when, trade, isk, direction, contract, with_contract) of each ``add``, for ``drop_ours``; not stored
     events: list = field(default_factory=list, repr=False, compare=False)
 
-    def add(self, day: str, trade: bool, isk, direction: str = "", contract: bool = False) -> None:
+    @property
+    def points(self) -> int:
+        return self.payments + self.contracts
+
+    def add(
+        self, day: str, trade: bool, isk, direction: str = "", contract: bool = False, with_contract: bool = False
+    ) -> None:
         if contract:
             self.contracts += 1
         else:
-            self.payments += 1
-            if trade:
-                self.trades += 1
+            # the ISK of a wallet entry that belongs to a counted private contract: no point of its own
+            if not with_contract:
+                self.payments += 1
+                if trade:
+                    self.trades += 1
             self.isk += abs(isk or 0)
         self.direction = "".join(sorted(set(self.direction + direction)))
         self.first = min(self.first or day, day)
@@ -329,11 +334,12 @@ def kept_partners(accounts: dict, blues: set | None = None) -> dict:
     return result
 
 
-def drop_ours(accounts: dict, tenure, entities: dict) -> dict:
+def drop_ours(accounts: dict, tenure, entities: dict, minimum: int = 1, blues: set | None = None) -> dict:
     """The accounts without what was exchanged while the counterpart was in the Alliance (user, 2026-11-24).
 
     A character ESI puts into one of our Corporations is a member, not a connection outside - but only for the
-    time it was there. Runs after ``kept_partners``: only the partners left need their histories.
+    time it was there. Runs after ``kept_partners``: only the partners left need their histories. The
+    ``minimum`` of points is checked here, on what is left (``_cut``); ``blues`` is the one ``kept_partners`` got.
     """
     tenure.prepare({counterpart_id for account in accounts.values() for counterpart_id in account.counterparts}, entities)
     result = {}
@@ -344,23 +350,36 @@ def drop_ours(accounts: dict, tenure, entities: dict) -> dict:
             for when, *event in link.events:
                 if not tenure.was_ours(link.counterpart_id, when):
                     kept.add(when.date().isoformat(), *event)
-            if kept.payments or kept.contracts:
+            if kept.points:
                 links.append(kept)
         account.links = links
-        if _cut(account):
+        if _cut(account, minimum, blues):
             result[user_id] = account
     return result
 
 
-def _cut(account: Connections) -> bool:
-    """Keep only the links of the counterparts that make the account show up; False when none does."""
-    keep = account.shared | account.trading | account.contracting
+def _cut(account: Connections, minimum: int, blues: set | None) -> bool:
+    """Keep only the links that make the account show up; False when none does.
+
+    The points of every link count for the counterpart and for each Corporation and Alliance behind it that
+    may stand for a group: hostile ones, and with ``blues`` (the neutral partners are on) every one that is not
+    blue. The counterpart itself is a partner already. A group that reaches ``minimum`` keeps the links of all
+    its members, so the table shows what added up.
+    """
+    scores = defaultdict(int)
+    for link in account.links:
+        for place, eve_id in enumerate(account.chain(link.counterpart_id)):
+            if place == 0 or eve_id in account.hostiles or (blues is not None and eve_id not in blues):
+                scores[eve_id] += link.points
+    hits = {eve_id for eve_id, score in scores.items() if score >= minimum}
     account.links = sorted(
-        (link for link in account.links if link.counterpart_id in keep),
-        key=lambda link: (-link.payments, link.character_id, link.counterpart_id),
+        (link for link in account.links if hits.intersection(account.chain(link.counterpart_id))),
+        key=lambda link: (-link.points, link.character_id, link.counterpart_id),
     )
-    account.counterparts = {counterpart_id: account.counterparts.get(counterpart_id) for counterpart_id in keep}
-    return bool(keep)
+    account.counterparts = {
+        link.counterpart_id: account.counterparts.get(link.counterpart_id) for link in account.links
+    }
+    return bool(account.links)
 
 
 def alliance_ids(alliance_id: int) -> set[int]:
@@ -382,8 +401,12 @@ def connections(
     ignored_characters=(),
     ignored_counterparts=(),
     tenure=None,
+    minimum=1,
 ) -> dict:
     """The accounts with connections outside the Alliance, by user ID.
+
+    An account stays when its points in all reach ``minimum``: no group can score more than that, so it is
+    the cut that needs no affiliations yet; ``_cut`` decides after ``kept_partners``.
 
     ``mains`` maps the user ID of every account to check to its main
     EveCharacter. ``stats`` gets the number of journal entries read. Only
@@ -421,7 +444,10 @@ def connections(
     # (user, own character, counterpart) -> link
     links = {}
 
-    def add(character_id, party_ids, when, trade: bool, isk, direction: str = "", contract: bool = False) -> None:
+    def add(
+        character_id, party_ids, when, trade: bool, isk, direction: str = "", contract: bool = False,
+        with_contract: bool = False,
+    ) -> None:
         user_id = owner[character_id]
         for party_id in party_ids:
             # an own alt, a member of the Alliance at the time or an NPC is no connection outside
@@ -436,8 +462,42 @@ def connections(
             link = links.get((user_id, character_id, party_id))
             if link is None:
                 link = links[(user_id, character_id, party_id)] = Link(character_id, party_id)
-            link.add(when.date().isoformat(), trade, isk, direction, contract)
-            link.events.append((when, trade, isk, direction, contract))
+            link.add(when.date().isoformat(), trade, isk, direction, contract, with_contract)
+            link.events.append((when, trade, isk, direction, contract, with_contract))
+
+    # A private contract with items is a kind of its own, with or without ISK (user, 2026-11-23). Any other
+    # contract with ISK is in the journal already; without any - collateral included, which has its own
+    # journal entries - it is a payment of 0 ISK. Every type and status, both directions (user)
+    has_items = Exists(ContractItem.objects.filter(contract=OuterRef("pk")))
+    contracts = Contract.objects.filter(character_id__in=list(audits)).annotate(has_items=has_items)
+    if since is not None:
+        contracts = contracts.filter(date_issued__gte=since)
+    # read first: the journal needs to know which wallet entries belong to a contract that counts as one point
+    counted = set()
+    for audit_id, contract_id, date, price, reward, collateral, availability, with_items, issuer_id, *party_ids in (
+        contracts.values_list(
+            "character_id",
+            "contract_id",
+            "date_issued",
+            "price",
+            "reward",
+            "collateral",
+            "availability",
+            "has_items",
+            "issuer_id",
+            "assignee_id",
+            "acceptor_id",
+        ).iterator()
+    ):
+        own_id = audits[audit_id]
+        if tenure is not None and not tenure.counts(own_id, date):
+            continue
+        parties = {issuer_id, *party_ids}
+        if availability == PRIVATE and with_items:
+            counted.add(contract_id)
+            add(own_id, parties, date, False, 0, "o" if issuer_id == own_id else "i", contract=True)
+        elif not (price or reward or collateral):
+            add(own_id, parties, date, False, 0)
 
     entries = CharacterWalletJournalEntry.objects.filter(
         character_id__in=list(audits),
@@ -447,43 +507,18 @@ def connections(
         entries = entries.filter(date__gte=since)
     # no names here: most entries are payments inside the Alliance and drop out; _fill_names
     # looks up only the counterparts that stay
-    entries = entries.values_list("character_id", "ref_type", "amount", "date", "first_party_id", "second_party_id")
-    for audit_id, ref_type, amount, date, first_id, second_id in entries.iterator():
+    entries = entries.values_list(
+        "character_id", "ref_type", "amount", "date", "first_party_id", "second_party_id", "context_id_type", "context_id"
+    )
+    for audit_id, ref_type, amount, date, first_id, second_id, context_type, context_id in entries.iterator():
         if stats is not None:
             stats["journal_entries"] += 1
         # the journal is the own character's: a negative amount left its wallet
         direction = "i" if amount and amount > 0 else "o" if amount else ""
         own_id = audits[audit_id]
         if tenure is None or tenure.counts(own_id, date):
-            add(own_id, (first_id, second_id), date, ref_type == TRADING, amount, direction)
-
-    # A private contract with items is a kind of its own, with or without ISK (user, 2026-11-23). Any other
-    # contract with ISK is in the journal already; without any - collateral included, which has its own
-    # journal entries - it is a payment of 0 ISK. Every type and status, both directions (user)
-    has_items = Exists(ContractItem.objects.filter(contract=OuterRef("pk")))
-    contracts = Contract.objects.filter(character_id__in=list(audits)).annotate(has_items=has_items)
-    if since is not None:
-        contracts = contracts.filter(date_issued__gte=since)
-    for audit_id, date, price, reward, collateral, availability, with_items, issuer_id, *party_ids in contracts.values_list(
-        "character_id",
-        "date_issued",
-        "price",
-        "reward",
-        "collateral",
-        "availability",
-        "has_items",
-        "issuer_id",
-        "assignee_id",
-        "acceptor_id",
-    ).iterator():
-        own_id = audits[audit_id]
-        if tenure is not None and not tenure.counts(own_id, date):
-            continue
-        parties = {issuer_id, *party_ids}
-        if availability == PRIVATE and with_items:
-            add(own_id, parties, date, False, 0, "o" if issuer_id == own_id else "i", contract=True)
-        elif not (price or reward or collateral):
-            add(own_id, parties, date, False, 0)
+            with_contract = context_type == "contract_id" and context_id in counted
+            add(own_id, (first_id, second_id), date, ref_type == TRADING, amount, direction, with_contract=with_contract)
 
     by_user = defaultdict(list)
     for (user_id, _character_id, _counterpart_id), link in links.items():
@@ -491,11 +526,12 @@ def connections(
 
     result = {}
     for user_id, user_links in by_user.items():
+        if sum(link.points for link in user_links) < minimum:
+            continue
         main = mains[user_id]
         account = Connections(user_id, main.character_id, main.character_name, main.corporation_id)
-        account.links = user_links
-        if not _cut(account):
-            continue
+        account.links = sorted(user_links, key=lambda link: (-link.points, link.character_id, link.counterpart_id))
+        account.counterparts = {link.counterpart_id: None for link in account.links}
         account.characters = {
             character_id: name for character_id, name in names.items() if owner[character_id] == user_id
         }

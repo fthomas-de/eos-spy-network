@@ -178,6 +178,7 @@ class SpyConfigurationForm(forms.ModelForm):
             "ignored_ref_types",
             "network_neutral",
             "network_blue_above",
+            "network_min_connections",
             "ignored_contact_characters",
             "ignored_network_characters",
             "ignored_network_counterparts",

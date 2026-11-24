@@ -12,6 +12,27 @@ Last updated 2026-11-24 (version 0.1.1, tag `v0.1.1`).
   0.0.47 (highlighted counterparts red in the graph), 0.1.0, 0.1.1; only `v0.1.1` is tagged. Prod: run migration
   0023, `collectstatic` (`network.js`), recalculate once. The legend and the red highlights were not seen in a
   browser (SSO). The first run asks ESI for the corporation history of every counterpart corptools has no audit of.
+- Unreleased, 2026-11-24 (not committed): *Network by points* (user). `network._cut(account, minimum, blues)`
+  replaces the three rules: `Link.points` = payments + contracts; the points of every link count for the
+  counterpart and for each Corporation/Alliance of its chain that is in `account.hostiles` or, with `blues` (the
+  neutral switch), not blue; whatever reaches `minimum` keeps the links of all its members. Setting
+  `SpyConfiguration.network_min_connections` (default 2, 1-100, migration 0024, NOT yet applied to `aa_dev`;
+  `snapshot._inputs`, form, Network section of the settings). `connections(..., minimum=1)` cuts only by the
+  account's total (no group can score more, no affiliations needed yet); `drop_ours(..., minimum, blues)` does the
+  real check after `kept_partners` and the replay. `snapshot.build` computes `blues` once for both.
+  - A private contract with items counts once: `connections` reads the contracts first and `counted` holds their
+    `contract_id`s; a journal entry with `context_id_type == "contract_id"` and a context in `counted` goes in as
+    `Link.add(..., with_contract=True)` (ISK, direction, dates, no point; stored in `events` for the replay).
+  - `Connections.shared/trading/contracting` stay, only as the badges' descriptions (no longer a rule).
+  - Highlights do not score (user: they are links to important counterparts, not a calculation basis); their
+    choice list is still the stored Network, so a party below the minimum cannot be picked.
+  - Tests: `TestMinimumConnections` (15), `NetworkTestCase` runs with `network_min_connections=1` (most fixtures
+    are one connection), `connections`/`drop_ours` default to 1; `TestNetworkPages` and the visitors' `trade()` set 1.
+    Eight mutations checked red; not red: `snapshot.build` leaving `minimum` out of `connections` (only
+    an optimisation, the final check is in `drop_ours`). Real ESI cost not measured: every counterpart of an
+    account with enough points in all is now looked up, not only the ones that met an old rule.
+  - Prod: migration 0024, recalculate. Expect other accounts than before: a single trade or private contract no
+    longer shows, two payments of one character do.
 - Version `0.1.1`, 2026-11-24: fewer ESI requests (user asked to buffer the new calls).
   - `tenure._stale(row, now, daily)`: a stored history is trusted for a thirtieth of the time since its last entry,
     between `STALE_AFTER` (1 day) and `MAX_STALE` (7 days); an empty history (ESI 404, or a Corporation never in an
@@ -696,6 +717,12 @@ Last updated 2026-11-24 (version 0.1.1, tag `v0.1.1`).
 - Check the release against https://github.com/fthomas-de/aa-app-checklist.
 
 ## Decisions
+
+- Network by points (user, 2026-11-24): every payment, contract and trade is one point, a private contract with
+  items one point however many wallet entries it has; a main shows up at X points (setting, default 2) with one
+  counterpart character or with one hostile Corporation/Alliance (neutral ones too with the neutral switch, blue
+  never), summed over all its characters; a group hit shows all rows of its members; the hostile filter has no
+  exception; highlights are links to counterparts, not a basis of the calculation.
 
 - Counterpart at the time (user, 2026-11-24): the counterpart's Alliance at the time of the payment, contract
   or mail decides, both ways (ours then -> no counterpart even if hostile today; joined later -> counts for the

@@ -157,6 +157,7 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
             set(config.ignored_network_characters or ()),
             {int(eve_id) for eve_id in config.ignored_network_counterparts or ()},
             tenure,
+            config.network_min_connections,
         )
     step("affiliations")
     with measurement.phase(AFFILIATIONS):
@@ -182,9 +183,10 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
         _affiliate_rows(contact_rows, entities, hostiles, "contact_id")
         _reference_rows(contact_rows, entities, hostiles)
         standings = {eve_id: standing for eve_id, standing in alliance_standings(config).items() if eve_id in entities}
-        found = kept_partners(found, network_blue_ids(config) if config.network_neutral else None)
+        blues = network_blue_ids(config) if config.network_neutral else None
+        found = kept_partners(found, blues)
         # a partner that was in our Alliance at the time is a member then, whatever Auth knows (user, 2026-11-24)
-        found = drop_ours(found, tenure, entities)
+        found = drop_ours(found, tenure, entities, config.network_min_connections, blues)
 
     tile_ids = {tile.id for tile in tiles}
     visited = defaultdict(set)  # user -> the Corporations of the Alliance its characters are in
@@ -357,6 +359,7 @@ def _inputs() -> tuple:
             "ignored_ref_types",
             "network_neutral",
             "network_blue_above",
+            "network_min_connections",
             "ignored_contact_characters",
             "ignored_network_characters",
             "ignored_network_counterparts",

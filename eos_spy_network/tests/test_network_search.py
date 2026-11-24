@@ -199,6 +199,7 @@ class TestHighlightSettings(SearchTestCase):
                 "hostile_below": "0",
                 "blue_from": "5",
                 "network_blue_above": "0",
+                "network_min_connections": "2",
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",

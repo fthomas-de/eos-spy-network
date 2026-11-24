@@ -155,6 +155,16 @@ class SpyConfiguration(SingletonModel):
             "value at a ticked source is blue and leaves the Network."
         ),
     )
+    network_min_connections = models.PositiveSmallIntegerField(
+        default=2,
+        validators=[MinValueValidator(1), MaxValueValidator(100)],
+        verbose_name=_("Network: minimum connections"),
+        help_text=_(
+            "An account shows up in the Network once its characters have at least this many connections with one "
+            "counterpart, or with one hostile Corporation or Alliance (a neutral one too, with neutral partners "
+            "on). A payment, a trade, a contract and a private contract with items count once each."
+        ),
+    )
     # EVE IDs: a character is ignored as a source of findings, its alts and main stay checked
     ignored_contact_characters = models.JSONField(
         default=list,

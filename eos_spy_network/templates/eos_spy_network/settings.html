@@ -92,6 +92,7 @@
                     <div class="card-body">
                         {% bootstrap_field form.network_neutral %}
                         {% bootstrap_field form.network_blue_above %}
+                        {% bootstrap_field form.network_min_connections %}
                         {% bootstrap_field form.ignored_network_characters %}
                         {# filled by the button on the Network page: nothing to show until one is ignored #}
                         {% if form.ignored_network_counterparts.field.choices %}

@@ -116,31 +116,36 @@ every one with a standing below a configurable value.
   between them; the partner's tooltip names its Corporation and Alliance.
   The own characters are green (main darker, alts lighter), hostiles red,
   the rest neutral; a hostile carries its standing, the sources in its
-  tooltip; a line's tooltip gives the payments and their period. A main
-  shows up when one of these is with a hostile partner - with anyone else
-  they are everyday trading and hauling. The setting *Network: neutral
-  partners too* lets the neutral partners show as well: then only a blue
-  one stays out - it, its Corporation or its Alliance above *Network: blue
-  above standing* (default 0) at a ticked source, and none of the three
-  hostile:
-  - *Shared payment partner*: at least two characters of the account - main
-    and alt, or two alts - exchanged ISK with the same character outside the
-    Alliance; one payment each is enough. Payments are the wallet journal's
-    `player_donation`, `player_trading` and contract payments
-    (`contract_price`, `contract_price_payment_corp`, `contract_reward`,
-    `contract_collateral`, `contract_collateral_payout`), and every contract
-    without ISK (price, reward and collateral 0 - a gift of items leaves no
-    journal entry with the partner) from corptools' contracts, of any type
-    and status, issued, assigned or accepted, as a payment of 0 ISK
-  - *Player trading*: any trade window deal (`player_trading`) of one of its
-    characters with someone outside the Alliance
-  - *Private contract*: any contract with items that corptools holds with
+  tooltip; a line's tooltip gives the payments and their period. Every
+  connection is worth one point, and a main shows up when its characters
+  together reach *Network: minimum connections* (default 2) points with one
+  counterpart - or with one hostile Corporation or Alliance, all its members
+  added up; then the table lists every row with a member of that group, also
+  the ones with a single connection. A partner that is not hostile does not
+  count - with anyone else they are everyday trading and hauling. The setting
+  *Network: neutral partners too* lets the neutral partners show as well:
+  then only a blue one stays out - it, its Corporation or its Alliance above
+  *Network: blue above standing* (default 0) at a ticked source, and none of
+  the three hostile; a neutral Corporation or Alliance adds up its members
+  then as well. Highlights do not count as a group. The connections are:
+  - a payment: the wallet journal's `player_donation`, `player_trading` and
+    contract payments (`contract_price`, `contract_price_payment_corp`,
+    `contract_reward`, `contract_collateral`, `contract_collateral_payout`)
+    between a character of the account and someone outside the Alliance
+  - a contract without ISK (price, reward and collateral 0 - a gift of items
+    leaves no journal entry with the partner) from corptools' contracts, of
+    any type and status, issued, assigned or accepted, as a payment of 0 ISK
+  - a private contract: any contract with items that corptools holds with
     availability *personal* (private), of any type and status, issued,
     assigned or accepted by one of its characters with someone outside the
-    Alliance - with or without ISK, one is enough. It is counted apart from
-    the payments, so it is no payment of 0 ISK any more. A button in its row
-    opens a popup with the contracts and their items (`view_suspects`; the
-    contracts are read from corptools at the click)
+    Alliance - with or without ISK. It counts once: the wallet entries that
+    belong to it add their ISK but no point. A button in its row opens a
+    popup with the contracts and their items (`view_suspects`; the contracts
+    are read from corptools at the click)
+
+  The badges on the main's entry say what the shown rows are: *Shared payment
+  partner* (two characters of the account with the same counterpart), *Player
+  trading* and *Private contract*.
 
   The graph's arrowheads follow the giver: a line points to the partner when
   the own character paid or issued, to the own character when it was paid or
@@ -208,7 +213,8 @@ every one with a standing below a configurable value.
   Freighters can be added); for the Corporation changes the number per year
   that sets a marker; for *Friendly to hostiles* the ignored characters,
   whose contacts are not checked. *Network*: whether neutral partners show
-  too and the standing above which a partner is blue, and the ignored
+  too and the standing above which a partner is blue, the minimum number of
+  connections with one counterpart or group (default 2), and the ignored
   characters, whose payments and contracts leave the Network. Both lists of
   ignored characters offer the characters with a finding in the last
   calculation (a friendly hostile contact, respectively a Network link) and

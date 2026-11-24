@@ -407,8 +407,9 @@ class TestNetworkPages(SuspectPageTestCase):
             amount=-1000,
             balance=0,
         )
-        # only a hostile partner makes the account show up
+        # only a hostile partner makes the account show up; the one trade is enough for these pages
         add_contact(ContactSource.ALLIANCE, ALLIANCE_ID, self.OUTSIDER, -10, contact_type="character")
+        configure(network_min_connections=1)
         snapshot.update()
         self.client.force_login(make_user("lead", VIEW_SUSPECTS))
 
@@ -662,6 +663,7 @@ class TestSettingsPage(SpyTestCase):
                 "blue_from": "7.5",
                 "network_neutral": "on",
                 "network_blue_above": "2.5",
+                "network_min_connections": "4",
                 "min_kill_value": "3",
                 "corp_changes_per_year": "6",
                 "lookback_days": "90",
@@ -679,10 +681,35 @@ class TestSettingsPage(SpyTestCase):
         self.assertEqual(config.blue_from, Decimal("7.5"))
         self.assertTrue(config.network_neutral)
         self.assertEqual(config.network_blue_above, Decimal("2.5"))
+        self.assertEqual(config.network_min_connections, 4)
         self.assertEqual(config.min_kill_value, 3)
         self.assertEqual(config.corp_changes_per_year, 6)
         self.assertEqual(config.lookback_days, 90)
         self.assertEqual(config.ignored_ref_types, ["market_transaction", "player_trading"])
+
+    def test_should_ask_for_two_connections_and_refuse_none(self):
+        configure()
+
+        response = self.client.get(reverse("eos_spy_network:settings"))
+
+        self.assertContains(response, 'name="network_min_connections" value="2"')
+
+        response = self.client.post(
+            reverse("eos_spy_network:settings"),
+            {
+                "alliance": make_alliance().pk,
+                "hostile_below": "0",
+                "blue_from": "5",
+                "network_blue_above": "0",
+                "network_min_connections": "0",
+                "min_kill_value": "0",
+                "corp_changes_per_year": "6",
+                "lookback_days": "90",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SpyConfiguration.get_solo().network_min_connections, 2)
 
     def test_should_open_the_alliance_tab_first(self):
         configure()
@@ -712,6 +739,7 @@ class TestSettingsPage(SpyTestCase):
                 "hostile_below": "0",
                 "blue_from": "5",
                 "network_blue_above": "0",
+                "network_min_connections": "2",
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
@@ -733,6 +761,7 @@ class TestSettingsPage(SpyTestCase):
                 "hostile_below": "0",
                 "blue_from": "5",
                 "network_blue_above": "0",
+                "network_min_connections": "2",
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
@@ -773,6 +802,7 @@ class TestSettingsPage(SpyTestCase):
                 "hostile_below": "0",
                 "blue_from": "5",
                 "network_blue_above": "0",
+                "network_min_connections": "2",
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
@@ -816,6 +846,7 @@ class TestSettingsPage(SpyTestCase):
                 "hostile_below": "0",
                 "blue_from": "5",
                 "network_blue_above": "0",
+                "network_min_connections": "2",
                 "min_kill_value": "0",
                 "ignored_ships": ["Capsule"],
                 "corp_changes_per_year": "4",
@@ -905,6 +936,7 @@ class TestSettingsPage(SpyTestCase):
                 "hostile_below": "0",
                 "blue_from": "5",
                 "network_blue_above": "0",
+                "network_min_connections": "2",
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
@@ -929,6 +961,7 @@ class TestSettingsPage(SpyTestCase):
                 "hostile_below": "0",
                 "blue_from": "5",
                 "network_blue_above": "0",
+                "network_min_connections": "2",
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
@@ -950,6 +983,7 @@ class TestSettingsPage(SpyTestCase):
                 "hostile_below": "0",
                 "blue_from": "5",
                 "network_blue_above": "0",
+                "network_min_connections": "2",
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
@@ -971,6 +1005,7 @@ class TestSettingsPage(SpyTestCase):
                 "hostile_below": "0",
                 "blue_from": "5",
                 "network_blue_above": "0",
+                "network_min_connections": "2",
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
@@ -1036,6 +1071,7 @@ class TestSettingsPage(SpyTestCase):
                 "hostile_below": "0",
                 "blue_from": "5",
                 "network_blue_above": "0",
+                "network_min_connections": "2",
                 "min_kill_value": "0",
                 "capital_ship_groups": ["Titan"],
                 "corp_changes_per_year": "4",

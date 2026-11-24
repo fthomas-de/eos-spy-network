@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-24
+
+### Changed
+
+- The Network counts connections instead of three kinds of rule. A payment, a
+  contract without ISK and a private contract with items are one point each;
+  a main shows up when its characters together reach *Network: minimum
+  connections* (new setting, default 2, migration 0024) with one counterpart,
+  or with one hostile Corporation or Alliance, all its members added up (a
+  neutral one too with *Network: neutral partners too*, never a blue one).
+  Before, "two characters with the same partner", one trade or one private
+  contract was enough, and two payments of one character were not. A group
+  that reaches the minimum shows the rows of all its members, so the table
+  shows what added up. Highlights stay what they were and add nothing.
+- A private contract with items and ISK is one point: the wallet entries that
+  belong to it (journal `context_id` = the contract) still add their ISK to the
+  row, but are no payments of their own - it would have counted twice.
+- The calculation looks up the Corporation and Alliance of every counterpart
+  of an account that has enough points in all, not only of those that met one
+  of the old rules: a group can only be told from the affiliations. Expect
+  more ESI name and affiliation requests per run (bulk, 1000 IDs each).
+
 ## [0.1.1] - 2026-11-24
 
 ### Changed
