@@ -4,12 +4,21 @@ Where the work on `eos-spy-network` stands, for the next session. Describes a
 moment; where it contradicts the code, the code is right. Lasting rules live
 in `CLAUDE.md`, the history in `CHANGELOG.md`.
 
-Last updated 2026-11-24 (version 0.1.3, tag `v0.1.3`).
+Last updated 2026-11-25 (version 0.1.4, tag `v0.1.4`).
 
 ## State
 
-- Pushed together (remote was at 0.1.1): 0.1.2 (Network by points) and 0.1.3; only `v0.1.3` is tagged. Prod:
-  run migration 0024, `collectstatic` (`network.js`), recalculate once. Expect fewer Network accounts, fewer ISK
+- Version `0.1.4`, 2026-11-25 (see `CHANGELOG.md`): a main of the Network Corporation page whose partners had only
+  plain payments showed no badge in the list. `Connections.paying` (counterparts with a payment and no trade,
+  per link, as the graph's payment edges) gives a grey `text-bg-secondary` badge titled *Payments* in the list and
+  in the card header (`network_corporation.html`); no new text. User's choice (2026-11-25): the Corporation tile
+  on the Network page gets no Payments row (`payments_count` is not in the snapshot). A partner traded with from
+  one character and only paid from another is in both `paying` and `trading` (per link, not per partner). Test:
+  `TestPlayerTrading.test_should_list_a_plain_payment_partner_apart_from_a_trading_one`, not checked red by hand
+  (it needs `paying`, so it fails without it). Suite 603 without translation tests, green. Prod: no migration, no
+  static file, no recalculation (the property reads the stored links). Not seen in a browser.
+- Remote was at 0.1.3 (0.1.2 and 0.1.3 pushed 2026-11-24 together, only `v0.1.3` tagged). Prod for those: run
+  migration 0024, `collectstatic` (`network.js`), recalculate once. Expect fewer Network accounts, fewer ISK
   and Contracts markers (public contracts gone), and a graph without figure eights.
 - Version `0.1.3`, 2026-11-24 (see `CHANGELOG.md`): public contracts out, double count fixed, graph order.
   - `markers.PUBLIC` and `markers.without_public_contracts(entries)`: drops journal entries with
