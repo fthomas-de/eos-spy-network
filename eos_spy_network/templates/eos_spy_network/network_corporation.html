@@ -43,6 +43,9 @@
                             {% if account.shared %}
                                 <span class="badge text-bg-warning" title="{% translate 'Shared payment partner' %}">{{ account.shared|length }}</span>
                             {% endif %}
+                            {% if account.paying %}
+                                <span class="badge text-bg-secondary" title="{% translate 'Payments' %}">{{ account.paying|length }}</span>
+                            {% endif %}
                             {% if account.trading %}
                                 <span class="badge text-bg-info" title="{% translate 'Player trading' %}">{{ account.trading|length }}</span>
                             {% endif %}
@@ -84,6 +87,9 @@
                             {% endif %}
                             {% if account.shared %}
                                 <span class="badge text-bg-warning">{% translate "Shared payment partner" %}: {{ account.shared|length }}</span>
+                            {% endif %}
+                            {% if account.paying %}
+                                <span class="badge text-bg-secondary">{% translate "Payments" %}: {{ account.paying|length }}</span>
                             {% endif %}
                             {% if account.trading %}
                                 <span class="badge text-bg-info">{% translate "Player trading" %}: {{ account.trading|length }}</span>

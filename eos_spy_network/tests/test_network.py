@@ -295,6 +295,15 @@ class TestIgnoredCounterparts(NetworkTestCase):
 
 
 class TestPlayerTrading(NetworkTestCase):
+    def test_should_list_a_plain_payment_partner_apart_from_a_trading_one(self):
+        self.pay(self.alt, OUTSIDER)
+        self.pay(self.alt, OTHER_OUTSIDER, ref_type="player_trading")
+
+        account = self.account()
+
+        self.assertEqual(account.paying, {OUTSIDER})
+        self.assertEqual(account.trading, {OTHER_OUTSIDER})
+
     def test_should_show_a_single_trade_with_an_outsider(self):
         self.pay(self.alt, OUTSIDER, ref_type="player_trading")
 

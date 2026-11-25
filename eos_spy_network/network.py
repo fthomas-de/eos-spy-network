@@ -142,6 +142,11 @@ class Connections:
         return {counterpart_id for counterpart_id, own in characters.items() if len(own) >= 2}
 
     @property
+    def paying(self) -> set:
+        """The counterparts with a plain payment: the graph's payment edges, trades and contracts apart."""
+        return {link.counterpart_id for link in self.links if link.payments and not link.trades}
+
+    @property
     def trading(self) -> set:
         return {link.counterpart_id for link in self.links if link.trades}
 

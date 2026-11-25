@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-11-25
+
+### Fixed
+
+- Network: in the list of a Corporation's mains, a main whose partners had
+  only plain payments (no trade, no contract, not shared, not hostile) showed
+  no badge. A grey badge with the number of those partners is there now.
+
 ## [0.1.3] - 2026-11-24
 
 ### Changed
