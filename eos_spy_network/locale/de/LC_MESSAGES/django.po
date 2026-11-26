@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos-spy-network\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 13:24+0000\n"
-"PO-Revision-Date: 2026-11-24 13:24+0000\n"
+"POT-Creation-Date: 2026-11-26 21:32+0000\n"
+"PO-Revision-Date: 2026-11-26 21:32+0000\n"
 "Last-Translator: eos-spy-network\n"
 "Language-Team: de\n"
 "Language: de\n"
@@ -22,7 +22,7 @@ msgid "Spy Network"
 msgstr "Spy Network"
 
 #: contacts.py:25 snapshot.py:52
-#: templates/eos_spy_network/network_corporation.html:104
+#: templates/eos_spy_network/network_corporation.html:110
 #: templates/eos_spy_network/network_search.html:39
 #: templates/eos_spy_network/partials/capital-contracts.html:7
 #: templates/eos_spy_network/partials/dealings.html:7
@@ -32,9 +32,9 @@ msgctxt "EVE jargon"
 msgid "Character"
 msgstr "Character"
 
-#: contacts.py:26 models.py:373 snapshot.py:53
-#: templates/eos_spy_network/network_corporation.html:107
-#: templates/eos_spy_network/network_search.html:41
+#: contacts.py:26 models.py:383 snapshot.py:53
+#: templates/eos_spy_network/network_corporation.html:113
+#: templates/eos_spy_network/network_search.html:42
 #: templates/eos_spy_network/partials/contacts.html:10
 #: templates/eos_spy_network/partials/dealings.html:10
 #: templates/eos_spy_network/partials/network-legend.html:8
@@ -44,9 +44,9 @@ msgctxt "EVE jargon"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: contacts.py:27 forms.py:101 models.py:63 models.py:372 snapshot.py:54
-#: templates/eos_spy_network/network_corporation.html:108
-#: templates/eos_spy_network/network_search.html:42
+#: contacts.py:27 forms.py:108 models.py:63 models.py:382 snapshot.py:54
+#: templates/eos_spy_network/network_corporation.html:114
+#: templates/eos_spy_network/network_search.html:43
 #: templates/eos_spy_network/partials/contacts.html:11
 #: templates/eos_spy_network/partials/dealings.html:11
 #: templates/eos_spy_network/partials/network-legend.html:10
@@ -62,15 +62,15 @@ msgctxt "EVE jargon"
 msgid "Faction"
 msgstr "Faction"
 
-#: forms.py:160 snapshot.py:50 templates/eos_spy_network/base.html:17
-#: templates/eos_spy_network/corporation.html:55
-#: templates/eos_spy_network/corporation.html:104
+#: forms.py:167 snapshot.py:50 templates/eos_spy_network/base.html:17
+#: templates/eos_spy_network/corporation.html:56
+#: templates/eos_spy_network/corporation.html:105
 #: templates/eos_spy_network/settings.html:33
-#: templates/eos_spy_network/settings.html:75 views.py:40
+#: templates/eos_spy_network/settings.html:79 views.py:61
 msgid "Markers"
 msgstr "Marker"
 
-#: forms.py:232
+#: forms.py:240
 #, python-format
 msgid "A text may have at most %(length)s characters."
 msgstr "Ein Text darf höchstens %(length)s Zeichen haben."
@@ -79,12 +79,12 @@ msgstr "Ein Text darf höchstens %(length)s Zeichen haben."
 msgid "Hostile membership"
 msgstr "Feindliche Mitgliedschaft"
 
-#: markers.py:46 templates/eos_spy_network/settings.html:84
+#: markers.py:46 templates/eos_spy_network/settings.html:88
 msgid "Frequent Corporation changes"
 msgstr "Häufige Corporation-Wechsel"
 
 #: markers.py:47 templates/eos_spy_network/settings.html:51
-#: templates/eos_spy_network/settings.html:86
+#: templates/eos_spy_network/settings.html:90
 msgid "Friendly to hostiles"
 msgstr "Freundlich zu Feinden"
 
@@ -100,12 +100,12 @@ msgstr "ISK mit Feinden"
 msgid "Contracts with hostiles"
 msgstr "Contracts mit Feinden"
 
-#: markers.py:51 templates/eos_spy_network/settings.html:82
+#: markers.py:51 templates/eos_spy_network/settings.html:86
 msgid "Capital in contract"
 msgstr "Capital im Contract"
 
 #: markers.py:52 templates/eos_spy_network/settings.html:43
-#: templates/eos_spy_network/settings.html:77
+#: templates/eos_spy_network/settings.html:81
 msgid "Blue kills"
 msgstr "Blue-Kills"
 
@@ -330,23 +330,24 @@ msgstr ""
 "Ein Partner, den die anderen Characters des Accounts teilen, zählt "
 "weiterhin."
 
-#: models.py:189
+#: models.py:190
 msgid "Ignored counterparts"
 msgstr "Ignorierte Gegenüber"
 
-#: models.py:190
+#: models.py:192
 msgid ""
-"Payments and contracts with these counterparts do not count for the Network."
-" Remove one to count it again."
+"Payments and contracts with these counterparts count neither for the Network"
+" nor for the markers ISK and Contracts. Remove one to count it again."
 msgstr ""
-"Zahlungen und Contracts mit diesen Gegenübern zählen nicht für das Network. "
-"Entferne eines, damit es wieder zählt."
+"Zahlungen und Contracts mit diesen Gegenübern zählen weder für das Network "
+"noch für die Marker ISK und Contracts. Entferne eines, damit es wieder "
+"zählt."
 
-#: models.py:197
+#: models.py:201
 msgid "Highlighted counterparts"
 msgstr "Hervorgehobene Gegenüber"
 
-#: models.py:199
+#: models.py:203
 msgid ""
 "Characters, Corporations and Alliances that get a tile on the Network page, "
 "with the number of accounts that deal with them in the Network."
@@ -355,18 +356,18 @@ msgstr ""
 "Kachel bekommen, mit der Anzahl der Accounts, die im Network mit ihnen zu "
 "tun haben."
 
-#: models.py:207
+#: models.py:211
 msgid "Markers switched off"
 msgstr "Ausgeschaltete Marker"
 
-#: models.py:208
+#: models.py:212
 msgid ""
 "Still calculated, but left out of the Markers pages until switched on again."
 msgstr ""
 "Wird weiter berechnet, aber auf den Marker-Seiten ausgelassen, bis er wieder"
 " eingeschaltet wird."
 
-#: models.py:213 models.py:216
+#: models.py:217 models.py:220
 msgid "Configuration"
 msgstr "Konfiguration"
 
@@ -427,7 +428,7 @@ msgid "Saving the result"
 msgstr "Speichere das Ergebnis"
 
 #: snapshot.py:50 templates/eos_spy_network/base.html:23
-#: templates/eos_spy_network/settings.html:91 views.py:42 views.py:43
+#: templates/eos_spy_network/settings.html:95 views.py:63 views.py:64
 msgid "Network"
 msgstr "Network"
 
@@ -435,19 +436,19 @@ msgstr "Network"
 msgid "Affiliations"
 msgstr "Zugehörigkeiten"
 
-#: templates/eos_spy_network/base.html:29 views.py:46
+#: templates/eos_spy_network/base.html:29 views.py:67
 msgid "Statistics"
 msgstr "Statistik"
 
-#: templates/eos_spy_network/base.html:32 views.py:47
+#: templates/eos_spy_network/base.html:32 views.py:68
 msgid "Log"
 msgstr "Protokoll"
 
-#: templates/eos_spy_network/base.html:38 views.py:45
+#: templates/eos_spy_network/base.html:38 views.py:66
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: templates/eos_spy_network/corporation.html:29
+#: templates/eos_spy_network/corporation.html:30
 #: templates/eos_spy_network/corporations.html:30
 #: templates/eos_spy_network/corporations.html:40
 #: templates/eos_spy_network/network.html:62
@@ -461,24 +462,24 @@ msgctxt "eos-spy-network"
 msgid "Mains"
 msgstr "Mains"
 
-#: templates/eos_spy_network/corporation.html:30
-#: templates/eos_spy_network/corporation.html:45
+#: templates/eos_spy_network/corporation.html:31
+#: templates/eos_spy_network/corporation.html:46
 #: templates/eos_spy_network/corporations.html:31
 msgid "Mains with markers"
 msgstr "Mains mit Markern"
 
-#: templates/eos_spy_network/corporation.html:31
+#: templates/eos_spy_network/corporation.html:32
 #: templates/eos_spy_network/corporations.html:32
 msgid "Alts of other mains with markers"
 msgstr "Alts fremder Mains mit Markern"
 
-#: templates/eos_spy_network/corporation.html:36
+#: templates/eos_spy_network/corporation.html:37
 #: templates/eos_spy_network/network_corporation.html:25
 msgid "Back"
 msgstr "Zurück"
 
-#: templates/eos_spy_network/corporation.html:53
-#: templates/eos_spy_network/corporation.html:101
+#: templates/eos_spy_network/corporation.html:54
+#: templates/eos_spy_network/corporation.html:102
 #: templates/eos_spy_network/log.html:18
 #: templates/eos_spy_network/partials/network-legend.html:4
 #: templates/eos_spy_network/settings.html:274
@@ -486,8 +487,8 @@ msgctxt "EVE jargon"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_spy_network/corporation.html:54
-#: templates/eos_spy_network/corporation.html:172
+#: templates/eos_spy_network/corporation.html:55
+#: templates/eos_spy_network/corporation.html:173
 #: templates/eos_spy_network/partials/contacts.html:7
 #: templates/eos_spy_network/settings.html:275
 #: templates/eos_spy_network/statistics.html:19
@@ -495,17 +496,17 @@ msgctxt "eos-spy-network"
 msgid "Characters"
 msgstr "Characters"
 
-#: templates/eos_spy_network/corporation.html:82
+#: templates/eos_spy_network/corporation.html:83
 #: templates/eos_spy_network/corporations.html:47
 msgid "No markers."
 msgstr "Keine Marker."
 
-#: templates/eos_spy_network/corporation.html:91
+#: templates/eos_spy_network/corporation.html:92
 msgctxt "eos-spy-network"
 msgid "Alts of mains in other Corporations"
 msgstr "Alts von Mains anderer Corporations"
 
-#: templates/eos_spy_network/corporation.html:95
+#: templates/eos_spy_network/corporation.html:96
 msgid ""
 "Characters of this Corporation whose main is in another Corporation or "
 "outside the Alliance, with their whole account. A note is changed on the "
@@ -517,19 +518,19 @@ msgstr ""
 "Seite der Corporation des Mains geändert, bei einem Main außerhalb der "
 "Alliance in den Einstellungs-Tabs."
 
-#: templates/eos_spy_network/corporation.html:102
+#: templates/eos_spy_network/corporation.html:103
 msgid "Main's Corporation"
 msgstr "Corporation des Mains"
 
-#: templates/eos_spy_network/corporation.html:103
+#: templates/eos_spy_network/corporation.html:104
 msgid "Alts here"
 msgstr "Alts hier"
 
-#: templates/eos_spy_network/corporation.html:146
+#: templates/eos_spy_network/corporation.html:147
 msgid "Cleared findings"
 msgstr "Geklärte Funde"
 
-#: templates/eos_spy_network/corporation.html:150
+#: templates/eos_spy_network/corporation.html:151
 msgid ""
 "Mains whose every finding is cleared, so they no longer show above. A note "
 "is changed in the settings tabs."
@@ -537,28 +538,28 @@ msgstr ""
 "Mains, deren Funde alle geklärt sind und die deshalb oben nicht mehr stehen."
 " Eine Notiz wird in den Tabs der Einstellungen geändert."
 
-#: templates/eos_spy_network/corporation.html:153
+#: templates/eos_spy_network/corporation.html:154
 msgid "Search main, finding or note"
 msgstr "Main, Fund oder Notiz suchen"
 
-#: templates/eos_spy_network/corporation.html:169
+#: templates/eos_spy_network/corporation.html:170
 #: templates/eos_spy_network/log.html:17
 msgid "Marker"
 msgstr "Marker"
 
-#: templates/eos_spy_network/corporation.html:170
+#: templates/eos_spy_network/corporation.html:171
 #: templates/eos_spy_network/log.html:15
 #: templates/eos_spy_network/partials/kills.html:7
 #: templates/eos_spy_network/settings.html:212
 msgid "Date"
 msgstr "Datum"
 
-#: templates/eos_spy_network/corporation.html:171
+#: templates/eos_spy_network/corporation.html:172
 #: templates/eos_spy_network/log.html:19
 msgid "Finding"
 msgstr "Fund"
 
-#: templates/eos_spy_network/corporation.html:173
+#: templates/eos_spy_network/corporation.html:174
 #: templates/eos_spy_network/log.html:22
 #: templates/eos_spy_network/partials/contacts.html:16
 #: templates/eos_spy_network/partials/kill-note-button.html:35
@@ -570,28 +571,28 @@ msgstr "Fund"
 msgid "Note"
 msgstr "Notiz"
 
-#: templates/eos_spy_network/corporation.html:210
-#: templates/eos_spy_network/network_corporation.html:179
+#: templates/eos_spy_network/corporation.html:211
+#: templates/eos_spy_network/network_corporation.html:188
 #: templates/eos_spy_network/statistics.html:44
 #: templates/eos_spy_network/statistics.html:68
 msgctxt "eos-spy-network"
 msgid "Contracts"
 msgstr "Contracts"
 
-#: templates/eos_spy_network/corporation.html:211
-#: templates/eos_spy_network/network_corporation.html:180
-#: templates/eos_spy_network/network_corporation.html:196
+#: templates/eos_spy_network/corporation.html:212
+#: templates/eos_spy_network/network_corporation.html:189
+#: templates/eos_spy_network/partials/ignore-modal.html:12
 #: templates/eos_spy_network/partials/kill-note-modal.html:22
 msgid "Close"
 msgstr "Schließen"
 
-#: templates/eos_spy_network/corporation.html:213
-#: templates/eos_spy_network/network_corporation.html:182
+#: templates/eos_spy_network/corporation.html:214
+#: templates/eos_spy_network/network_corporation.html:191
 msgid "Loading ..."
 msgstr "Lade ..."
 
-#: templates/eos_spy_network/corporation.html:213
-#: templates/eos_spy_network/network_corporation.html:182
+#: templates/eos_spy_network/corporation.html:214
+#: templates/eos_spy_network/network_corporation.html:191
 msgid "The contracts could not be loaded."
 msgstr "Die Contracts konnten nicht geladen werden."
 
@@ -602,8 +603,9 @@ msgstr "Corporations ohne Marker ausblenden"
 #: templates/eos_spy_network/corporations.html:53
 #: templates/eos_spy_network/network.html:102
 #: templates/eos_spy_network/network_corporation.html:154
+#: templates/eos_spy_network/network_corporation.html:163
 #: templates/eos_spy_network/partials/capital-contracts.html:33
-#: templates/eos_spy_network/partials/dealings.html:33
+#: templates/eos_spy_network/partials/dealings.html:46
 #: templates/eos_spy_network/partials/highlight-tile.html:45
 msgid "View details"
 msgstr "Details anzeigen"
@@ -640,23 +642,23 @@ msgstr "Geklärt"
 msgid "Note before"
 msgstr "Notiz vorher"
 
-#: templates/eos_spy_network/log.html:29
+#: templates/eos_spy_network/log.html:30
 msgid "Own account"
 msgstr "Eigener Account"
 
-#: templates/eos_spy_network/log.html:40
+#: templates/eos_spy_network/log.html:41
 #: templates/eos_spy_network/settings.html:153
 msgctxt "eos-spy-network"
 msgid "Yes"
 msgstr "Ja"
 
-#: templates/eos_spy_network/log.html:40
+#: templates/eos_spy_network/log.html:41
 #: templates/eos_spy_network/settings.html:155
 msgctxt "eos-spy-network"
 msgid "No"
 msgstr "Nein"
 
-#: templates/eos_spy_network/log.html:50
+#: templates/eos_spy_network/log.html:51
 msgid "Nothing saved yet."
 msgstr "Noch nichts gespeichert."
 
@@ -699,7 +701,7 @@ msgstr ""
 
 #: templates/eos_spy_network/network.html:70
 #: templates/eos_spy_network/network_corporation.html:41
-#: templates/eos_spy_network/network_corporation.html:83
+#: templates/eos_spy_network/network_corporation.html:86
 #: templates/eos_spy_network/partials/network-legend.html:7
 msgid "Hostile partner"
 msgstr "Feindlicher Partner"
@@ -714,7 +716,7 @@ msgstr ""
 
 #: templates/eos_spy_network/network.html:76
 #: templates/eos_spy_network/network_corporation.html:44
-#: templates/eos_spy_network/network_corporation.html:86
+#: templates/eos_spy_network/network_corporation.html:89
 msgid "Shared payment partner"
 msgstr "Gemeinsamer Zahlungspartner"
 
@@ -723,11 +725,11 @@ msgid "Player trading with characters outside the Alliance."
 msgstr "Player Trading mit Characters außerhalb der Alliance."
 
 #: templates/eos_spy_network/network.html:82
-#: templates/eos_spy_network/network_corporation.html:47
-#: templates/eos_spy_network/network_corporation.html:67
-#: templates/eos_spy_network/network_corporation.html:89
-#: templates/eos_spy_network/network_corporation.html:110
-#: templates/eos_spy_network/network_search.html:44
+#: templates/eos_spy_network/network_corporation.html:50
+#: templates/eos_spy_network/network_corporation.html:70
+#: templates/eos_spy_network/network_corporation.html:95
+#: templates/eos_spy_network/network_corporation.html:116
+#: templates/eos_spy_network/network_search.html:45
 #: templates/eos_spy_network/partials/network-legend.html:13
 msgid "Player trading"
 msgstr "Player Trading"
@@ -737,91 +739,65 @@ msgid "Private contracts with items with characters outside the Alliance."
 msgstr "Private Contracts mit Items mit Characters außerhalb der Alliance."
 
 #: templates/eos_spy_network/network.html:88
-#: templates/eos_spy_network/network_corporation.html:50
-#: templates/eos_spy_network/network_corporation.html:68
-#: templates/eos_spy_network/network_corporation.html:92
-#: templates/eos_spy_network/network_corporation.html:111
+#: templates/eos_spy_network/network_corporation.html:53
+#: templates/eos_spy_network/network_corporation.html:71
+#: templates/eos_spy_network/network_corporation.html:98
+#: templates/eos_spy_network/network_corporation.html:117
 #: templates/eos_spy_network/partials/network-legend.html:14
 msgid "Private contract"
 msgstr "Privater Contract"
 
 #: templates/eos_spy_network/network.html:96
-#: templates/eos_spy_network/network_corporation.html:171
+#: templates/eos_spy_network/network_corporation.html:180
 msgid "No connections outside the Alliance."
 msgstr "Keine Verbindungen außerhalb der Alliance."
 
-#: templates/eos_spy_network/network_corporation.html:60
-msgid "Click a main to see its connections."
-msgstr "Klicke auf einen Main, um seine Verbindungen zu sehen."
-
-#: templates/eos_spy_network/network_corporation.html:66
-#: templates/eos_spy_network/network_corporation.html:109
-#: templates/eos_spy_network/network_search.html:43
+#: templates/eos_spy_network/network_corporation.html:47
+#: templates/eos_spy_network/network_corporation.html:69
+#: templates/eos_spy_network/network_corporation.html:92
+#: templates/eos_spy_network/network_corporation.html:115
+#: templates/eos_spy_network/network_search.html:44
 #: templates/eos_spy_network/partials/network-legend.html:12
 msgid "Payments"
 msgstr "Zahlungen"
 
-#: templates/eos_spy_network/network_corporation.html:69
-#: templates/eos_spy_network/partials/group-cell.html:13
+#: templates/eos_spy_network/network_corporation.html:63
+msgid "Click a main to see its connections."
+msgstr "Klicke auf einen Main, um seine Verbindungen zu sehen."
+
+#: templates/eos_spy_network/network_corporation.html:72
+#: templates/eos_spy_network/partials/group-cell.html:9
 #: templates/eos_spy_network/partials/highlight-tile.html:21
 msgctxt "eos-spy-network"
 msgid "Standing"
 msgstr "Standing"
 
-#: templates/eos_spy_network/network_corporation.html:70
-#: templates/eos_spy_network/network_corporation.html:113
-#: templates/eos_spy_network/network_search.html:46
+#: templates/eos_spy_network/network_corporation.html:73
+#: templates/eos_spy_network/network_corporation.html:119
+#: templates/eos_spy_network/network_search.html:47
 #: templates/eos_spy_network/partials/dealings.html:15
 msgid "Period"
 msgstr "Zeitraum"
 
-#: templates/eos_spy_network/network_corporation.html:105
+#: templates/eos_spy_network/network_corporation.html:111
+#: templates/eos_spy_network/network_search.html:40
 msgctxt "eos-spy-network"
 msgid "Age"
 msgstr "Alter"
 
-#: templates/eos_spy_network/network_corporation.html:106
-#: templates/eos_spy_network/network_search.html:40
+#: templates/eos_spy_network/network_corporation.html:112
+#: templates/eos_spy_network/network_search.html:41
 #: templates/eos_spy_network/partials/dealings.html:8
 msgid "Counterpart"
 msgstr "Gegenüber"
 
-#: templates/eos_spy_network/network_corporation.html:131
-#: templates/eos_spy_network/network_corporation.html:133
-#: templates/eos_spy_network/partials/group-cell.html:8
-#: templates/eos_spy_network/partials/group-cell.html:10
-#: templates/eos_spy_network/partials/standing-badge.html:4
-#: templates/eos_spy_network/partials/standing-badge.html:6
-msgid "Standing held by the Alliance"
-msgstr "Standing der Alliance"
-
-#: templates/eos_spy_network/network_corporation.html:140
-#: templates/eos_spy_network/network_corporation.html:141
-#: templates/eos_spy_network/network_corporation.html:195
+#: templates/eos_spy_network/network_corporation.html:142
+#: templates/eos_spy_network/network_corporation.html:143
+#: templates/eos_spy_network/partials/dealings.html:31
+#: templates/eos_spy_network/partials/dealings.html:32
+#: templates/eos_spy_network/partials/ignore-modal.html:11
 msgid "Ignore this counterpart"
 msgstr "Dieses Gegenüber ignorieren"
-
-#: templates/eos_spy_network/network_corporation.html:199
-msgid "Ignore this counterpart in the Network?"
-msgstr "Dieses Gegenüber im Network ignorieren?"
-
-#: templates/eos_spy_network/network_corporation.html:201
-msgid ""
-"Payments and contracts with it no longer count and the Network is "
-"recalculated. You can take it back in the settings."
-msgstr ""
-"Zahlungen und Contracts mit ihm zählen nicht mehr und das Network wird neu "
-"berechnet. Du kannst es in den Einstellungen zurücknehmen."
-
-#: templates/eos_spy_network/network_corporation.html:204
-#: templates/eos_spy_network/partials/kill-note-modal.html:50
-msgid "Cancel"
-msgstr "Abbrechen"
-
-#: templates/eos_spy_network/network_corporation.html:205
-msgctxt "eos-spy-network"
-msgid "Ignore"
-msgstr "Ignorieren"
 
 #: templates/eos_spy_network/network_search.html:37
 msgctxt "eos-spy-network"
@@ -832,11 +808,11 @@ msgstr "Main"
 msgid "Corporation of the main"
 msgstr "Corporation des Mains"
 
-#: templates/eos_spy_network/network_search.html:72
+#: templates/eos_spy_network/network_search.html:81
 msgid "Nothing in the Network matches."
 msgstr "Im Network passt nichts."
 
-#: templates/eos_spy_network/network_search.html:74
+#: templates/eos_spy_network/network_search.html:83
 msgid ""
 "Pick a name or type part of one: every connection of the Network whose "
 "counterpart, Corporation or Alliance matches is listed here."
@@ -845,7 +821,7 @@ msgstr ""
 "Verbindungen des Network, deren Gegenüber, Corporation oder Alliance passt."
 
 #: templates/eos_spy_network/partials/affiliation-cells.html:13
-#: templates/eos_spy_network/partials/group-cell.html:17
+#: templates/eos_spy_network/partials/group-cell.html:13
 msgid "unknown"
 msgstr "unbekannt"
 
@@ -988,6 +964,37 @@ msgstr "Wert"
 msgid "Kind"
 msgstr "Art"
 
+#: templates/eos_spy_network/partials/ignore-modal.html:15
+msgid ""
+"Ignore this counterpart in the Network and in the markers ISK and Contracts?"
+msgstr ""
+"Dieses Gegenüber im Network und in den Markern ISK und Contracts ignorieren?"
+
+#: templates/eos_spy_network/partials/ignore-modal.html:17
+#: templates/eos_spy_network/partials/kills.html:14
+#: templates/eos_spy_network/settings.html:219
+msgctxt "eos-spy-network"
+msgid "Reason"
+msgstr "Grund"
+
+#: templates/eos_spy_network/partials/ignore-modal.html:19
+msgid ""
+"Payments and contracts with it no longer count and everything is "
+"recalculated. You can take it back in the settings."
+msgstr ""
+"Zahlungen und Contracts mit ihm zählen nicht mehr und alles wird neu "
+"berechnet. Du kannst es in den Einstellungen zurücknehmen."
+
+#: templates/eos_spy_network/partials/ignore-modal.html:22
+#: templates/eos_spy_network/partials/kill-note-modal.html:50
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: templates/eos_spy_network/partials/ignore-modal.html:23
+msgctxt "eos-spy-network"
+msgid "Ignore"
+msgstr "Ignorieren"
+
 #: templates/eos_spy_network/partials/ingame-link-button.html:3
 msgid "Copy in-game link"
 msgstr "Ingame-Link kopieren"
@@ -995,7 +1002,7 @@ msgstr "Ingame-Link kopieren"
 #: templates/eos_spy_network/partials/kill-note-button.html:33
 #: templates/eos_spy_network/partials/kill-note-modal.html:11
 #: templates/eos_spy_network/settings.html:248
-#: templates/eos_spy_network/settings.html:299
+#: templates/eos_spy_network/settings.html:302
 msgid "Add a note"
 msgstr "Notiz hinzufügen"
 
@@ -1043,12 +1050,6 @@ msgstr "Opfer-Alliance"
 #: templates/eos_spy_network/settings.html:217
 msgid "Ship"
 msgstr "Schiff"
-
-#: templates/eos_spy_network/partials/kills.html:14
-#: templates/eos_spy_network/settings.html:219
-msgctxt "eos-spy-network"
-msgid "Reason"
-msgstr "Grund"
 
 #: templates/eos_spy_network/partials/kills.html:33
 #: templates/eos_spy_network/partials/kills.html:36
@@ -1175,6 +1176,11 @@ msgstr ""
 "corptools ist nicht installiert: Geprüft werden nur die aktuelle Corporation"
 " und Alliance der Characters."
 
+#: templates/eos_spy_network/partials/standing-badge.html:4
+#: templates/eos_spy_network/partials/standing-badge.html:6
+msgid "Standing held by the Alliance"
+msgstr "Standing der Alliance"
+
 #: templates/eos_spy_network/partials/state.html:9
 #, python-format
 msgid "Calculated %(built_at)s"
@@ -1203,13 +1209,13 @@ msgstr "Feinde und Datenbasis"
 
 #: templates/eos_spy_network/settings.html:116
 msgid ""
-"Tick whose contacts make up the hostile list. The contacts come from aa-"
+"Tick whose contacts decide who counts as hostile. The contacts come from aa-"
 "contacts: a source needs a token there, and aa-contacts' own task keeps them"
 " up to date."
 msgstr ""
-"Hake an, wessen Kontakte die Feindliste bilden. Die Kontakte kommen aus aa-"
-"contacts: Eine Quelle braucht dort einen Token, und der eigene Task von aa-"
-"contacts hält sie aktuell."
+"Hake an, wessen Kontakte bestimmen, wer als feindlich gilt. Die Kontakte "
+"kommen aus aa-contacts: Eine Quelle braucht dort einen Token, und der eigene"
+" Task von aa-contacts hält sie aktuell."
 
 #: templates/eos_spy_network/settings.html:117
 msgid "Open aa-contacts"
@@ -1217,10 +1223,11 @@ msgstr "aa-contacts öffnen"
 
 #: templates/eos_spy_network/settings.html:121
 msgid ""
-"aa-contacts is not installed: the hostile list is made from its contacts."
+"aa-contacts is not installed: hostiles come from its contacts, so nothing "
+"counts as hostile."
 msgstr ""
-"aa-contacts ist nicht installiert: Die Feindliste entsteht aus dessen "
-"Kontakten."
+"aa-contacts ist nicht installiert: Feinde ergeben sich aus dessen Kontakten,"
+" daher gilt nichts als feindlich."
 
 #: templates/eos_spy_network/settings.html:129
 msgid "Ticked"
@@ -1284,7 +1291,7 @@ msgstr ""
 "zählt nicht mehr für den Marker."
 
 #: templates/eos_spy_network/settings.html:246
-#: templates/eos_spy_network/settings.html:297
+#: templates/eos_spy_network/settings.html:300
 #, python-format
 msgid "Last changed by %(name)s, %(at)s"
 msgstr "Zuletzt geändert von %(name)s, %(at)s"
@@ -1303,7 +1310,7 @@ msgstr ""
 "geklärten. Ein geklärter Kontakt zählt nicht mehr für den Marker; mit "
 "anderem Standing ist er ein neuer Fund."
 
-#: templates/eos_spy_network/settings.html:308
+#: templates/eos_spy_network/settings.html:311
 msgid "No friendly hostile contact found."
 msgstr "Kein freundlicher feindlicher Kontakt gefunden."
 
@@ -1371,31 +1378,37 @@ msgstr "Contracts je Corporation"
 msgid "No contract sweep has run yet."
 msgstr "Es ist noch kein Contract-Durchlauf gelaufen."
 
-#: views.py:41
+#: views.py:62
 msgid "Suspects"
 msgstr "Verdächtige"
 
-#: views.py:44
+#: views.py:65
 msgid "Network search"
 msgstr "Network-Suche"
 
-#: views.py:690
+#: views.py:310
+msgid "Ignored counterpart"
+msgstr "Ignoriertes Gegenüber"
+
+#: views.py:754
 msgid "The markers and connections are being recalculated."
 msgstr "Marker und Verbindungen werden neu berechnet."
 
-#: views.py:692
+#: views.py:756
 msgid ""
 "The recalculation could not be started: the task queue is not reachable."
 msgstr ""
 "Die Neuberechnung konnte nicht gestartet werden: Die Task-Queue ist nicht "
 "erreichbar."
 
-#: views.py:729
+#: views.py:831
 #, python-format
-msgid "%(name)s is ignored. The connections are being recalculated."
-msgstr "%(name)s wird ignoriert. Die Verbindungen werden neu berechnet."
+msgid ""
+"%(name)s is ignored. The markers and connections are being recalculated."
+msgstr ""
+"%(name)s wird ignoriert. Die Marker und Verbindungen werden neu berechnet."
 
-#: views.py:733
+#: views.py:836
 #, python-format
 msgid ""
 "%(name)s is ignored, but the task queue is not reachable: recalculate once "
@@ -1404,12 +1417,12 @@ msgstr ""
 "%(name)s wird ignoriert, aber die Task-Warteschlange ist nicht erreichbar: "
 "Berechne neu, sobald sie wieder da ist."
 
-#: views.py:760
+#: views.py:870
 msgid "Settings saved. The markers and connections are being recalculated."
 msgstr ""
 "Einstellungen gespeichert. Marker und Verbindungen werden neu berechnet."
 
-#: views.py:764
+#: views.py:874
 msgid ""
 "Settings saved, but the task queue is not reachable: recalculate once it is "
 "back."

@@ -22,7 +22,10 @@
                     <td class="text-break">
                         {% for character_id, name in row.named_characters %}{{ name }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=character_id %}{% if not forloop.last %}, {% endif %}{% endfor %}
                     </td>
-                    <td class="text-break">{{ row.contact }}{% include "eos_spy_network/partials/evewho-link.html" with category=row.category eve_id=row.contact_id %}</td>
+                    <td class="text-break">
+                        {{ row.contact }}{% include "eos_spy_network/partials/evewho-link.html" with category=row.category eve_id=row.contact_id %}
+                        {% include "eos_spy_network/partials/standing-badge.html" with held=row.held %}
+                    </td>
                     {% if marker.affiliated %}{% include "eos_spy_network/partials/affiliation-cells.html" %}{% endif %}
                     {# what the ticked sources hold against the contact, or its Corporation or Alliance; a snapshot of 0.0.27 or older has none #}
                     {% if row.reference %}<td class="text-nowrap" title="{% for name, standing in row.reference.sources %}{{ name }}: {{ standing|floatformat:"-1" }}{% if not forloop.last %}, {% endif %}{% endfor %}" data-order="{{ row.reference.standing }}">{{ row.reference.standing|floatformat:"-1" }}</td>{% else %}<td class="text-nowrap">–</td>{% endif %}

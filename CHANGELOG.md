@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-11-26
+
+### Added
+
+- Network search: the column *Age* of the own character, as on the Network
+  Corporation page - the result rows had none.
+- Network Corporation page: a *View details* button in the *Payments* column
+  when payments of the link are contracts (paid through the wallet, or
+  without any ISK). Its popup lists those contracts; before, only private
+  contracts with items had one. Needs one recalculation: an older snapshot
+  holds no count of contract payments and shows no button.
+- Corporation page and settings tab *Friendly to hostiles*: the ISK,
+  contract and contact tables show the standing the Alliance itself holds
+  for the counterpart, its Corporation and its Alliance, as the Network table
+  does; red text still marks a hostile one. Needs one recalculation: an older
+  snapshot shows dashes.
+- Ignoring a counterpart: the button is also in the ISK and contract tables
+  of a Corporation page, and an ignored counterpart no longer counts for the
+  markers ISK and Contracts either (mails still do) - before, it left only
+  the Network. The popup asks for a reason; the list of ignored counterparts
+  (now under *Hostile and data basis*) shows it with who and when, and the
+  *Log* page records ignoring and taking back. Migration 0025 keeps the
+  counterparts ignored before, without a reason.
+
+### Changed
+
+- Settings: the two help texts on the contact sources no longer speak of a
+  "hostile list" - no page of that name exists, the sources decide who counts
+  as hostile.
+
+### Fixed
+
+- *Log* page: an entry whose user was deleted since (the log keeps the entry
+  and drops the user) broke the whole page with a server error. It shows "?"
+  as *Changed by* now.
+- Network: a highlight tile's *View details* searched for its name as a
+  substring, so a short name also listed every longer name containing it -
+  more rows than the tile counts. The link now names the party by its ID, and
+  the search lists exactly the rows the tile counts.
+
 ## [0.1.4] - 2026-11-25
 
 ### Fixed

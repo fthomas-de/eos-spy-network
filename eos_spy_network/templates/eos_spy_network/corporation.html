@@ -10,6 +10,7 @@
     {% sri_static "eos_spy_network/js/contracts.js" %}
     {% sri_static "eos_spy_network/js/kills.js" %}
     {% sri_static "eos_spy_network/js/cleared.js" %}
+    {% sri_static "eos_spy_network/js/ignore.js" %}
 {% endblock %}
 
 {% block details %}
@@ -216,4 +217,6 @@
     </div>
 
     {% include "eos_spy_network/partials/kill-note-modal.html" with reload=True %}
+    {# the ignore button of the ISK and contract tables comes back to this page #}
+    {% include "eos_spy_network/partials/ignore-modal.html" with next=request.path %}
 {% endblock %}

@@ -96,6 +96,13 @@ def network_parties(config: SpyConfiguration) -> dict:
     return Report(stored).parties
 
 
+def ignored_label(entry: dict) -> str:
+    """'Name – reason (by, date)'; a counterpart ignored before reasons were asked for has its name alone."""
+    if not entry["reason"]:
+        return entry["name"]
+    return f"{entry['name']} – {entry['reason']} ({entry['by']}, {entry['at']})"
+
+
 class SpyConfigurationForm(forms.ModelForm):
     alliance = forms.ModelChoiceField(
         label=pgettext_lazy("EVE jargon", "Alliance"),
@@ -201,10 +208,11 @@ class SpyConfigurationForm(forms.ModelForm):
             self.fields[name].choices = character_choices(
                 self.instance, marked_characters(self.instance, contacts), getattr(self.instance, name)
             )
-        # the stored table is a dict: the field shows its IDs as selected, with the names as labels
+        # the stored table is a dict: the field shows its IDs as selected, labelled with name, reason, who and when
         counterparts = self.instance.ignored_network_counterparts or {}
         self.fields["ignored_network_counterparts"].choices = [
-            (eve_id, name) for eve_id, name in sorted(counterparts.items(), key=lambda row: row[1].lower())
+            (eve_id, ignored_label(entry))
+            for eve_id, entry in sorted(counterparts.items(), key=lambda row: row[1]["name"].lower())
         ]
         self.initial["ignored_network_counterparts"] = list(counterparts)
         # the stored names win: a highlight keeps the name it was saved with, as an ignored counterpart does

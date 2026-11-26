@@ -133,11 +133,7 @@
                                                 </td>
                                                 <td class="text-break{% if row.hostile %} text-danger fw-semibold{% endif %}">
                                                     {{ row.counterpart }}
-                                                    {% if row.counterpart_held is None %}
-                                                        <span class="text-body-secondary" title="{% translate 'Standing held by the Alliance' %}">–</span>
-                                                    {% else %}
-                                                        <span class="badge {% if row.counterpart_held >= 5 %}text-bg-primary{% elif row.counterpart_held > 0 %}text-bg-info{% elif row.counterpart_held == 0 %}text-bg-secondary{% elif row.counterpart_held > -10 %}text-bg-warning{% else %}text-bg-danger{% endif %}" title="{% translate 'Standing held by the Alliance' %}">{{ row.counterpart_held|floatformat:"-1" }}</span>
-                                                    {% endif %}
+                                                    {% include "eos_spy_network/partials/standing-badge.html" with held=row.counterpart_held %}
                                                     {% if perms.eos_spy_network.manage_settings %}
                                                         <button type="button" class="btn btn-sm btn-link p-0 ms-1 text-body-secondary"
                                                                 data-bs-toggle="modal" data-bs-target="#eos-spy-network-ignore"
@@ -151,7 +147,14 @@
                                                 </td>
                                                 {% include "eos_spy_network/partials/group-cell.html" with group=row.corporation with_held=True %}
                                                 {% include "eos_spy_network/partials/group-cell.html" with group=row.alliance with_held=True %}
-                                                <td>{{ row.payments }}</td>
+                                                <td class="text-nowrap" data-order="{{ row.payments }}">
+                                                    {{ row.payments }}
+                                                    {% if row.contract_payments %}
+                                                        <button type="button" class="btn btn-sm btn-secondary ms-1" data-eos-spy-network-contracts="{% url 'eos_spy_network:network_payment_contracts' row.character_id row.counterpart_id %}">
+                                                            {% translate "View details" %}
+                                                        </button>
+                                                    {% endif %}
+                                                </td>
                                                 <td>{{ row.trades }}</td>
                                                 <td class="text-nowrap" data-order="{{ row.contracts }}">
                                                     {{ row.contracts }}
@@ -177,7 +180,7 @@
         <p class="text-body-secondary">{% translate "No connections outside the Alliance." %}</p>
     {% endif %}
 
-    {# one popup for every private contract link; contracts.js fills it #}
+    {# one popup for every contract button (private contracts, contract payments); contracts.js fills it #}
     <div class="modal fade" tabindex="-1" aria-hidden="true" data-eos-spy-network-contracts-modal>
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -190,30 +193,9 @@
         </div>
     </div>
 
-    {# the confirmation of the ignore button; ignore.js puts the name in #}
-    {% if perms.eos_spy_network.manage_settings %}
-        <div class="modal fade" id="eos-spy-network-ignore" tabindex="-1" aria-labelledby="eos-spy-network-ignore-title" aria-hidden="true">
-            <div class="modal-dialog">
-                <form method="post" action="{% url 'eos_spy_network:ignore_counterpart' %}" class="modal-content">
-                    {% csrf_token %}
-                    <input type="hidden" name="counterpart_id" data-eos-spy-network-ignore-field>
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="eos-spy-network-ignore-title">{% translate "Ignore this counterpart" %}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="mb-2">{% translate "Ignore this counterpart in the Network?" %}</p>
-                        <p class="fw-bold text-break mb-2" data-eos-spy-network-ignore-name></p>
-                        <p class="small text-body-secondary mb-0">{% translate "Payments and contracts with it no longer count and the Network is recalculated. You can take it back in the settings." %}</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Cancel" %}</button>
-                        <button type="submit" class="btn btn-danger">{% translate "Ignore" context "eos-spy-network" %}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    {% endif %}
+    {# the overview to come back to: this page is a 404 once its last connection is ignored #}
+    {% url 'eos_spy_network:network' as network_url %}
+    {% include "eos_spy_network/partials/ignore-modal.html" with next=network_url %}
 {% endblock %}
 
 {% block extra_css %}

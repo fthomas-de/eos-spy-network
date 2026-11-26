@@ -227,10 +227,13 @@ every one with a standing below a configurable value.
   calculation (a friendly hostile contact, respectively a Network link) and
   the ones already ignored (default none); the alts and the main of an
   ignored character stay checked. A counterpart is ignored with the button
-  next to *Counterpart* on a Network Corporation page (needs
-  `manage_settings` as well as `view_suspects`, asks first): it is then no
-  connection at all and shows in the Network list of ignored counterparts,
-  where removing it takes it back. *Highlights*: the counterparts that get a
+  next to it on a Network Corporation page or in the ISK and contract tables
+  of a Corporation page (needs `manage_settings` as well as `view_suspects`,
+  asks for a reason first): it is then no connection at all and no counterpart
+  of the markers ISK and Contracts (mails still count), and shows with its
+  reason, who and when in the list of ignored counterparts under *Hostile and
+  data basis*, where removing it takes it back. Both steps show on the *Log*
+  page. *Highlights*: the counterparts that get a
   tile on the Network page, chosen from the parties of the last Network
   calculation and the ones already chosen (default none). *Contact sources*: a
   searchable table of the Alliance and its Corporations to tick the

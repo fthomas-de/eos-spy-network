@@ -181,13 +181,17 @@ class SpyConfiguration(SingletonModel):
             "the account's other characters still counts."
         ),
     )
-    # EVE ID (a string: JSON keys are) -> the name it had when ignored; a counterpart that is ignored leaves
-    # the snapshot, so only this table can still name it in the settings
+    # EVE ID (a string: JSON keys are) -> {"name", "reason", "by", "at"} as ignored; a counterpart that is
+    # ignored leaves the snapshot, so only this table can still name it in the settings. Named for the Network,
+    # where it began: it holds for the markers ISK and Contracts as well (user)
     ignored_network_counterparts = models.JSONField(
         default=dict,
         blank=True,
         verbose_name=_("Ignored counterparts"),
-        help_text=_("Payments and contracts with these counterparts do not count for the Network. Remove one to count it again."),
+        help_text=_(
+            "Payments and contracts with these counterparts count neither for the Network nor for the markers ISK "
+            "and Contracts. Remove one to count it again."
+        ),
     )
     # EVE ID (a string: JSON keys are) -> name, like ignored_network_counterparts: a highlight that left the
     # snapshot keeps its tile, and the settings can still name it
@@ -328,6 +332,10 @@ class FindingReview(models.Model):
         return f"{self.kind} {self.key} of {self.main_id}"
 
 
+# the ReviewLog kind of ignoring a counterpart (cleared = ignored, note = the reason)
+IGNORED_COUNTERPARTS = "ignored_counterparts"
+
+
 class ReviewLog(models.Model):
     """One save of a note and cleared tick, of a blue kill or another finding.
 
@@ -338,9 +346,11 @@ class ReviewLog(models.Model):
     alliance_id = models.PositiveBigIntegerField()
     # the marker: blue_kills or the kind of a FindingReview
     kind = models.CharField(max_length=32)
-    # the main of a finding; for a blue kill the character it was saved for, its main looked up when shown
+    # the main of a finding; for a blue kill the character it was saved for, its main looked up when shown;
+    # the counterpart for an ignored one
     character_id = models.PositiveBigIntegerField()
-    # the killmail ID for a blue kill, the FindingReview key otherwise
+    # the killmail ID for a blue kill, the counterpart's name for an ignored one (the settings forget it once
+    # taken back), the FindingReview key otherwise
     key = models.CharField(max_length=64)
     cleared = models.BooleanField()
     note = models.CharField(max_length=KILL_NOTE_LENGTH, blank=True)

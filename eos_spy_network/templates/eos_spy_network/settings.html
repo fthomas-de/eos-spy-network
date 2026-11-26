@@ -69,6 +69,10 @@
                         {% bootstrap_field form.hostile_below %}
                         {% bootstrap_field form.lookback_days %}
                         {% bootstrap_field form.ignored_ref_types %}
+                        {# filled by the ignore buttons: nothing to show until one is ignored #}
+                        {% if form.ignored_network_counterparts.field.choices %}
+                            {% bootstrap_field form.ignored_network_counterparts %}
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card mb-3">
@@ -94,10 +98,6 @@
                         {% bootstrap_field form.network_blue_above %}
                         {% bootstrap_field form.network_min_connections %}
                         {% bootstrap_field form.ignored_network_characters %}
-                        {# filled by the button on the Network page: nothing to show until one is ignored #}
-                        {% if form.ignored_network_counterparts.field.choices %}
-                            {% bootstrap_field form.ignored_network_counterparts %}
-                        {% endif %}
                     </div>
                 </div>
                 <div class="card mb-3">
@@ -113,12 +113,12 @@
                     <div class="card-body">
                         {% if aa_contacts_installed %}
                             <p class="small text-body-secondary">
-                                {% translate "Tick whose contacts make up the hostile list. The contacts come from aa-contacts: a source needs a token there, and aa-contacts' own task keeps them up to date." %}
+                                {% translate "Tick whose contacts decide who counts as hostile. The contacts come from aa-contacts: a source needs a token there, and aa-contacts' own task keeps them up to date." %}
                                 <a href="{% url 'aa_contacts:index' %}">{% translate "Open aa-contacts" %}</a>
                             </p>
                         {% else %}
                             <div class="alert alert-danger">
-                                {% translate "aa-contacts is not installed: the hostile list is made from its contacts." %}
+                                {% translate "aa-contacts is not installed: hostiles come from its contacts, so nothing counts as hostile." %}
                             </div>
                         {% endif %}
                         {% if rows %}
@@ -289,7 +289,10 @@
                                                 <td class="text-break">
                                                     {% for character_id, name in row.named_characters %}{{ name }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=character_id %}{% if not forloop.last %}, {% endif %}{% endfor %}
                                                 </td>
-                                                <td class="text-break">{{ row.contact }}{% include "eos_spy_network/partials/evewho-link.html" with category=row.category eve_id=row.contact_id %}</td>
+                                                <td class="text-break">
+                                                    {{ row.contact }}{% include "eos_spy_network/partials/evewho-link.html" with category=row.category eve_id=row.contact_id %}
+                                                    {% include "eos_spy_network/partials/standing-badge.html" with held=row.held %}
+                                                </td>
                                                 {% include "eos_spy_network/partials/affiliation-cells.html" %}
                                                 {% if row.reference %}<td class="text-nowrap" title="{% for name, standing in row.reference.sources %}{{ name }}: {{ standing|floatformat:"-1" }}{% if not forloop.last %}, {% endif %}{% endfor %}" data-order="{{ row.reference.standing }}">{{ row.reference.standing|floatformat:"-1" }}</td>{% else %}<td class="text-nowrap">–</td>{% endif %}
                                                 <td class="text-nowrap">{{ row.standing }}</td>

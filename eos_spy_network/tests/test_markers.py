@@ -522,6 +522,40 @@ class TestContracts(MarkerTestCase):
         self.assertEqual(self.kinds(), {markers.MEMBERSHIP})
 
 
+class TestIgnoredCounterparts(MarkerTestCase):
+    """A counterpart ignored with the button counts for neither ISK nor contracts; mails keep it (user)."""
+
+    # borrowed, not inherited: inheriting would run their tests twice
+    add_entry = TestWallet.add_entry
+    add_contract = TestContracts.add_contract
+    add_mail = TestMails.add_mail
+
+    def ignore(self, eve_id):
+        configure(ignored_network_counterparts={str(eve_id): {"name": "Ignored", "reason": "Known trader"}})
+
+    def test_should_leave_it_out_of_isk_and_contracts(self):
+        self.add_entry(1, HOSTILE_MEMBER, self.main.character_id)
+        self.add_contract(1, self.main.character_id, 2001, HOSTILE_MEMBER)
+        self.ignore(HOSTILE_MEMBER)
+
+        self.assertIsNone(self.suspect())
+
+    def test_should_keep_it_in_the_mails(self):
+        self.add_mail(1, 1, HOSTILE_MEMBER)
+        self.ignore(HOSTILE_MEMBER)
+
+        self.assertEqual(self.kinds(), {markers.MAILS})
+
+    def test_should_keep_the_other_counterparts(self):
+        self.add_entry(1, HOSTILE_MEMBER, self.main.character_id)
+        self.add_entry(2, HOSTILE_CORP, self.main.character_id)
+        self.ignore(HOSTILE_MEMBER)
+
+        (row,) = self.suspect().markers[markers.WALLET].rows
+
+        self.assertEqual(row["counterpart_id"], HOSTILE_CORP)
+
+
 class TestCharacterIds(MarkerTestCase):
     """Every marker names the own characters behind it, so other apps can show it at the character."""
 
@@ -651,8 +685,10 @@ class TestDealingAffiliation(MarkerTestCase):
 
         self.assertEqual(row["counterpart"], f"Char {HOSTILE_MEMBER}")
         # the name the character's own row in Auth carries; make_character writes "Corp <ID>"
-        self.assertEqual(row["corporation"], {"name": f"Corp {HOSTILE_CORP}", "standing": "-10.0"})
+        self.assertEqual(row["corporation"], {"name": f"Corp {HOSTILE_CORP}", "standing": "-10.0", "held": -10.0})
         self.assertIsNone(row["alliance"])
+        # the Alliance holds nothing for the character itself
+        self.assertIsNone(row["held"])
 
     def test_should_look_up_a_stranger_through_esi(self):
         make_corporation(4001, alliance_id=HOSTILE_ALLIANCE)
@@ -663,15 +699,17 @@ class TestDealingAffiliation(MarkerTestCase):
 
         row = self.wallet_row()
 
-        self.assertEqual(row["corporation"], {"name": "Corp 4001", "standing": None})
-        self.assertEqual(row["alliance"], {"name": f"Alliance {HOSTILE_ALLIANCE}", "standing": "-5.0"})
+        self.assertEqual(row["corporation"], {"name": "Corp 4001", "standing": None, "held": None})
+        self.assertEqual(row["alliance"], {"name": f"Alliance {HOSTILE_ALLIANCE}", "standing": "-5.0", "held": -5.0})
+        self.assertEqual(row["held"], -3.0)
 
     def test_should_give_a_corporation_counterpart_its_own_column(self):
         self.add_entry(1, HOSTILE_CORP, self.main.character_id)
 
         row = self.wallet_row()
 
-        self.assertEqual(row["corporation"], {"name": "Bad Corp", "standing": "-10.0"})
+        self.assertEqual(row["corporation"], {"name": "Bad Corp", "standing": "-10.0", "held": -10.0})
+        self.assertEqual(row["held"], -10.0)
 
 
 class TestCapitalContracts(MarkerTestCase):

@@ -4,8 +4,10 @@ Alliance Auth (5.x) app that points leadership at members of one Alliance
 who may be spies: the hostile list is built from the contacts of the Alliance
 and its Corporations, the members are checked against it with corptools
 data. `README.md` says what the app does; this file says how to work on it;
-`docs/HANDOVER.md` says where the work currently stands, which decisions the
-user made and what is open. Read both before changing anything.
+`docs/HANDOVER.md` says where the work currently stands and what is open.
+Read both before changing anything. The user's lasting decisions are in
+`docs/DECISIONS.md` - look one up (`grep` or one section) when a task
+touches it.
 
 ## Where things are
 
@@ -26,7 +28,7 @@ A bare `python` below means the Python from `## AA environment`.
 
 ```bash
 aa-test eos_spy_network --exclude-tag translations   # whole suite, quiet
-aa-test eos_spy_network.tests.<module>                # one module
+aa-test eos_spy_network.tests.<module>                # one module (several labels allowed)
 aa-test eos_spy_network --fresh                       # rebuild the test database first
 python manage.py makemigrations eos_spy_network
 python manage.py collectstatic --noinput
@@ -37,13 +39,16 @@ Auth's console logging adds, nothing else - a real traceback, `WARNING` or
 `ERROR` still comes through. It keeps the test database (`--keepdb`);
 `--fresh` rebuilds it, and the suite at `/commit` always runs fresh. No
 `--parallel`: with `--keepdb` it saves little, does not migrate its clone
-databases and hangs on a failing subtest.
+databases and hangs on a failing subtest. After regenerating an unreleased
+migration, the kept test database still has the old one: run `--fresh` once.
 
 Standalone, without the dev instance, from the repo root (sqlite of its own):
 
 ```bash
 python runtests.py eos_spy_network --exclude-tag translations
 ```
+
+The dev venv has no `flake8`; line length (120) is checked by eye.
 
 ## Release
 
@@ -76,6 +81,22 @@ is no binary log and there are no dumps.
   dev instance's Celery worker may be restarted likewise. Read a migration
   before applying it: one that touches a foreign app's tables or deletes
   rows still needs the user's yes.
+- A Celery worker started before an app joined `INSTALLED_APPS` drops that
+  app's tasks as "unregistered", and celery_once keeps their lock for an
+  hour: restart every worker and clear the `qo_` keys of dropped tasks.
+
+## Seeing a page
+
+- The dev server answers only on `127.0.0.1:8000` (not `localhost`) and
+  needs EVE SSO. Render a page in `manage.py shell` with
+  `Client(HTTP_HOST="127.0.0.1:8000")`, `force_login` and a user with a
+  `profile.main_character` (plain `Client()` gets 400, a superuser without a
+  main is redirected).
+- The graph without SSO and network data: a static page with the legend
+  partial, `network.css`, `network.js` and a `json_script` graph, served
+  with `python3 -m http.server` (the browser pane opens a `file://` page
+  without scripts). `?dark` plus `data-bs-theme="dark"` on `<html>` before
+  the scripts gives the dark theme - `network.js` reads the colours once.
 
 ## Code
 
@@ -88,6 +109,15 @@ is no binary log and there are no dumps.
   `SpyTestCase` patches its three calls. Never use aa-contacts' `contact_name`
   property - for an entity Auth does not know it creates rows from ESI;
   read names through `with_contact_name()`.
+- corptools' `CorporationContact` is never filled by corptools - the contacts
+  are aa-contacts'. aa-contacts keeps a contact that left ESI but has notes,
+  with standing 0.
+- `api.py` is a contract with eos-auth-monitor (`character_markers(*,
+  corporation_id=None) -> dict[int, list[str]]`, `label`, `description`,
+  `KINDS`): change it only together with eos-auth-monitor.
+- *Ignored ships* reads killtracker's private
+  `_require_victim_ship_types_query`: after a killtracker update check it
+  still exists, or the list shrinks to the stored names without an error.
 - Every foreign app is optional: guard it with `apps.is_installed(...)` and
   import its models inside that guard. Never add one to the dependencies.
 - Mirror the foreign app's own rules instead of reinventing them.
@@ -98,6 +128,19 @@ is no binary log and there are no dumps.
   into the README as a `CELERYBEAT_SCHEDULE` block for `local.py`.
 - Mail bodies are never shown: headers and subjects only.
 - Keep the README true: the checklist compares every claim with the code.
+- django-esi 10: `.results()` uses ETags by default and raises
+  `HTTPNotModified` when every page answered 304 - pass `use_etag=False` or
+  catch it. Its built-in retry never fires for timeouts or 5xx (aiopenapi3
+  wraps them in its own exceptions). Buckets exist only for operations with
+  an `x-rate-limit` group in `https://esi.evetech.net/meta/openapi.json`, and
+  only with a token.
+- `bulk_create(update_conflicts=True)`: MySQL refuses `unique_fields`, sqlite
+  requires them - ask `connection.features.supports_update_conflicts_with_target`.
+- A `ModelForm` field over a JSON dict shown as a `MultipleChoiceField` needs
+  `self.initial[name] = list(keys)`, or the initial value is the dict.
+- DataTables takes rows of other pages and rows hidden by its search out of
+  the page, so their checkboxes are not posted: the source table has no
+  pages, and `tables.js` clears the search before the form is sent.
 
 Comments say **why**, not what. A comment that restates the line is noise; a
 comment that names the fault the line prevents keeps it from coming back.
@@ -113,7 +156,8 @@ in eos-auth-monitor and eos-invoices.
 JavaScript and CSS live in `eos_spy_network/static/eos_spy_network/`, never
 inline in a template - `sri_static` cannot hash inline code, and
 `collectstatic` has to see the file. Run `collectstatic` after every change
-to them.
+to them; until then `sri_static` of a new file fails in tests with "Missing
+staticfiles manifest entry".
 
 ## Tests
 
@@ -127,12 +171,49 @@ to them.
   for "not installed" patches `eos_spy_network.contacts.is_installed`.
 - Test users come from `tests.base.make_user`: it gives them a main and its
   ownership, which Alliance Auth's `main_character_required` needs.
+- A counterpart's name in the Network needs a corptools `EveName` in the
+  fixture: `_fill_names` falls back to the ID.
+- Test IDs like 98000001 make tickers too long for MySQL: `tests.base.ticker`.
+- Fake the capital sweep's ESI by patching `capital_sweep._region_contracts`
+  and `_contract_items`, never the provider - `esi.client` would load the
+  OpenAPI spec over the network. Assert call arguments with
+  `patch.object(capital_sweep, "esi")`. A bound task runs in a test when
+  called directly with `retry` patched.
+- Borrowing from another test class: `setUp = Other.setUp` fails on the
+  zero-argument `super()`, and importing or inheriting a TestCase class runs
+  its tests twice. Assign the helper (`add_entry = TestWallet.add_entry`) or
+  reach it through the module (`test_views.TestEvidence.add_donation`).
+- A new required `SpyConfiguration` form field breaks the settings POSTs in
+  `test_views.TestSettingsPage` (200 instead of 302): add it to each posted
+  dict.
+- Assertions: `user_passes_test` redirects to the login URL with
+  `?next=/eos_spy_network/...` - assert on the login URL. `/rebuild/` also
+  matches `rebuild/progress/` - assert on `action="..."`. `sri_static`
+  renders the hashed name - assert on `eos_spy_network/js/copy.`. A missing
+  key renders as an empty string - assert on `.../character/"`.
+- `test_network.TestQueries` counts queries per table with a `FROM <table>`
+  regex: a subquery inside another query counts as one more.
 
 Every change gets a test, and every new test gets checked against the broken
 version: put the fault back, run the test, confirm it fails, restore the
 file. A test that passes against the broken code tests nothing. Compare the
 test count after every test change; an indentation slip drops a whole module
 silently.
+
+- Cheapest: write the test before the change and run it red. Afterwards:
+  `git stash push -- <the changed code files>` (name the paths, or the tests
+  go into the stash too), run, `git stash pop`. Stashing a template-facing
+  `forms.py` turns every settings page test into an error, not only the new
+  one.
+- A guard test ("leaves X out") passes against the old code, which knew
+  nothing of X: break that one line in the new code instead, with a script
+  that asserts the line occurs once, runs the test and restores the file in
+  `finally`. Run it with the venv Python by its full path (`~` is not
+  expanded through `wsl.exe -e`). A template line commented out with
+  `{# ... #}` must close on the same line.
+- Auto mode refuses a mutation that weakens a permission decorator, even
+  briefly: mutate calculation code instead, or leave the guard test unchecked
+  and say so.
 
 Test users get no password, and tests log in with `force_login`. Django
 hashes a password with PBKDF2 at about 0.2 seconds a user.
@@ -151,12 +232,19 @@ machine-generated and marked so in the `.po` header. They are only touched
   and compilemessages, confirms each `.mo` is newer than its `.po` and runs
   the catalogue tests. A message missing from the glossary stops it with a
   list; it never leaves gettext's fuzzy guess. It needs `polib` in the venv.
-- The `.mo` files are committed: there is no build step at deploy.
+- The `.mo` files are committed: there is no build step at deploy. Check
+  `git status` shows them after a translation run.
 - EVE jargon stays English in every language: Corporation, Alliance,
   Character, Main, Faction. Alliance Auth translates some short words itself
   and wins a msgid clash, so those carry a context: `EVE jargon` for the
   jargon words, `eos-spy-network` for ordinary words AA translates
   differently (Name, Type, Status, Save, Yes, No).
+- Other installed apps clash too (eos-tax's "Reason", "Standing", "Hostile",
+  eos-auth-monitor's footer) and can turn a translation test red without a
+  change here: give ours the `eos-spy-network` context; `tools/translate.py`
+  names each new clash. Under `EVE jargon` Alliance Auth shows "Mains",
+  "Characters" and "Corporations" as the singular in ru and zh_Hans, so our
+  plurals carry `eos-spy-network`.
 - Every new message must be a plain string in the source: xgettext does not
   look inside an f-string.
 - `makemessages` without `--no-location`: the flag strips every `#:` line
@@ -176,8 +264,20 @@ the affected test modules - the full suite runs at `/commit`.
 Write patch scripts with the Write tool and run them by path - never build
 them with shell heredocs: an apostrophe or a backtick gets executed by bash
 before Python sees the text. Every patch script asserts its anchor occurs
-exactly once before it replaces anything. For a small, unambiguous change the
-Edit tool is one step instead of two - use it. `git` runs in WSL only.
+exactly once before it replaces anything, and lives outside the repo (a
+`patch_*.py` in the root lands in the next commit). For a small, unambiguous
+change the Edit tool is one step instead of two - use it. `git` runs in WSL
+only.
+
+- Run a script through the PowerShell tool
+  (`wsl.exe -d Ubuntu-22.04 -e bash -l <path>`): the Bash tool (Git Bash)
+  rewrites `/mnt/c/...` and `/home/...` paths handed to `wsl.exe`.
+- The Edit tool refuses a file under `\\wsl.localhost\...` that was only seen
+  through Grep: Read it first.
+- `shutil.copy2` from `/mnt/c` carries the Windows mode along (100755 in
+  `git diff --summary`): `chmod 644`, or write the text back instead.
+- An unclean WSL restart can leave fresh git objects empty (`git fsck`
+  red): run `sync` after a commit, and `git fsck` once if WSL restarted.
 
 ## Keeping a session cheap
 

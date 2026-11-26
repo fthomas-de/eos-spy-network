@@ -20,8 +20,29 @@ from . import __version__, contacts, contract_details, killmails, progress
 from . import snapshot as snapshots
 from .forms import SpyConfigurationForm
 from .hostiles import save_sources, source_rows
-from .markers import BLUE_KILLS, CAPITAL_CONTRACTS, CONTACTS, KINDS, LABELS, WALLET, corptools_installed, million, own_kill, worth_counting
-from .models import KILL_NOTE_LENGTH, BlueKill, ContactSource, FindingReview, ReviewLog, SpyConfiguration, SweepStats
+from .markers import (
+    BLUE_KILLS,
+    CAPITAL_CONTRACTS,
+    CONTACTS,
+    CONTRACTS,
+    KINDS,
+    LABELS,
+    WALLET,
+    corptools_installed,
+    million,
+    own_kill,
+    worth_counting,
+)
+from .models import (
+    IGNORED_COUNTERPARTS,
+    KILL_NOTE_LENGTH,
+    BlueKill,
+    ContactSource,
+    FindingReview,
+    ReviewLog,
+    SpyConfiguration,
+    SweepStats,
+)
 from .network import fill_birthdays
 from .permissions import (
     APP_PERMISSIONS,
@@ -284,6 +305,14 @@ def _log_rows(config, contact_rows) -> list:
     contacts_by_key = {(row["main_id"], row["key"]): row["contact"] for row in contact_rows}
     for entry in entries:
         entry.label = LABELS.get(entry.kind, entry.kind)
+        if entry.kind == IGNORED_COUNTERPARTS:
+            # a counterpart, not a finding of a main: no main to name, the key holds its name
+            entry.label = _("Ignored counterpart")
+            entry.main_id = None
+            entry.main_name = ""
+            entry.finding = entry.key
+            entry.own_account = False
+            continue
         if entry.kind == BLUE_KILLS:
             entry.main_id = mains.get(entry.character_id, entry.character_id)
             entry.killmail_id = int(entry.key)
@@ -556,7 +585,15 @@ def network_search(request):
     config = SpyConfiguration.get_solo()
     report = _report(config)
     query = request.GET.get("q", "").strip()
+    # a highlight tile's link names its party by ID too; the box below keeps only the name
+    raw_id = request.GET.get("id", "")
+    eve_id = int(raw_id) if raw_id.isdigit() else None
     suggestions = report.suggestions() if report else []
+    rows = []
+    if report and (query or eve_id is not None):
+        # the rows carry the age, so the birthdays come first; one query over every account the search reads
+        fill_birthdays(account for tile in report.network_tiles for account in tile.accounts)
+        rows = report.search(query, eve_id)
     return _render(
         request,
         "eos_spy_network/network_search.html",
@@ -567,7 +604,7 @@ def network_search(request):
             "suggestions": suggestions,
             # a typed text no party carries is added as an option, or the box would come back empty
             "query_listed": any(query in names for _label, names in suggestions),
-            "rows": report.search(query) if report else [],
+            "rows": rows,
         },
         NAV_NETWORK,
         started,
@@ -586,7 +623,7 @@ def network_corporation(request, corporation_id):
     return _render(
         request,
         "eos_spy_network/network_corporation.html",
-        {**_notices(config), "report": report, "tile": tile},
+        {**_notices(config), "report": report, "tile": tile, "note_length": KILL_NOTE_LENGTH},
         NAV_NETWORK,
         started,
     )
@@ -645,6 +682,33 @@ def network_contracts(request, character_id, counterpart_id):
     )
 
 
+@any_permission_required(VIEW_SUSPECTS)
+def network_payment_contracts(request, character_id, counterpart_id):
+    """The popup of a Network link's contract payments: the contracts without items behind them, as HTML."""
+    if not corptools_installed():
+        raise Http404
+    config = SpyConfiguration.get_solo()
+    report = _report(config)
+    # only a pair the Network shows with contract payments: any other character's contracts are not ours to show
+    offered = report is not None and any(
+        (link.character_id, link.counterpart_id) == (character_id, counterpart_id) and link.contract_payments
+        for tile in report.network_tiles
+        for account in tile.accounts
+        for link in account.links
+    )
+    if not offered:
+        raise Http404
+    return render(
+        request,
+        "eos_spy_network/partials/contract-details.html",
+        {
+            "contracts": contract_details.payments(
+                character_id, counterpart_id, config.since(), config.ignored_ref_types or ()
+            )
+        },
+    )
+
+
 @any_permission_required(VIEW_SUSPECTS, VIEW_OWN_CORPORATION)
 def capital_contract(request, contract_id):
     """The popup of one contract of the capital marker, as HTML."""
@@ -690,51 +754,91 @@ def rebuild(request):
         messages.info(request, _("The markers and connections are being recalculated."))
     else:
         messages.error(request, _("The recalculation could not be started: the task queue is not reachable."))
-    # back to the page the button was on; only our own pages, never elsewhere
+    return redirect(_own_page(request) or "eos_spy_network:index")
+
+
+def _own_page(request) -> str:
+    """The posted ``next`` when it is a page of this site, the page a button was on; else an empty string."""
     target = request.POST.get("next", "")
     # a path only: redirect() would look a bare word up as a URL name and fail on an unknown one
-    if not target.startswith("/") or not url_has_allowed_host_and_scheme(
-        target, allowed_hosts={request.get_host()}
-    ):
-        target = ""
-    return redirect(target or "eos_spy_network:index")
+    if not target.startswith("/") or not url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}):
+        return ""
+    return target
+
+
+def _counterpart_name(report, counterpart_id: int) -> str | None:
+    """The stored name of a counterpart the Network or the markers ISK and Contracts list; None for any other."""
+    if report is None:
+        return None
+    for tile in report.network_tiles:
+        for account in tile.accounts:
+            if counterpart_id in account.counterparts:
+                return account.counterparts[counterpart_id]
+    for tile in report.tiles:
+        for suspect in _accounts(tile):
+            for kind in (WALLET, CONTRACTS):
+                for row in suspect.markers[kind].rows if kind in suspect.markers else ():
+                    if row.get("counterpart_id") == counterpart_id:
+                        return row["counterpart"]
+    return None
+
+
+def _log_ignored(config, counterpart_id: int, name: str, ignored: bool, reason: str, previous: str, user) -> None:
+    """One line on the log page: ignored with its reason, or taken back with the reason it had."""
+    ReviewLog.objects.create(
+        alliance_id=config.alliance.alliance_id,
+        kind=IGNORED_COUNTERPARTS,
+        character_id=counterpart_id,
+        key=name[:64],
+        cleared=ignored,
+        note=reason,
+        previous_cleared=not ignored,
+        previous_note=previous,
+        changed_at=timezone.now(),
+        changed_by=user,
+    )
 
 
 @all_permissions_required(MANAGE_SETTINGS, VIEW_SUSPECTS)
 @require_POST
 def ignore_counterpart(request):
-    """The Network's button: leave one counterpart out of every connection, then recalculate."""
+    """The button of the Network and the ISK and contract tables: leave one counterpart out, then recalculate."""
     config = SpyConfiguration.get_solo()
-    report = _report(config)
     try:
         counterpart_id = int(request.POST.get("counterpart_id", ""))
     except ValueError:
         return HttpResponseBadRequest()
-    # only a counterpart the Network page lists, and its name is the stored one, not the posted one
-    name = next(
-        (
-            name
-            for tile in (report.network_tiles if report else [])
-            for account in tile.accounts
-            for eve_id, name in account.counterparts.items()
-            if eve_id == counterpart_id
-        ),
-        None,
-    )
+    # the user's rule: whoever ignores a counterpart says why, as the log and the settings list show it
+    reason = " ".join(request.POST.get("reason", "").split())
+    if not reason or len(reason) > KILL_NOTE_LENGTH:
+        return HttpResponseBadRequest("a reason of at most %d characters is needed" % KILL_NOTE_LENGTH)
+    # only a counterpart a page lists, and its name is the stored one, not the posted one
+    name = _counterpart_name(_report(config), counterpart_id)
     if name is None:
         raise Http404
-    config.ignored_network_counterparts = {**(config.ignored_network_counterparts or {}), str(counterpart_id): name}
+    main = request.user.profile.main_character
+    entry = {
+        "name": name,
+        "reason": reason,
+        "by": main.character_name if main else request.user.username,
+        "at": timezone.localdate().isoformat(),
+    }
+    config.ignored_network_counterparts = {**(config.ignored_network_counterparts or {}), str(counterpart_id): entry}
     config.save(update_fields=["ignored_network_counterparts"])
+    _log_ignored(config, counterpart_id, name, True, reason, "", request.user)
     if _start_rebuild():
-        messages.success(request, _("%(name)s is ignored. The connections are being recalculated.") % {"name": name})
+        messages.success(
+            request, _("%(name)s is ignored. The markers and connections are being recalculated.") % {"name": name}
+        )
     else:
         messages.warning(
             request,
             _("%(name)s is ignored, but the task queue is not reachable: recalculate once it is back.")
             % {"name": name},
         )
-    # the overview, not this Corporation's page: with its last connection gone that page is a 404
-    return redirect("eos_spy_network:network")
+    # the page the button was on; the Network passes its overview, as a Corporation's Network page is a 404 once
+    # its last connection is gone
+    return redirect(_own_page(request) or "eos_spy_network:network")
 
 
 # the CEO's Corporation page shows the bar too, without the button that starts a run
@@ -748,12 +852,18 @@ def rebuild_progress(request):
 @any_permission_required(MANAGE_SETTINGS)
 def settings(request):
     config = SpyConfiguration.get_solo()
+    # read before is_valid(): validating already writes the posted values into the instance
+    before = dict(config.ignored_network_counterparts or {})
     form = SpyConfigurationForm(request.POST or None, instance=config)
     rows = source_rows(config)
     tab = request.GET.get("tab")
 
     if request.method == "POST" and form.is_valid():
         form.save()
+        if config.alliance:
+            for eve_id, entry in before.items():
+                if eve_id not in config.ignored_network_counterparts:
+                    _log_ignored(config, int(eve_id), entry["name"], False, "", entry["reason"], request.user)
         # the ticks belong to the table the viewer saw: the Alliance before this save
         save_sources(rows, request.POST.getlist("source"))
         if _start_rebuild():

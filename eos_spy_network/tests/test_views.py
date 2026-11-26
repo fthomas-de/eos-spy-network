@@ -9,7 +9,15 @@ from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from eos_spy_network import snapshot
-from eos_spy_network.models import BlueKill, ContactSource, Snapshot, SpyConfiguration, SweepStats
+from eos_spy_network.models import (
+    IGNORED_COUNTERPARTS,
+    BlueKill,
+    ContactSource,
+    ReviewLog,
+    Snapshot,
+    SpyConfiguration,
+    SweepStats,
+)
 
 from . import test_markers
 from .base import (
@@ -295,7 +303,7 @@ class TestCorporationPage(SuspectPageTestCase):
 
 class TestEvidence(SuspectPageTestCase):
     # the wallet entry's counterpart alone; the membership marker names "Char 5001: Bad Corp"
-    COUNTERPART = ">Bad Corp</td>"
+    COUNTERPART = '<td class="text-break text-danger">Bad Corp'
 
     def setUp(self):
         super().setUp()
@@ -327,6 +335,39 @@ class TestEvidence(SuspectPageTestCase):
         self.assertContains(response, "<th>Alliance</th>", html=True)
         self.assertContains(response, "player donation")
         self.assertContains(response, timezone.now().date().isoformat())
+        # the ignore button is for settings managers only
+        self.assertNotContains(response, "data-eos-spy-network-ignore-id")
+
+    def test_should_offer_settings_managers_to_ignore_an_isk_counterpart(self):
+        self.client.force_login(make_user("lead", VIEW_SUSPECTS, MANAGE_SETTINGS))
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, f'data-eos-spy-network-ignore-id="{HOSTILE_CORP}"')
+        self.assertContains(response, 'id="eos-spy-network-ignore"')
+        self.assertContains(response, "eos_spy_network/js/ignore.")
+
+    def test_should_ignore_an_isk_counterpart_and_come_back_to_the_page(self):
+        self.client.force_login(make_user("lead", VIEW_SUSPECTS, MANAGE_SETTINGS))
+        page = reverse("eos_spy_network:corporation", args=[2001])
+
+        response = self.client.post(
+            reverse("eos_spy_network:ignore_counterpart"),
+            {"counterpart_id": HOSTILE_CORP, "reason": "Our buyback", "next": page},
+        )
+
+        self.assertRedirects(response, page)
+        self.assertEqual(
+            SpyConfiguration.get_solo().ignored_network_counterparts[str(HOSTILE_CORP)]["reason"], "Our buyback"
+        )
+
+    def test_should_show_the_standing_the_alliance_holds_as_on_the_network_page(self):
+        self.client.force_login(make_user("lead", VIEW_SUSPECTS))
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        # the counterpart cell and the Corporation cell (the counterpart is a Corporation) carry the badge
+        self.assertContains(response, 'text-bg-danger" title="Standing held by the Alliance">-10</span>', count=2)
 
 
 class TestCorporationChangesTooltip(SuspectPageTestCase):
@@ -574,6 +615,68 @@ class TestNetworkPages(SuspectPageTestCase):
 
         self.assertTrue(response.url.startswith(LOGIN))
 
+    def add_contract_payment(self, contract_id=78, price=5000):
+        """A private contract without items to the outsider; with a ``price``, the wallet entry that paid it."""
+        from corptools.models import CharacterAudit, CharacterWalletJournalEntry, Contract
+
+        from .test_network import eve_name
+
+        main = EveCharacter.objects.get(pk=self.suspect_main.pk)
+        audit = CharacterAudit.objects.get(character=main)
+        now = timezone.now()
+        Contract.objects.create(
+            id=f"plain-{contract_id}", contract_id=contract_id, character=audit,
+            issuer_id=main.character_id, issuer_name=eve_name(main.character_id),
+            issuer_corporation_id=2001, issuer_corporation_name=eve_name(2001, "corporation"),
+            assignee_id=self.OUTSIDER, assignee_name=eve_name(self.OUTSIDER),
+            acceptor_id=self.OUTSIDER, acceptor_name=eve_name(self.OUTSIDER),
+            for_corporation=False, date_expired=now, date_issued=now, status="finished",
+            contract_type="item_exchange", availability="personal", title=f"Plain {contract_id}", price=price,
+        )
+        if price:
+            CharacterWalletJournalEntry.objects.create(
+                character=audit, entry_id=contract_id, date=now, description="", ref_type="contract_price",
+                first_party_id=self.OUTSIDER, second_party_id=main.character_id, amount=price, balance=0,
+                context_id_type="contract_id", context_id=contract_id,
+            )
+        snapshot.update()
+        return main
+
+    def test_should_offer_the_contracts_behind_the_payments(self):
+        main = self.add_contract_payment()
+
+        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+
+        url = reverse("eos_spy_network:network_payment_contracts", args=[main.character_id, self.OUTSIDER])
+        self.assertContains(response, f'data-eos-spy-network-contracts="{url}"')
+
+    def test_should_offer_no_payment_details_for_a_plain_trade(self):
+        response = self.client.get(reverse("eos_spy_network:network_corporation", args=[2001]))
+
+        self.assertNotContains(response, "network/contract-payments/")
+
+    def test_should_show_the_contracts_behind_the_payments_without_the_ones_with_items(self):
+        main = self.add_private_contract()
+        self.add_contract_payment()
+        self.add_contract_payment(contract_id=79, price=0)
+
+        response = self.client.get(
+            reverse("eos_spy_network:network_payment_contracts", args=[main.character_id, self.OUTSIDER])
+        )
+
+        self.assertContains(response, "Contract 78")
+        self.assertContains(response, "Contract 79")
+        self.assertNotContains(response, "Contract 77")
+
+    def test_should_refuse_the_payment_popup_for_a_link_without_contract_payments(self):
+        main = EveCharacter.objects.get(pk=self.suspect_main.pk)
+
+        response = self.client.get(
+            reverse("eos_spy_network:network_payment_contracts", args=[main.character_id, self.OUTSIDER])
+        )
+
+        self.assertEqual(response.status_code, 404)
+
     def test_should_offer_the_ignore_button_to_settings_managers(self):
         self.client.force_login(make_user("lead2", VIEW_SUSPECTS, MANAGE_SETTINGS))
 
@@ -590,17 +693,56 @@ class TestNetworkPages(SuspectPageTestCase):
         self.assertNotContains(response, "data-eos-spy-network-ignore-id")
         self.assertNotContains(response, 'id="eos-spy-network-ignore"')
 
-    def test_should_ignore_a_counterpart_and_recalculate(self):
-        self.client.force_login(make_user("lead2", VIEW_SUSPECTS, MANAGE_SETTINGS))
+    def test_should_ignore_a_counterpart_with_its_reason_log_it_and_recalculate(self):
+        lead = make_user("lead2", VIEW_SUSPECTS, MANAGE_SETTINGS)
+        self.client.force_login(lead)
 
-        response = self.client.post(reverse("eos_spy_network:ignore_counterpart"), {"counterpart_id": self.OUTSIDER})
+        response = self.client.post(
+            reverse("eos_spy_network:ignore_counterpart"),
+            {"counterpart_id": self.OUTSIDER, "reason": "  Known   trader ", "next": reverse("eos_spy_network:network")},
+        )
 
         # the overview: the Corporation's own page is gone once its last connection is
         self.assertRedirects(response, reverse("eos_spy_network:network"))
         self.assertEqual(
-            SpyConfiguration.get_solo().ignored_network_counterparts, {str(self.OUTSIDER): "Stranger"}
+            SpyConfiguration.get_solo().ignored_network_counterparts,
+            {
+                str(self.OUTSIDER): {
+                    "name": "Stranger",
+                    "reason": "Known trader",
+                    "by": lead.profile.main_character.character_name,
+                    "at": timezone.localdate().isoformat(),
+                }
+            },
+        )
+        log = ReviewLog.objects.get()
+        self.assertEqual(
+            (log.kind, log.character_id, log.key, log.cleared, log.note, log.previous_cleared, log.changed_by),
+            (IGNORED_COUNTERPARTS, self.OUTSIDER, "Stranger", True, "Known trader", False, lead),
         )
         self.update_snapshot.delay.assert_called_once_with()
+
+    def test_should_refuse_to_ignore_without_a_reason(self):
+        self.client.force_login(make_user("lead2", VIEW_SUSPECTS, MANAGE_SETTINGS))
+
+        for reason in ("", "   ", "x" * 161):
+            with self.subTest(reason=reason):
+                response = self.client.post(
+                    reverse("eos_spy_network:ignore_counterpart"), {"counterpart_id": self.OUTSIDER, "reason": reason}
+                )
+                self.assertEqual(response.status_code, 400)
+        self.assertEqual(SpyConfiguration.get_solo().ignored_network_counterparts, {})
+        self.assertFalse(ReviewLog.objects.exists())
+
+    def test_should_go_back_to_our_own_page_only(self):
+        self.client.force_login(make_user("lead2", VIEW_SUSPECTS, MANAGE_SETTINGS))
+
+        response = self.client.post(
+            reverse("eos_spy_network:ignore_counterpart"),
+            {"counterpart_id": self.OUTSIDER, "reason": "Trader", "next": "https://example.com/"},
+        )
+
+        self.assertRedirects(response, reverse("eos_spy_network:network"))
 
     def test_should_keep_the_ignoring_from_viewers(self):
         response = self.client.post(reverse("eos_spy_network:ignore_counterpart"), {"counterpart_id": self.OUTSIDER})
@@ -620,7 +762,7 @@ class TestNetworkPages(SuspectPageTestCase):
     def test_should_refuse_a_counterpart_the_network_does_not_list(self):
         self.client.force_login(make_user("lead2", VIEW_SUSPECTS, MANAGE_SETTINGS))
 
-        for posted in ({"counterpart_id": 12345}, {"counterpart_id": "x"}, {}):
+        for posted in ({"counterpart_id": 12345, "reason": "Trader"}, {"counterpart_id": "x", "reason": "Trader"}, {}):
             with self.subTest(posted=posted):
                 response = self.client.post(reverse("eos_spy_network:ignore_counterpart"), posted)
                 self.assertIn(response.status_code, (400, 404))
@@ -973,8 +1115,13 @@ class TestSettingsPage(SpyTestCase):
         self.assertEqual(SpyConfiguration.get_solo().ignored_network_characters, [])
 
     def test_should_list_the_ignored_counterparts_and_take_one_back(self):
-        configure(ignored_network_counterparts={"5": "Stranger", "6": "Other"})
-        self.assertEqual(self.choices("ignored_network_counterparts"), [("6", "Other"), ("5", "Stranger")])
+        stranger = {"name": "Stranger", "reason": "Trader", "by": "Lead", "at": "2026-11-26"}
+        other = {"name": "Other", "reason": "Buyback", "by": "Lead", "at": "2026-11-25"}
+        configure(ignored_network_counterparts={"5": stranger, "6": other})
+        self.assertEqual(
+            self.choices("ignored_network_counterparts"),
+            [("6", "Other – Buyback (Lead, 2026-11-25)"), ("5", "Stranger – Trader (Lead, 2026-11-26)")],
+        )
 
         response = self.client.post(
             reverse("eos_spy_network:settings"),
@@ -992,8 +1139,28 @@ class TestSettingsPage(SpyTestCase):
         )
 
         self.assertRedirects(response, reverse("eos_spy_network:settings"))
-        # what stays keeps its stored name
-        self.assertEqual(SpyConfiguration.get_solo().ignored_network_counterparts, {"5": "Stranger"})
+        # what stays keeps its stored name and reason
+        self.assertEqual(SpyConfiguration.get_solo().ignored_network_counterparts, {"5": stranger})
+        # taking one back is logged like ignoring it
+        log = ReviewLog.objects.get()
+        self.assertEqual(
+            (log.kind, log.character_id, log.key, log.cleared, log.note, log.previous_cleared, log.previous_note),
+            (IGNORED_COUNTERPARTS, 6, "Other", False, "", True, "Buyback"),
+        )
+
+    def test_should_label_a_counterpart_ignored_before_reasons_by_its_name(self):
+        configure(ignored_network_counterparts={"5": {"name": "Stranger", "reason": "", "by": "", "at": ""}})
+
+        self.assertEqual(self.choices("ignored_network_counterparts"), [("5", "Stranger")])
+
+    def test_should_turn_a_stored_name_into_an_entry(self):
+        from importlib import import_module
+
+        migration = import_module("eos_spy_network.migrations.0025_ignored_counterpart_reasons")
+        entry = {"name": "Stranger", "reason": "Trader", "by": "Lead", "at": "2026-11-26"}
+
+        self.assertEqual(migration.as_entry("Stranger"), {"name": "Stranger", "reason": "", "by": "", "at": ""})
+        self.assertEqual(migration.as_entry(entry), entry)
 
     def test_should_not_add_a_counterpart_through_the_settings(self):
         configure()
@@ -1020,7 +1187,7 @@ class TestSettingsPage(SpyTestCase):
         configure()
         self.assertNotContains(self.client.get(reverse("eos_spy_network:settings")), "id_ignored_network_counterparts")
 
-        configure(ignored_network_counterparts={"5": "Stranger"})
+        configure(ignored_network_counterparts={"5": {"name": "Stranger", "reason": "Trader", "by": "", "at": ""}})
 
         self.assertContains(self.client.get(reverse("eos_spy_network:settings")), "id_ignored_network_counterparts")
 

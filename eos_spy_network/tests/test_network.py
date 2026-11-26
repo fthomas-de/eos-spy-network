@@ -289,7 +289,7 @@ class TestIgnoredCounterparts(NetworkTestCase):
         self.pay(self.main, OUTSIDER)
         self.pay(self.alt, OUTSIDER)
         # the stored keys are strings: JSON has no other
-        configure(ignored_network_counterparts={str(OUTSIDER): "Stranger"})
+        configure(ignored_network_counterparts={str(OUTSIDER): {"name": "Stranger", "reason": "Trader"}})
 
         self.assertEqual(self.stored_accounts(), [])
 
@@ -630,6 +630,44 @@ class TestPrivateContracts(NetworkTestCase):
 
         self.assertEqual(account.contracting, {OUTSIDER})
         self.assertEqual(account.rows[0]["contracts"], 1)
+
+
+class TestContractPayments(NetworkTestCase):
+    """The payments behind a contract without items are counted apart, for the popup of the Payments column."""
+
+    def test_should_count_a_contract_without_items_or_isk(self):
+        self.contract(self.alt, OUTSIDER)
+
+        (link,) = self.account().links
+
+        self.assertEqual((link.payments, link.contract_payments), (1, 1))
+
+    def test_should_count_the_wallet_entry_of_a_contract(self):
+        contract = self.contract(self.alt, OUTSIDER, price=1000, acceptor=OUTSIDER)
+        self.pay(
+            self.alt, OUTSIDER, ref_type="contract_price", context_id_type="contract_id",
+            context_id=contract.contract_id,
+        )
+
+        (link,) = self.account().links
+
+        self.assertEqual((link.payments, link.contract_payments), (1, 1))
+
+    def test_should_not_count_a_donation_or_a_private_contract_with_items(self):
+        self.pay(self.alt, OUTSIDER)
+        self.contract(self.alt, OUTSIDER, items=True)
+
+        (link,) = self.account().links
+
+        self.assertEqual((link.payments, link.contracts, link.contract_payments), (1, 1, 0))
+
+    def test_should_keep_the_count_through_the_snapshot(self):
+        self.make_hostile(OUTSIDER)
+        self.contract(self.alt, OUTSIDER)
+
+        (account,) = self.stored_accounts()
+
+        self.assertEqual(account.rows[0]["contract_payments"], 1)
 
 
 class TestPublicContracts(NetworkTestCase):

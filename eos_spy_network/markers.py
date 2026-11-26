@@ -405,6 +405,12 @@ def _check(
             and not (tenure is not None and tenure.was_ours(party_id, when))
         }
 
+    # ignored with the button: no ISK or contract counterpart, but still one of the mails (user)
+    ignored = {int(eve_id) for eve_id in config.ignored_network_counterparts or ()}
+
+    def dealing_counterparts(user_id, when, *party_ids):
+        return counterparts(user_id, when, *party_ids) - ignored
+
     audits = character_audits(list(owner))
     hostile_ids = index.ids
     # the hostile list is today's: the further back, the likelier a hostile was a friend then
@@ -413,17 +419,20 @@ def _check(
     _check_history(accounts, index, config, owner, names, audits, since, current)
     step("contacts")
     # contacts carry no date in corptools: today's are checked whatever the time frame
-    ignored = set(config.ignored_contact_characters or ())
-    contact_audits = {audit_id: character_id for audit_id, character_id in audits.items() if character_id not in ignored}
+    ignored_characters = set(config.ignored_contact_characters or ())
+    contact_audits = {
+        audit_id: character_id for audit_id, character_id in audits.items() if character_id not in ignored_characters
+    }
     _check_contacts(accounts, index, owner, names, contact_audits, hostile_ids)
     step("mails")
     _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, since, tenure)
     step("wallet")
     _check_wallet(
-        accounts, index, owner, names, audits, hostile_ids, counterparts, since, config.ignored_ref_types or (), tenure
+        accounts, index, owner, names, audits, hostile_ids, dealing_counterparts, since, config.ignored_ref_types or (),
+        tenure,
     )
     step("contracts")
-    _check_contracts(accounts, index, owner, names, audits, hostile_ids, counterparts, since, tenure)
+    _check_contracts(accounts, index, owner, names, audits, hostile_ids, dealing_counterparts, since, tenure)
 
 
 def _check_history(accounts, index, config, owner, names, audits, since=None, current=frozenset()):

@@ -179,10 +179,10 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
             hostiles,
             {row["counterpart_id"] for row in dealing_rows} | {row["contact_id"] for row in contact_rows},
         )
-        _affiliate_rows(dealing_rows, entities, hostiles)
-        _affiliate_rows(contact_rows, entities, hostiles, "contact_id")
-        _reference_rows(contact_rows, entities, hostiles)
         standings = {eve_id: standing for eve_id, standing in alliance_standings(config).items() if eve_id in entities}
+        _affiliate_rows(dealing_rows, entities, hostiles, standings)
+        _affiliate_rows(contact_rows, entities, hostiles, standings, "contact_id")
+        _reference_rows(contact_rows, entities, hostiles)
         blues = network_blue_ids(config) if config.network_neutral else None
         found = kept_partners(found, blues)
         # a partner that was in our Alliance at the time is a member then, whatever Auth knows (user, 2026-11-24)
@@ -248,8 +248,17 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
     return data
 
 
-def _affiliate_rows(rows: list, entities: dict, hostiles: dict, id_key: str = "counterpart_id") -> None:
-    """Name the Corporation and Alliance of each counterpart or contact, with the standing of a hostile one."""
+def _affiliate_rows(rows: list, entities: dict, hostiles: dict, standings: dict, id_key: str = "counterpart_id") -> None:
+    """Name the Corporation and Alliance of each counterpart or contact, with the standing of a hostile one.
+
+    ``held`` is the standing the Alliance itself holds, for the row's party and each group, as the Network table
+    shows it. A snapshot older than that has none: the tables show a dash until the next run.
+    """
+
+    def held(eve_id):
+        # a number, unlike the hostile standing: the badge compares it with the bands
+        standing = standings.get(eve_id)
+        return None if standing is None else float(standing)
 
     def group(eve_id):
         if not eve_id:
@@ -259,6 +268,7 @@ def _affiliate_rows(rows: list, entities: dict, hostiles: dict, id_key: str = "c
         return {
             "name": entity.name if entity else str(eve_id),
             "standing": str(hostile.standing) if hostile else None,
+            "held": held(eve_id),
         }
 
     for row in rows:
@@ -272,6 +282,7 @@ def _affiliate_rows(rows: list, entities: dict, hostiles: dict, id_key: str = "c
             corporation_id = entity.corporation_id if entity else None
             alliance_id = entity.alliance_id if entity else None
         row["category"] = category
+        row["held"] = held(row[id_key])
         row["corporation"] = group(corporation_id)
         row["alliance"] = group(alliance_id)
 
@@ -338,6 +349,7 @@ def _connections_data(account: Connections) -> dict:
                 link.last,
                 link.contracts,
                 link.direction,
+                link.contract_payments,
             ]
             for link in account.links
         ],
@@ -692,22 +704,29 @@ class Report:
             groups[label].append(name)
         return [(label, sorted(found, key=str.casefold)) for label, found in groups.items() if found]
 
-    def search(self, query: str) -> list[dict]:
+    def search(self, query: str, eve_id: int | None = None) -> list[dict]:
         """The Network rows whose counterpart, Corporation or Alliance has ``query`` in its name, of every account.
+
+        With ``eve_id`` (a highlight tile's link) the rows whose chain holds that party instead, as the tile counts
+        them - a name match would also find every longer name containing it.
 
         Each row is the table row of ``Connections.rows`` plus its ``tile`` (the main's Corporation) and the
         account's ``main_id`` and ``main_name``, which the result table links on.
         """
         needle = query.strip().casefold()
-        if not needle:
+        if not needle and eve_id is None:
             return []
         rows = []
         for tile in self.network_tiles:
             for account in tile.accounts:
                 for row in account.rows:
-                    groups = (row["corporation"] or {}, row["alliance"] or {})
-                    names = (row["counterpart"], *(group.get("name", "") for group in groups))
-                    if any(needle in name.casefold() for name in names):
+                    if eve_id is not None:
+                        found = eve_id in account.chain(row["counterpart_id"])
+                    else:
+                        groups = (row["corporation"] or {}, row["alliance"] or {})
+                        names = (row["counterpart"], *(group.get("name", "") for group in groups))
+                        found = any(needle in name.casefold() for name in names)
+                    if found:
                         rows.append({**row, "tile": tile, "main_id": account.main_id, "main_name": account.main_name})
         return rows
 

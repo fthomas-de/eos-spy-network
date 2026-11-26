@@ -1,0 +1,28 @@
+{% load i18n %}
+{# The confirmation of every ignore button of a page, for settings managers; ignore.js puts the counterpart in. next is the page to come back to. #}
+{% if perms.eos_spy_network.manage_settings %}
+    <div class="modal fade" id="eos-spy-network-ignore" tabindex="-1" aria-labelledby="eos-spy-network-ignore-title" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" action="{% url 'eos_spy_network:ignore_counterpart' %}" class="modal-content">
+                {% csrf_token %}
+                <input type="hidden" name="counterpart_id" data-eos-spy-network-ignore-field>
+                <input type="hidden" name="next" value="{{ next }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eos-spy-network-ignore-title">{% translate "Ignore this counterpart" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Close' %}"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">{% translate "Ignore this counterpart in the Network and in the markers ISK and Contracts?" %}</p>
+                    <p class="fw-bold text-break mb-2" data-eos-spy-network-ignore-name></p>
+                    <label for="eos-spy-network-ignore-reason" class="form-label">{% translate "Reason" context "eos-spy-network" %}</label>
+                    <textarea id="eos-spy-network-ignore-reason" name="reason" class="form-control mb-2" rows="2" maxlength="{{ note_length }}" required></textarea>
+                    <p class="small text-body-secondary mb-0">{% translate "Payments and contracts with it no longer count and everything is recalculated. You can take it back in the settings." %}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Cancel" %}</button>
+                    <button type="submit" class="btn btn-danger">{% translate "Ignore" context "eos-spy-network" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endif %}

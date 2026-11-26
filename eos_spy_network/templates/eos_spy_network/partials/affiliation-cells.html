@@ -4,10 +4,10 @@
     {# an Alliance as counterpart has no Corporation above it #}
     <td></td>
 {% else %}
-    {% include "eos_spy_network/partials/group-cell.html" with group=row.corporation %}
+    {% include "eos_spy_network/partials/group-cell.html" with group=row.corporation with_held=True %}
 {% endif %}
 {% if row.alliance %}
-    {% include "eos_spy_network/partials/group-cell.html" with group=row.alliance %}
+    {% include "eos_spy_network/partials/group-cell.html" with group=row.alliance with_held=True %}
 {% else %}
     {# no Alliance is a fact, not a gap: the Corporation is known #}
     <td class="text-body-secondary">{% if not row.corporation %}{% translate "unknown" %}{% endif %}</td>

@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from eos_spy_network import markers
-from eos_spy_network.models import BlueKill, FindingReview, ReviewLog
+from eos_spy_network.models import IGNORED_COUNTERPARTS, BlueKill, FindingReview, ReviewLog
 
 from .base import OTHER_ALLIANCE_ID, ALLIANCE_ID, make_user
 from .test_finding_reviews import FindingTestCase
@@ -140,6 +140,27 @@ class TestLogTab(FindingTestCase):
         self.assertNotIn("log", response.context)
         self.assertNotContains(response, "eos-spy-network-settings-log")
         self.assertContains(response, f'href="{reverse("eos_spy_network:log")}"')
+
+    def test_should_show_an_entry_whose_user_was_deleted(self):
+        # changed_by is SET_NULL: the entry stays, who made it is gone
+        self.log(self.main.character_id, None)
+
+        response = self.get()
+
+        self.assertContains(response, "Logged note")
+        self.assertContains(response, '<td class="text-break">?</td>', html=True)
+
+    def test_should_list_an_ignored_counterpart_by_its_name_without_a_main(self):
+        ReviewLog.objects.create(
+            alliance_id=ALLIANCE_ID, kind=IGNORED_COUNTERPARTS, character_id=90000100, key="Stranger", cleared=True,
+            note="Known trader", changed_at=timezone.now(), changed_by=make_user("lead", MANAGE_SETTINGS),
+        )
+
+        response = self.get()
+
+        [entry] = response.context["log"]
+        self.assertEqual((entry.label, entry.finding, entry.main_id), ("Ignored counterpart", "Stranger", None))
+        self.assertContains(response, "Known trader")
 
     def test_should_leave_out_another_alliance(self):
         ReviewLog.objects.create(

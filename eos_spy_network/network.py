@@ -74,7 +74,11 @@ class Link:
     contracts: int = 0
     # "o": the own character gave (paid, issued), "i": it received; both may be there. Empty in an older snapshot
     direction: str = ""
-    # (when, trade, isk, direction, contract, with_contract) of each ``add``, for ``drop_ours``; not stored
+    # the payments that are contracts (any but the counted private ones with items); the popup of the Payments
+    # column lists them. 0 in a snapshot older than that
+    contract_payments: int = 0
+    # (when, trade, isk, direction, contract, with_contract, contract_payment) of each ``add``, for ``drop_ours``;
+    # not stored
     events: list = field(default_factory=list, repr=False, compare=False)
 
     @property
@@ -82,7 +86,8 @@ class Link:
         return self.payments + self.contracts
 
     def add(
-        self, day: str, trade: bool, isk, direction: str = "", contract: bool = False, with_contract: bool = False
+        self, day: str, trade: bool, isk, direction: str = "", contract: bool = False, with_contract: bool = False,
+        contract_payment: bool = False,
     ) -> None:
         if contract:
             self.contracts += 1
@@ -92,6 +97,8 @@ class Link:
                 self.payments += 1
                 if trade:
                     self.trades += 1
+                if contract_payment:
+                    self.contract_payments += 1
             self.isk += abs(isk or 0)
         self.direction = "".join(sorted(set(self.direction + direction)))
         self.first = min(self.first or day, day)
@@ -130,7 +137,7 @@ class Connections:
     highlights: frozenset = frozenset()
     # EVE ID -> the standing the Alliance itself holds, hostile or not; shared as well
     standings: dict = field(default_factory=dict)
-    # own character ID -> birthday; read by ``fill_birthdays`` for the one page that shows the age
+    # own character ID -> birthday; filled by ``fill_birthdays`` only for the pages that show the age
     birthdays: dict = field(default_factory=dict)
 
     @property
@@ -213,6 +220,7 @@ class Connections:
                     "payments": link.payments,
                     "trades": link.trades,
                     "contracts": link.contracts,
+                    "contract_payments": link.contract_payments,
                     "isk": link.isk,
                     "first": link.first,
                     "last": link.last,
@@ -451,7 +459,7 @@ def connections(
 
     def add(
         character_id, party_ids, when, trade: bool, isk, direction: str = "", contract: bool = False,
-        with_contract: bool = False,
+        with_contract: bool = False, contract_payment: bool = False,
     ) -> None:
         user_id = owner[character_id]
         for party_id in party_ids:
@@ -467,8 +475,8 @@ def connections(
             link = links.get((user_id, character_id, party_id))
             if link is None:
                 link = links[(user_id, character_id, party_id)] = Link(character_id, party_id)
-            link.add(when.date().isoformat(), trade, isk, direction, contract, with_contract)
-            link.events.append((when, trade, isk, direction, contract, with_contract))
+            link.add(when.date().isoformat(), trade, isk, direction, contract, with_contract, contract_payment)
+            link.events.append((when, trade, isk, direction, contract, with_contract, contract_payment))
 
     # A private contract with items is a kind of its own, with or without ISK (user, 2026-11-23). Any other
     # contract with ISK is in the journal already; without any - collateral included, which has its own
@@ -506,7 +514,7 @@ def connections(
             counted.add(contract_id)
             add(own_id, parties, date, False, 0, "o" if issuer_id == own_id else "i", contract=True)
         elif not (price or reward or collateral):
-            add(own_id, parties, date, False, 0)
+            add(own_id, parties, date, False, 0, contract_payment=True)
 
     entries = CharacterWalletJournalEntry.objects.filter(
         character_id__in=list(audits),
@@ -528,8 +536,12 @@ def connections(
         direction = "i" if amount and amount > 0 else "o" if amount else ""
         own_id = audits[audit_id]
         if tenure is None or tenure.counts(own_id, date):
-            with_contract = context_type == "contract_id" and context_id in counted
-            add(own_id, (first_id, second_id), date, ref_type == TRADING, amount, direction, with_contract=with_contract)
+            of_contract = context_type == "contract_id"
+            with_contract = of_contract and context_id in counted
+            add(
+                own_id, (first_id, second_id), date, ref_type == TRADING, amount, direction,
+                with_contract=with_contract, contract_payment=of_contract,
+            )
 
     by_user = defaultdict(list)
     for (user_id, _character_id, _counterpart_id), link in links.items():
@@ -553,7 +565,7 @@ def connections(
 
 
 def fill_birthdays(accounts) -> None:
-    """Hand each account the birthdays of its characters: one query, for the page that shows the age.
+    """Hand each account the birthdays of its characters: one query, for the pages that show the age.
 
     Auth has no birthday for a character it never refreshed from ESI; the table shows a dash then.
     """

@@ -13,6 +13,11 @@ urlpatterns = [
     path("network/<int:corporation_id>/", views.network_corporation, name="network_corporation"),
     path("contracts/<int:character_id>/<int:counterpart_id>/", views.contracts, name="contracts"),
     path("network/contracts/<int:character_id>/<int:counterpart_id>/", views.network_contracts, name="network_contracts"),
+    path(
+        "network/contract-payments/<int:character_id>/<int:counterpart_id>/",
+        views.network_payment_contracts,
+        name="network_payment_contracts",
+    ),
     path("capital-contract/<int:contract_id>/", views.capital_contract, name="capital_contract"),
     path("kills/note/", views.kill_note, name="kill_note"),
     path("kills/day/", views.kill_day_note, name="kill_day_note"),

@@ -41,7 +41,7 @@
         </div>
 
         <div class="text-center mt-auto">
-            <a href="{% url 'eos_spy_network:network_search' %}?q={{ tile.name|urlencode }}" class="btn btn-sm btn-primary">
+            <a href="{% url 'eos_spy_network:network_search' %}?q={{ tile.name|urlencode }}&amp;id={{ tile.id }}" class="btn btn-sm btn-primary">
                 {% translate "View details" %}
             </a>
         </div>

@@ -51,10 +51,10 @@ TRANSLATIONS = {
     ),
     "Configuration": ("Konfiguration", "Конфигурация", "配置"),
     "Settings": ("Einstellungen", "Настройки", "设置"),
-    "aa-contacts is not installed: the hostile list is made from its contacts.": (
-        "aa-contacts ist nicht installiert: Die Feindliste entsteht aus dessen Kontakten.",
-        "aa-contacts не установлен: список врагов строится из его контактов.",
-        "未安装 aa-contacts：敌对列表由其联系人生成。",
+    "aa-contacts is not installed: hostiles come from its contacts, so nothing counts as hostile.": (
+        "aa-contacts ist nicht installiert: Feinde ergeben sich aus dessen Kontakten, daher gilt nichts als feindlich.",
+        "aa-contacts не установлен: враждебные определяются по его контактам, поэтому ничто не считается враждебным.",
+        "未安装 aa-contacts：敌对对象来自其联系人，因此没有任何对象被视为敌对。",
     ),
     "No Alliance is configured yet.": (
         "Es ist noch keine Alliance eingestellt.",
@@ -70,10 +70,10 @@ TRANSLATIONS = {
     "Name": ("Name", "Название", "名称"),
     "Type": ("Typ", "Тип", "类型"),
     "Contact sources": ("Kontaktquellen", "Источники контактов", "联系人来源"),
-    "Tick whose contacts make up the hostile list. The contacts come from aa-contacts: a source needs a token there, and aa-contacts' own task keeps them up to date.": (
-        "Hake an, wessen Kontakte die Feindliste bilden. Die Kontakte kommen aus aa-contacts: Eine Quelle braucht dort einen Token, und der eigene Task von aa-contacts hält sie aktuell.",
-        "Отметьте, чьи контакты составляют список врагов. Контакты берутся из aa-contacts: источнику нужен там токен, а собственная задача aa-contacts поддерживает их в актуальном состоянии.",
-        "勾选其联系人构成敌对列表的来源。联系人来自 aa-contacts：来源需要在其中拥有令牌，aa-contacts 自己的任务会保持其最新。",
+    "Tick whose contacts decide who counts as hostile. The contacts come from aa-contacts: a source needs a token there, and aa-contacts' own task keeps them up to date.": (
+        "Hake an, wessen Kontakte bestimmen, wer als feindlich gilt. Die Kontakte kommen aus aa-contacts: Eine Quelle braucht dort einen Token, und der eigene Task von aa-contacts hält sie aktuell.",
+        "Отметьте, чьи контакты определяют, кто считается враждебным. Контакты берутся из aa-contacts: источнику нужен там токен, а собственная задача aa-contacts поддерживает их в актуальном состоянии.",
+        "勾选其联系人决定谁被视为敌对的来源。联系人来自 aa-contacts：来源需要在其中拥有令牌，aa-contacts 自己的任务会保持其最新。",
     ),
     "Open aa-contacts": ("aa-contacts öffnen", "Открыть aa-contacts", "打开 aa-contacts"),
     "Ticked": ("Angehakt", "Отмечено", "已勾选"),
@@ -537,35 +537,36 @@ TRANSLATIONS = {
         "这些 Characters 的付款和合同不计入关系网。与该账号其他 Characters 共有的合作方仍会计入。",
     ),
     "Ignored counterparts": ("Ignorierte Gegenüber", "Игнорируемые контрагенты", "忽略的对方"),
-    "Payments and contracts with these counterparts do not count for the Network. Remove one to count it again.": (
-        "Zahlungen und Contracts mit diesen Gegenübern zählen nicht für das Network. Entferne eines, damit es "
-        "wieder zählt.",
-        "Платежи и контракты с этими контрагентами не учитываются в сети. Удалите контрагента, чтобы он снова "
-        "учитывался.",
-        "与这些对方的付款和合同不计入关系网。移除某一项即可重新计入。",
+    "Payments and contracts with these counterparts count neither for the Network nor for the markers ISK and Contracts. Remove one to count it again.": (
+        "Zahlungen und Contracts mit diesen Gegenübern zählen weder für das Network noch für die Marker ISK und "
+        "Contracts. Entferne eines, damit es wieder zählt.",
+        "Платежи и контракты с этими контрагентами не учитываются ни в сети, ни в маркерах ISK и Contracts. "
+        "Удалите контрагента, чтобы он снова учитывался.",
+        "与这些对方的付款和合同既不计入关系网，也不计入 ISK 和 Contracts 标记。移除某一项即可重新计入。",
     ),
+    "Ignored counterpart": ("Ignoriertes Gegenüber", "Игнорируемый контрагент", "忽略的对方"),
     "Ignore this counterpart": ("Dieses Gegenüber ignorieren", "Игнорировать этого контрагента", "忽略此对方"),
     "Standing held by the Alliance": (
         "Standing der Alliance",
         "Standing, установленный Alliance",
         "Alliance 持有的 Standing",
     ),
-    "Ignore this counterpart in the Network?": (
-        "Dieses Gegenüber im Network ignorieren?",
-        "Игнорировать этого контрагента в сети?",
-        "在关系网中忽略此对方？",
+    "Ignore this counterpart in the Network and in the markers ISK and Contracts?": (
+        "Dieses Gegenüber im Network und in den Markern ISK und Contracts ignorieren?",
+        "Игнорировать этого контрагента в сети и в маркерах ISK и Contracts?",
+        "在关系网以及 ISK 和 Contracts 标记中忽略此对方？",
     ),
-    "Payments and contracts with it no longer count and the Network is recalculated. You can take it back in the settings.": (
-        "Zahlungen und Contracts mit ihm zählen nicht mehr und das Network wird neu berechnet. Du kannst es in den "
+    "Payments and contracts with it no longer count and everything is recalculated. You can take it back in the settings.": (
+        "Zahlungen und Contracts mit ihm zählen nicht mehr und alles wird neu berechnet. Du kannst es in den "
         "Einstellungen zurücknehmen.",
-        "Платежи и контракты с ним больше не учитываются, сеть будет пересчитана. Это можно отменить в настройках.",
-        "与其的付款和合同将不再计入，关系网会重新计算。可在设置中撤销。",
+        "Платежи и контракты с ним больше не учитываются, всё будет пересчитано. Это можно отменить в настройках.",
+        "与其的付款和合同将不再计入，所有内容会重新计算。可在设置中撤销。",
     ),
     "Ignore": ("Ignorieren", "Игнорировать", "忽略"),
-    "%(name)s is ignored. The connections are being recalculated.": (
-        "%(name)s wird ignoriert. Die Verbindungen werden neu berechnet.",
-        "%(name)s игнорируется. Связи пересчитываются.",
-        "%(name)s 已被忽略。正在重新计算连接。",
+    "%(name)s is ignored. The markers and connections are being recalculated.": (
+        "%(name)s wird ignoriert. Die Marker und Verbindungen werden neu berechnet.",
+        "%(name)s игнорируется. Маркеры и связи пересчитываются.",
+        "%(name)s 已被忽略。正在重新计算标记和连接。",
     ),
     "%(name)s is ignored, but the task queue is not reachable: recalculate once it is back.": (
         "%(name)s wird ignoriert, aber die Task-Warteschlange ist nicht erreichbar: Berechne neu, sobald sie "

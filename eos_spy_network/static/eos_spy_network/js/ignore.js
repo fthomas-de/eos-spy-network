@@ -1,6 +1,7 @@
 /*
- * The "ignore this counterpart" popup of the Network page: the button of a
- * row hands its counterpart's ID and name to the one confirmation modal.
+ * The "ignore this counterpart" popup of the Network page and the ISK and
+ * contract tables: the button of a row hands its counterpart's ID and name to
+ * the one confirmation modal, which asks for the reason.
  */
 document.addEventListener("DOMContentLoaded", () => {
     "use strict";

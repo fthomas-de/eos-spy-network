@@ -10,7 +10,7 @@ from django.db.models import Exists, OuterRef, Q
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
-from .markers import CONTRACT_REF_TYPES, character_audits
+from .markers import CONTRACT_REF_TYPES, PUBLIC, character_audits
 from .models import CapitalContract
 from .network import PRIVATE
 
@@ -83,6 +83,43 @@ def private(character_id: int, counterpart_id: int, since=None) -> list[dict]:
         {"contract_id": contract.contract_id, "contract": contract, "payments": []}
         for contract in _with_details(contracts).order_by("-date_issued")
     ]
+
+
+def payments(character_id: int, counterpart_id: int, since=None, ignored=()) -> list[dict]:
+    """The contracts the Network counts as payments of one own character and one counterpart, the latest first.
+
+    As ``network.connections`` reads them: a contract paid through the wallet (``details``), and one without any
+    ISK, which leaves no wallet entry. Public contracts never count, and a private one with items is ``private``'s.
+    """
+    from corptools.models import Contract
+
+    def counted_apart(contract) -> bool:
+        if contract.availability == PUBLIC:
+            return True
+        issued_in_time = since is None or contract.date_issued >= since
+        return contract.availability == PRIVATE and issued_in_time and bool(contract.contractitem_set.all())
+
+    rows = [
+        row
+        for row in details(character_id, counterpart_id, since, ignored)
+        if not (row["contract"] and counted_apart(row["contract"]))
+    ]
+    listed = {row["contract_id"] for row in rows}
+    audits = character_audits([character_id])
+    without_isk = Contract.objects.filter(
+        Q(issuer_id=counterpart_id) | Q(assignee_id=counterpart_id) | Q(acceptor_id=counterpart_id),
+        character_id__in=list(audits),
+    ).exclude(availability=PUBLIC)
+    if since is not None:
+        without_isk = without_isk.filter(date_issued__gte=since)
+    for contract in _with_details(without_isk.exclude(contract_id__in=listed)):
+        if not (contract.price or contract.reward or contract.collateral or counted_apart(contract)):
+            rows.append({"contract_id": contract.contract_id, "contract": contract, "payments": []})
+
+    def issued(row):
+        return row["contract"].date_issued if row["contract"] else row["payments"][0]["date"]
+
+    return sorted(rows, key=issued, reverse=True)
 
 
 def details(character_id: int, counterpart_id: int, since=None, ignored=()) -> list[dict]:

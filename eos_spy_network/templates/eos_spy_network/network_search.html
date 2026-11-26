@@ -37,6 +37,7 @@
                         <th>{% translate "Main" context "eos-spy-network" %}</th>
                         <th>{% translate "Corporation of the main" %}</th>
                         <th>{% translate "Character" context "EVE jargon" %}</th>
+                        <th>{% translate "Age" context "eos-spy-network" %}</th>
                         <th>{% translate "Counterpart" %}</th>
                         <th>{% translate "Corporation" context "EVE jargon" %}</th>
                         <th>{% translate "Alliance" context "EVE jargon" %}</th>
@@ -53,6 +54,14 @@
                             <td class="text-break"><a href="{% url 'eos_spy_network:network_corporation' row.tile.id %}#main-{{ row.main_id }}">{{ row.main_name }}</a></td>
                             <td class="text-break">{{ row.tile.name }}</td>
                             <td class="text-break">{{ row.character }}</td>
+                            {# as on the Network Corporation page: Auth has no birthday for a character it never refreshed #}
+                            <td class="text-nowrap" data-order="{{ row.age_days|default_if_none:'' }}">
+                                {% if row.birthday %}
+                                    <span title="{{ row.birthday|date:'Y-m-d' }}">{{ row.birthday|timesince }}</span>
+                                {% else %}
+                                    <span class="text-body-secondary">–</span>
+                                {% endif %}
+                            </td>
                             <td class="text-break{% if row.hostile %} text-danger fw-semibold{% endif %}">
                                 {{ row.counterpart }}
                                 {% include "eos_spy_network/partials/standing-badge.html" with held=row.counterpart_held %}

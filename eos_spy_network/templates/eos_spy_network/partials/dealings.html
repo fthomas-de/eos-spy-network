@@ -20,7 +20,20 @@
             {% for row in marker.rows %}
                 <tr>
                     <td class="text-break">{{ row.character }}</td>
-                    <td class="text-break text-danger">{{ row.counterpart }}</td>
+                    <td class="text-break text-danger">{{ row.counterpart }}
+                        {% include "eos_spy_network/partials/standing-badge.html" with held=row.held %}
+                        {# the same button as on the Network page; the CEO's page has no manager's perms #}
+                        {% if perms.eos_spy_network.manage_settings and perms.eos_spy_network.view_suspects %}
+                            <button type="button" class="btn btn-sm btn-link p-0 ms-1 text-body-secondary"
+                                    data-bs-toggle="modal" data-bs-target="#eos-spy-network-ignore"
+                                    data-eos-spy-network-ignore-id="{{ row.counterpart_id }}"
+                                    data-eos-spy-network-ignore-name="{{ row.counterpart }}"
+                                    title="{% translate 'Ignore this counterpart' %}"
+                                    aria-label="{% translate 'Ignore this counterpart' %}">
+                                <i class="fas fa-eye-slash"></i>
+                            </button>
+                        {% endif %}
+                    </td>
                     {% if marker.affiliated %}{% include "eos_spy_network/partials/affiliation-cells.html" %}{% endif %}
                     <td>{{ row.count }}</td>
                     {% if marker.kind == "wallet" %}<td class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>{% elif marker.kind == "contracts" %}<td class="text-nowrap">{% if row.million is not None %}{{ row.million|floatformat:"1g" }} M{% else %}–{% endif %}</td>{% endif %}

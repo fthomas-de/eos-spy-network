@@ -1,6 +1,7 @@
 from corptools.models import EveName
 
 from django.urls import reverse
+from django.utils import timezone
 
 from eos_spy_network import snapshot
 from eos_spy_network.models import ContactSource, SpyConfiguration
@@ -54,6 +55,22 @@ class TestSearch(SearchTestCase):
         self.assertEqual(self.report.search("   "), [])
         self.assertEqual(self.report.search("Nobody"), [])
 
+    def test_should_find_a_party_by_its_id_and_not_by_a_longer_name(self):
+        other = OUTSIDER + 1
+        EveName.objects.create(eve_id=other, name="Outsider Two", category="character")
+        self.esi_names.return_value = {OUTSIDER: ("Outsider", "character"), other: ("Outsider Two", "character")}
+        self.esi_affiliations.return_value = {
+            OUTSIDER: (HOSTILE_CORP, OTHER_ALLIANCE_ID),
+            other: (HOSTILE_CORP, OTHER_ALLIANCE_ID),
+        }
+        self.pay(self.alt, other, ref_type="player_trading")
+        report = snapshot.Report(snapshot.update())
+
+        self.assertEqual(len(report.search("Outsider")), 2)
+        self.assertEqual([row["counterpart"] for row in report.search("Outsider", OUTSIDER)], ["Outsider"])
+        # a Corporation's ID finds every counterpart in it, whatever the name
+        self.assertEqual(len(report.search("", HOSTILE_CORP)), 2)
+
     def test_should_offer_every_party_once_grouped_by_category(self):
         groups = [(str(label), names) for label, names in self.report.suggestions()]
 
@@ -78,6 +95,27 @@ class TestSearchPage(SearchTestCase):
         link = reverse("eos_spy_network:network_corporation", args=[2001])
         self.assertContains(response, f'href="{link}#main-{self.main.character_id}"')
         self.assertContains(response, 'selected>Outsider</option>', html=False)
+
+    def test_should_show_the_age_of_the_own_character(self):
+        self.alt.birthday = timezone.localdate().replace(year=timezone.localdate().year - 3, month=1, day=1)
+        self.alt.save()
+
+        response = self.client.get(reverse("eos_spy_network:network_search"), {"q": "Outsider"})
+
+        self.assertContains(response, "<th>Age</th>")
+        self.assertContains(response, f'title="{self.alt.birthday.isoformat()}"')
+
+    def test_should_search_by_the_id_of_a_highlight_tile(self):
+        # the ID decides: the name in the box is only shown
+        response = self.client.get(reverse("eos_spy_network:network_search"), {"q": "Nobody", "id": OUTSIDER})
+
+        self.assertNotContains(response, "Nothing in the Network matches.")
+        self.assertContains(response, f'href="{reverse("eos_spy_network:network_corporation", args=[2001])}#main-')
+
+    def test_should_ignore_an_id_that_is_no_number(self):
+        response = self.client.get(reverse("eos_spy_network:network_search"), {"q": "Nobody", "id": "x"})
+
+        self.assertContains(response, "Nothing in the Network matches.")
 
     def test_should_keep_a_typed_text_in_the_box(self):
         response = self.client.get(reverse("eos_spy_network:network_search"), {"q": "outs"})
@@ -174,7 +212,7 @@ class TestHighlightPages(SearchTestCase):
         response = self.client.get(reverse("eos_spy_network:network"))
 
         html = response.content.decode()
-        self.assertContains(response, reverse("eos_spy_network:network_search") + "?q=Outsider")
+        self.assertContains(response, reverse("eos_spy_network:network_search") + f"?q=Outsider&amp;id={OUTSIDER}")
         self.assertLess(html.index("Highlights"), html.index(reverse("eos_spy_network:network_corporation", args=[2001])))
 
     def test_should_not_show_the_tiles_on_the_markers_page(self):

@@ -62,7 +62,7 @@ class TestRows(FindingTestCase):
         (row,) = self.report_marker().rows
 
         self.assertEqual(row["category"], "corporation")
-        self.assertEqual(row["corporation"], {"name": "Bad Corp", "standing": "-10.0"})
+        self.assertEqual(row["corporation"], {"name": "Bad Corp", "standing": "-10.0", "held": -10.0})
         self.assertTrue(self.report_marker().affiliated)
 
     def test_should_name_the_standing_that_makes_the_contact_hostile(self):

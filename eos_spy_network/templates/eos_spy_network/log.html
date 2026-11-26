@@ -26,7 +26,8 @@
                             {% for entry in log %}
                                 <tr>
                                     <td class="text-nowrap" data-order="{{ entry.changed_at|date:'U' }}">{{ entry.changed_at|date:"Y-m-d H:i" }}</td>
-                                    <td class="text-break">{{ entry.changed_by.profile.main_character.character_name|default:entry.changed_by.username|default:"?" }}{% if entry.own_account %} <span class="badge text-bg-warning">{% translate "Own account" %}</span>{% endif %}</td>
+                                    {# changed_by is gone with a deleted user; a filter argument does not swallow the lookup on None #}
+                                    <td class="text-break">{% if entry.changed_by %}{{ entry.changed_by.profile.main_character.character_name|default:entry.changed_by.username }}{% else %}?{% endif %}{% if entry.own_account %} <span class="badge text-bg-warning">{% translate "Own account" %}</span>{% endif %}</td>
                                     <td>{{ entry.label }}</td>
                                     <td class="text-break">{{ entry.main_name }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=entry.main_id %}</td>
                                     <td class="text-break">
