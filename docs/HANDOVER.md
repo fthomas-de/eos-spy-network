@@ -11,13 +11,11 @@ one section), not at session start.
 
 ## State
 
-- Version: `0.1.4`, 2026-11-25 (tag `v0.1.4`).
-- Not deployed yet: none - the user deploys every release right away.
-- `0.1.5` committed 2026-11-26, not pushed yet (search age, contract-payment
-  popup, highlight search by ID, held standings in the marker tables,
-  ignoring ISK/contract counterparts with a reason, log page fix). Prod steps
-  once deployed: migration 0025, `collectstatic` (`ignore.js`), one
-  recalculation.
+- Version: `0.1.5`, 2026-11-26 (tag `v0.1.5`).
+- Not deployed yet: `0.1.5` (the user deploys every release right away, so
+  probably done soon). Prod steps: migration 0025, `collectstatic`
+  (`ignore.js`), one recalculation - until then the new payment buttons and
+  the held standings in the marker tables do not show.
 - What the app does today: from the contacts of the Alliance and its
   Corporations it builds a hostile list and checks every account with a
   character in the Alliance against it - markers per main (membership,
@@ -31,7 +29,8 @@ one section), not at session start.
 
 - Possible next steps the user may want:
   - Note and *Cleared* for the remaining markers: Membership, Corporation
-    changes, Mails/ISK/Contracts (mails need rows).
+    changes, Mails/ISK/Contracts (mails need rows). Large; offered to the
+    user for a fresh session, no answer yet (build, keep open or drop).
   - Capital: structure names (need a token with docking rights); a contract
     of a character no account owns is not shown; Reward and Collateral show
     0 ISK for a capital contract, and its popup says "corptools has not
@@ -51,7 +50,7 @@ one section), not at session start.
 
 - Installed editable, in `INSTALLED_APPS` of `myauth/settings/local.py`;
   migrations up to 0025 applied, `collectstatic` current, snapshot rebuilt
-  2026-11-25 with 0.1.4 (none of the `[Unreleased]` work yet).
+  2026-11-25 with 0.1.4 (recalculate to see the 0.1.5 changes).
 - `local.py` has a `## eos spy network` block with the sweep's beat entry.
   The periodic task row `contacts` (id 7) is disabled; the hourly
   `CELERYBEAT_SCHEDULE` entry in `local.py` is the one to keep. A Celery
