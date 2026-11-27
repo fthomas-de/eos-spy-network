@@ -11,7 +11,8 @@ one section), not at session start.
 
 ## State
 
-- Version: `0.1.6`, 2026-11-27 (tag `v0.1.6`).
+- Version: `0.1.7`, 2026-11-27 (tag `v0.1.7`): a user without a page's
+  permission gets 403 instead of the login page (no prod steps).
 - Possibly not deployed yet (the user deploys every release right away):
   - `0.1.5`: migration 0025, `collectstatic` (`ignore.js`), one
     recalculation.
@@ -42,7 +43,14 @@ one section), not at session start.
     stored this contract." once the sweep dropped the row (shared template).
   - Markers weighted into a score; an account page with the evidence.
   - More markers: clones/assets in staging systems (needs a setting for the
-    systems), owner changes, audit gaps as a data gap.
+    systems), audit gaps as a data gap.
+  - Owner change marker: Alliance Auth keeps `OwnershipRecord` (user,
+    character, `owner_hash`, `created`); a character with several records
+    of differing `owner_hash` or user changed hands. Unchecked: `created` is
+    `auto_now` (not a reliable date), where AA writes the records, and
+    whether `aa_dev` holds any such character - look at the data first.
+  - The same 403 is still missing in eos-sig-checker and eos-invoices (their
+    own sessions).
 - Not decided, left as built: a `BlueKill` copy is never deleted (few rows,
   the time frame hides old ones; after a change of the Alliance the old
   copies stay unused); the settings tabs stay flat (no grouping per main,
