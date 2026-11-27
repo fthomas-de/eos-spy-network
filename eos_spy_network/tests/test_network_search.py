@@ -195,6 +195,21 @@ class TestHighlights(SearchTestCase):
         self.assertEqual((tile["name"], tile["accounts"], tile["groups"]), ("stored name", 0, []))
 
 
+    def test_should_order_the_tiles_alliance_then_corporation_then_the_rest(self):
+        # stored the other way round
+        highlights = {str(OUTSIDER): "", str(HOSTILE_CORP): "", str(OTHER_ALLIANCE_ID): ""}
+
+        tiles = self.report.highlight_tiles(highlights)
+
+        self.assertEqual([str(tile["label"]) for tile in tiles], ["Alliance", "Corporation", "Character"])
+
+    def test_should_put_the_party_with_more_accounts_first_within_a_category(self):
+        # 12345 is not in the Network: no accounts, no category, so it sorts with the Characters
+        tiles = self.report.highlight_tiles({"12345": "stored name", str(OUTSIDER): ""})
+
+        self.assertEqual([tile["id"] for tile in tiles], [OUTSIDER, 12345])
+
+
 class TestHighlightPages(SearchTestCase):
     def setUp(self):
         super().setUp()

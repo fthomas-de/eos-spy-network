@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-11-27
+
+### Changed
+
+- The Highlights tiles on the Network page are sorted: Alliances first, then
+  Corporations, then Characters (and parties the Network no longer holds),
+  each group with the most mains first, ties by name. They came in the order
+  the settings stored them, so the busiest party could sit at the bottom. No
+  migration, no `collectstatic`, no recalculation.
+
 ## [0.1.9] - 2026-11-27
 
 ### Added

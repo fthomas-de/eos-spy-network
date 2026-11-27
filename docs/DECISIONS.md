@@ -146,7 +146,8 @@ section.
   only (a party the Network does not hold shows 0); a click opens the search
   for exactly that party (by ID, the name only in the box). Highlights do not
   score. Highlights beyond the Network:
-  decided against for now.
+  decided against for now. Order (user, 2026-11-27): Alliance, Corporation,
+  Character; within each the most mains first, then by name.
 - The Corporation tile on the Network page has a Payments row (plain
   payments, mains counted like the other rows). It had none at first; the user
   asked for it on 2026-11-27. Ignoring counterparts and characters stays as

@@ -1058,4 +1058,6 @@ class Report:
                     "accounts": len(users),
                 }
             )
-        return tiles
+        # Alliances first, then Corporations, then the rest (Characters, parties the Network lost); the busiest first
+        order = {"alliance": 0, "corporation": 1}
+        return sorted(tiles, key=lambda tile: (order.get(tile["category"], 2), -tile["accounts"], tile["name"].casefold()))
