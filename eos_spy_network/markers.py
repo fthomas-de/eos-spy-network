@@ -18,11 +18,11 @@ from decimal import Decimal
 
 from django.apps import apps
 from django.db import connection
-from django.db.models import Q
+from django.db.models import F, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from allianceauth.authentication.models import CharacterOwnership, UserProfile
+from allianceauth.authentication.models import CharacterOwnership, OwnershipRecord, UserProfile
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from . import killmails
@@ -31,6 +31,7 @@ from .models import BlueKill, CapitalContractItem, SpyConfiguration
 
 MEMBERSHIP = "membership"
 CORP_CHANGES = "corp_changes"
+OWNER_CHANGES = "owner_changes"
 CONTACTS = "contacts"
 MAILS = "mails"
 WALLET = "wallet"
@@ -39,11 +40,12 @@ CAPITAL_CONTRACTS = "capital_contracts"
 BLUE_KILLS = "blue_kills"
 
 # in this order on the pages
-KINDS = (MEMBERSHIP, CORP_CHANGES, CONTACTS, MAILS, WALLET, CONTRACTS, CAPITAL_CONTRACTS, BLUE_KILLS)
+KINDS = (MEMBERSHIP, CORP_CHANGES, OWNER_CHANGES, CONTACTS, MAILS, WALLET, CONTRACTS, CAPITAL_CONTRACTS, BLUE_KILLS)
 
 LABELS = {
     MEMBERSHIP: _("Hostile membership"),
     CORP_CHANGES: _("Frequent Corporation changes"),
+    OWNER_CHANGES: _("Owner changes"),
     CONTACTS: _("Friendly to hostiles"),
     MAILS: _("Mails with hostiles"),
     WALLET: _("ISK with hostiles"),
@@ -55,6 +57,7 @@ LABELS = {
 DESCRIPTIONS = {
     MEMBERSHIP: _("A character is or was in a hostile Corporation or Alliance."),
     CORP_CHANGES: _("A character joined many Corporations within the last 365 days."),
+    OWNER_CHANGES: _("A character changed hands: Alliance Auth holds an earlier owner of it."),
     CONTACTS: _(
         "A character's own contacts hold a hostile with a positive standing."
     ),
@@ -133,6 +136,11 @@ class Marker:
     def joins(self) -> bool:
         """Corporation changes name the Corporations in a tooltip per character."""
         return self.kind == CORP_CHANGES and bool(self.rows)
+
+    @property
+    def owners(self) -> bool:
+        """Owner changes show one case per character with its earlier owners; the table is the Corporation changes'."""
+        return self.kind == OWNER_CHANGES and bool(self.rows)
 
     @property
     def kills(self) -> bool:
@@ -371,6 +379,9 @@ def corporation_tiles(
     if accounts:
         step("kills")
         _check_kills(accounts, config, members.characters, tenure)
+    # like the kills, no hostile needed: the earlier owner itself is the finding
+    if accounts:
+        _check_owner_changes(accounts, members.characters)
     # like the kills, no hostile needed: the contract itself is the finding
     if accounts:
         step("capitals")
@@ -513,6 +524,40 @@ def _check_history(accounts, index, config, owner, names, audits, since=None, cu
                     ],
                 }
             )
+
+
+def _check_owner_changes(accounts, characters):
+    """Characters that changed hands (user, 2026-11-27): Alliance Auth keeps an ``OwnershipRecord`` per owner hash
+    of a character, and a record whose hash is not the one it holds today is an earlier owner. Only the hash
+    counts: the same player moving the character to another Auth account keeps it. A record has no end, and
+    ``created`` is the day Auth first saw that owner, not when the character was sold.
+
+    shortcut: the whole history, whatever the time frame - ``created`` is ``auto_now``, no date to cut by; upgrade
+    when someone asks. A record goes with its user (cascade): an earlier owner's deleted account takes the finding.
+    """
+    owner = {character_id: user_id for user_id, character_id, *_rest in characters}
+    names = {character_id: name for _user_id, character_id, name, *_rest in characters}
+    # the hash of today is joined in, not read apart: the run reads the ownerships once
+    earlier = (
+        OwnershipRecord.objects.filter(character__character_id__in=list(owner))
+        .exclude(owner_hash=F("character__character_ownership__owner_hash"))
+        .values_list(
+            "pk", "character__character_id", "created", "user__profile__main_character__character_name",
+            "user__username",
+        )
+    )
+    for record_id, character_id, created, main_name, username in earlier:
+        suspect = accounts[owner[character_id]]
+        who = main_name or username
+        suspect.mark(OWNER_CHANGES, f"{names[character_id]}: {who}", character_id)
+        rows = suspect.markers[OWNER_CHANGES].rows
+        row = next((row for row in rows if row["character_id"] == character_id), None)
+        if row is None:
+            row = {"character": names[character_id], "character_id": character_id, "count": 0, "items": []}
+            rows.append(row)
+        row["count"] += 1
+        # [record ID, day Auth first saw the owner, the owner's main or user name]
+        row["items"].append([record_id, created.date().isoformat(), who])
 
 
 def _add_membership(suspect, index, group_id, character_id, name, item_id, day):

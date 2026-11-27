@@ -50,7 +50,10 @@ every one with a standing below a configurable value.
   The Corporation changes show a case per character: how many Corporations
   it joined within the year (the info button names each with the day) and
   the period, with note and tick; a join after the tick opens a new case
-  with every join of the year. Blue kills show a row per own character and
+  with every join of the year. The owner changes show a case per character:
+  the earlier owners Alliance Auth holds of it (the info button names each
+  with the day Auth first saw them) and the period, with note and tick; a
+  further earlier owner opens a new case. Blue kills show a row per own character and
   killmail: the day (linked to zKillboard), the victim, its Corporation and
   Alliance, the ship and the reason - *Awox* or *Blue* with the standing.
   Each row has a
@@ -79,6 +82,16 @@ every one with a standing below a configurable value.
     (`CorporationHistory`)
   - *Frequent Corporation changes*: a character joined as many Corporations
     within the last 365 days as configured (default 4)
+  - *Owner changes*: a character changed hands. Alliance Auth keeps an
+    `OwnershipRecord` per owner hash of a character; a record whose hash is
+    not the one the character holds today is an earlier owner (shown by the
+    main of its Auth account, else the user name). The same hash under another
+    Auth account does not count: that is the same player. The whole history
+    counts, whatever the time frame: a record's `created` is when Auth first
+    saw the owner, not when the character was sold. A record goes with its
+    user, so deleting an earlier owner's Auth account takes the finding with
+    it, and Auth knows nothing of owners from before it kept records. It needs
+    neither corptools nor a hostile
   - *Friendly to hostiles*: a character's own contacts hold a hostile with a
     positive standing (`CharacterContact`; 0 and below do not count)
   - *Mails with hostiles*: mails from or to hostiles, counted once per mail
@@ -261,7 +274,7 @@ every one with a standing below a configurable value.
   note and the tick of each row and who changed them last. *Friendly to
   hostiles*: every friendly hostile contact of the last calculation, the
   cleared ones too, per main, contact and standing, alike. *Hostile
-  membership*, *Frequent Corporation changes*, *Mails with hostiles*, *ISK with hostiles* and
+  membership*, *Frequent Corporation changes*, *Owner changes*, *Mails with hostiles*, *ISK with hostiles* and
   *Contracts with hostiles*: every case of the last
   calculation, the cleared ones too, alike. In all of them a user
   with `manage_settings` and `view_suspects` ticks a row off without a note.

@@ -30,6 +30,7 @@ from .markers import (
     LABELS,
     MAILS,
     MEMBERSHIP,
+    OWNER_CHANGES,
     WALLET,
     corptools_installed,
     million,
@@ -85,12 +86,13 @@ TAB_KILLS = "kills"
 TAB_CONTACTS = "contacts"
 TAB_MEMBERSHIP = "membership"
 TAB_CORP_CHANGES = "corp_changes"
+TAB_OWNER_CHANGES = "owner_changes"
 TAB_MAILS = "mails"
 TAB_WALLET = "wallet"
 TAB_CONTRACTS = "contracts"
 SETTINGS_TABS = (
-    TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS, TAB_KILLS, TAB_MEMBERSHIP, TAB_CORP_CHANGES, TAB_CONTACTS, TAB_MAILS,
-    TAB_WALLET, TAB_CONTRACTS,
+    TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS, TAB_KILLS, TAB_MEMBERSHIP, TAB_CORP_CHANGES, TAB_OWNER_CHANGES,
+    TAB_CONTACTS, TAB_MAILS, TAB_WALLET, TAB_CONTRACTS,
 )
 
 
@@ -321,7 +323,7 @@ def _log_rows(config, finding_rows: dict) -> list:
             return row["contact"]
         if kind == MEMBERSHIP:
             return row["group"]
-        if kind == CORP_CHANGES:
+        if kind in (CORP_CHANGES, OWNER_CHANGES):
             return f"{row['character']}: {row['count']}"
         return f"{row['character']} – {row['counterpart']}"
 
@@ -466,7 +468,7 @@ def _posted_note(request) -> tuple:
 
 
 # the markers whose findings take a note and a tick here; blue kills have kill_note
-REVIEWED_KINDS = (MEMBERSHIP, CORP_CHANGES, CONTACTS, MAILS, WALLET, CONTRACTS)
+REVIEWED_KINDS = (MEMBERSHIP, CORP_CHANGES, OWNER_CHANGES, CONTACTS, MAILS, WALLET, CONTRACTS)
 
 
 @any_permission_required(VIEW_SUSPECTS)
@@ -938,6 +940,7 @@ def settings(request):
             "contacts": _finding_rows(config, CONTACTS) if reviewer else [],
             "membership_rows": _finding_rows(config, MEMBERSHIP) if reviewer else [],
             "join_rows": _finding_rows(config, CORP_CHANGES) if reviewer else [],
+            "owner_rows": _finding_rows(config, OWNER_CHANGES) if reviewer else [],
             "mail_rows": _finding_rows(config, MAILS) if reviewer else [],
             "wallet_rows": _finding_rows(config, WALLET) if reviewer else [],
             "contract_rows": _finding_rows(config, CONTRACTS) if reviewer else [],

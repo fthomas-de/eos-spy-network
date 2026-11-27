@@ -60,6 +60,14 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link{% if tab == 'owner_changes' %} active{% endif %}" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-owner_changes"
+                        aria-controls="eos-spy-network-settings-owner_changes"
+                        aria-selected="{% if tab == 'owner_changes' %}true{% else %}false{% endif %}">
+                    {% translate "Owner changes" %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link{% if tab == 'contacts' %} active{% endif %}" type="button" role="tab"
                         data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-contacts"
                         aria-controls="eos-spy-network-settings-contacts"
@@ -355,6 +363,7 @@
             </div>
             {% include "eos_spy_network/partials/settings-membership.html" %}
             {% include "eos_spy_network/partials/settings-joins.html" %}
+            {% include "eos_spy_network/partials/settings-owners.html" %}
             {% include "eos_spy_network/partials/settings-dealings.html" with kind="mails" cases=mail_rows %}
             {% include "eos_spy_network/partials/settings-dealings.html" with kind="wallet" cases=wallet_rows %}
             {% include "eos_spy_network/partials/settings-dealings.html" with kind="contracts" cases=contract_rows %}

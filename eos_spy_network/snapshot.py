@@ -33,6 +33,7 @@ from .markers import (
     LABELS,
     MAILS,
     MEMBERSHIP,
+    OWNER_CHANGES,
     WALLET,
     CorporationTile,
     Marker,
@@ -54,7 +55,7 @@ NETWORK = "network"
 # the markers whose rows are cases of one own character with one counterpart, summed (user, 2026-11-27)
 DEALINGS = (WALLET, CONTRACTS, MAILS)
 # the markers reviewed per case, whose first tick fixes what the case holds
-CASES = (MEMBERSHIP, CORP_CHANGES, *DEALINGS)
+CASES = (MEMBERSHIP, CORP_CHANGES, OWNER_CHANGES, *DEALINGS)
 AFFILIATIONS = "affiliations"
 PHASE_LABELS = {MARKERS: _("Markers"), NETWORK: _("Network"), AFFILIATIONS: _("Affiliations")}
 CATEGORY_LABELS = {
@@ -599,6 +600,36 @@ def _membership_case(row: dict, key: str, cleared: bool, note: str, items: list)
     }
 
 
+def owner_rows(marker: dict, main_id: int, reviews: dict) -> list:
+    """The cases of a stored Owner changes marker: per character, its earlier owners, split as ``dealing_rows`` does -
+    one more owner than a cleared case held is a new case. Keys: "<character ID>:<number>"."""
+    cases = _reviewed_cases(marker["kind"], main_id, reviews)
+    rows = []
+    for row in marker.get("rows", []):
+        prefix = f"{row['character_id']}:"
+        rows += _split(row, prefix, cases.get(prefix, {}), _owner_case)
+    return _open_first(rows)
+
+
+def _owner_case(row: dict, key: str, cleared: bool, note: str, items: list) -> dict:
+    """One case of an Owner changes row: the character with the earlier owners in ``items`` alone."""
+    items = sorted(items, key=lambda item: item[1], reverse=True)
+    days = [item[1] for item in items]
+    return {
+        **row,
+        "key": key,
+        "cleared": cleared,
+        "note": note,
+        "items": items,
+        # each owner for the info button: the day Auth first saw them and their name
+        "entries": [(item[1], item[2], "0", "") for item in items],
+        "count": len(items),
+        "first": min(days),
+        "last": max(days),
+        "named_characters": [(row["character_id"], row["character"])],
+    }
+
+
 def join_rows(marker: dict, main_id: int, reviews: dict) -> list:
     """The cases of a stored Corporation changes marker: per character, its joins of the last 365 days.
 
@@ -697,7 +728,9 @@ def _case(row: dict, key: str, cleared: bool, note: str, items: list) -> dict:
 
 def case_rows(marker: dict, main_id: int, reviews: dict) -> list:
     """The cases of a stored marker of ``CASES``."""
-    rows = {MEMBERSHIP: membership_rows, CORP_CHANGES: join_rows}.get(marker["kind"], dealing_rows)
+    rows = {MEMBERSHIP: membership_rows, CORP_CHANGES: join_rows, OWNER_CHANGES: owner_rows}.get(
+        marker["kind"], dealing_rows
+    )
     return rows(marker, main_id, reviews)
 
 
@@ -725,6 +758,12 @@ def reviewed_cases(marker: dict, main_id: int, reviews: dict) -> dict | None:
         # as the calculation counts: every join of each character
         count = sum(row["count"] for row in open_rows)
         details = [f"{row['character']}: {row['count']}" for row in open_rows]
+    elif marker["kind"] == OWNER_CHANGES:
+        # as the calculation counts and names them: every earlier owner, "character: owner"
+        count = sum(row["count"] for row in open_rows)
+        details = sorted(
+            {f"{row['character']}: {item[2]}" for row in open_rows for item in row["items"]}, key=str.lower
+        )
     else:
         # an entry, contract or mail two own characters hold counts once, as in the calculation
         count = len({item[0] for row in open_rows for item in row["items"]})
@@ -744,6 +783,8 @@ def _finding(kind: str, row: dict) -> str:
         return row["group"]
     if kind == CORP_CHANGES:
         return str(row["count"])
+    if kind == OWNER_CHANGES:
+        return ", ".join(sorted({item[2] for item in row["items"]}, key=str.lower))
     return row["counterpart"]
 
 

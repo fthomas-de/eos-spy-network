@@ -871,7 +871,7 @@ class TestSettingsPage(SpyTestCase):
 
         self.assertContains(response, 'class="tab-pane fade show active" id="eos-spy-network-settings-markers"')
         self.assertContains(response, 'name="markers" value="membership" id="id_markers_0" checked>')
-        self.assertContains(response, 'name="markers" value="mails" id="id_markers_3">')
+        self.assertContains(response, 'name="markers" value="mails" id="id_markers_4">')
 
     def test_should_switch_markers_off_and_return_to_the_tab(self):
         configure()
@@ -887,7 +887,10 @@ class TestSettingsPage(SpyTestCase):
                 "min_kill_value": "0",
                 "corp_changes_per_year": "4",
                 "lookback_days": "365",
-                "markers": ["membership", "corp_changes", "mails", "wallet", "contracts", "capital_contracts", "blue_kills"],
+                "markers": [
+                    "membership", "corp_changes", "owner_changes", "mails", "wallet", "contracts", "capital_contracts",
+                    "blue_kills",
+                ],
                 "tab": "markers",
             },
         )

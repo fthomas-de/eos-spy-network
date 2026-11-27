@@ -113,6 +113,7 @@ class TestKinds(SpyTestCase):
             (
                 markers.MEMBERSHIP,
                 markers.CORP_CHANGES,
+                markers.OWNER_CHANGES,
                 markers.CONTACTS,
                 markers.MAILS,
                 markers.WALLET,

@@ -8,6 +8,8 @@ from corptools.models import CharacterAudit, CorporationHistory, MailMessage, Ma
 from django.urls import reverse
 from django.utils import timezone
 
+from allianceauth.authentication.models import OwnershipRecord
+
 from eos_spy_network import api, markers, snapshot
 from eos_spy_network.models import FindingReview, ReviewLog
 
@@ -509,3 +511,112 @@ class TestSettingsTabAndLog(DealingTestCase):
         response = self.client.get(reverse("eos_spy_network:log"))
 
         self.assertContains(response, f"{self.main.character_name} – Bad Corp")
+
+
+class OwnerTestCase(MarkerTestCase):
+    """An alt of the main that its earlier owner (``seller``) held under another owner hash."""
+
+    ALT = 5001
+
+    def setUp(self):
+        super().setUp()
+        self.alt = self.add_alt(self.ALT)
+        self.seller = make_user("seller")
+        self.record = OwnershipRecord.objects.create(user=self.seller, character=self.alt, owner_hash="seller-hash")
+        snapshot.update()
+        self.prefix = f"{self.ALT}:"
+
+    def report(self):
+        return snapshot.Report(snapshot.current(), (), {}, snapshot.finding_reviews(ALLIANCE_ID))
+
+    def report_marker(self):
+        suspects = self.report().tile(2001).suspects
+        suspect = next((suspect for suspect in suspects if suspect.user_id == self.user.pk), None)
+        return suspect.markers.get(markers.OWNER_CHANGES) if suspect else None
+
+    def cases(self):
+        return {row["key"]: row for row in self.report_marker().rows}
+
+    def post(self, **fields):
+        data = {"kind": markers.OWNER_CHANGES, "main_id": self.main.character_id, "key": f"{self.prefix}0"}
+        return self.client.post(reverse("eos_spy_network:finding_note"), {**data, **fields})
+
+    def clear(self):
+        self.client.force_login(make_user("viewer", VIEW_SUSPECTS))
+        self.post(note="Bought from a friend", cleared="1")
+
+
+class TestOwnerChanges(OwnerTestCase):
+    def test_should_show_a_character_with_an_earlier_owner_hash(self):
+        marker = self.report_marker()
+        (row,) = marker.rows
+
+        self.assertEqual((row["key"], row["count"], marker.count), (f"{self.prefix}0", 1, 1))
+        self.assertEqual(row["items"], [[self.record.pk, timezone.now().date().isoformat(), "seller main"]])
+        self.assertEqual(row["named_characters"], [(self.ALT, f"Char {self.ALT}")])
+        self.assertEqual(marker.character_ids, {self.ALT})
+        self.assertEqual(marker.details, {f"Char {self.ALT}: seller main"})
+
+    def test_should_not_show_a_character_that_only_moved_between_accounts_of_its_owner(self):
+        # the same hash under another Auth account: the same player, not a sale
+        OwnershipRecord.objects.filter(pk=self.record.pk).update(owner_hash=f"hash-{self.ALT}")
+        snapshot.update()
+
+        self.assertIsNone(self.report_marker())
+
+    def test_should_name_the_user_of_an_earlier_owner_without_a_main(self):
+        profile = self.seller.profile
+        profile.main_character = None
+        profile.save()
+        snapshot.update()
+
+        (row,) = self.report_marker().rows
+
+        self.assertEqual(row["items"][0][2], "seller")
+
+    def test_should_drop_the_marker_once_the_character_is_cleared(self):
+        self.clear()
+
+        self.assertEqual(FindingReview.objects.get(kind=markers.OWNER_CHANGES).items, [self.record.pk])
+        self.assertIsNone(self.report_marker())
+        self.assertNotIn(self.ALT, api.character_markers())
+        (cleared,) = self.report().tile(2001).cleared
+        self.assertEqual(
+            [(row["finding"], row["note"]) for row in cleared["rows"]], [("seller main", "Bought from a friend")]
+        )
+
+    def test_should_stay_cleared_while_no_further_owner_comes(self):
+        self.clear()
+        snapshot.update()
+
+        self.assertIsNone(self.report_marker())
+
+    def test_should_open_a_new_case_for_a_further_earlier_owner(self):
+        self.clear()
+        OwnershipRecord.objects.create(user=make_user("seller2"), character=self.alt, owner_hash="seller2-hash")
+        snapshot.update()
+
+        cases = self.cases()
+
+        self.assertEqual((cases[f"{self.prefix}1"]["count"], cases[f"{self.prefix}1"]["cleared"]), (1, False))
+        self.assertEqual((cases[f"{self.prefix}0"]["count"], cases[f"{self.prefix}0"]["cleared"]), (1, True))
+        self.assertEqual(self.report_marker().count, 1)
+        self.assertIn(markers.OWNER_CHANGES, api.character_markers()[self.ALT])
+
+    def test_should_show_the_case_on_the_corporation_page_and_in_its_settings_tab(self):
+        self.client.force_login(make_user("admin", MANAGE_SETTINGS, VIEW_SUSPECTS))
+
+        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
+
+        self.assertContains(response, f'data-eos-spy-network-kill-key="{self.prefix}0"')
+        self.assertContains(response, f'data-eos-spy-network-kill-kind="{markers.OWNER_CHANGES}"', count=2)
+        response = self.client.get(reverse("eos_spy_network:settings") + "?tab=owner_changes")
+        self.assertEqual(response.context["tab"], "owner_changes")
+        self.assertContains(response, 'id="eos-spy-network-settings-owner_changes"')
+        self.assertEqual([row["key"] for row in response.context["owner_rows"]], [f"{self.prefix}0"])
+
+    def test_should_name_the_case_in_the_log(self):
+        self.client.force_login(make_user("admin", MANAGE_SETTINGS, VIEW_SUSPECTS))
+        self.post(cleared="1")
+
+        self.assertContains(self.client.get(reverse("eos_spy_network:log")), f"Char {self.ALT}: 1")

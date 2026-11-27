@@ -5,7 +5,7 @@
         <span class="badge text-bg-info text-wrap" title="{{ marker.description }}">{{ marker.label }}{% if marker.count > 1 %} ({{ marker.count }}){% endif %}</span>
         {% if marker.memberships %}
             {% include "eos_spy_network/partials/membership.html" %}
-        {% elif marker.joins %}
+        {% elif marker.joins or marker.owners %}
             {% include "eos_spy_network/partials/corp-changes.html" %}
         {% elif marker.kills %}
             {# killmails are public on zKillboard: no evidence #}

@@ -1,0 +1,46 @@
+{% load i18n %}
+{# The settings tab of the owner changes: every case of the last calculation, the cleared ones too, for the admin to tick off. #}
+{# No Save button: kills.js saves each row on its own. #}
+<div class="tab-pane fade{% if tab == 'owner_changes' %} show active{% endif %}" id="eos-spy-network-settings-owner_changes" role="tabpanel">
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="small text-body-secondary">
+                {% translate "Every character of the last calculation with the earlier owners Alliance Auth holds of it, the cleared ones too. A cleared character no longer counts for the marker; a further earlier owner opens a new case." %}
+            </p>
+            {% if owner_rows %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped table-hover w-100 eos-spy-network-sortable">
+                        <thead>
+                            <tr>
+                                <th>{% translate "Main" context "EVE jargon" %}</th>
+                                <th>{% translate "Character" context "EVE jargon" %}</th>
+                                <th>{% translate "Count" %}</th>
+                                <th>{% translate "Period" %}</th>
+                                <th>{% translate "Cleared" context "eos-spy-network" %}</th>
+                                <th>{% translate "Note" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in owner_rows %}
+                                <tr{% if row.cleared %} class="opacity-50"{% endif %}>
+                                    <td class="text-break">{{ row.main_name }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=row.main_id %}</td>
+                                    <td class="text-break">{{ row.character }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=row.character_id %}</td>
+                                    <td class="text-nowrap" data-order="{{ row.count }}">{{ row.count }}{% include "eos_spy_network/partials/items-button.html" %}</td>
+                                    <td class="text-nowrap" data-order="{{ row.last }}">{% include "eos_spy_network/partials/period.html" with first=row.first last=row.last %}</td>
+                                    {% if row.reviewed_at %}
+                                        {% blocktranslate asvar reviewed with name=row.reviewed_by.profile.main_character.character_name|default:row.reviewed_by.username|default:"?" at=row.reviewed_at|date:"Y-m-d H:i" %}Last changed by {{ name }}, {{ at }}{% endblocktranslate %}
+                                    {% else %}
+                                        {% translate "Add a note" as reviewed %}
+                                    {% endif %}
+                                    {% include "eos_spy_network/partials/kill-note-button.html" with kind="owner_changes" main_id=row.main_id key=row.key character=row.character note=row.note cleared=row.cleared reviewed=reviewed %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="mb-0 text-body-secondary">{% translate "No case found." %}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>

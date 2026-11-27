@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-11-27
+
+### Added
+
+- Marker *Owner changes*: a character that changed hands. Alliance Auth keeps
+  an `OwnershipRecord` per owner hash of a character; a record whose hash is
+  not the one the character holds today is an earlier owner, shown by the
+  main of its Auth account (else the user name). Only the hash counts: the
+  same hash under another Auth account is the same player moving the
+  character, not a sale. The whole history counts, whatever the time frame -
+  a record's `created` is `auto_now`, the day Auth first saw the owner, no
+  date to cut by. A case is one character with its earlier owners, with a
+  note and a *Cleared* tick like the Corporation changes; a further earlier
+  owner after the tick opens a new case with that owner alone. It has a
+  settings tab, a row in the log and a place in `api.KINDS`, so eos-auth-monitor
+  shows it without a change. Limits: a record goes with its user (cascade), so
+  an earlier owner's deleted Auth account takes the finding with it, and Auth
+  knows nothing of owners from before it kept records. No migration; the
+  marker needs one recalculation to appear, and `collectstatic` is not needed.
+
 ## [0.1.7] - 2026-11-27
 
 ### Fixed

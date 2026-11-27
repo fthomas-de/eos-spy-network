@@ -104,6 +104,7 @@ TRANSLATIONS = {
         "Частая смена Corporation",
         "频繁更换 Corporation",
     ),
+    "Owner changes": ("Besitzerwechsel", "Смена владельца", "所有者变更"),
     "Friendly to hostiles": ("Freundlich zu Feinden", "Дружелюбен к врагам", "对敌对方友好"),
     "Mails with hostiles": ("Mails mit Feinden", "Почта с врагами", "与敌对方的邮件"),
     "ISK with hostiles": ("ISK mit Feinden", "ISK с врагами", "与敌对方的 ISK"),
@@ -117,6 +118,11 @@ TRANSLATIONS = {
         "Ein Character ist in den letzten 365 Tagen vielen Corporations beigetreten.",
         "Character вступил во многие Corporation за последние 365 дней.",
         "某个 Character 在过去 365 天内加入了许多 Corporation。",
+    ),
+    "A character changed hands: Alliance Auth holds an earlier owner of it.": (
+        "Ein Character hat den Besitzer gewechselt: Alliance Auth kennt einen früheren Besitzer.",
+        "Character сменил владельца: Alliance Auth знает о прежнем владельце.",
+        "某个 Character 易主：Alliance Auth 记录有其先前的所有者。",
     ),
     "A character's own contacts hold a hostile with a positive standing.": (
         "Die eigenen Kontakte eines Characters führen einen Feind mit positivem Standing.",
@@ -651,6 +657,17 @@ TRANSLATIONS = {
         "Character больше не учитывается в маркере; новое вступление снова открывает его со всеми вступлениями.",
         "上次计算中的每个 Character 及其最近 365 天内的加入记录，包括已澄清的。已澄清的 Character 不再计入该标记；"
         "新的加入会使其重新打开，并包含所有加入记录。",
+    ),
+    "Every character of the last calculation with the earlier owners Alliance Auth holds of it, the cleared ones "
+    "too. A cleared character no longer counts for the marker; a further earlier owner opens a new case.": (
+        "Jeder Character der letzten Berechnung mit den früheren Besitzern, die Alliance Auth von ihm kennt, auch die "
+        "geklärten. Ein geklärter Character zählt nicht mehr für den Marker; ein weiterer früherer Besitzer öffnet "
+        "einen neuen Fall.",
+        "Каждый Character из последнего расчёта с прежними владельцами, о которых знает Alliance Auth, включая "
+        "улаженные. Улаженный Character больше не учитывается в маркере; ещё один прежний владелец открывает новый "
+        "случай.",
+        "上次计算中的每个 Character 及 Alliance Auth 所记录的其先前所有者，包括已澄清的。已澄清的 Character 不再计入该标记；"
+        "出现新的先前所有者即为新案例。",
     ),
     "Log": ("Protokoll", "Журнал", "日志"),
     "Changed by": ("Geändert von", "Изменил", "修改人"),
