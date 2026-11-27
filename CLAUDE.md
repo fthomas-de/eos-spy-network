@@ -41,6 +41,8 @@ Auth's console logging adds, nothing else - a real traceback, `WARNING` or
 `--parallel`: with `--keepdb` it saves little, does not migrate its clone
 databases and hangs on a failing subtest. After regenerating an unreleased
 migration, the kept test database still has the old one: run `--fresh` once.
+An `IntegrityError` "Duplicate entry" in the `setUp` of untouched tests after
+mutation runs is a leftover in the kept database, not a fault: `--fresh`.
 
 Standalone, without the dev instance, from the repo root (sqlite of its own):
 

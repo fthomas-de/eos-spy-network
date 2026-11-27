@@ -11,11 +11,13 @@ one section), not at session start.
 
 ## State
 
-- Version: `0.1.5`, 2026-11-26 (tag `v0.1.5`).
-- Not deployed yet: `0.1.5` (the user deploys every release right away, so
-  probably done soon). Prod steps: migration 0025, `collectstatic`
-  (`ignore.js`), one recalculation - until then the new payment buttons and
-  the held standings in the marker tables do not show.
+- Version: `0.1.6`, 2026-11-27 (tag `v0.1.6`).
+- Possibly not deployed yet (the user deploys every release right away):
+  - `0.1.5`: migration 0025, `collectstatic` (`ignore.js`), one
+    recalculation.
+  - `0.1.6`: migration 0026, `collectstatic` (`items.js`, `items.css`), one
+    recalculation - until then membership, Corporation changes, mails, ISK
+    and contracts show no tick (the snapshot holds no items yet).
 - What the app does today: from the contacts of the Alliance and its
   Corporations it builds a hostile list and checks every account with a
   character in the Alliance against it - markers per main (membership,
@@ -23,14 +25,17 @@ one section), not at session start.
   kills, capital ships in public contracts) and a Network of ISK and contract
   links to hostile (optionally neutral) partners, scored by points. A Celery
   task stores the result as a snapshot; the pages read only that, and
-  eos-auth-monitor reads the markers through `api.py`.
+  eos-auth-monitor reads the markers through `api.py`. Every marker but
+  *Capital in contract* takes a note and a *Cleared* tick per case; the
+  cleared ones are folded below the open ones.
 
 ## Open
 
+- Not seen in a browser (SSO, and `aa_dev` lacks the data): the info
+  button's popover (`items.js`, scrolls when long), the folded *Cleared*
+  rows and the day rows of the new case tables. Only rendered in tests.
 - Possible next steps the user may want:
-  - Note and *Cleared* for the remaining markers: Membership, Corporation
-    changes, Mails/ISK/Contracts (mails need rows). Large; offered to the
-    user for a fresh session, no answer yet (build, keep open or drop).
+  - A filter, should the folded *Cleared* lists grow too long (user's word).
   - Capital: structure names (need a token with docking rights); a contract
     of a character no account owns is not shown; Reward and Collateral show
     0 ISK for a capital contract, and its popup says "corptools has not
@@ -40,32 +45,39 @@ one section), not at session start.
     systems), owner changes, audit gaps as a data gap.
 - Not decided, left as built: a `BlueKill` copy is never deleted (few rows,
   the time frame hides old ones; after a change of the Alliance the old
-  copies stay unused); the settings tabs stay flat (no grouping per main).
+  copies stay unused); the settings tabs stay flat (no grouping per main,
+  cleared rows greyed in place, not folded).
 - Known quirks, left as is: a contact hostile only through its group shows
   the same standing twice when the Alliance is the source (reference, and the
-  held badge of its Corporation or Alliance cell) and still reads "Name (Corp)" next to the Corporation
-  column.
+  held badge of its Corporation or Alliance cell) and still reads "Name
+  (Corp)" next to the Corporation column. A case of ISK/mails ticked off
+  again keeps its fixed items, so new entries make a second open case beside
+  it.
 
 ## Dev instance
 
 - Installed editable, in `INSTALLED_APPS` of `myauth/settings/local.py`;
-  migrations up to 0025 applied, `collectstatic` current, snapshot rebuilt
-  2026-11-25 with 0.1.4 (recalculate to see the 0.1.5 changes).
+  migrations up to 0026 applied, `collectstatic` current, snapshot rebuilt
+  2026-11-25 with 0.1.4 (recalculate to see the 0.1.5 and 0.1.6 changes).
 - `local.py` has a `## eos spy network` block with the sweep's beat entry.
   The periodic task row `contacts` (id 7) is disabled; the hourly
   `CELERYBEAT_SCHEDULE` entry in `local.py` is the one to keep. A Celery
-  worker runs (`-P solo`), no beat: no periodic task fires on its own.
+  worker runs (`-P solo`), no beat: no periodic task fires on its own. Since
+  2026-11-27 it runs in the background (`setsid nohup`, started from
+  `myauth`), its log in `~/aa-dev/celery-worker.log`; before, it ran in a
+  terminal.
 - aa-contacts holds tokens for Invidia Gloriae Comes (99003995) and Ether
   Element (98633815).
-- `aa_dev` has no hostile Network partner, no ISK, contract or contacts
+- `aa_dev` has no hostile Network partner, no ISK, contract, mail or contacts
   marker and no capital contract of the Alliance: those pages and popups
   were only rendered in tests. Seeding corptools rows for them (journal,
-  `Contract`, `CharacterContact`) needs the user's yes (foreign tables).
+  `Contract`, `CharacterContact`, mails) needs the user's yes (foreign
+  tables).
 - Held data: 7 `CapitalContract` rows and the `SweepStats` row of the
   2026-11-20 hand run (no capital among them); 1 `CorporationAlliances` row;
   4 `BlueKill` rows with fake killmail IDs 99000000101-103 (Ether Element,
   test seed of unknown origin, never pruned); killtracker itself stores
-  none (no beat).
+  none (no beat). No `FindingReview` rows of the new kinds yet.
 - The configured Alliance holds 30 Corporations `T000`-`T029` without mains,
   apparently another app's leftover seed: ask before removing anything.
 - `auth_permission` still has the stale `view_evidence` row; untouched.
