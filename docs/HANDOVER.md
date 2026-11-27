@@ -11,8 +11,11 @@ one section), not at session start.
 
 ## State
 
-- Version: `0.1.8`, 2026-11-27 (tag `v0.1.8`): marker *Owner changes*.
+- Version: `0.1.10`, 2026-11-27 (tag `v0.1.10`): the Highlights tiles are
+  sorted (Alliance, Corporation, Character; most mains first).
 - Possibly not deployed yet (the user deploys every release right away):
+  - `0.1.10`, `0.1.9` (Payments row on the Corporation tile): no migration,
+    no `collectstatic`, no recalculation.
   - `0.1.8`: no migration, no `collectstatic`, one recalculation - until
     then the marker does not show.
   - `0.1.7`: no prod steps (403 instead of the login page).
