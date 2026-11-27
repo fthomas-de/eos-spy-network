@@ -147,7 +147,10 @@ section.
   for exactly that party (by ID, the name only in the box). Highlights do not
   score. Highlights beyond the Network:
   decided against for now.
-- The Corporation tile on the Network page has no Payments row.
+- The Corporation tile on the Network page has a Payments row (plain
+  payments, mains counted like the other rows). It had none at first; the user
+  asked for it on 2026-11-27. Ignoring counterparts and characters stays as
+  it was: it filters the links before any count.
 - Left as is: a counterpart only ESI knows shows as its ID, so the search
   cannot find it by name.
 

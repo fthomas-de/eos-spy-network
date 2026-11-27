@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-11-27
+
+### Added
+
+- The Corporation tile on the Network page shows a *Payments* row, as the
+  Corporation page already did: the Network page named the shared partner,
+  player trading and private contracts but left out the plain payments, so a
+  tile and its page disagreed. It counts the mains with a plain payment (no
+  trade) and reads the same links as the page, so ignored counterparts and
+  characters stay out of it. No migration, no `collectstatic`.
+
 ## [0.1.8] - 2026-11-27
 
 ### Added

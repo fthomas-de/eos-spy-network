@@ -523,6 +523,18 @@ class TestHostileChain(NetworkTestCase):
 
         self.assertEqual(tile.hostile_count, 1)
 
+    def test_should_count_a_plain_payment_on_the_tile(self):
+        self.pay(self.main, OUTSIDER)
+
+        tile = snapshot.Report(snapshot.update()).network_tile(2001)
+
+        self.assertEqual(tile.paying_count, 1)
+
+    def test_should_not_count_a_trade_alone_as_a_payment_on_the_tile(self):
+        tile = snapshot.Report(snapshot.update()).network_tile(2001)
+
+        self.assertEqual(tile.paying_count, 0)
+
     def test_should_drop_a_partner_in_a_neutral_corporation(self):
         self.esi_affiliations.return_value = {OUTSIDER: (4001, None)}
 

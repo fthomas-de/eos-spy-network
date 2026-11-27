@@ -77,6 +77,12 @@
                                             <span class="small text-body-secondary ms-auto text-nowrap">{% translate "Mains" context "eos-spy-network" %}: {{ tile.shared_count }}</span>
                                         </li>
                                     {% endif %}
+                                    {% if tile.paying_count %}
+                                        <li class="list-group-item d-flex align-items-center gap-2 px-0">
+                                            <span class="badge text-bg-secondary text-wrap">{% translate "Payments" %}</span>
+                                            <span class="small text-body-secondary ms-auto text-nowrap">{% translate "Mains" context "eos-spy-network" %}: {{ tile.paying_count }}</span>
+                                        </li>
+                                    {% endif %}
                                     {% if tile.trading_count %}
                                         <li class="list-group-item d-flex align-items-center gap-2 px-0">
                                             <span class="badge text-bg-info text-wrap" title="{% translate 'Player trading with characters outside the Alliance.' %}">{% translate "Player trading" %}</span>

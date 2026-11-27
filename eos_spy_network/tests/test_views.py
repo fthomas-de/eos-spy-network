@@ -462,6 +462,36 @@ class TestNetworkPages(SuspectPageTestCase):
         self.assertContains(response, reverse("eos_spy_network:network_corporation", args=[2001]))
         self.assertContains(response, "Player trading")
 
+    def test_should_show_a_payments_row_on_the_tile(self):
+        from corptools.models import CharacterAudit, CharacterWalletJournalEntry, EveName
+
+        # a second partner: the first one's link is a trade, which is no plain payment
+        donee = self.OUTSIDER + 1
+        EveName.objects.create(eve_id=donee, name="Donee", category="character")
+        add_contact(ContactSource.ALLIANCE, ALLIANCE_ID, donee, -10, contact_type="character")
+        main = EveCharacter.objects.get(pk=self.suspect_main.pk)
+        CharacterWalletJournalEntry.objects.create(
+            character=CharacterAudit.objects.get(character=main),
+            entry_id=2,
+            date=timezone.now(),
+            description="",
+            ref_type="player_donation",
+            first_party_id=main.character_id,
+            second_party_id=donee,
+            amount=-1000,
+            balance=0,
+        )
+        snapshot.update()
+
+        response = self.client.get(reverse("eos_spy_network:network"))
+
+        self.assertContains(response, 'text-bg-secondary text-wrap">Payments</span>')
+
+    def test_should_not_show_a_payments_row_without_a_plain_payment(self):
+        response = self.client.get(reverse("eos_spy_network:network"))
+
+        self.assertNotContains(response, 'text-bg-secondary text-wrap">Payments</span>')
+
     def test_should_offer_to_hide_corporations_without_connections(self):
         make_corporation(2002)
         snapshot.update()

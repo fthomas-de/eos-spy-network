@@ -101,6 +101,10 @@ class NetworkTile:
         return sum(1 for account in self.accounts if account.shared)
 
     @property
+    def paying_count(self) -> int:
+        return sum(1 for account in self.accounts if account.paying)
+
+    @property
     def trading_count(self) -> int:
         return sum(1 for account in self.accounts if account.trading)
 
