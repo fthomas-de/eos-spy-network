@@ -44,11 +44,51 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link{% if tab == 'membership' %} active{% endif %}" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-membership"
+                        aria-controls="eos-spy-network-settings-membership"
+                        aria-selected="{% if tab == 'membership' %}true{% else %}false{% endif %}">
+                    {% translate "Hostile membership" %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link{% if tab == 'corp_changes' %} active{% endif %}" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-corp_changes"
+                        aria-controls="eos-spy-network-settings-corp_changes"
+                        aria-selected="{% if tab == 'corp_changes' %}true{% else %}false{% endif %}">
+                    {% translate "Frequent Corporation changes" %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link{% if tab == 'contacts' %} active{% endif %}" type="button" role="tab"
                         data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-contacts"
                         aria-controls="eos-spy-network-settings-contacts"
                         aria-selected="{% if tab == 'contacts' %}true{% else %}false{% endif %}">
                     {% translate "Friendly to hostiles" %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link{% if tab == 'mails' %} active{% endif %}" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-mails"
+                        aria-controls="eos-spy-network-settings-mails"
+                        aria-selected="{% if tab == 'mails' %}true{% else %}false{% endif %}">
+                    {% translate "Mails with hostiles" %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link{% if tab == 'wallet' %} active{% endif %}" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-wallet"
+                        aria-controls="eos-spy-network-settings-wallet"
+                        aria-selected="{% if tab == 'wallet' %}true{% else %}false{% endif %}">
+                    {% translate "ISK with hostiles" %}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link{% if tab == 'contracts' %} active{% endif %}" type="button" role="tab"
+                        data-bs-toggle="tab" data-bs-target="#eos-spy-network-settings-contracts"
+                        aria-controls="eos-spy-network-settings-contracts"
+                        aria-selected="{% if tab == 'contracts' %}true{% else %}false{% endif %}">
+                    {% translate "Contracts with hostiles" %}
                 </button>
             </li>
             {% endif %}
@@ -313,6 +353,11 @@
                     </div>
                 </div>
             </div>
+            {% include "eos_spy_network/partials/settings-membership.html" %}
+            {% include "eos_spy_network/partials/settings-joins.html" %}
+            {% include "eos_spy_network/partials/settings-dealings.html" with kind="mails" cases=mail_rows %}
+            {% include "eos_spy_network/partials/settings-dealings.html" with kind="wallet" cases=wallet_rows %}
+            {% include "eos_spy_network/partials/settings-dealings.html" with kind="contracts" cases=contract_rows %}
             {% endif %}
         </div>
     </form>
@@ -324,10 +369,12 @@
 {% block extra_css %}
     {{ block.super }}
     {% include "eos_spy_network/bundles/tom-select-css.html" %}
+    {% sri_static "eos_spy_network/css/items.css" %}
 {% endblock %}
 
 {% block extra_javascript %}
     {{ block.super }}
     {% include "eos_spy_network/bundles/tom-select-js.html" %}
     {% sri_static "eos_spy_network/js/kills.js" %}
+    {% sri_static "eos_spy_network/js/items.js" %}
 {% endblock %}

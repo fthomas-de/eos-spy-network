@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-11-27
+
+### Added
+
+- Markers *Mails with hostiles*, *ISK with hostiles* and *Contracts with
+  hostiles*: a note and a *Cleared* tick per case, as the blue kills and
+  contacts had - before, a checked trade or mail kept marking the account
+  forever. A case is one own character with one counterpart, summed; an info
+  button shows each journal entry, contract or mail of it (a mail with its
+  direction and subject, never its text). Mails had no table before, only
+  the counterparts' names; they now have one like ISK, without an ISK
+  column and without the ignore button (mails keep an ignored counterpart).
+  The first tick fixes the entries the case holds:
+  whatever comes after - also an entry corptools fetches late with an older
+  date, which a split by time would have hidden - is a new open case. On the
+  Corporation page the open cases stand under a row per date of their last
+  interaction, to clear a whole day at once; each marker has a settings tab,
+  and the log names the case. Needs migration 0026, `collectstatic` and one
+  recalculation: an older snapshot holds no entries and shows no tick.
+- Marker *Hostile membership*: a note and a *Cleared* tick per hostile
+  group of an account, in a table instead of a list of names, each
+  membership (character, day joined) behind the info button. A tick fixes
+  the memberships it saw; a character joining the group again, or one newly
+  added to the account who is or was in it, is a new case - leaving it is
+  not. A membership only Auth knows (no Character Audit) becomes a new case
+  once, when corptools' history names it.
+- Marker *Frequent Corporation changes*: a note and a *Cleared* tick per
+  character, in a table instead of the tooltip, the Corporations joined
+  behind the info button. A tick fixes the joins it saw; a later join opens
+  the character again as a new case with every join of the last 365 days -
+  the number is the finding, not the one join.
+
+### Changed
+
+- Corporation page: the cleared findings of every marker with a tick no longer
+  stand greyed between the open ones but folded below them, under one
+  *Cleared* row per marker (user, 2026-11-27). A day row of the blue kills is
+  only shown while one of its kills is open.
+
 ## [0.1.5] - 2026-11-26
 
 ### Added

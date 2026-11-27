@@ -25,8 +25,11 @@ from .markers import (
     CAPITAL_CONTRACTS,
     CONTACTS,
     CONTRACTS,
+    CORP_CHANGES,
     KINDS,
     LABELS,
+    MAILS,
+    MEMBERSHIP,
     WALLET,
     corptools_installed,
     million,
@@ -80,7 +83,15 @@ TAB_SOURCES = "sources"
 TAB_MARKERS = "markers"
 TAB_KILLS = "kills"
 TAB_CONTACTS = "contacts"
-SETTINGS_TABS = (TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS, TAB_KILLS, TAB_CONTACTS)
+TAB_MEMBERSHIP = "membership"
+TAB_CORP_CHANGES = "corp_changes"
+TAB_MAILS = "mails"
+TAB_WALLET = "wallet"
+TAB_CONTRACTS = "contracts"
+SETTINGS_TABS = (
+    TAB_ALLIANCE, TAB_SOURCES, TAB_MARKERS, TAB_KILLS, TAB_MEMBERSHIP, TAB_CORP_CHANGES, TAB_CONTACTS, TAB_MAILS,
+    TAB_WALLET, TAB_CONTRACTS,
+)
 
 
 def _render(request, template, context=None, nav=None, started=None):
@@ -146,7 +157,7 @@ def _report(config) -> snapshots.Report | None:
         return None
     disabled = config.disabled_markers or ()
     reviews = {} if BLUE_KILLS in disabled else snapshots.kill_reviews(config.alliance.alliance_id)
-    findings = {} if CONTACTS in disabled else snapshots.finding_reviews(config.alliance.alliance_id)
+    findings = snapshots.finding_reviews(config.alliance.alliance_id)
     highlights = {int(eve_id) for eve_id in config.highlight_counterparts or ()}
     return snapshots.Report(current, disabled, reviews, findings, highlights)
 
@@ -232,17 +243,22 @@ def _kill_rows(config) -> list:
     return rows
 
 
-def _contact_rows(config) -> list:
-    """Every friendly hostile contact of the stored result, the cleared ones too: one row per main, contact and standing."""
+def _finding_rows(config, kind) -> list:
+    """Every finding of a reviewed marker (contacts, ISK, contracts) in the stored result, the cleared ones too,
+    with the main and who changed it last: a contact per main and standing, ISK and contracts per case."""
     current = _snapshot(config)
     if current is None:
         return []
     reviews = {
         (review.main_id, review.key): review
         for review in FindingReview.objects.filter(
-            alliance_id=config.alliance.alliance_id, kind=CONTACTS
+            alliance_id=config.alliance.alliance_id, kind=kind
         ).select_related("reviewed_by__profile__main_character")
     }
+    findings = {
+        (kind, main_id, key): (review.cleared, review.note, review.items) for (main_id, key), review in reviews.items()
+    }
+    cases = snapshots.contact_rows if kind == CONTACTS else snapshots.case_rows
     rows = []
     # a visitor whose main is in the Alliance is a suspect of its main's Corporation as well: list it once
     seen = set()
@@ -251,20 +267,17 @@ def _contact_rows(config) -> list:
             if suspect["main_id"] in seen:
                 continue
             seen.add(suspect["main_id"])
-            for marker in (marker for marker in suspect["markers"] if marker["kind"] == CONTACTS):
-                # a snapshot of 0.0.15 or older has no rows to review until the next run
-                for row in marker.get("rows", []):
-                    key = snapshots.contact_key(row)
-                    review = reviews.get((suspect["main_id"], key))
+            for marker in (marker for marker in suspect["markers"] if marker["kind"] == kind):
+                for row in cases(marker, suspect["main_id"], findings):
+                    if "key" not in row:
+                        # a snapshot older than the reviews of this marker: nothing to tick until the next run
+                        continue
+                    review = reviews.get((suspect["main_id"], row["key"]))
                     rows.append(
                         {
                             **row,
                             "main_id": suspect["main_id"],
                             "main_name": suspect["main_name"],
-                            "key": key,
-                            "named_characters": list(zip(row["character_ids"], row["characters"])),
-                            "cleared": review.cleared if review else False,
-                            "note": review.note if review else "",
                             "reviewed_at": review.reviewed_at if review else None,
                             "reviewed_by": review.reviewed_by if review else None,
                         }
@@ -272,7 +285,7 @@ def _contact_rows(config) -> list:
     return rows
 
 
-def _log_rows(config, contact_rows) -> list:
+def _log_rows(config, finding_rows: dict) -> list:
     """Every saved note and tick of the configured Alliance, the latest first."""
     if not config.alliance:
         return []
@@ -301,8 +314,20 @@ def _log_rows(config, contact_rows) -> list:
             killmail_id__in=[int(entry.key) for entry in entries if entry.kind == BLUE_KILLS],
         ).values_list("killmail_id", "victim")
     )
-    # a contact gone from the last calculation keeps its key "<contact ID>:<standing>"
-    contacts_by_key = {(row["main_id"], row["key"]): row["contact"] for row in contact_rows}
+    # a finding gone from the last calculation keeps its key: "<contact ID>:<standing>" or
+    # "<character ID>:<counterpart ID>:<case>"
+    def finding(kind, row):
+        if kind == CONTACTS:
+            return row["contact"]
+        if kind == MEMBERSHIP:
+            return row["group"]
+        if kind == CORP_CHANGES:
+            return f"{row['character']}: {row['count']}"
+        return f"{row['character']} – {row['counterpart']}"
+
+    findings_by_key = {
+        (kind, row["main_id"], row["key"]): finding(kind, row) for kind, rows in finding_rows.items() for row in rows
+    }
     for entry in entries:
         entry.label = LABELS.get(entry.kind, entry.kind)
         if entry.kind == IGNORED_COUNTERPARTS:
@@ -319,7 +344,7 @@ def _log_rows(config, contact_rows) -> list:
             entry.finding = victims.get(entry.killmail_id) or entry.key
         else:
             entry.main_id = entry.character_id
-            entry.finding = contacts_by_key.get((entry.character_id, entry.key), entry.key)
+            entry.finding = findings_by_key.get((entry.kind, entry.character_id, entry.key), entry.key)
         entry.main_name = names.get(entry.main_id) or str(entry.main_id)
         # the reviewer's own account: allowed (user, 2026-11-12), but the reader should see it at a glance
         # shortcut: ownership of today, not of the save; store it on ReviewLog if characters change hands often
@@ -441,50 +466,69 @@ def _posted_note(request) -> tuple:
 
 
 # the markers whose findings take a note and a tick here; blue kills have kill_note
-REVIEWED_KINDS = (CONTACTS,)
+REVIEWED_KINDS = (MEMBERSHIP, CORP_CHANGES, CONTACTS, MAILS, WALLET, CONTRACTS)
 
 
 @any_permission_required(VIEW_SUSPECTS)
 @require_POST
 def finding_note(request):
-    """Stores the note and the cleared tick of one finding of a main."""
+    """Stores the note and the cleared tick of one finding of a main (``key``), or of every open case of ISK or
+    contracts whose last interaction was on one ``date``, as the Corporation page groups them."""
     config = SpyConfiguration.get_solo()
     if not config.alliance:
         raise Http404
     kind = request.POST.get("kind", "")
     key = request.POST.get("key", "")
-    if kind not in REVIEWED_KINDS or not key or len(key) > FindingReview._meta.get_field("key").max_length:
+    if kind not in REVIEWED_KINDS or len(key) > FindingReview._meta.get_field("key").max_length:
         return HttpResponseBadRequest("unknown finding")
     try:
         main_id = int(request.POST.get("main_id", ""))
-    except ValueError:
-        return HttpResponseBadRequest("main_id must be a number")
-    # only a finding the pages show: a review ahead of its finding would clear it unseen
-    if not any(row["main_id"] == main_id and row["key"] == key for row in _contact_rows(config)):
+        day = date.fromisoformat(request.POST["date"]).isoformat() if not key else ""
+    except (KeyError, ValueError):
+        return HttpResponseBadRequest("main_id must be a number, and a key or a date given")
+    rows = [row for row in _finding_rows(config, kind) if row["main_id"] == main_id]
+    # only a finding the pages show: a review ahead of its finding would clear it unseen; of a day only the
+    # open ones (user, 2026-11-13): a cleared one keeps its note
+    rows = [row for row in rows if row["key"] == key] if key else [
+        row for row in rows if row.get("last") == day and not row["cleared"]
+    ]
+    if not rows:
         raise Http404
     text, cleared, refused = _posted_note(request)
     if refused:
         return refused
-    finding = {"alliance_id": config.alliance.alliance_id, "kind": kind, "key": key}
+    stored = 0
     with transaction.atomic():
-        previous = FindingReview.objects.select_for_update().filter(main_id=main_id, **finding).first()
         now = timezone.now()
-        FindingReview.objects.update_or_create(
-            main_id=main_id,
-            **finding,
-            defaults={"note": text, "cleared": cleared, "reviewed_at": now, "reviewed_by": request.user},
-        )
-        ReviewLog.objects.create(
-            character_id=main_id,
-            **finding,
-            cleared=cleared,
-            note=text,
-            previous_cleared=previous.cleared if previous else None,
-            previous_note=previous.note if previous else "",
-            changed_at=now,
-            changed_by=request.user,
-        )
-    return JsonResponse({"note": text, "cleared": cleared})
+        for row in rows:
+            finding = {"alliance_id": config.alliance.alliance_id, "kind": kind, "key": row["key"]}
+            previous = FindingReview.objects.select_for_update().filter(main_id=main_id, **finding).first()
+            if day and previous and previous.cleared:
+                # cleared by someone else since the page was read: theirs stays
+                continue
+            items = previous.items if previous else []
+            if cleared and not items:
+                # the first tick fixes the case: what it holds now stays its own, anything later is a new case
+                items = [item[0] for item in row.get("items", [])]
+            FindingReview.objects.update_or_create(
+                main_id=main_id,
+                **finding,
+                defaults={
+                    "note": text, "cleared": cleared, "reviewed_at": now, "reviewed_by": request.user, "items": items,
+                },
+            )
+            ReviewLog.objects.create(
+                character_id=main_id,
+                **finding,
+                cleared=cleared,
+                note=text,
+                previous_cleared=previous.cleared if previous else None,
+                previous_note=previous.note if previous else "",
+                changed_at=now,
+                changed_by=request.user,
+            )
+            stored += 1
+    return JsonResponse({"note": text, "cleared": cleared, **({"count": stored} if day else {})})
 
 
 def _killmails_missing(config) -> str:
@@ -891,7 +935,12 @@ def settings(request):
             "form": form,
             "rows": rows,
             "kills": _kill_rows(config) if reviewer else [],
-            "contacts": _contact_rows(config) if reviewer else [],
+            "contacts": _finding_rows(config, CONTACTS) if reviewer else [],
+            "membership_rows": _finding_rows(config, MEMBERSHIP) if reviewer else [],
+            "join_rows": _finding_rows(config, CORP_CHANGES) if reviewer else [],
+            "mail_rows": _finding_rows(config, MAILS) if reviewer else [],
+            "wallet_rows": _finding_rows(config, WALLET) if reviewer else [],
+            "contract_rows": _finding_rows(config, CONTRACTS) if reviewer else [],
             "note_length": KILL_NOTE_LENGTH,
             "note_presets": config.note_presets,
             "tab": tab if tab in tabs else TAB_ALLIANCE,
@@ -904,7 +953,8 @@ def settings(request):
 @all_permissions_required(MANAGE_SETTINGS, VIEW_SUSPECTS)
 def log(request):
     config = SpyConfiguration.get_solo()
-    return _render(request, "eos_spy_network/log.html", {"log": _log_rows(config, _contact_rows(config))}, NAV_LOG)
+    findings = {kind: _finding_rows(config, kind) for kind in REVIEWED_KINDS}
+    return _render(request, "eos_spy_network/log.html", {"log": _log_rows(config, findings)}, NAV_LOG)
 
 
 @all_permissions_required(MANAGE_SETTINGS, VIEW_SUSPECTS)

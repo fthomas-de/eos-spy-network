@@ -179,12 +179,12 @@ class TestKillNote(ReviewTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(BlueKill.objects.get(killmail_id=1).cleared)
 
-    def test_should_show_a_cleared_kill_greyed_on_the_corporation_page(self):
+    def test_should_show_a_cleared_kill_folded_on_the_corporation_page(self):
         self.post(note="Fleet fight", cleared="1")
 
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
-        self.assertContains(response, 'class="opacity-50 collapse eos-spy-network-day-', count=1)
+        self.assertContains(response, 'class="opacity-50 collapse eos-spy-network-cleared-', count=1)
         self.assertContains(response, "Fleet fight")
         self.assertContains(response, 'data-eos-spy-network-kill-reload')
 
@@ -542,24 +542,18 @@ class TestDayNote(ReviewTestCase):
         self.assertContains(response, f'data-eos-spy-network-kill-day="{self.day_before}"', count=1)
         self.assertEqual([row["day_open"] for row in self.report_marker().rows], [2, 2, 1])
 
-    def test_should_lock_a_day_whose_kills_are_all_cleared(self):
+    def test_should_fold_the_cleared_kills_under_the_open_ones(self):
+        # the user's rule (2026-11-27): no day row for a day with nothing open; its kill waits folded below
         self.review(1, note="Agreed")
 
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
+        folded = f"eos-spy-network-cleared-{self.main.character_id}-{markers.BLUE_KILLS}"
         self.assertNotContains(response, f'data-eos-spy-network-kill-day="{self.day_before}"')
-        self.assertRegex(response.content.decode(), r"checked\s+disabled>")
-    def test_should_fold_a_day_whose_kills_are_all_cleared(self):
-        self.review(1, note="Agreed")
-
-        response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
-
-        # kill 1's day: its row is folded and the date in the day row unfolds it; kill 2's day stays open
-        self.assertContains(response, 'data-bs-target=".eos-spy-network-day-', count=1)
-        self.assertContains(response, 'class="opacity-50 collapse eos-spy-network-day-', count=1)
-        self.assertContains(response, f'data-bs-target=".eos-spy-network-day-{self.main.character_id}-{self.day_before}"')
-        self.assertContains(response, f'<tr class="opacity-50 collapse eos-spy-network-day-{self.main.character_id}-{self.day_before}">')
-        self.assertContains(response, f"eos-spy-network-day-{self.main.character_id}-{self.day}", count=0)
+        self.assertContains(response, f'data-eos-spy-network-kill-day="{self.day}"')
+        self.assertContains(response, f'data-bs-target=".{folded}"', count=1)
+        self.assertContains(response, f'<tr class="opacity-50 collapse {folded}">', count=1)
+        self.assertEqual([row["cleared"] for row in self.report_marker().rows], [False, False, True])
 
 
 class TestNotePresets(ReviewTestCase):

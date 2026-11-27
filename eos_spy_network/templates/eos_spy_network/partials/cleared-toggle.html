@@ -1,0 +1,12 @@
+{% load i18n %}
+{# The head of a marker's cleared rows, folded under its open ones (user, 2026-11-27): the button unfolds every row of the class. #}
+{# Takes colspan, the table's column count; `suspect` and `marker` name the class. #}
+<tr class="table-active">
+    <th colspan="{{ colspan }}" class="text-nowrap">
+        <button type="button" class="btn btn-link btn-sm p-0 align-baseline text-decoration-none" data-bs-toggle="collapse"
+                data-bs-target=".eos-spy-network-cleared-{{ suspect.main.character_id }}-{{ marker.kind }}" aria-expanded="false">
+            <i class="fas fa-chevron-right me-1" aria-hidden="true"></i>{% translate "Cleared" context "eos-spy-network" %}
+        </button>
+        <span class="badge text-bg-secondary ms-1">{{ marker.cleared_rows|length }}</span>
+    </th>
+</tr>

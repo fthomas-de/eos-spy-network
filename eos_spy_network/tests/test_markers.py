@@ -657,7 +657,9 @@ class TestCharacterIds(MarkerTestCase):
         self.add_alt(5002, corporation_id=HOSTILE_CORP, alliance_id=None)
         stored = snapshot.update()
         for marker in stored.data["corporations"][0]["suspects"][0]["markers"]:
+            # a snapshot of 0.0.9 or older had neither characters nor rows
             del marker["character_ids"]
+            marker.pop("rows", None)
 
         (tile,) = snapshot.Report(stored).tiles
 

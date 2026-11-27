@@ -8,8 +8,8 @@ permission ``eos_spy_network.view_suspects`` (whole Alliance) or
 
 Everything comes from the stored snapshot, as on this app's own pages: no
 calculation, no query beyond the configuration, the one snapshot row and,
-when the snapshot holds blue kills or friendly hostile contacts, the
-reviewed ones (a query each).
+when the snapshot holds blue kills or other reviewable findings (Corporation
+changes, contacts, mails, ISK, contracts), the reviewed ones (a query each).
 
 - ``character_markers(*, corporation_id=None) -> dict[int, list[str]]``
 - ``label(kind) -> str`` and ``description(kind) -> str``: the texts this app
@@ -19,7 +19,7 @@ reviewed ones (a query each).
 
 from .markers import BLUE_KILLS, CONTACTS, DESCRIPTIONS, KINDS, LABELS
 from .models import SpyConfiguration
-from .snapshot import current, finding_reviews, kill_reviews, reviewed_contacts, reviewed_kills
+from .snapshot import CASES, current, finding_reviews, kill_reviews, reviewed_cases, reviewed_contacts, reviewed_kills
 
 __all__ = ["KINDS", "character_markers", "description", "label"]
 
@@ -34,7 +34,7 @@ def character_markers(*, corporation_id: int | None = None) -> dict[int, list[st
     accounts of its visitors (an alt there, the main elsewhere) - what a CEO with
     ``view_own_corporation`` sees (the caller checks that permission, see
     ``permissions.sees_corporation``); empty for a Corporation without a page.
-    Markers switched off in the settings are left out, as on this app's pages, and so are the blue kills and contacts marked cleared. Empty without a snapshot, and when the
+    Markers switched off in the settings are left out, as on this app's pages, and so are the cleared findings of every marker that has a tick. Empty without a snapshot, and when the
     stored snapshot is of another Alliance than the configured one: after a
     change of the Alliance it is stale until recalculated. A snapshot built
     before 0.0.10 names no characters and gives nothing until the next run.
@@ -70,10 +70,12 @@ def character_markers(*, corporation_id: int | None = None) -> dict[int, list[st
                     if reviews is None:
                         reviews = kill_reviews(alliance_id)
                     marker = reviewed_kills(marker, reviews)
-                elif marker["kind"] == CONTACTS:
+                # a marker without rows (a snapshot older than its reviews) has nothing to review: no query
+                elif marker["kind"] in (CONTACTS, *CASES) and marker.get("rows"):
                     if findings is None:
                         findings = finding_reviews(alliance_id)
-                    marker = reviewed_contacts(marker, suspect["main_id"], findings)
+                    reviewed = reviewed_contacts if marker["kind"] == CONTACTS else reviewed_cases
+                    marker = reviewed(marker, suspect["main_id"], findings)
                 if marker is None:
                     continue
                 for character_id in marker.get("character_ids", []):

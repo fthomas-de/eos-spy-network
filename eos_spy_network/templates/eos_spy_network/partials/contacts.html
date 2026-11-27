@@ -1,5 +1,5 @@
 {% load i18n %}
-{# Friendly hostile contacts of a marker: one row per contact and standing with the main's characters on it; a cleared one greyed, it no longer counts #}
+{# Friendly hostile contacts of a marker: one row per contact and standing with the main's characters on it; the cleared ones folded below, they no longer count #}
 <div class="table-responsive mt-1">
     <table class="table table-sm table-borderless small mb-0 w-auto">
         <thead>
@@ -18,7 +18,10 @@
         </thead>
         <tbody>
             {% for row in marker.rows %}
-                <tr{% if row.cleared %} class="opacity-50"{% endif %}>
+                {% if row.cleared %}
+                    {% ifchanged row.cleared %}{% include "eos_spy_network/partials/cleared-toggle.html" with colspan=marker.affiliated|yesno:"8,6" %}{% endifchanged %}
+                {% endif %}
+                <tr{% if row.cleared %} class="opacity-50 collapse eos-spy-network-cleared-{{ suspect.main.character_id }}-{{ marker.kind }}"{% endif %}>
                     <td class="text-break">
                         {% for character_id, name in row.named_characters %}{{ name }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=character_id %}{% if not forloop.last %}, {% endif %}{% endfor %}
                     </td>

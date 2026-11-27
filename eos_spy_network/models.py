@@ -319,6 +319,9 @@ class FindingReview(models.Model):
     reviewed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
     )
+    # ISK, contracts, mails: the entries, contracts or mails the case held when first cleared; they stay its own,
+    # anything else - also an entry corptools fetched late with an older date - is a new case (user, 2026-11-27)
+    items = models.JSONField(default=list, blank=True)
 
     class Meta:
         default_permissions = ()

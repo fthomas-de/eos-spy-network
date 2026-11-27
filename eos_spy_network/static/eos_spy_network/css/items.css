@@ -1,0 +1,5 @@
+/* the popover of items.js: a long list scrolls instead of running off the page */
+.eos-spy-network-items .popover-body {
+    max-height: 20rem;
+    overflow-y: auto;
+}

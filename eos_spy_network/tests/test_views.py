@@ -280,7 +280,9 @@ class TestCorporationPage(SuspectPageTestCase):
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
         self.assertContains(response, self.suspect_main.character_name)
-        self.assertContains(response, "Char 5001: Bad Corp")
+        # the membership as a case: the hostile group with the account's characters in it
+        self.assertContains(response, '<td class="text-break text-danger">Bad Corp</td>')
+        self.assertContains(response, "Char 5001")
         # the viewer has no marker and is no suspect; its name is in the navbar, so not by text
         self.assertEqual(
             [suspect.main.character_id for suspect in response.context["tile"].suspects],
@@ -371,7 +373,7 @@ class TestEvidence(SuspectPageTestCase):
 
 
 class TestCorporationChangesTooltip(SuspectPageTestCase):
-    def test_should_name_the_corporations_joined_in_the_tooltip(self):
+    def test_should_name_the_corporations_joined_behind_the_info_button(self):
         from corptools.models import CharacterAudit, CorporationHistory, EveName
 
         configure(corp_changes_per_year=2)
@@ -390,10 +392,12 @@ class TestCorporationChangesTooltip(SuspectPageTestCase):
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
         today = timezone.now().date().isoformat()
+        # one case per character with its count, each join with its day in the info button's popover
+        self.assertContains(response, f'<td class="text-break">{self.suspect_main.character_name}</td>')
         self.assertContains(
             response,
-            f'<abbr title="{today} First Corp&#10;{today} Second Corp">{self.suspect_main.character_name}: 2</abbr>',
-            html=False,
+            f'<tr><td class="text-nowrap">{today}</td><td>Second Corp</td><td class="text-break"></td></tr>'
+            f'<tr><td class="text-nowrap">{today}</td><td>First Corp</td><td class="text-break"></td></tr>',
         )
 
 

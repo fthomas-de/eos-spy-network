@@ -11,6 +11,12 @@
     {% sri_static "eos_spy_network/js/kills.js" %}
     {% sri_static "eos_spy_network/js/cleared.js" %}
     {% sri_static "eos_spy_network/js/ignore.js" %}
+    {% sri_static "eos_spy_network/js/items.js" %}
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    {% sri_static "eos_spy_network/css/items.css" %}
 {% endblock %}
 
 {% block details %}

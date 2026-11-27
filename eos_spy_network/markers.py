@@ -67,6 +67,10 @@ DESCRIPTIONS = {
 
 CORPTOOLS = "corptools"
 
+# the kind of a mail in the rows: from the hostile, or to it
+RECEIVED = "received"
+SENT = "sent"
+
 # wallet entries that pay for a contract: corptools' journal names the contract in context_id
 CONTRACT_REF_TYPES = (
     "contract_price",
@@ -117,8 +121,8 @@ class Marker:
 
     @property
     def dealings(self) -> bool:
-        """ISK and contracts show their rows as a table."""
-        return self.kind in (WALLET, CONTRACTS) and bool(self.rows)
+        """ISK, contracts and mails show their rows as a table; mails of a snapshot of 0.1.5 or older have none."""
+        return self.kind in (WALLET, CONTRACTS, MAILS) and bool(self.rows)
 
     @property
     def affiliated(self) -> bool:
@@ -145,6 +149,17 @@ class Marker:
         """Friendly hostile contacts show one row per contact and standing, with note and tick."""
         return self.kind == CONTACTS and bool(self.rows)
 
+    @property
+    def memberships(self) -> bool:
+        """Hostile memberships show one row per hostile group, with note and tick; a snapshot of 0.1.5 or older has
+        no rows."""
+        return self.kind == MEMBERSHIP and bool(self.rows)
+
+    @property
+    def cleared_rows(self) -> list:
+        """The reviewed rows ticked off: folded under the open ones (user, 2026-11-27)."""
+        return [row for row in self.rows if row.get("cleared")]
+
 
 def million(isk) -> float | None:
     """ISK in million, as the minimum kill value is set (user); None stays unknown."""
@@ -162,14 +177,21 @@ class Dealings:
     types: set = field(default_factory=set)
     # one of the entries pays for a contract: the row gets the popup button
     contract_payments: bool = False
+    # [journal entry, contract or mail ID, date, kind, ISK, subject] each: the details behind the sums, and what a
+    # review covers; the subject is a mail's only, None otherwise
+    items: list = field(default_factory=list)
 
-    def add(self, when: datetime, kind: str, isk=None) -> None:
+    def add(self, item_id: int, when: datetime | None, kind: str, isk=None, subject=None) -> None:
         self.count += 1
         self.contract_payments = self.contract_payments or kind in CONTRACT_REF_TYPES
         self.isk += abs(isk or 0)
-        self.first = when if self.first is None else min(self.first, when)
-        self.last = when if self.last is None else max(self.last, when)
+        # corptools allows a mail without a timestamp: it counts, undated
+        if when is not None:
+            self.first = when if self.first is None else min(self.first, when)
+            self.last = when if self.last is None else max(self.last, when)
         self.types.add(kind.replace("_", " "))
+        day = when.date().isoformat() if when else ""
+        self.items.append([item_id, day, kind, str(abs(isk or 0)), subject])
 
     def row(self, character: str, character_id: int, counterpart_id: int, counterpart: str) -> dict:
         return {
@@ -182,10 +204,11 @@ class Dealings:
             "count": self.count,
             "isk": str(self.isk),
             "million": million(self.isk),
-            "first": self.first.date().isoformat(),
-            "last": self.last.date().isoformat(),
+            "first": self.first.date().isoformat() if self.first else "",
+            "last": self.last.date().isoformat() if self.last else "",
             "types": sorted(self.types),
             "contract_payments": self.contract_payments,
+            "items": sorted(self.items, key=lambda item: (item[1], item[0]), reverse=True),
         }
 
 
@@ -386,6 +409,8 @@ def _check(
             if group_id in index:
                 accounts[user_id].mark(MEMBERSHIP, f"{name}: {index.describe(group_id)}", character_id)
                 current.add((character_id, group_id))
+                # Auth knows no start: the history record takes this item over when corptools has one
+                _add_membership(accounts[user_id], index, group_id, character_id, name, f"{character_id}:auth", "")
                 break
 
     if not corptools_installed():
@@ -425,7 +450,7 @@ def _check(
     }
     _check_contacts(accounts, index, owner, names, contact_audits, hostile_ids)
     step("mails")
-    _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, since, tenure)
+    _check_mails(accounts, index, owner, names, audits, hostile_ids, counterparts, since, tenure)
     step("wallet")
     _check_wallet(
         accounts, index, owner, names, audits, hostile_ids, dealing_counterparts, since, config.ignored_ref_types or (),
@@ -439,41 +464,71 @@ def _check_history(accounts, index, config, owner, names, audits, since=None, cu
     from corptools.models import CorporationHistory
 
     year_ago = timezone.now() - timedelta(days=365)
-    records = defaultdict(list)  # character -> [(start date, Corporation ID, Corporation name)]
-    for audit_id, corporation_id, corporation_name, start_date in CorporationHistory.objects.filter(
+    records = defaultdict(list)  # character -> [(start date, Corporation ID, Corporation name, ESI record ID)]
+    for audit_id, corporation_id, corporation_name, start_date, record_id in CorporationHistory.objects.filter(
         character_id__in=list(audits)
-    ).values_list("character_id", "corporation_id", "corporation_name__name", "start_date"):
-        records[audits[audit_id]].append((start_date, corporation_id, corporation_name or str(corporation_id)))
+    ).values_list("character_id", "corporation_id", "corporation_name__name", "start_date", "record_id"):
+        records[audits[audit_id]].append(
+            (start_date, corporation_id, corporation_name or str(corporation_id), record_id)
+        )
 
-    joined = defaultdict(list)  # character -> [(start date, Corporation name)]
+    joined = defaultdict(list)  # character -> [(start date, Corporation name, ESI record ID)]
     for character_id, history in records.items():
         history.sort()
         # a membership ends where the next one starts; the last one lasts until today
         ends = [following[0] for following in history[1:]] + [None]
-        for (start_date, corporation_id, corporation_name), end_date in zip(history, ends):
-            if (
-                corporation_id in index
-                and (since is None or end_date is None or end_date >= since)
-                # the open-ended record is today's membership, marked already: one fact, not two findings
-                and not (end_date is None and (character_id, corporation_id) in current)
-            ):
-                accounts[owner[character_id]].mark(
-                    MEMBERSHIP, f"{names[character_id]}: {index.describe(corporation_id)}", character_id
+        for (start_date, corporation_id, corporation_name, record_id), end_date in zip(history, ends):
+            suspect = accounts[owner[character_id]]
+            item_id = f"{character_id}:{record_id}"
+            if end_date is None and (character_id, corporation_id) in current:
+                # the open-ended record is today's membership, marked already: one fact, not two findings - its
+                # record names it from now on, so leaving the Corporation later keeps the same item
+                for row in suspect.markers[MEMBERSHIP].rows:
+                    for item in row["items"]:
+                        if item[0] == f"{character_id}:auth" and row["group_id"] == corporation_id:
+                            item[0], item[1] = item_id, start_date.date().isoformat()
+            elif corporation_id in index and (since is None or end_date is None or end_date >= since):
+                suspect.mark(MEMBERSHIP, f"{names[character_id]}: {index.describe(corporation_id)}", character_id)
+                _add_membership(
+                    suspect, index, corporation_id, character_id, names[character_id], item_id,
+                    start_date.date().isoformat(),
                 )
             if start_date >= year_ago:
-                joined[character_id].append((start_date, corporation_name))
+                joined[character_id].append((start_date, corporation_name, record_id))
     for character_id, corporations in joined.items():
         count = len(corporations)
         if count >= config.corp_changes_per_year:
             suspect = accounts[owner[character_id]]
             suspect.mark(CORP_CHANGES, f"{names[character_id]}: {count}", character_id, count)
+            corporations.sort()
             suspect.markers[CORP_CHANGES].rows.append(
                 {
                     "character": names[character_id],
+                    "character_id": character_id,
                     "count": count,
-                    "corporations": [[start.date().isoformat(), name] for start, name in sorted(corporations)],
+                    "corporations": [[start.date().isoformat(), name] for start, name, _record in corporations],
+                    # [ESI record ID, day, Corporation] each, the latest first: what a review covers
+                    "items": [
+                        [record_id, start.date().isoformat(), name] for start, name, record_id in reversed(corporations)
+                    ],
                 }
             )
+
+
+def _add_membership(suspect, index, group_id, character_id, name, item_id, day):
+    """One membership of a character in a hostile group, in the account's row of that group (user, 2026-11-27):
+    the group is the finding, each membership an item a review covers - a new one reopens it."""
+    rows = suspect.markers[MEMBERSHIP].rows
+    row = next((row for row in rows if row["group_id"] == group_id), None)
+    if row is None:
+        row = {"group_id": group_id, "group": index.describe(group_id), "characters": [], "character_ids": []}
+        row["items"] = []
+        rows.append(row)
+    if character_id not in row["character_ids"]:
+        row["characters"].append(name)
+        row["character_ids"].append(character_id)
+    # [item ID, day joined ("" when Auth alone knows it), character, character ID]
+    row["items"].append([item_id, day, name, character_id])
 
 
 def _check_contacts(accounts, index, owner, names, audits, hostile_ids):
@@ -500,7 +555,7 @@ def _check_contacts(accounts, index, owner, names, audits, hostile_ids):
         row["character_ids"].append(character_id)
 
 
-def _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, since=None, tenure=None):
+def _check_mails(accounts, index, owner, names, audits, hostile_ids, counterparts, since=None, tenure=None):
     from corptools.models import MailMessage
 
     mails = MailMessage.objects.filter(character_id__in=list(audits))
@@ -514,24 +569,40 @@ def _check_mails(accounts, index, owner, audits, hostile_ids, counterparts, sinc
             Q(mailmessage__timestamp__gte=since) | Q(mailmessage__timestamp__isnull=True)
         )
 
-    sent_by = list(mails.filter(from_id__in=hostile_ids).values_list("character_id", "mail_id", "from_id", "timestamp"))
-    sent_to = list(
-        recipients.values_list(
-            "mailmessage__character_id", "mailmessage__mail_id", "mailrecipient_id", "mailmessage__timestamp"
+    # the headers and the subject only: a mail body is never read (user)
+    sent_by = [
+        (*mail, RECEIVED)
+        for mail in mails.filter(from_id__in=hostile_ids).values_list(
+            "character_id", "mail_id", "from_id", "timestamp", "subject"
         )
-    )
+    ]
+    sent_to = [
+        (*mail, SENT)
+        for mail in recipients.values_list(
+            "mailmessage__character_id",
+            "mailmessage__mail_id",
+            "mailrecipient_id",
+            "mailmessage__timestamp",
+            "mailmessage__subject",
+        )
+    ]
     if tenure is not None:
-        tenure.prepare({party_id for _audit, _mail, party_id, _sent in sent_by + sent_to})
+        tenure.prepare({mail[2] for mail in sent_by + sent_to})
 
     found = Found()  # (account, mail ID) -> hostile counterparts, own mailboxes
-    for audit_id, mail_id, party_id, sent in sent_by + sent_to:
+    dealings = defaultdict(Dealings)  # (account, own character, hostile) -> its mails
+    for audit_id, mail_id, party_id, sent, subject, direction in sent_by + sent_to:
         character_id = audits[audit_id]
         if tenure is not None and not tenure.counts(character_id, sent):
             continue
         user_id = owner[character_id]
-        found.add((user_id, mail_id), counterparts(user_id, sent, party_id), character_id)
+        parties = counterparts(user_id, sent, party_id)
+        found.add((user_id, mail_id), parties, character_id)
+        for party_id in parties:
+            dealings[(user_id, character_id, party_id)].add(mail_id, sent, direction, subject=subject or "")
     # a mail in the boxes of two own characters counts once
     _mark_found(accounts, index, found, MAILS)
+    _add_rows(accounts, index, names, dealings, MAILS)
 
 
 def _check_wallet(
@@ -548,14 +619,16 @@ def _check_wallet(
     entries = without_public_contracts(entries)
 
     entries = list(
-        entries.values_list("pk", "character_id", "first_party_id", "second_party_id", "date", "ref_type", "amount")
+        entries.values_list(
+            "pk", "character_id", "first_party_id", "second_party_id", "date", "ref_type", "amount", "entry_id"
+        )
     )
     if tenure is not None:
         tenure.prepare({party_id for entry in entries for party_id in entry[2:4] if party_id in index})
 
     found = Found()
     dealings = defaultdict(Dealings)  # (account, own character, hostile) -> Dealings
-    for pk, audit_id, first_party_id, second_party_id, date, ref_type, amount in entries:
+    for pk, audit_id, first_party_id, second_party_id, date, ref_type, amount, entry_id in entries:
         character_id = audits[audit_id]
         if tenure is not None and not tenure.counts(character_id, date):
             continue
@@ -563,7 +636,8 @@ def _check_wallet(
         parties = counterparts(user_id, date, first_party_id, second_party_id)
         found.add((user_id, pk), parties, character_id)
         for party_id in parties:
-            dealings[(user_id, character_id, party_id)].add(date, ref_type, amount)
+            # EVE's ID, not corptools' row: a review keeps covering the entry should corptools fetch it anew
+            dealings[(user_id, character_id, party_id)].add(entry_id, date, ref_type, amount)
     _mark_found(accounts, index, found, WALLET)
     _add_rows(accounts, index, names, dealings, WALLET)
 
@@ -621,7 +695,9 @@ def _check_contracts(accounts, index, owner, names, audits, hostile_ids, counter
         found.add((user_id, contract_id), parties, character_id)
         for party_id in parties:
             # what changes hands; the collateral is a deposit that comes back (user)
-            dealings[(user_id, character_id, party_id)].add(date_issued, contract_type, (price or 0) + (reward or 0))
+            dealings[(user_id, character_id, party_id)].add(
+                contract_id, date_issued, contract_type, (price or 0) + (reward or 0)
+            )
     _mark_found(accounts, index, found, CONTRACTS)
     _add_rows(accounts, index, names, dealings, CONTRACTS)
 
@@ -654,8 +730,9 @@ def _mark_found(accounts, index, found: Found, kind):
 
 def _add_rows(accounts, index, names, dealings, kind):
     """One row per own character and hostile, the latest first."""
+    # an undated mail has no last day: such a row goes last
     for (user_id, character_id, party_id), dealing in sorted(
-        dealings.items(), key=lambda item: item[1].last, reverse=True
+        dealings.items(), key=lambda item: item[1].last.isoformat() if item[1].last else "", reverse=True
     ):
         # the plain name: Corporation and Alliance get columns of their own
         name = index.names.get(party_id) or str(party_id)

@@ -1,0 +1,48 @@
+{% load i18n %}
+{# Corporation changes of a marker: one case per character with its joins of the last 365 days (the info button names each); #}
+{# the open cases under a row per day of their last join, one note and tick for every open case of the main that day; the cleared ones folded below. #}
+<div class="table-responsive mt-1">
+    <table class="table table-sm table-borderless small mb-0 w-auto">
+        <thead>
+            <tr>
+                <th>{% translate "Character" context "EVE jargon" %}</th>
+                <th>{% translate "Count" %}</th>
+                <th>{% translate "Period" %}</th>
+                <th>{% translate "Cleared" context "eos-spy-network" %}</th>
+                <th>{% translate "Note" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in marker.rows %}
+                {% if row.cleared %}
+                    {% ifchanged row.cleared %}{% include "eos_spy_network/partials/cleared-toggle.html" with colspan=5 %}{% endifchanged %}
+                {% elif row.key %}
+                    {% ifchanged row.last %}
+                        <tr class="table-active">
+                            <th colspan="3" class="text-nowrap">
+                                {{ row.last }}
+                                <span class="badge text-bg-info ms-1" title="{% translate 'Open cases whose last interaction was on this day' %}">{{ row.day_open }}</span>
+                            </th>
+                            {% with day_name=suspect.main.character_name|add:" "|add:row.last %}
+                                {% translate "Open cases whose last interaction was on this day" as day_title %}
+                                {% include "eos_spy_network/partials/kill-note-button.html" with kind=marker.kind day=row.last main_id=suspect.main.character_id character=day_name note="" cleared=False reviewed=day_title %}
+                            {% endwith %}
+                        </tr>
+                    {% endifchanged %}
+                {% endif %}
+                <tr{% if row.cleared %} class="opacity-50 collapse eos-spy-network-cleared-{{ suspect.main.character_id }}-{{ marker.kind }}"{% endif %}>
+                    <td class="text-break">{{ row.character }}</td>
+                    {% if row.key %}
+                        <td class="text-nowrap">{{ row.count }}{% include "eos_spy_network/partials/items-button.html" %}</td>
+                        <td class="text-nowrap">{% include "eos_spy_network/partials/period.html" with first=row.first last=row.last %}</td>
+                        {% include "eos_spy_network/partials/kill-note-button.html" with kind=marker.kind main_id=suspect.main.character_id key=row.key character=row.character note=row.note cleared=row.cleared reviewed=row.note %}
+                    {% else %}
+                        {# a snapshot of 0.1.5 or older holds no joins to review until the next run: the Corporations in a tooltip #}
+                        <td class="text-nowrap"><abbr title="{% for start, name in row.corporations %}{{ start }} {{ name }}{% if not forloop.last %}&#10;{% endif %}{% endfor %}">{{ row.count }}</abbr></td>
+                        <td></td><td></td><td></td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

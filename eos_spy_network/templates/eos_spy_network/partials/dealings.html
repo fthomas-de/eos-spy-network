@@ -1,5 +1,7 @@
 {% load i18n %}
-{# ISK or contracts of a marker: per own character and hostile, how often, how much and when #}
+{# ISK, contracts or mails of a marker: one case per own character and hostile, summed (user, 2026-11-27); the open cases under a #}
+{# row per date of their last interaction, one note and tick for every open case of the main on that day; the cleared ones folded below. #}
+{# Mails have no ISK column (5 columns before the tick, 7 with the affiliation; ISK and contracts 6 and 8). #}
 <div class="table-responsive mt-1">
     <table class="table table-sm table-borderless small mb-0 w-auto">
         <thead>
@@ -14,16 +16,45 @@
                 {% if marker.kind == "wallet" %}<th>ISK</th>{% elif marker.kind == "contracts" %}<th>{% translate "Value" %}</th>{% endif %}
                 <th>{% translate "Period" %}</th>
                 <th>{% translate "Kind" %}</th>
+                <th>{% translate "Cleared" context "eos-spy-network" %}</th>
+                <th>{% translate "Note" %}</th>
             </tr>
         </thead>
         <tbody>
             {% for row in marker.rows %}
-                <tr>
+                {% if row.cleared %}
+                    {% ifchanged row.cleared %}
+                        {% if marker.kind == "mails" %}
+                            {% include "eos_spy_network/partials/cleared-toggle.html" with colspan=marker.affiliated|yesno:"9,7" %}
+                        {% else %}
+                            {% include "eos_spy_network/partials/cleared-toggle.html" with colspan=marker.affiliated|yesno:"10,8" %}
+                        {% endif %}
+                    {% endifchanged %}
+                {% elif row.key %}
+                    {% ifchanged row.last %}
+                        <tr class="table-active">
+                            <th colspan="{% if marker.kind == 'mails' %}{{ marker.affiliated|yesno:'7,5' }}{% else %}{{ marker.affiliated|yesno:'8,6' }}{% endif %}" class="text-nowrap">
+                                {{ row.last|default:"–" }}
+                                <span class="badge text-bg-info ms-1" title="{% translate 'Open cases whose last interaction was on this day' %}">{{ row.day_open }}</span>
+                            </th>
+                            {% if row.last %}
+                                {% with day_name=suspect.main.character_name|add:" "|add:row.last %}
+                                    {% translate "Open cases whose last interaction was on this day" as day_title %}
+                                    {% include "eos_spy_network/partials/kill-note-button.html" with kind=marker.kind day=row.last main_id=suspect.main.character_id character=day_name note="" cleared=False reviewed=day_title %}
+                                {% endwith %}
+                            {% else %}
+                                {# undated mails: no day to clear at once, each case has its own tick #}
+                                <td></td><td></td>
+                            {% endif %}
+                        </tr>
+                    {% endifchanged %}
+                {% endif %}
+                <tr{% if row.cleared %} class="opacity-50 collapse eos-spy-network-cleared-{{ suspect.main.character_id }}-{{ marker.kind }}"{% endif %}>
                     <td class="text-break">{{ row.character }}</td>
                     <td class="text-break text-danger">{{ row.counterpart }}
                         {% include "eos_spy_network/partials/standing-badge.html" with held=row.held %}
-                        {# the same button as on the Network page; the CEO's page has no manager's perms #}
-                        {% if perms.eos_spy_network.manage_settings and perms.eos_spy_network.view_suspects %}
+                        {# the same button as on the Network page; the CEO's page has no manager's perms; mails keep an ignored counterpart (user) #}
+                        {% if perms.eos_spy_network.manage_settings and perms.eos_spy_network.view_suspects and marker.kind != "mails" %}
                             <button type="button" class="btn btn-sm btn-link p-0 ms-1 text-body-secondary"
                                     data-bs-toggle="modal" data-bs-target="#eos-spy-network-ignore"
                                     data-eos-spy-network-ignore-id="{{ row.counterpart_id }}"
@@ -35,7 +66,7 @@
                         {% endif %}
                     </td>
                     {% if marker.affiliated %}{% include "eos_spy_network/partials/affiliation-cells.html" %}{% endif %}
-                    <td>{{ row.count }}</td>
+                    <td class="text-nowrap">{{ row.count }}{% include "eos_spy_network/partials/items-button.html" %}</td>
                     {% if marker.kind == "wallet" %}<td class="text-nowrap">{{ row.isk|floatformat:"0g" }}</td>{% elif marker.kind == "contracts" %}<td class="text-nowrap">{% if row.million is not None %}{{ row.million|floatformat:"1g" }} M{% else %}–{% endif %}</td>{% endif %}
                     <td class="text-nowrap">{% include "eos_spy_network/partials/period.html" with first=row.first last=row.last %}</td>
                     <td>
@@ -47,6 +78,12 @@
                             </button>
                         {% endif %}
                     </td>
+                    {% if row.key %}
+                        {% include "eos_spy_network/partials/kill-note-button.html" with kind=marker.kind main_id=suspect.main.character_id key=row.key character=row.character|add:" – "|add:row.counterpart note=row.note cleared=row.cleared reviewed=row.note %}
+                    {% else %}
+                        {# a snapshot of 0.1.5 or older holds no items to review until the next run #}
+                        <td></td><td></td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </tbody>

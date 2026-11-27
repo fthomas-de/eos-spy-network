@@ -149,24 +149,50 @@ section.
 
 - A review belongs to the main + finding: a later alt with the same finding
   is cleared too; a different finding (other standing, new payment/mail/
-  join) is always a separate row, never a reopened one - for dated markers
-  the calculation splits the rows at the review time.
+  join) is always a separate row, never a reopened one.
+- Every marker gets note and *Cleared* (2026-11-27; *Capital in contract*
+  excepted, see there): the rules are
+  strict enough that every case counts; nothing is cut or summed away so
+  that information is lost.
+- Grouping on the Corporation page: main > date > case; a head row per date
+  clears every open case of the main that day at once.
+- The cleared rows of every marker stand folded under the open ones, not
+  greyed between them. Should a list grow too long, a filter comes then.
+- ISK and contracts: a case is one own character + one counterpart, summed
+  (payments of today and yesterday between A1 and X are one row); under the
+  date of its last interaction. An info button shows each entry or contract
+  (date, kind, ISK), scrolling when long. The first tick fixes the entries
+  the case holds (`FindingReview.items`), not a review time: whatever comes
+  after, also an entry corptools fetches late with an older date, is a new
+  open case. Unticking keeps the fixed entries.
+- Mails: a case per own character + counterpart, as ISK; the info button
+  shows date, direction (received/sent) and subject, never the text. An
+  undated mail counts in the case; a case of undated mails alone has no day
+  row to clear at once.
+- Membership: what matters is that a character of the account is or was in
+  a hostile group within the time frame. A case per main + hostile group;
+  the tick fixes the memberships it saw (history record per character); a
+  character joining again, or one newly authed who is or was in it, is a new
+  case; leaving is not.
+- Corporation changes: a case per character, under the day of its last
+  join; the tick fixes the joins it saw (ESI record IDs), a new join after it
+  reopens the character as a new case with the full count of the last 365
+  days.
 - Blue kills: one row, note and tick per main and killmail (two mains on one
   killmail, a row each). Editable with `view_suspects` on the Corporation
   page and in the settings tab; clearing needs a note, except for admins in
-  the settings tabs. A cleared kill no longer counts (pages and API) but
-  stays greyed; at once, no recalculation. The settings tab lists every kill
-  of the Alliance regardless of the time frame.
+  the settings tabs. A cleared kill no longer counts (pages and API); at
+  once, no recalculation. The settings tab lists every kill of the Alliance
+  regardless of the time frame.
 - Every reviewable finding gets a settings tab where `manage_settings` +
   `view_suspects` clears with the tick alone; the Corporation page keeps the
   note.
 - Note buttons: a click enters the text, ticks *Cleared* and saves; blue
   kills only; free texts in tab *Alliance*, default "bomb" and "sb ratting".
 - Clearing a day: Corporation page only, a head row per date; it touches only
-  that day's open kills, a cleared one keeps its note.
-- *Cleared findings*: only mains with nothing open; one table for blue kills
-  and contacts; read only (notes change in the settings tabs); folded at
-  first.
+  that day's open kills or cases, a cleared one keeps its note.
+- *Cleared findings*: only mains with nothing open; one table for every
+  marker; read only (notes change in the settings tabs); folded at first.
 - Review log: every save of a note or tick is kept, on its own page; reviews
   older than the log were seeded once with their last state.
 - A reviewer may clear findings of their own account; the log marks it, no

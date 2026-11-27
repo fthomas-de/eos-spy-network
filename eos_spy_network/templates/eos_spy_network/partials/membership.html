@@ -1,0 +1,52 @@
+{% load i18n %}
+{# Hostile memberships of a marker: one case per hostile group with the account's characters in it (the info button names each #}
+{# membership with its day joined); the open cases under a row per day of their last join, one note and tick for every open case #}
+{# of the main that day; the cleared ones folded below. #}
+<div class="table-responsive mt-1">
+    <table class="table table-sm table-borderless small mb-0 w-auto">
+        <thead>
+            <tr>
+                <th>{% translate "Hostile group" %}</th>
+                <th>{% translate "Characters" context "eos-spy-network" %}</th>
+                <th>{% translate "Count" %}</th>
+                <th>{% translate "Period" %}</th>
+                <th>{% translate "Cleared" context "eos-spy-network" %}</th>
+                <th>{% translate "Note" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in marker.rows %}
+                {% if row.cleared %}
+                    {% ifchanged row.cleared %}{% include "eos_spy_network/partials/cleared-toggle.html" with colspan=6 %}{% endifchanged %}
+                {% else %}
+                    {% ifchanged row.last %}
+                        <tr class="table-active">
+                            <th colspan="4" class="text-nowrap">
+                                {{ row.last|default:"–" }}
+                                <span class="badge text-bg-info ms-1" title="{% translate 'Open cases whose last interaction was on this day' %}">{{ row.day_open }}</span>
+                            </th>
+                            {% if row.last %}
+                                {% with day_name=suspect.main.character_name|add:" "|add:row.last %}
+                                    {% translate "Open cases whose last interaction was on this day" as day_title %}
+                                    {% include "eos_spy_network/partials/kill-note-button.html" with kind=marker.kind day=row.last main_id=suspect.main.character_id character=day_name note="" cleared=False reviewed=day_title %}
+                                {% endwith %}
+                            {% else %}
+                                {# a membership Auth alone knows has no day joined: each case has its own tick #}
+                                <td></td><td></td>
+                            {% endif %}
+                        </tr>
+                    {% endifchanged %}
+                {% endif %}
+                <tr{% if row.cleared %} class="opacity-50 collapse eos-spy-network-cleared-{{ suspect.main.character_id }}-{{ marker.kind }}"{% endif %}>
+                    <td class="text-break text-danger">{{ row.group }}</td>
+                    <td class="text-break">
+                        {% for character_id, name in row.named_characters %}{{ name }}{% include "eos_spy_network/partials/evewho-link.html" with category="character" eve_id=character_id %}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    </td>
+                    <td class="text-nowrap">{{ row.count }}{% include "eos_spy_network/partials/items-button.html" %}</td>
+                    <td class="text-nowrap">{% include "eos_spy_network/partials/period.html" with first=row.first last=row.last %}</td>
+                    {% include "eos_spy_network/partials/kill-note-button.html" with kind=marker.kind main_id=suspect.main.character_id key=row.key character=row.group note=row.note cleared=row.cleared reviewed=row.note %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

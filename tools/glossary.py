@@ -613,6 +613,45 @@ TRANSLATIONS = {
         "Дружественных враждебных контактов не найдено.",
         "未发现友好的敌对联系人。",
     ),
+    "Open cases whose last interaction was on this day": (
+        "Offene Fälle, deren letzter Vorgang an diesem Tag war",
+        "Открытые случаи, последнее действие которых было в этот день",
+        "最后一次往来在当天的未处理案例",
+    ),
+    "Show each one": ("Einzeln anzeigen", "Показать каждую", "逐条显示"),
+    "Every case of the last calculation, the cleared ones too: per own character and counterpart, summed. A "
+    "cleared case no longer counts for the marker; what comes after it is a new case.": (
+        "Jeder Fall der letzten Berechnung, auch die geklärten: je eigenem Character und Gegenüber summiert. Ein "
+        "geklärter Fall zählt nicht mehr für den Marker; was danach kommt, ist ein neuer Fall.",
+        "Каждый случай из последнего расчёта, включая улаженные: суммарно по своему Character и контрагенту. "
+        "Улаженный случай больше не учитывается в маркере; всё, что после него, — новый случай.",
+        "上次计算中的每个案例，包括已澄清的：按自己的 Character 和对方汇总。已澄清的案例不再计入该标记；"
+        "之后发生的即为新案例。",
+    ),
+    "No case found.": ("Kein Fall gefunden.", "Случаев не найдено.", "未发现案例。"),
+    "Hostile group": ("Feindliche Gruppe", "Враждебная группа", "敌对团体"),
+    "Every hostile group a character of an account is or was in, of the last calculation, the cleared ones too. A "
+    "cleared group no longer counts for the marker; a character joining it again, or one newly added to the "
+    "account, is a new case.": (
+        "Jede feindliche Gruppe, in der ein Character eines Accounts ist oder war, aus der letzten Berechnung, auch "
+        "die geklärten. Eine geklärte Gruppe zählt nicht mehr für den Marker; tritt ein Character ihr erneut bei "
+        "oder kommt ein neuer zum Account dazu, ist das ein neuer Fall.",
+        "Каждая враждебная группа, в которой состоит или состоял Character аккаунта, из последнего расчёта, "
+        "включая улаженные. Улаженная группа больше не учитывается в маркере; повторное вступление Character или "
+        "новый Character в аккаунте — это новый случай.",
+        "上次计算中账号的 Character 曾经或正在所在的每个敌对团体，包括已澄清的。已澄清的团体不再计入该标记；"
+        "Character 再次加入或账号新增的 Character 即为新案例。",
+    ),
+    "Every character of the last calculation with its joins of the last 365 days, the cleared ones too. A cleared "
+    "character no longer counts for the marker; a new join opens it again with every join.": (
+        "Jeder Character der letzten Berechnung mit seinen Beitritten der letzten 365 Tage, auch die geklärten. Ein "
+        "geklärter Character zählt nicht mehr für den Marker; ein neuer Beitritt öffnet ihn wieder, mit allen "
+        "Beitritten.",
+        "Каждый Character из последнего расчёта со вступлениями за последние 365 дней, включая улаженные. Улаженный "
+        "Character больше не учитывается в маркере; новое вступление снова открывает его со всеми вступлениями.",
+        "上次计算中的每个 Character 及其最近 365 天内的加入记录，包括已澄清的。已澄清的 Character 不再计入该标记；"
+        "新的加入会使其重新打开，并包含所有加入记录。",
+    ),
     "Log": ("Protokoll", "Журнал", "日志"),
     "Changed by": ("Geändert von", "Изменил", "修改人"),
     "Marker": ("Marker", "Маркер", "标记"),

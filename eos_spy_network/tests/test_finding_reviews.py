@@ -198,7 +198,7 @@ class TestFindingNote(FindingTestCase):
         self.assertFalse(FindingReview.objects.exists())
 
     def test_should_refuse_a_kind_without_reviews(self):
-        self.assertEqual(self.post(kind=markers.MAILS, note="Agreed").status_code, 400)
+        self.assertEqual(self.post(kind=markers.CAPITAL_CONTRACTS, note="Agreed").status_code, 400)
 
     def test_should_refuse_a_main_that_is_no_number(self):
         self.assertEqual(self.post(main_id="x", note="Agreed").status_code, 400)
@@ -247,7 +247,7 @@ class TestFindingNote(FindingTestCase):
 
         self.assertContains(response, '<td class="text-nowrap">–</td>')
 
-    def test_should_show_a_cleared_contact_greyed_while_another_stays_open(self):
+    def test_should_fold_a_cleared_contact_under_the_open_one(self):
         # with every contact cleared the marker is gone; the open one keeps the table on the page
         CharacterContact.objects.filter(character=self.alt_audit).update(standing=10)
         snapshot.update()
@@ -255,8 +255,10 @@ class TestFindingNote(FindingTestCase):
 
         response = self.client.get(reverse("eos_spy_network:corporation", args=[2001]))
 
-        self.assertContains(response, 'class="opacity-50"', count=1)
+        folded = f"eos-spy-network-cleared-{self.main.character_id}-{markers.CONTACTS}"
+        self.assertContains(response, f'<tr class="opacity-50 collapse {folded}">', count=1)
         self.assertContains(response, "Fleet fight")
+        self.assertEqual([row["cleared"] for row in self.report_marker().rows], [False, True])
 
 
 class TestSettingsTab(FindingTestCase):

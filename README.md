@@ -32,13 +32,25 @@ every one with a standing below a configurable value.
 - **Corporation page**: every main of the Corporation with at least one
   marker, the most marked first, with the number of characters on the
   account and per marker what was found, with the counterparts of mails,
-  ISK and contracts. ISK and contracts show a row per own
-  character and hostile: the hostile's Corporation and Alliance (red with
-  the standing when hostile themselves), how many entries or contracts, the
-  ISK moved (for the wallet), the period from the first to the last one and
-  their kinds.
-  The Corporation changes name the Corporations joined, with the day, in a
-  tooltip per character. Blue kills show a row per own character and
+  ISK and contracts. Mails, ISK and contracts show a case per own
+  character and hostile, summed (mails with no ISK, their subjects in the
+  info button, never their text): the hostile's Corporation and Alliance (red
+  with the standing when hostile themselves), how many entries or contracts
+  (an info button lists each with its date, kind and ISK), the ISK moved,
+  the period from the first to the last one and their kinds. Each case has a
+  note and a tick *Cleared*, as the blue kills below; the open cases stand
+  under a row per date of their last interaction, whose note and tick clear
+  every open case of the main that day. The first tick fixes the entries or
+  contracts the case holds: whatever comes after - also an entry corptools
+  fetches late with an older date - is a new open case.
+  The hostile memberships show a case per hostile group with the account's
+  characters in it (the info button names each membership with its day
+  joined), with note and tick; a character joining it again, or one newly
+  added to the account, opens a new case.
+  The Corporation changes show a case per character: how many Corporations
+  it joined within the year (the info button names each with the day) and
+  the period, with note and tick; a join after the tick opens a new case
+  with every join of the year. Blue kills show a row per own character and
   killmail: the day (linked to zKillboard), the victim, its Corporation and
   Alliance, the ship and the reason - *Awox* or *Blue* with the standing.
   Each row has a
@@ -46,11 +58,11 @@ every one with a standing below a configurable value.
   `view_suspects` here and in the settings tab *Blue kills*; clearing needs
   a note here, while an admin with `manage_settings` ticks a row off in the
   settings tab without one. A cleared kill
-  stays in the table, greyed, but no longer counts - at once, without a
+  stays in the table but no longer counts - at once, without a
   recalculation, on these pages and for eos-auth-monitor; a main whose kills
-  are all cleared and who has no other marker counts as clean. A day whose
-  kills are all cleared is folded to its day row; a click on the date
-  unfolds it. *Capital in contract* shows a row per contract: the
+  are all cleared and who has no other marker counts as clean. The cleared
+  rows of every marker are folded under its open ones, behind one *Cleared*
+  row; a click on it unfolds them. *Capital in contract* shows a row per contract: the
   character, the ships, the type, price and buyout in million ISK, the
   location, the dates and the title; a button next to *View details* and
   one in its popup copy the contract's in-game link with the ships as its
@@ -248,9 +260,12 @@ every one with a standing below a configurable value.
   outside the time frame, as a table to sort, page and search, with the
   note and the tick of each row and who changed them last. *Friendly to
   hostiles*: every friendly hostile contact of the last calculation, the
-  cleared ones too, per main, contact and standing, alike. In both a user
+  cleared ones too, per main, contact and standing, alike. *Hostile
+  membership*, *Frequent Corporation changes*, *Mails with hostiles*, *ISK with hostiles* and
+  *Contracts with hostiles*: every case of the last
+  calculation, the cleared ones too, alike. In all of them a user
   with `manage_settings` and `view_suspects` ticks a row off without a note.
-  These two tabs show who is suspected and need `view_suspects` as well
+  These tabs show who is suspected and need `view_suspects` as well
 - **Log page**: every save of a note or a tick, on the Corporation pages or
   in the settings tabs, the latest first, with who and when, the main, the
   finding, the tick and the note before and after; reviews made before the

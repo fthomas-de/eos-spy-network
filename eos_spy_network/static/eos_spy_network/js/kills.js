@@ -14,7 +14,8 @@
  *
  * A note button of the settings (blue kills only) enters its text, sets the
  * tick and saves. A day row of the Corporation page stands for every open
- * kill of one main on that date and is saved like a kill row.
+ * kill (or mails, ISK or contracts case) of one main on that date and is saved like
+ * a single row.
  *
  * On the Corporation page the marker's count depends on the tick, so the
  * page reloads after a save; in the settings tab the row is updated in place
@@ -57,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
         error.textContent = "";
         if (presets) {
             // the texts are kill reasons: a finding of another marker gets none
-            presets.hidden = "eosSpyNetworkKillKey" in button.dataset;
+            presets.hidden = "eosSpyNetworkKillKind" in button.dataset;
         }
         showCount();
     });
@@ -100,16 +101,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const store = (target, note, isCleared) => {
         const body = new URLSearchParams();
-        // a finding of another marker names its main and key; a blue kill its character and killmail
-        const finding = "eosSpyNetworkKillKey" in target.dataset;
-        // a day row: every open kill of its main on that date
+        // a finding of another marker names its kind, main and key; a blue kill its character and killmail
+        const finding = "eosSpyNetworkKillKind" in target.dataset;
+        // a day row: every open kill (or case of the kind) of its main on that date
         const day = "eosSpyNetworkKillDay" in target.dataset;
         let url = modal.dataset.eosSpyNetworkKillUrl;
         if (finding) {
             url = modal.dataset.eosSpyNetworkFindingUrl;
             body.set("kind", target.dataset.eosSpyNetworkKillKind);
             body.set("main_id", target.dataset.eosSpyNetworkKillMain);
-            body.set("key", target.dataset.eosSpyNetworkKillKey);
+            if (day) {
+                body.set("date", target.dataset.eosSpyNetworkKillDay);
+            } else {
+                body.set("key", target.dataset.eosSpyNetworkKillKey);
+            }
         } else if (day) {
             url = modal.dataset.eosSpyNetworkDayUrl;
             body.set("main_id", target.dataset.eosSpyNetworkKillMain);

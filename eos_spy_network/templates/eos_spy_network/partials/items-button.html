@@ -1,0 +1,5 @@
+{% load i18n %}
+{# The info button of a summed ISK, contracts or mails case: items.js shows the table in the template after it as a popover, #}
+{# every journal entry, contract or mail with its date, kind and ISK or subject - nothing of the case is left out (user, 2026-11-27). #}
+{% if row.entries %}<button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline text-body-secondary" data-eos-spy-network-items
+        title="{% translate 'Show each one' %}" aria-label="{% translate 'Show each one' %}"><i class="fas fa-circle-info" aria-hidden="true"></i></button><template><table class="table table-sm table-borderless small mb-0"><tbody>{% for day, kind, isk, subject in row.entries %}<tr><td class="text-nowrap">{{ day|default:"–" }}</td><td>{{ kind }}</td>{% if subject is None %}<td class="text-end text-nowrap">{{ isk|floatformat:"0g" }} ISK</td>{% else %}<td class="text-break">{{ subject }}</td>{% endif %}</tr>{% endfor %}</tbody></table></template>{% endif %}

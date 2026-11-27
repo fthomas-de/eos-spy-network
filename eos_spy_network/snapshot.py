@@ -27,8 +27,12 @@ from .hostiles import alliance_standings, hostile_entities, network_blue_ids
 from .markers import (
     BLUE_KILLS,
     CONTACTS,
+    CONTRACT_REF_TYPES,
+    CORP_CHANGES,
     CONTRACTS,
     LABELS,
+    MAILS,
+    MEMBERSHIP,
     WALLET,
     CorporationTile,
     Marker,
@@ -36,6 +40,7 @@ from .markers import (
     Visitor,
     by_markers,
     corporation_tiles,
+    million,
     roster,
 )
 from .models import BlueKill, ContactSource, FindingReview, Snapshot, SpyConfiguration
@@ -46,6 +51,10 @@ logger = get_extension_logger(__name__)
 
 MARKERS = "markers"
 NETWORK = "network"
+# the markers whose rows are cases of one own character with one counterpart, summed (user, 2026-11-27)
+DEALINGS = (WALLET, CONTRACTS, MAILS)
+# the markers reviewed per case, whose first tick fixes what the case holds
+CASES = (MEMBERSHIP, CORP_CHANGES, *DEALINGS)
 AFFILIATIONS = "affiliations"
 PHASE_LABELS = {MARKERS: _("Markers"), NETWORK: _("Network"), AFFILIATIONS: _("Affiliations")}
 CATEGORY_LABELS = {
@@ -173,7 +182,7 @@ def build(config: SpyConfiguration, step=_no_step) -> dict | None:
                 for row in suspect.markers[kind].rows
             ]
 
-        dealing_rows, contact_rows = rows(WALLET, CONTRACTS), rows(CONTACTS)
+        dealing_rows, contact_rows = rows(*DEALINGS), rows(CONTACTS)
         entities = affiliate(
             found.values(),
             hostiles,
@@ -432,7 +441,8 @@ def reviewed_kills(marker: dict, reviews: dict) -> dict | None:
         row["day_open"] = day_open[row["date"]]
     return {
         **marker,
-        "rows": rows,
+        # the cleared ones folded under the open ones (user, 2026-11-27); stable, so each part stays by date
+        "rows": sorted(rows, key=lambda row: row["cleared"]),
         "count": len(open_rows),
         "details": [row["victim"] or row["corporation"] for row in open_rows],
         "character_ids": sorted({character_id for row in open_rows for character_id in row["character_ids"]}),
@@ -470,11 +480,16 @@ def kill_rows(marker: dict, reviews: dict) -> list:
 
 
 def finding_reviews(alliance_id: int) -> dict:
-    """(kind, main ID, key) -> (cleared, note) of the findings someone reviewed; one query."""
-    reviewed = FindingReview.objects.filter(alliance_id=alliance_id).filter(Q(cleared=True) | ~Q(note=""))
+    """(kind, main ID, key) -> (cleared, note, items) of the findings someone reviewed; one query.
+
+    Every review, the ones ticked off again too: a case of ISK, contracts or mails keeps its items after an untick.
+    """
+    reviews = FindingReview.objects.filter(alliance_id=alliance_id)
     return {
-        (kind, main_id, key): (cleared, note)
-        for kind, main_id, key, cleared, note in reviewed.values_list("kind", "main_id", "key", "cleared", "note")
+        (kind, main_id, key): (cleared, note, items)
+        for kind, main_id, key, cleared, note, items in reviews.values_list(
+            "kind", "main_id", "key", "cleared", "note", "items"
+        )
     }
 
 
@@ -509,18 +524,246 @@ def contact_rows(marker: dict, main_id: int, reviews: dict) -> list:
     rows = []
     for row in marker.get("rows", []):
         key = contact_key(row)
-        cleared, note = reviews.get((CONTACTS, main_id, key), (False, ""))
+        cleared, note, _items = reviews.get((CONTACTS, main_id, key), (False, "", []))
         # the template cannot zip: each character with its ID for the EveWho link
         named = list(zip(row["character_ids"], row["characters"]))
         rows.append({**row, "key": key, "cleared": cleared, "note": note, "named_characters": named})
+    # the cleared ones folded under the open ones (user, 2026-11-27)
+    return sorted(rows, key=lambda row: row["cleared"])
+
+
+def dealing_rows(marker: dict, main_id: int, reviews: dict) -> list:
+    """The cases of a stored ISK, contracts or mails marker: per own character and counterpart, each reviewed case with
+    the items it held when first cleared, the items left over one open case; the open cases first, the latest first.
+
+    A case's key is "<character ID>:<counterpart ID>:<number>"; the open case takes the number after the last
+    reviewed one, so its note stays with it until it is cleared (user, 2026-11-27).
+    """
+    cases = _reviewed_cases(marker["kind"], main_id, reviews)
+    rows = []
+    for row in marker.get("rows", []):
+        if "items" not in row:
+            # a snapshot of 0.1.5 or older holds no items to review until the next run
+            rows.append(row)
+            continue
+        prefix = f"{row['character_id']}:{row['counterpart_id']}:"
+        rows += _split(row, prefix, cases.get(prefix, {}), _case)
+    return _open_first(rows)
+
+
+def membership_rows(marker: dict, main_id: int, reviews: dict) -> list:
+    """The cases of a stored Hostile membership marker: per hostile group, the memberships of the account's
+    characters in it, split as ``dealing_rows`` does - a character joining it again, or one newly added to the
+    account, is a new case (user, 2026-11-27). Keys: "<group ID>:<number>"."""
+    cases = _reviewed_cases(marker["kind"], main_id, reviews)
+    rows = []
+    for row in marker.get("rows", []):
+        prefix = f"{row['group_id']}:"
+        rows += _split(row, prefix, cases.get(prefix, {}), _membership_case)
+    return _open_first(rows)
+
+
+def _split(row: dict, prefix: str, reviewed: dict, case) -> list:
+    """Each reviewed case of ``row`` with the items it held when first cleared, the items left over one open case;
+    ``case`` makes a row of a key, the tick, the note and items."""
+    left = {item[0]: item for item in row["items"]}
+    rows = []
+    for number, (cleared, note, covered) in sorted(reviewed.items()):
+        held = [left.pop(item_id) for item_id in covered if item_id in left]
+        if held:
+            rows.append(case(row, f"{prefix}{number}", cleared, note, held))
+    if left:
+        number, cleared, note = _open_case(reviewed)
+        rows.append(case(row, f"{prefix}{number}", cleared, note, list(left.values())))
     return rows
 
 
+def _membership_case(row: dict, key: str, cleared: bool, note: str, items: list) -> dict:
+    """One case of a Hostile membership row: the group with the memberships in ``items`` alone."""
+    items = sorted(items, key=lambda item: item[1], reverse=True)
+    named = list(dict.fromkeys((item[3], item[2]) for item in items))
+    days = [item[1] for item in items]
+    return {
+        **row,
+        "key": key,
+        "cleared": cleared,
+        "note": note,
+        "items": items,
+        # each membership for the info button: day joined and character
+        "entries": [(item[1], item[2], "0", "") for item in items],
+        "count": len(items),
+        # a membership Auth alone knows has no day
+        "first": min(filter(None, days), default=""),
+        "last": max(days),
+        "named_characters": named,
+    }
+
+
+def join_rows(marker: dict, main_id: int, reviews: dict) -> list:
+    """The cases of a stored Corporation changes marker: per character, its joins of the last 365 days.
+
+    A case cleared once keeps the joins it held; a join none of them holds reopens the character as a new case
+    with every join of the year (user, 2026-11-27) - the number is the finding, not the one join. Keys as in
+    ``dealing_rows``: "<character ID>:<number>".
+    """
+    cases = _reviewed_cases(marker["kind"], main_id, reviews)
+    rows = []
+    for row in marker.get("rows", []):
+        if "items" not in row:
+            # a snapshot of 0.1.5 or older holds no joins to review until the next run
+            rows.append(row)
+            continue
+        prefix = f"{row['character_id']}:"
+        reviewed = cases.get(prefix, {})
+        covered = set()
+        for number, (cleared, note, items) in sorted(reviewed.items()):
+            held = [item for item in row["items"] if item[0] in items]
+            covered.update(items)
+            if held:
+                rows.append(_join_case(row, f"{prefix}{number}", cleared, note, held))
+        if any(item[0] not in covered for item in row["items"]):
+            number, cleared, note = _open_case(reviewed)
+            rows.append(_join_case(row, f"{prefix}{number}", cleared, note, row["items"]))
+    return _open_first(rows)
+
+
+def _reviewed_cases(kind: str, main_id: int, reviews: dict) -> dict:
+    """The main's reviews of one marker by key prefix: "<...>:" -> {case number: (cleared, note, items)}."""
+    cases = {}
+    for (review_kind, review_main, key), review in reviews.items():
+        if (review_kind, review_main) == (kind, main_id):
+            prefix, _sep, number = key.rpartition(":")
+            cases.setdefault(f"{prefix}:", {})[int(number)] = review
+    return cases
+
+
+def _open_case(reviewed: dict) -> tuple:
+    """(number, cleared, note) of the open case: the number after the last case fixed by a tick, so its note stays
+    with it until it is cleared (user, 2026-11-27)."""
+    frozen = [number for number, review in reviewed.items() if review[2]]
+    number = max(frozen) + 1 if frozen else 0
+    cleared, note, _items = reviewed.get(number, (False, "", []))
+    return number, cleared, note
+
+
+def _open_first(rows: list) -> list:
+    rows.sort(key=lambda row: row["last"], reverse=True)
+    # stable: the latest first within the open and within the cleared ones
+    return sorted(rows, key=lambda row: row.get("cleared", False))
+
+
+def _join_case(row: dict, key: str, cleared: bool, note: str, items: list) -> dict:
+    """One case of a Corporation changes row: the stored row counted over ``items`` (its joins) alone."""
+    days = [item[1] for item in items]
+    return {
+        **row,
+        "key": key,
+        "cleared": cleared,
+        "note": note,
+        "items": items,
+        # each join for the info button: day and Corporation, in the columns of a mail's day and kind
+        "entries": [(item[1], item[2], "0", "") for item in items],
+        "count": len(items),
+        "first": min(days),
+        "last": max(days),
+        "named_characters": [(row["character_id"], row["character"])],
+    }
+
+
+def _case(row: dict, key: str, cleared: bool, note: str, items: list) -> dict:
+    """One case of an ISK, contracts or mails row: the stored row with its sums taken over ``items`` alone."""
+    isk = sum((Decimal(item[3]) for item in items), Decimal(0))
+    days = [item[1] for item in items]
+    return {
+        **row,
+        "key": key,
+        "cleared": cleared,
+        "note": note,
+        "items": items,
+        # each one for the info button: date, kind, ISK, and a mail's subject (None for ISK and contracts)
+        "entries": [(item[1], item[2].replace("_", " "), item[3], item[4]) for item in items],
+        "count": len(items),
+        "isk": str(isk),
+        "million": million(isk),
+        # an undated mail adds no day; a case of undated mails alone has none
+        "first": min(filter(None, days), default=""),
+        "last": max(days),
+        "types": sorted({item[2].replace("_", " ") for item in items}),
+        "contract_payments": any(item[2] in CONTRACT_REF_TYPES for item in items),
+        # the template cannot zip; one character, as the contacts' and kills' rows name theirs
+        "named_characters": [(row["character_id"], row["character"])],
+    }
+
+
+def case_rows(marker: dict, main_id: int, reviews: dict) -> list:
+    """The cases of a stored marker of ``CASES``."""
+    rows = {MEMBERSHIP: membership_rows, CORP_CHANGES: join_rows}.get(marker["kind"], dealing_rows)
+    return rows(marker, main_id, reviews)
+
+
+def reviewed_cases(marker: dict, main_id: int, reviews: dict) -> dict | None:
+    """A stored marker of ``CASES`` with the reviews applied; None once every case is cleared.
+
+    As ``reviewed_kills``: read at every view, a cleared case stays, folded, it only stops counting.
+    """
+    rows = case_rows(marker, main_id, reviews)
+    if not rows or "key" not in rows[0]:
+        # nothing to review in a snapshot of 0.1.5 or older
+        return marker
+    open_rows = [row for row in rows if not row["cleared"]]
+    if not open_rows:
+        return None
+    # the Corporation page heads each date of a last interaction or join with its open cases, to clear them at once
+    day_open = Counter(row["last"] for row in open_rows)
+    for row in open_rows:
+        row["day_open"] = day_open[row["last"]]
+    if marker["kind"] == MEMBERSHIP:
+        # as the calculation counts and names them: every membership, "character: group"
+        count = sum(row["count"] for row in open_rows)
+        details = sorted({f"{item[2]}: {row['group']}" for row in open_rows for item in row["items"]}, key=str.lower)
+    elif marker["kind"] == CORP_CHANGES:
+        # as the calculation counts: every join of each character
+        count = sum(row["count"] for row in open_rows)
+        details = [f"{row['character']}: {row['count']}" for row in open_rows]
+    else:
+        # an entry, contract or mail two own characters hold counts once, as in the calculation
+        count = len({item[0] for row in open_rows for item in row["items"]})
+        details = sorted({row["counterpart"] for row in open_rows}, key=str.lower)
+    return {
+        **marker,
+        "rows": rows,
+        "count": count,
+        "details": details,
+        "character_ids": sorted({eve_id for row in open_rows for eve_id, _name in row["named_characters"]}),
+    }
+
+
+def _finding(kind: str, row: dict) -> str:
+    """A case in a word: the hostile group, the number of joins, or the counterpart."""
+    if kind == MEMBERSHIP:
+        return row["group"]
+    if kind == CORP_CHANGES:
+        return str(row["count"])
+    return row["counterpart"]
+
+
 def cleared_rows(markers: list, main_id: int, reviews: dict, findings: dict) -> list:
-    """The findings of a main whose every finding is cleared, kills and contacts in one list for one table."""
+    """The findings of a main whose every finding is cleared, every marker in one list for one table."""
     rows = []
     for marker in markers:
-        if marker["kind"] == BLUE_KILLS:
+        if marker["kind"] in CASES:
+            rows += [
+                {
+                    "label": LABELS[marker["kind"]],
+                    "date": row["last"],
+                    "finding": _finding(marker["kind"], row),
+                    "killmail_id": None,
+                    "named_characters": row["named_characters"],
+                    "note": row["note"],
+                }
+                for row in case_rows(marker, main_id, findings)
+            ]
+        elif marker["kind"] == BLUE_KILLS:
             rows += [
                 {
                     "label": LABELS[BLUE_KILLS],
@@ -604,6 +847,8 @@ class Report:
                 marker = reviewed_kills(marker, reviews)
             elif marker["kind"] == CONTACTS:
                 marker = reviewed_contacts(marker, stored["main_id"], findings)
+            elif marker["kind"] in CASES:
+                marker = reviewed_cases(marker, stored["main_id"], findings)
             if marker is None:
                 done.append(stored_marker)
                 continue
