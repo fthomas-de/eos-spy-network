@@ -187,7 +187,11 @@ staticfiles manifest entry".
   reach it through the module (`test_views.TestEvidence.add_donation`).
 - A new required `SpyConfiguration` form field breaks the settings POSTs in
   `test_views.TestSettingsPage` (200 instead of 302): add it to each posted
-  dict.
+  dict. A new marker kind does the same to `test_views`: the posted
+  `markers` list and the `id_markers_N` index of the switches shift.
+- `test_network` counts how often a run reads `authentication_characterownership`
+  and `userprofile`: a new check joins what it needs into its own query
+  instead of reading them again.
 - Assertions: a logged-in user without the permission gets 403 (assert on the
   status code); only an anonymous user is redirected to the login URL. `/rebuild/` also
   matches `rebuild/progress/` - assert on `action="..."`. `sri_static`

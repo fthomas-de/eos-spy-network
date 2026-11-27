@@ -11,9 +11,11 @@ one section), not at session start.
 
 ## State
 
-- Version: `0.1.7`, 2026-11-27 (tag `v0.1.7`): a user without a page's
-  permission gets 403 instead of the login page (no prod steps).
+- Version: `0.1.8`, 2026-11-27 (tag `v0.1.8`): marker *Owner changes*.
 - Possibly not deployed yet (the user deploys every release right away):
+  - `0.1.8`: no migration, no `collectstatic`, one recalculation - until
+    then the marker does not show.
+  - `0.1.7`: no prod steps (403 instead of the login page).
   - `0.1.5`: migration 0025, `collectstatic` (`ignore.js`), one
     recalculation.
   - `0.1.6`: migration 0026, `collectstatic` (`items.js`, `items.css`), one
@@ -22,8 +24,8 @@ one section), not at session start.
 - What the app does today: from the contacts of the Alliance and its
   Corporations it builds a hostile list and checks every account with a
   character in the Alliance against it - markers per main (membership,
-  Corporation changes, friendly hostile contacts, mails, ISK, contracts, blue
-  kills, capital ships in public contracts) and a Network of ISK and contract
+  Corporation changes, owner changes, friendly hostile contacts, mails, ISK,
+  contracts, blue kills, capital ships in public contracts) and a Network of ISK and contract
   links to hostile (optionally neutral) partners, scored by points. A Celery
   task stores the result as a snapshot; the pages read only that, and
   eos-auth-monitor reads the markers through `api.py`. Every marker but
@@ -34,7 +36,8 @@ one section), not at session start.
 
 - Not seen in a browser (SSO, and `aa_dev` lacks the data): the info
   button's popover (`items.js`, scrolls when long), the folded *Cleared*
-  rows and the day rows of the new case tables. Only rendered in tests.
+  rows and the day rows of the new case tables, and the *Owner changes* case
+  table and settings tab. Only rendered in tests.
 - Possible next steps the user may want:
   - A filter, should the folded *Cleared* lists grow too long (user's word).
   - Capital: structure names (need a token with docking rights); a contract
@@ -44,11 +47,9 @@ one section), not at session start.
   - Markers weighted into a score; an account page with the evidence.
   - More markers: clones/assets in staging systems (needs a setting for the
     systems), audit gaps as a data gap.
-  - Owner change marker: Alliance Auth keeps `OwnershipRecord` (user,
-    character, `owner_hash`, `created`); a character with several records
-    of differing `owner_hash` or user changed hands. Unchecked: `created` is
-    `auto_now` (not a reliable date), where AA writes the records, and
-    whether `aa_dev` holds any such character - look at the data first.
+  - Owner changes: a record goes with its user (cascade), so an earlier
+    owner's deleted Auth account takes the finding away; a time frame is not
+    possible (`created` is `auto_now`).
   - The same 403 is still missing in eos-sig-checker and eos-invoices (their
     own sessions).
 - Not decided, left as built: a `BlueKill` copy is never deleted (few rows,
@@ -66,7 +67,8 @@ one section), not at session start.
 
 - Installed editable, in `INSTALLED_APPS` of `myauth/settings/local.py`;
   migrations up to 0026 applied, `collectstatic` current, snapshot rebuilt
-  2026-11-25 with 0.1.4 (recalculate to see the 0.1.5 and 0.1.6 changes).
+  2026-11-25 with 0.1.4 (recalculate to see the 0.1.5, 0.1.6 and 0.1.8
+  changes).
 - `local.py` has a `## eos spy network` block with the sweep's beat entry.
   The periodic task row `contacts` (id 7) is disabled; the hourly
   `CELERYBEAT_SCHEDULE` entry in `local.py` is the one to keep. A Celery
@@ -77,8 +79,10 @@ one section), not at session start.
 - aa-contacts holds tokens for Invidia Gloriae Comes (99003995) and Ether
   Element (98633815).
 - `aa_dev` has no hostile Network partner, no ISK, contract, mail or contacts
-  marker and no capital contract of the Alliance: those pages and popups
-  were only rendered in tests. Seeding corptools rows for them (journal,
+  marker and no capital contract of the Alliance, and no owner change (12
+  `OwnershipRecord` rows, one per character): those pages and popups
+  were only rendered in tests. A seed of an earlier owner is an Auth table
+  and needs the user's yes. Seeding corptools rows for them (journal,
   `Contract`, `CharacterContact`, mails) needs the user's yes (foreign
   tables).
 - Held data: 7 `CapitalContract` rows and the `SweepStats` row of the

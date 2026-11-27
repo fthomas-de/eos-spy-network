@@ -66,6 +66,12 @@ section.
   history of who ever had a finding (offered, declined). A character that is
   only the counterpart of another account's payment is not ignored: the
   list ignores actors. Other markers have none.
+- *Owner changes*: a character changed hands only when Auth holds an
+  `OwnershipRecord` with another `owner_hash` than the character's today; the
+  same hash under another Auth account is the same player and does not count.
+  The whole history counts, no time frame (`created` is `auto_now`, no date
+  to cut by). It shows the earlier owner as the main of that Auth account,
+  else the user name. No hostile and no corptools needed.
 
 ### Blue kills
 
@@ -178,6 +184,9 @@ section.
   join; the tick fixes the joins it saw (ESI record IDs), a new join after it
   reopens the character as a new case with the full count of the last 365
   days.
+- Owner changes: a case per character with its earlier owners; the tick fixes
+  the `OwnershipRecord` IDs it saw, a further earlier owner is a new case with
+  that owner alone (as the memberships, unlike the Corporation changes).
 - Blue kills: one row, note and tick per main and killmail (two mains on one
   killmail, a row each). Editable with `view_suspects` on the Corporation
   page and in the settings tab; clearing needs a note, except for admins in
