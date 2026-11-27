@@ -34,8 +34,6 @@ from .base import (
 
 VIEW_SUSPECTS = "eos_spy_network.view_suspects"
 MANAGE_SETTINGS = "eos_spy_network.manage_settings"
-# user_passes_test sends a user without the permission to the login page
-LOGIN = "/account/login/"
 NOT_INSTALLED = "eos_spy_network.contacts.is_installed"
 HOSTILE_CORP = 98000001
 
@@ -55,14 +53,14 @@ class TestAccess(SpyTestCase):
         ):
             with self.subTest(url):
                 response = self.client.get(url)
-                self.assertTrue(response.url.startswith(LOGIN))
+                self.assertEqual(response.status_code, 403)
 
     def test_should_keep_settings_from_viewers(self):
         self.client.force_login(make_user("viewer", VIEW_SUSPECTS))
 
         response = self.client.get(reverse("eos_spy_network:settings"))
 
-        self.assertTrue(response.url.startswith(LOGIN))
+        self.assertEqual(response.status_code, 403)
 
     def test_should_open_the_network_to_viewers(self):
         # view_evidence is gone (user, 2026-11-19): view_suspects alone opens the network
@@ -77,7 +75,7 @@ class TestAccess(SpyTestCase):
 
         response = self.client.get(reverse("eos_spy_network:corporations"))
 
-        self.assertTrue(response.url.startswith(LOGIN))
+        self.assertEqual(response.status_code, 403)
 
     def test_should_send_viewers_to_the_corporations(self):
         self.client.force_login(make_user("viewer", VIEW_SUSPECTS))
@@ -617,7 +615,7 @@ class TestNetworkPages(SuspectPageTestCase):
 
         response = self.client.get(reverse("eos_spy_network:network_contracts", args=[main.character_id, self.OUTSIDER]))
 
-        self.assertTrue(response.url.startswith(LOGIN))
+        self.assertEqual(response.status_code, 403)
 
     def add_contract_payment(self, contract_id=78, price=5000):
         """A private contract without items to the outsider; with a ``price``, the wallet entry that paid it."""
@@ -751,7 +749,7 @@ class TestNetworkPages(SuspectPageTestCase):
     def test_should_keep_the_ignoring_from_viewers(self):
         response = self.client.post(reverse("eos_spy_network:ignore_counterpart"), {"counterpart_id": self.OUTSIDER})
 
-        self.assertTrue(response.url.startswith(LOGIN))
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(SpyConfiguration.get_solo().ignored_network_counterparts, {})
 
     def test_should_keep_the_ignoring_from_settings_managers_without_the_network(self):
@@ -760,7 +758,7 @@ class TestNetworkPages(SuspectPageTestCase):
 
         response = self.client.post(reverse("eos_spy_network:ignore_counterpart"), {"counterpart_id": self.OUTSIDER})
 
-        self.assertTrue(response.url.startswith(LOGIN))
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(SpyConfiguration.get_solo().ignored_network_counterparts, {})
 
     def test_should_refuse_a_counterpart_the_network_does_not_list(self):
@@ -1385,7 +1383,7 @@ class TestContractDetails(SuspectPageTestCase):
 
         response = self.client.get(self.url)
 
-        self.assertRedirects(response, f"{LOGIN}?next={self.url}", fetch_redirect_response=False)
+        self.assertEqual(response.status_code, 403)
 
     def test_should_offer_the_button_for_a_contract_payment_only(self):
         self.pay(1, "contract_price", context_id=80)
@@ -1572,7 +1570,7 @@ class TestStatisticsPage(SpyTestCase):
             with self.subTest(perm):
                 self.client.force_login(make_user(name, perm))
 
-                self.assertTrue(self.get().url.startswith(LOGIN))
+                self.assertEqual(self.get().status_code, 403)
 
     def test_should_show_the_tab_to_holders_of_both_permissions_only(self):
         url = f'href="{reverse("eos_spy_network:statistics")}"'

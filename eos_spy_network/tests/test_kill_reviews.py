@@ -176,7 +176,7 @@ class TestKillNote(ReviewTestCase):
 
         response = self.post(note="Agreed", cleared="1")
 
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 403)
         self.assertFalse(BlueKill.objects.get(killmail_id=1).cleared)
 
     def test_should_show_a_cleared_kill_folded_on_the_corporation_page(self):
@@ -532,7 +532,7 @@ class TestDayNote(ReviewTestCase):
     def test_should_need_view_suspects(self):
         self.client.force_login(make_user("settings", MANAGE_SETTINGS))
 
-        self.assertEqual(self.post(note="bomb", cleared="1").status_code, 302)
+        self.assertEqual(self.post(note="bomb", cleared="1").status_code, 403)
         self.assertFalse(BlueKill.objects.filter(cleared=True).exists())
 
     def test_should_head_each_date_with_its_open_kills(self):

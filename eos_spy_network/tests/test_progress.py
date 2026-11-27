@@ -126,4 +126,4 @@ class TestPages(SpyTestCase):
 
         response = self.client.get(reverse("eos_spy_network:rebuild_progress"))
 
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 403)

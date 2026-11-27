@@ -188,8 +188,8 @@ staticfiles manifest entry".
 - A new required `SpyConfiguration` form field breaks the settings POSTs in
   `test_views.TestSettingsPage` (200 instead of 302): add it to each posted
   dict.
-- Assertions: `user_passes_test` redirects to the login URL with
-  `?next=/eos_spy_network/...` - assert on the login URL. `/rebuild/` also
+- Assertions: a logged-in user without the permission gets 403 (assert on the
+  status code); only an anonymous user is redirected to the login URL. `/rebuild/` also
   matches `rebuild/progress/` - assert on `action="..."`. `sri_static`
   renders the hashed name - assert on `eos_spy_network/js/copy.`. A missing
   key renders as an empty string - assert on `.../character/"`.

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-11-27
+
+### Fixed
+
+- **403 instead of the login page**: a logged-in user without the permission
+  of a page was sent to the login page, as if they were not signed in. They
+  now get "403 Forbidden", as in eos-auth-monitor. A user who is not logged
+  in still goes to the login page. The permission checks in
+  `permissions._required` raise `PermissionDenied` instead of failing
+  `user_passes_test`.
+
 ## [0.1.6] - 2026-11-27
 
 ### Added

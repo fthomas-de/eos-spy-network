@@ -131,8 +131,7 @@ class TestLogTab(FindingTestCase):
 
                 response = self.get()
 
-                # user_passes_test sends them to the login page
-                self.assertTrue(response.url.startswith("/account/login/"))
+                self.assertEqual(response.status_code, 403)
 
     def test_should_be_gone_from_the_settings(self):
         response = self.client.get(reverse("eos_spy_network:settings"))

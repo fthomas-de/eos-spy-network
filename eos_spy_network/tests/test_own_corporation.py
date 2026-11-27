@@ -8,7 +8,7 @@ from eos_spy_network.auth_hooks import SpyNetworkMenuItem
 
 from . import test_views
 from .base import make_corporation, make_user
-from .test_views import LOGIN, SuspectPageTestCase
+from .test_views import SuspectPageTestCase
 
 
 VIEW_OWN_CORPORATION = "eos_spy_network.view_own_corporation"
@@ -65,7 +65,7 @@ class TestOwnCorporation(SuspectPageTestCase):
             reverse("eos_spy_network:kill_day_note"),
         ):
             with self.subTest(url):
-                self.assertTrue(self.client.get(url).url.startswith(LOGIN))
+                self.assertEqual(self.client.get(url).status_code, 403)
 
     def test_should_offer_neither_recalculation_nor_the_way_back_to_all_tiles(self):
         self.login()

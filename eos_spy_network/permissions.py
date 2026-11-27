@@ -3,6 +3,7 @@
 from functools import wraps
 
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.exceptions import PermissionDenied
 
 VIEW_SUSPECTS = "eos_spy_network.view_suspects"
 MANAGE_SETTINGS = "eos_spy_network.manage_settings"
@@ -38,9 +39,15 @@ def all_permissions_required(*perms):
 
 
 def _required(test):
+    def check(user) -> bool:
+        # a logged-in user without the permission gets a 403, not the login page (user, 2026-11-27)
+        if test(user):
+            return True
+        raise PermissionDenied
+
     def decorator(view):
         @login_required
-        @user_passes_test(test)
+        @user_passes_test(check)
         @wraps(view)
         def wrapper(request, *args, **kwargs):
             return view(request, *args, **kwargs)

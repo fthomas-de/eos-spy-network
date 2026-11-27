@@ -211,7 +211,7 @@ class TestFindingNote(FindingTestCase):
     def test_should_need_view_suspects(self):
         self.client.force_login(make_user("nobody"))
 
-        self.assertEqual(self.post(note="Agreed", cleared="1").status_code, 302)
+        self.assertEqual(self.post(note="Agreed", cleared="1").status_code, 403)
         self.assertFalse(FindingReview.objects.exists())
 
     def test_should_show_the_contact_with_its_tick_on_the_corporation_page(self):

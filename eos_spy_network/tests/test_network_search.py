@@ -13,7 +13,6 @@ OUTSIDER = test_network.OUTSIDER
 HOSTILE_CORP = test_network.HOSTILE_CORP
 VIEW_SUSPECTS = "eos_spy_network.view_suspects"
 MANAGE_SETTINGS = "eos_spy_network.manage_settings"
-LOGIN = "/account/login/"
 
 
 class SearchTestCase(test_network.NetworkTestCase):
@@ -133,7 +132,7 @@ class TestSearchPage(SearchTestCase):
 
         response = self.client.get(reverse("eos_spy_network:network_search"))
 
-        self.assertTrue(response.url.startswith(LOGIN))
+        self.assertEqual(response.status_code, 403)
 
     def test_should_put_the_search_box_on_the_network_page_and_not_in_the_menu(self):
         search = reverse("eos_spy_network:network_search")
